@@ -1,0 +1,20 @@
+Start Development inside your folder and follow the workflow before merging.
+
+** Git Flow **
+feature/
+branch
+→
+Pull
+Request
+→
+Code
+Review
+→
+develop
+merge
+→
+Integration
+Test
+→
+main
+release 
