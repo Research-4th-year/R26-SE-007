@@ -1,0 +1,61 @@
+farmer_id,type,quantity,expected_price,district
+F001,Nadu,500,115,Ampara
+F002,Samba,800,120,Ampara
+F003,Keeri Samba,350,132,Ampara
+F004,Nadu,620,115,Ampara
+F005,Samba,450,120,Ampara
+F006,Keeri Samba,280,132,Ampara
+F007,Nadu,780,115,Ampara
+F008,Samba,1200,120,Ampara
+F009,Nadu,430,115,Ampara
+F010,Keeri Samba,500,132,Ampara
+F011,Samba,670,120,Ampara
+F012,Nadu,590,115,Ampara
+F013,Keeri Samba,410,132,Ampara
+F014,Samba,960,120,Ampara
+F015,Nadu,720,115,Ampara
+F016,Samba,540,120,Ampara
+F017,Nadu,850,115,Ampara
+F018,Keeri Samba,320,132,Ampara
+F019,Samba,730,120,Ampara
+F020,Nadu,460,115,Ampara
+F021,Nadu,550,115,Kandy
+F022,Samba,900,120,Kandy
+F023,Keeri Samba,280,132,Kandy
+F024,Nadu,720,115,Kandy
+F025,Samba,1100,120,Kandy
+F026,Keeri Samba,360,132,Kandy
+F027,Nadu,490,115,Kandy
+F028,Samba,670,120,Kandy
+F029,Nadu,810,115,Kandy
+F030,Keeri Samba,250,132,Kandy
+F031,Samba,780,120,Kandy
+F032,Nadu,630,115,Kandy
+F033,Keeri Samba,390,132,Kandy
+F034,Samba,860,120,Kandy
+F035,Nadu,570,115,Kandy
+F036,Samba,940,120,Kandy 
+F037,Nadu,710,115,Kandy
+F038,Keeri Samba,300,132,Kandy
+F039,Samba,620,120,Kandy
+F040,Nadu,480,115,Kandy
+F041,Nadu,600,115,Badulla
+F042,Samba,850,120,Badulla
+F043,Keeri Samba,290,132,Badulla
+F044,Nadu,740,115,Badulla
+F045,Samba,1050,120,Badulla
+F046,Keeri Samba,370,132,Badulla
+F047,Nadu,520,115,Badulla
+F048,Samba,690,120,Badulla
+F049,Nadu,660,115,Badulla
+F050,Keeri Samba,310,132,Badulla
+F051,Samba,770,120,Badulla
+F052,Nadu,580,115,Badulla
+F053,Keeri Samba,420,132,Badulla
+F054,Samba,930,120,Badulla
+F055,Nadu,650,115,Badulla
+F056,Samba,810,120,Badulla
+F057,Nadu,470,115,Badulla
+F058,Keeri Samba,340,132,Badulla
+F059,Samba,750,120,Badulla
+F060,Nadu,530,115,Badulla
