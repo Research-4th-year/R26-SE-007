@@ -1,0 +1,1001 @@
+district,paddyType,season,quantity,price
+Ampara,Keeri Samba,Yala,3054,131
+Kandy,Nadu,Maha,4960,110
+Ampara,Nadu,Yala,1087,100
+Kandy,Samba,Yala,1244,125
+Ampara,Nadu,Maha,3882,111
+Ampara,Keeri Samba,Maha,2841,141
+Ampara,Samba,Maha,1478,135
+Kandy,Nadu,Maha,3627,113
+Badulla,Nadu,Yala,4211,100
+Kandy,Keeri Samba,Maha,3635,143
+Monaragala,Keeri Samba,Yala,2208,130
+Kandy,Samba,Maha,2198,134
+Badulla,Keeri Samba,Yala,2497,136
+Monaragala,Samba,Yala,1006,125
+Monaragala,Samba,Yala,2304,118
+Ampara,Samba,Yala,3994,122
+Kandy,Nadu,Maha,4393,108
+Badulla,Keeri Samba,Yala,4092,136
+Badulla,Samba,Yala,2175,126
+Badulla,Keeri Samba,Yala,1484,129
+Kandy,Nadu,Yala,4444,103
+Ampara,Keeri Samba,Maha,2438,145
+Kandy,Samba,Maha,3321,131
+Ampara,Nadu,Maha,4071,118
+Monaragala,Samba,Maha,4918,127
+Kandy,Keeri Samba,Yala,2138,136
+Ampara,Nadu,Maha,3035,114
+Kandy,Samba,Yala,3392,125
+Kandy,Samba,Maha,845,136
+Badulla,Samba,Yala,4329,116
+Kandy,Keeri Samba,Yala,1347,129
+Ampara,Keeri Samba,Maha,4524,143
+Kandy,Nadu,Maha,2310,108
+Monaragala,Samba,Maha,3921,137
+Kandy,Nadu,Maha,3812,112
+Ampara,Keeri Samba,Yala,4386,134
+Ampara,Nadu,Maha,550,113
+Badulla,Keeri Samba,Maha,2567,140
+Kandy,Samba,Yala,742,126
+Badulla,Keeri Samba,Yala,4596,130
+Kandy,Nadu,Yala,4973,105
+Ampara,Samba,Yala,4531,129
+Badulla,Keeri Samba,Yala,4619,126
+Badulla,Keeri Samba,Maha,698,143
+Badulla,Nadu,Maha,2913,109
+Kandy,Keeri Samba,Maha,1490,143
+Kandy,Keeri Samba,Maha,710,147
+Kandy,Keeri Samba,Maha,1901,142
+Badulla,Keeri Samba,Maha,2914,143
+Badulla,Keeri Samba,Yala,3945,129
+Ampara,Nadu,Maha,2713,114
+Ampara,Samba,Maha,3588,138
+Kandy,Keeri Samba,Maha,3893,146
+Ampara,Samba,Yala,3844,121
+Kandy,Keeri Samba,Yala,4365,132
+Badulla,Keeri Samba,Yala,527,127
+Kandy,Keeri Samba,Maha,3176,139
+Monaragala,Samba,Yala,4880,119
+Monaragala,Nadu,Yala,708,101
+Kandy,Keeri Samba,Maha,1478,140
+Monaragala,Samba,Yala,2342,119
+Monaragala,Samba,Maha,3387,131
+Monaragala,Keeri Samba,Yala,4057,131
+Kandy,Nadu,Maha,2847,112
+Badulla,Samba,Maha,3190,126
+Ampara,Nadu,Maha,1251,118
+Monaragala,Keeri Samba,Maha,644,139
+Ampara,Keeri Samba,Yala,2996,134
+Badulla,Samba,Maha,2148,130
+Ampara,Keeri Samba,Maha,4946,145
+Ampara,Samba,Maha,2270,136
+Badulla,Nadu,Yala,1624,99
+Ampara,Nadu,Maha,621,110
+Monaragala,Samba,Maha,2330,133
+Monaragala,Nadu,Yala,3339,107
+Ampara,Nadu,Maha,2211,112
+Badulla,Nadu,Maha,1278,115
+Ampara,Samba,Yala,4751,126
+Ampara,Keeri Samba,Maha,1955,147
+Monaragala,Nadu,Yala,670,102
+Monaragala,Samba,Yala,3851,124
+Badulla,Keeri Samba,Maha,3657,136
+Monaragala,Nadu,Yala,1846,100
+Kandy,Keeri Samba,Yala,2984,129
+Monaragala,Keeri Samba,Maha,4761,140
+Badulla,Nadu,Maha,1372,110
+Ampara,Nadu,Yala,4603,101
+Monaragala,Samba,Yala,1416,120
+Monaragala,Nadu,Maha,4298,111
+Ampara,Keeri Samba,Maha,3622,150
+Ampara,Nadu,Yala,1523,100
+Kandy,Samba,Yala,552,119
+Badulla,Samba,Yala,1733,116
+Kandy,Nadu,Yala,2205,108
+Badulla,Keeri Samba,Maha,1670,141
+Badulla,Nadu,Maha,1074,111
+Ampara,Keeri Samba,Maha,2488,149
+Monaragala,Nadu,Yala,2590,103
+Kandy,Keeri Samba,Yala,2191,138
+Monaragala,Nadu,Yala,1257,103
+Ampara,Keeri Samba,Yala,4076,133
+Kandy,Samba,Maha,2761,128
+Kandy,Samba,Maha,3051,133
+Badulla,Samba,Yala,4010,117
+Badulla,Samba,Maha,4374,128
+Kandy,Samba,Yala,1748,124
+Badulla,Nadu,Yala,1411,100
+Monaragala,Samba,Maha,3327,129
+Kandy,Samba,Yala,2479,123
+Ampara,Samba,Yala,2907,120
+Ampara,Samba,Yala,943,130
+Kandy,Keeri Samba,Maha,3943,143
+Monaragala,Nadu,Yala,4754,106
+Monaragala,Samba,Maha,4428,129
+Monaragala,Nadu,Maha,1166,113
+Ampara,Keeri Samba,Maha,2994,150
+Kandy,Nadu,Maha,3292,115
+Monaragala,Keeri Samba,Maha,934,142
+Badulla,Keeri Samba,Maha,4486,146
+Ampara,Samba,Yala,3158,120
+Monaragala,Keeri Samba,Yala,2275,129
+Ampara,Nadu,Maha,3228,119
+Badulla,Samba,Yala,3052,126
+Ampara,Keeri Samba,Yala,3825,133
+Monaragala,Keeri Samba,Yala,1731,134
+Monaragala,Nadu,Maha,3348,109
+Badulla,Nadu,Yala,2210,97
+Badulla,Nadu,Maha,3925,113
+Kandy,Nadu,Maha,3729,118
+Monaragala,Samba,Maha,2920,129
+Ampara,Nadu,Yala,1627,102
+Badulla,Samba,Yala,876,123
+Monaragala,Keeri Samba,Maha,1058,141
+Kandy,Samba,Yala,771,123
+Ampara,Samba,Maha,4362,140
+Badulla,Keeri Samba,Maha,4085,144
+Monaragala,Samba,Yala,2115,121
+Kandy,Nadu,Maha,4377,117
+Badulla,Keeri Samba,Yala,4550,130
+Badulla,Samba,Maha,3851,135
+Monaragala,Keeri Samba,Yala,3484,133
+Ampara,Nadu,Yala,3261,101
+Monaragala,Keeri Samba,Maha,4753,142
+Ampara,Nadu,Maha,2310,119
+Badulla,Nadu,Maha,1952,112
+Ampara,Samba,Yala,3219,123
+Ampara,Samba,Maha,2572,130
+Badulla,Nadu,Maha,1024,114
+Ampara,Nadu,Yala,2100,108
+Kandy,Nadu,Maha,3255,115
+Monaragala,Keeri Samba,Maha,3282,140
+Monaragala,Samba,Maha,1352,131
+Kandy,Samba,Maha,2080,128
+Badulla,Samba,Yala,1668,124
+Badulla,Keeri Samba,Yala,3245,126
+Kandy,Nadu,Maha,3556,115
+Ampara,Nadu,Maha,847,111
+Kandy,Keeri Samba,Yala,2988,130
+Badulla,Nadu,Yala,4347,101
+Badulla,Keeri Samba,Yala,763,132
+Kandy,Nadu,Maha,1734,112
+Ampara,Keeri Samba,Maha,1897,149
+Ampara,Keeri Samba,Maha,1953,147
+Ampara,Keeri Samba,Yala,4402,132
+Badulla,Nadu,Yala,4754,105
+Badulla,Samba,Maha,2862,132
+Ampara,Keeri Samba,Yala,2195,130
+Monaragala,Keeri Samba,Yala,4644,130
+Badulla,Nadu,Yala,3587,99
+Kandy,Nadu,Maha,2383,108
+Kandy,Nadu,Maha,3881,113
+Monaragala,Samba,Maha,4909,130
+Monaragala,Samba,Yala,544,119
+Badulla,Nadu,Maha,4404,112
+Ampara,Samba,Yala,1838,122
+Kandy,Keeri Samba,Yala,2225,128
+Monaragala,Keeri Samba,Yala,2315,128
+Badulla,Samba,Maha,1575,130
+Kandy,Nadu,Maha,2131,112
+Monaragala,Samba,Maha,2155,137
+Monaragala,Keeri Samba,Yala,2189,131
+Ampara,Samba,Maha,2470,135
+Ampara,Keeri Samba,Maha,1753,140
+Kandy,Nadu,Maha,3836,110
+Badulla,Nadu,Yala,4234,106
+Monaragala,Nadu,Yala,4477,102
+Monaragala,Samba,Maha,2894,129
+Kandy,Keeri Samba,Yala,1241,136
+Monaragala,Nadu,Yala,3152,106
+Kandy,Samba,Maha,3673,132
+Monaragala,Samba,Maha,670,137
+Ampara,Keeri Samba,Yala,1164,131
+Badulla,Samba,Yala,2008,119
+Monaragala,Samba,Maha,1962,128
+Ampara,Samba,Maha,2160,131
+Ampara,Nadu,Yala,3534,103
+Ampara,Keeri Samba,Maha,2310,148
+Kandy,Nadu,Maha,3751,113
+Badulla,Nadu,Maha,4118,115
+Badulla,Samba,Maha,4601,136
+Kandy,Samba,Maha,3267,136
+Kandy,Keeri Samba,Maha,4150,148
+Monaragala,Samba,Yala,3972,117
+Badulla,Nadu,Yala,4150,101
+Ampara,Samba,Yala,2444,122
+Badulla,Samba,Yala,2102,125
+Monaragala,Nadu,Yala,2296,102
+Kandy,Keeri Samba,Yala,4985,132
+Kandy,Keeri Samba,Maha,2233,144
+Monaragala,Samba,Yala,3888,120
+Kandy,Samba,Maha,860,137
+Ampara,Nadu,Yala,3380,107
+Ampara,Nadu,Yala,1866,101
+Monaragala,Keeri Samba,Yala,1064,132
+Ampara,Nadu,Yala,3906,105
+Monaragala,Samba,Maha,1987,135
+Monaragala,Nadu,Yala,1182,102
+Kandy,Keeri Samba,Maha,3386,141
+Monaragala,Nadu,Maha,3657,116
+Monaragala,Samba,Maha,4363,133
+Kandy,Samba,Maha,3474,129
+Badulla,Samba,Maha,2073,132
+Ampara,Nadu,Maha,1002,117
+Kandy,Keeri Samba,Yala,2953,137
+Ampara,Nadu,Yala,604,103
+Monaragala,Keeri Samba,Maha,1670,139
+Badulla,Nadu,Maha,3771,114
+Ampara,Samba,Yala,4548,126
+Badulla,Keeri Samba,Yala,712,134
+Monaragala,Samba,Yala,4409,117
+Kandy,Samba,Maha,1773,133
+Kandy,Nadu,Yala,2326,104
+Badulla,Nadu,Maha,3938,110
+Badulla,Samba,Yala,2706,125
+Kandy,Samba,Yala,2962,121
+Monaragala,Samba,Yala,931,119
+Kandy,Keeri Samba,Maha,1216,144
+Kandy,Samba,Yala,548,124
+Badulla,Samba,Yala,2315,125
+Monaragala,Keeri Samba,Yala,977,132
+Badulla,Samba,Maha,1924,133
+Badulla,Keeri Samba,Yala,2238,131
+Badulla,Samba,Yala,1634,121
+Badulla,Nadu,Yala,4958,96
+Monaragala,Samba,Maha,2173,133
+Badulla,Nadu,Yala,2762,102
+Badulla,Nadu,Yala,1286,97
+Monaragala,Keeri Samba,Yala,4829,130
+Ampara,Samba,Yala,1610,129
+Monaragala,Keeri Samba,Maha,1596,143
+Monaragala,Keeri Samba,Yala,4015,135
+Monaragala,Samba,Yala,1439,125
+Monaragala,Samba,Yala,2423,125
+Ampara,Nadu,Yala,4317,106
+Monaragala,Nadu,Maha,3248,107
+Monaragala,Nadu,Yala,1788,107
+Badulla,Keeri Samba,Yala,3376,126
+Badulla,Keeri Samba,Maha,1493,142
+Ampara,Nadu,Yala,2362,105
+Badulla,Nadu,Yala,3013,98
+Ampara,Keeri Samba,Yala,2237,138
+Kandy,Samba,Yala,3393,123
+Badulla,Keeri Samba,Yala,4911,134
+Ampara,Keeri Samba,Yala,4406,136
+Ampara,Samba,Maha,3020,132
+Ampara,Nadu,Maha,2149,110
+Ampara,Keeri Samba,Yala,4367,132
+Monaragala,Nadu,Yala,697,97
+Monaragala,Samba,Maha,729,134
+Ampara,Keeri Samba,Yala,4219,136
+Monaragala,Keeri Samba,Yala,3644,127
+Badulla,Keeri Samba,Maha,3429,146
+Kandy,Samba,Yala,1780,119
+Badulla,Samba,Maha,1313,128
+Ampara,Keeri Samba,Maha,1914,143
+Ampara,Nadu,Yala,1103,107
+Badulla,Nadu,Yala,2165,97
+Monaragala,Nadu,Yala,2715,103
+Badulla,Nadu,Maha,666,111
+Monaragala,Keeri Samba,Yala,3123,137
+Badulla,Keeri Samba,Yala,2310,133
+Badulla,Nadu,Yala,963,103
+Ampara,Samba,Maha,980,131
+Monaragala,Nadu,Yala,1344,102
+Monaragala,Samba,Yala,3541,117
+Monaragala,Samba,Yala,3314,117
+Kandy,Samba,Maha,3988,135
+Monaragala,Samba,Yala,2410,117
+Kandy,Samba,Maha,3110,137
+Ampara,Keeri Samba,Maha,3057,148
+Ampara,Nadu,Maha,2795,112
+Badulla,Samba,Yala,757,121
+Ampara,Nadu,Maha,4586,111
+Badulla,Keeri Samba,Maha,4833,143
+Monaragala,Samba,Maha,1962,137
+Badulla,Keeri Samba,Yala,2730,128
+Ampara,Nadu,Maha,3312,117
+Ampara,Samba,Maha,2794,140
+Monaragala,Keeri Samba,Yala,535,136
+Monaragala,Keeri Samba,Yala,736,134
+Monaragala,Nadu,Maha,1156,109
+Badulla,Keeri Samba,Maha,3396,139
+Badulla,Nadu,Yala,2875,102
+Kandy,Samba,Maha,3228,128
+Badulla,Keeri Samba,Yala,4326,131
+Monaragala,Keeri Samba,Maha,2534,140
+Ampara,Keeri Samba,Maha,4485,142
+Ampara,Keeri Samba,Maha,4739,141
+Ampara,Nadu,Maha,1691,116
+Kandy,Nadu,Yala,1533,98
+Kandy,Keeri Samba,Yala,3427,132
+Ampara,Keeri Samba,Yala,3102,134
+Kandy,Samba,Yala,3043,123
+Kandy,Keeri Samba,Maha,3846,146
+Monaragala,Nadu,Maha,4995,116
+Monaragala,Nadu,Maha,2148,115
+Badulla,Keeri Samba,Yala,3673,126
+Ampara,Samba,Yala,867,124
+Badulla,Nadu,Maha,1007,113
+Badulla,Keeri Samba,Maha,1829,140
+Monaragala,Keeri Samba,Maha,1622,140
+Kandy,Keeri Samba,Yala,4890,135
+Kandy,Keeri Samba,Yala,4496,137
+Badulla,Samba,Yala,2982,116
+Monaragala,Keeri Samba,Yala,774,131
+Badulla,Nadu,Maha,2976,115
+Badulla,Samba,Maha,3736,129
+Badulla,Keeri Samba,Yala,4128,131
+Badulla,Samba,Yala,3606,125
+Monaragala,Nadu,Maha,3914,109
+Kandy,Nadu,Yala,2445,102
+Monaragala,Nadu,Maha,634,112
+Badulla,Samba,Maha,4938,126
+Monaragala,Nadu,Maha,1028,109
+Badulla,Keeri Samba,Maha,1710,142
+Badulla,Keeri Samba,Maha,4483,139
+Ampara,Nadu,Yala,3547,107
+Ampara,Keeri Samba,Maha,1855,142
+Monaragala,Keeri Samba,Yala,2455,132
+Monaragala,Keeri Samba,Yala,4838,128
+Monaragala,Keeri Samba,Maha,1811,139
+Ampara,Samba,Maha,2470,134
+Badulla,Nadu,Maha,2446,113
+Ampara,Samba,Maha,745,130
+Badulla,Keeri Samba,Yala,1442,131
+Monaragala,Nadu,Maha,4433,114
+Kandy,Samba,Maha,1957,132
+Monaragala,Keeri Samba,Maha,3036,142
+Kandy,Samba,Yala,3228,128
+Badulla,Nadu,Maha,3402,115
+Badulla,Samba,Maha,4039,136
+Kandy,Keeri Samba,Yala,3784,129
+Badulla,Samba,Maha,2899,134
+Ampara,Samba,Maha,1955,131
+Kandy,Nadu,Maha,4849,110
+Badulla,Keeri Samba,Yala,3899,129
+Kandy,Nadu,Maha,2019,113
+Badulla,Nadu,Maha,3270,109
+Badulla,Keeri Samba,Yala,3614,133
+Ampara,Keeri Samba,Yala,2684,140
+Badulla,Keeri Samba,Yala,1427,136
+Badulla,Nadu,Maha,2795,108
+Ampara,Keeri Samba,Yala,4904,133
+Kandy,Nadu,Maha,953,108
+Badulla,Nadu,Maha,1578,107
+Ampara,Samba,Maha,1975,137
+Ampara,Samba,Maha,797,135
+Kandy,Samba,Maha,1329,134
+Ampara,Nadu,Maha,2312,112
+Badulla,Keeri Samba,Yala,504,133
+Badulla,Samba,Maha,2351,132
+Badulla,Nadu,Maha,2900,109
+Ampara,Nadu,Maha,503,118
+Monaragala,Keeri Samba,Yala,710,127
+Ampara,Keeri Samba,Yala,2846,130
+Monaragala,Samba,Maha,3070,132
+Kandy,Keeri Samba,Maha,3627,140
+Monaragala,Nadu,Maha,3143,114
+Badulla,Keeri Samba,Yala,3685,136
+Monaragala,Samba,Yala,4318,126
+Badulla,Keeri Samba,Yala,1905,135
+Badulla,Keeri Samba,Maha,764,143
+Badulla,Keeri Samba,Maha,2889,143
+Kandy,Samba,Maha,2081,135
+Badulla,Nadu,Maha,2648,115
+Badulla,Samba,Maha,2596,133
+Ampara,Keeri Samba,Maha,2445,150
+Kandy,Samba,Maha,1086,133
+Ampara,Samba,Yala,2379,124
+Monaragala,Samba,Yala,4541,123
+Monaragala,Keeri Samba,Maha,2464,141
+Badulla,Nadu,Maha,515,115
+Monaragala,Keeri Samba,Maha,697,139
+Kandy,Samba,Yala,4940,123
+Ampara,Keeri Samba,Yala,3172,133
+Monaragala,Samba,Maha,4778,137
+Badulla,Keeri Samba,Yala,2957,132
+Badulla,Keeri Samba,Yala,1645,132
+Badulla,Samba,Yala,3109,121
+Monaragala,Keeri Samba,Maha,1455,146
+Ampara,Keeri Samba,Maha,3968,142
+Badulla,Samba,Maha,2575,130
+Monaragala,Keeri Samba,Maha,4157,139
+Badulla,Samba,Yala,3338,122
+Kandy,Keeri Samba,Yala,1951,132
+Kandy,Keeri Samba,Maha,4059,140
+Badulla,Samba,Maha,4620,132
+Kandy,Nadu,Yala,2580,108
+Kandy,Nadu,Yala,1841,102
+Ampara,Keeri Samba,Yala,4459,134
+Kandy,Keeri Samba,Maha,1461,145
+Ampara,Samba,Maha,2684,134
+Kandy,Nadu,Maha,632,115
+Ampara,Keeri Samba,Maha,2955,144
+Badulla,Keeri Samba,Yala,3258,127
+Badulla,Keeri Samba,Maha,4585,139
+Badulla,Samba,Maha,1392,127
+Ampara,Keeri Samba,Maha,4936,140
+Monaragala,Samba,Maha,4131,133
+Kandy,Samba,Maha,4098,135
+Ampara,Samba,Maha,1789,137
+Ampara,Keeri Samba,Maha,4114,140
+Ampara,Keeri Samba,Maha,1853,143
+Kandy,Samba,Yala,3450,121
+Ampara,Nadu,Maha,1864,114
+Badulla,Samba,Maha,3184,135
+Ampara,Nadu,Yala,2098,103
+Kandy,Keeri Samba,Yala,1660,128
+Kandy,Keeri Samba,Maha,2806,139
+Badulla,Samba,Maha,4885,131
+Monaragala,Nadu,Yala,4159,104
+Ampara,Samba,Yala,3541,124
+Kandy,Samba,Yala,3200,126
+Kandy,Nadu,Maha,3836,112
+Kandy,Samba,Maha,2857,137
+Monaragala,Keeri Samba,Yala,2110,137
+Kandy,Samba,Yala,4705,119
+Monaragala,Nadu,Maha,3290,116
+Badulla,Keeri Samba,Yala,2533,132
+Monaragala,Nadu,Yala,976,107
+Kandy,Samba,Yala,2118,125
+Kandy,Nadu,Maha,2228,111
+Monaragala,Keeri Samba,Maha,2700,142
+Badulla,Keeri Samba,Yala,4104,136
+Kandy,Keeri Samba,Yala,2902,129
+Badulla,Samba,Yala,2614,119
+Kandy,Nadu,Maha,2012,116
+Ampara,Nadu,Maha,4935,111
+Badulla,Nadu,Maha,1492,106
+Monaragala,Nadu,Yala,2881,101
+Ampara,Nadu,Yala,2536,104
+Ampara,Samba,Yala,4750,124
+Badulla,Nadu,Yala,3931,104
+Monaragala,Keeri Samba,Yala,3693,129
+Kandy,Nadu,Maha,3217,113
+Kandy,Nadu,Maha,4926,112
+Ampara,Nadu,Maha,1614,118
+Badulla,Samba,Maha,4125,127
+Ampara,Keeri Samba,Yala,1715,130
+Badulla,Nadu,Yala,777,105
+Ampara,Keeri Samba,Maha,990,141
+Monaragala,Keeri Samba,Yala,3247,127
+Monaragala,Nadu,Yala,4624,97
+Badulla,Nadu,Maha,3057,109
+Ampara,Nadu,Maha,1803,117
+Monaragala,Keeri Samba,Yala,3785,132
+Ampara,Keeri Samba,Yala,2556,137
+Badulla,Samba,Yala,2798,117
+Ampara,Keeri Samba,Yala,3496,136
+Badulla,Keeri Samba,Maha,2359,146
+Monaragala,Keeri Samba,Maha,3796,144
+Kandy,Keeri Samba,Yala,4534,132
+Monaragala,Keeri Samba,Maha,562,146
+Monaragala,Samba,Yala,2216,117
+Monaragala,Nadu,Maha,2012,111
+Kandy,Nadu,Maha,3025,108
+Kandy,Keeri Samba,Yala,1418,137
+Monaragala,Nadu,Maha,1695,110
+Monaragala,Keeri Samba,Yala,1669,130
+Monaragala,Nadu,Maha,569,117
+Monaragala,Samba,Maha,2851,135
+Ampara,Keeri Samba,Yala,1377,136
+Ampara,Keeri Samba,Maha,557,149
+Badulla,Keeri Samba,Yala,2010,130
+Monaragala,Samba,Yala,2246,124
+Ampara,Samba,Yala,2637,128
+Monaragala,Nadu,Maha,3733,117
+Monaragala,Nadu,Yala,614,103
+Monaragala,Keeri Samba,Yala,924,128
+Monaragala,Keeri Samba,Maha,3294,146
+Ampara,Keeri Samba,Maha,4244,144
+Ampara,Nadu,Yala,4046,109
+Kandy,Nadu,Yala,4623,101
+Kandy,Nadu,Maha,1194,114
+Badulla,Nadu,Yala,601,106
+Kandy,Nadu,Maha,1758,108
+Ampara,Samba,Maha,966,132
+Ampara,Samba,Yala,1095,120
+Kandy,Samba,Yala,1102,119
+Monaragala,Nadu,Maha,1764,112
+Monaragala,Keeri Samba,Yala,2265,137
+Kandy,Samba,Yala,1318,119
+Kandy,Nadu,Maha,3322,116
+Monaragala,Nadu,Yala,2748,104
+Badulla,Nadu,Maha,1653,115
+Kandy,Nadu,Maha,4542,111
+Kandy,Nadu,Yala,4176,98
+Badulla,Nadu,Yala,4419,98
+Ampara,Nadu,Maha,2370,115
+Kandy,Nadu,Maha,4995,114
+Monaragala,Samba,Maha,2417,127
+Ampara,Nadu,Yala,965,103
+Badulla,Nadu,Yala,2845,98
+Ampara,Samba,Yala,2051,125
+Ampara,Nadu,Yala,2513,103
+Monaragala,Keeri Samba,Maha,4531,141
+Ampara,Keeri Samba,Yala,2768,133
+Ampara,Samba,Maha,1109,132
+Badulla,Nadu,Yala,1995,104
+Ampara,Nadu,Yala,1459,108
+Badulla,Keeri Samba,Maha,764,145
+Monaragala,Keeri Samba,Maha,2261,143
+Ampara,Nadu,Yala,747,104
+Kandy,Nadu,Yala,4064,104
+Ampara,Keeri Samba,Yala,2944,136
+Badulla,Nadu,Maha,604,106
+Monaragala,Nadu,Maha,1843,113
+Ampara,Keeri Samba,Maha,4416,149
+Monaragala,Keeri Samba,Maha,2977,141
+Ampara,Keeri Samba,Maha,682,146
+Ampara,Samba,Maha,2796,134
+Monaragala,Keeri Samba,Maha,526,146
+Ampara,Nadu,Maha,544,114
+Badulla,Samba,Maha,1711,131
+Ampara,Keeri Samba,Yala,1977,135
+Badulla,Samba,Yala,3329,119
+Ampara,Keeri Samba,Maha,1633,142
+Badulla,Keeri Samba,Yala,2691,133
+Kandy,Nadu,Yala,4948,99
+Kandy,Keeri Samba,Maha,4295,140
+Badulla,Keeri Samba,Maha,2616,141
+Monaragala,Samba,Maha,3930,137
+Monaragala,Nadu,Yala,4658,106
+Ampara,Samba,Yala,3271,120
+Ampara,Samba,Maha,4179,138
+Kandy,Samba,Yala,1823,124
+Ampara,Samba,Yala,4430,123
+Kandy,Nadu,Yala,3644,100
+Kandy,Keeri Samba,Yala,4151,134
+Ampara,Samba,Maha,4271,135
+Ampara,Samba,Maha,3797,140
+Kandy,Nadu,Yala,1872,105
+Ampara,Keeri Samba,Maha,3230,142
+Monaragala,Samba,Maha,3968,130
+Badulla,Keeri Samba,Maha,1828,138
+Ampara,Keeri Samba,Yala,2228,130
+Ampara,Keeri Samba,Maha,3265,148
+Badulla,Keeri Samba,Yala,2218,129
+Monaragala,Samba,Maha,3849,134
+Kandy,Samba,Maha,3894,132
+Ampara,Nadu,Yala,4617,110
+Monaragala,Keeri Samba,Yala,3410,131
+Monaragala,Samba,Maha,3079,135
+Ampara,Samba,Maha,4318,130
+Kandy,Keeri Samba,Yala,2419,133
+Kandy,Samba,Yala,2922,118
+Kandy,Keeri Samba,Yala,3673,129
+Ampara,Keeri Samba,Yala,3560,137
+Monaragala,Nadu,Maha,1628,109
+Kandy,Samba,Maha,3995,128
+Ampara,Samba,Yala,4776,125
+Ampara,Keeri Samba,Yala,2174,139
+Monaragala,Keeri Samba,Yala,4071,136
+Kandy,Nadu,Maha,1918,110
+Ampara,Samba,Yala,1545,129
+Kandy,Keeri Samba,Yala,978,135
+Kandy,Samba,Yala,1782,128
+Kandy,Samba,Maha,4685,133
+Ampara,Samba,Maha,3765,139
+Kandy,Nadu,Maha,4469,115
+Ampara,Nadu,Maha,3546,114
+Badulla,Nadu,Maha,752,111
+Monaragala,Nadu,Yala,1668,101
+Badulla,Nadu,Maha,4523,111
+Ampara,Keeri Samba,Yala,867,137
+Ampara,Keeri Samba,Yala,520,137
+Ampara,Keeri Samba,Maha,4554,144
+Monaragala,Samba,Maha,4719,133
+Monaragala,Nadu,Maha,1424,107
+Monaragala,Keeri Samba,Maha,3921,141
+Monaragala,Keeri Samba,Maha,2416,144
+Monaragala,Samba,Yala,2082,121
+Ampara,Samba,Yala,629,120
+Monaragala,Samba,Yala,2877,122
+Badulla,Keeri Samba,Yala,4943,134
+Badulla,Samba,Maha,1224,134
+Ampara,Samba,Maha,1605,138
+Monaragala,Nadu,Maha,1253,110
+Kandy,Samba,Yala,1421,125
+Monaragala,Nadu,Maha,2204,112
+Badulla,Nadu,Yala,4563,106
+Kandy,Samba,Maha,4079,137
+Kandy,Nadu,Maha,914,111
+Kandy,Keeri Samba,Yala,2303,135
+Badulla,Nadu,Maha,3945,111
+Monaragala,Keeri Samba,Maha,1364,143
+Badulla,Samba,Yala,2006,116
+Kandy,Keeri Samba,Maha,3766,139
+Kandy,Nadu,Maha,1618,113
+Monaragala,Nadu,Maha,3707,109
+Ampara,Samba,Maha,3265,130
+Monaragala,Nadu,Yala,591,99
+Badulla,Samba,Yala,1653,117
+Monaragala,Samba,Maha,1044,128
+Monaragala,Samba,Yala,642,126
+Kandy,Nadu,Yala,3959,104
+Monaragala,Nadu,Maha,556,110
+Monaragala,Samba,Maha,1446,133
+Badulla,Samba,Yala,4246,119
+Kandy,Nadu,Maha,597,113
+Monaragala,Keeri Samba,Maha,868,146
+Monaragala,Keeri Samba,Yala,3710,135
+Badulla,Nadu,Maha,4286,116
+Kandy,Samba,Yala,3270,122
+Badulla,Samba,Maha,4780,129
+Kandy,Samba,Yala,4783,127
+Badulla,Samba,Yala,2480,118
+Kandy,Keeri Samba,Maha,1320,148
+Badulla,Nadu,Yala,2491,98
+Ampara,Nadu,Maha,1210,118
+Kandy,Nadu,Yala,4748,100
+Monaragala,Nadu,Maha,2782,117
+Kandy,Samba,Maha,1858,130
+Ampara,Keeri Samba,Maha,1197,144
+Ampara,Keeri Samba,Maha,4324,140
+Ampara,Samba,Maha,4498,136
+Monaragala,Keeri Samba,Maha,3082,144
+Ampara,Keeri Samba,Maha,1079,149
+Ampara,Nadu,Maha,3455,119
+Badulla,Samba,Maha,577,134
+Kandy,Samba,Yala,4972,128
+Monaragala,Samba,Maha,4727,130
+Kandy,Keeri Samba,Maha,4660,143
+Kandy,Keeri Samba,Maha,4477,139
+Ampara,Keeri Samba,Yala,2437,136
+Ampara,Nadu,Yala,1432,100
+Badulla,Samba,Maha,2340,131
+Monaragala,Nadu,Yala,1894,98
+Ampara,Keeri Samba,Maha,1981,141
+Badulla,Nadu,Maha,4730,107
+Ampara,Nadu,Yala,2088,105
+Kandy,Keeri Samba,Maha,4056,139
+Ampara,Keeri Samba,Maha,1191,147
+Kandy,Keeri Samba,Yala,1995,133
+Monaragala,Nadu,Yala,3255,102
+Monaragala,Nadu,Maha,1107,110
+Kandy,Keeri Samba,Maha,2033,143
+Badulla,Samba,Maha,4178,136
+Monaragala,Keeri Samba,Maha,3172,147
+Badulla,Samba,Maha,3569,133
+Monaragala,Keeri Samba,Yala,3507,133
+Kandy,Nadu,Maha,4400,118
+Monaragala,Keeri Samba,Yala,4733,134
+Badulla,Nadu,Yala,1633,105
+Kandy,Keeri Samba,Maha,2075,148
+Kandy,Samba,Maha,1401,130
+Badulla,Samba,Maha,4962,127
+Ampara,Samba,Maha,786,135
+Badulla,Nadu,Maha,1450,114
+Ampara,Nadu,Yala,1930,105
+Ampara,Keeri Samba,Yala,2571,132
+Badulla,Nadu,Yala,1234,98
+Ampara,Nadu,Yala,2646,100
+Monaragala,Samba,Maha,1111,136
+Monaragala,Samba,Maha,2215,134
+Kandy,Samba,Yala,1871,120
+Monaragala,Samba,Maha,2181,127
+Kandy,Samba,Yala,1182,128
+Badulla,Samba,Maha,4158,136
+Ampara,Samba,Yala,1011,123
+Kandy,Nadu,Yala,767,100
+Monaragala,Nadu,Maha,2256,117
+Badulla,Keeri Samba,Maha,4498,145
+Monaragala,Samba,Maha,710,133
+Ampara,Samba,Yala,2130,120
+Kandy,Samba,Maha,712,128
+Monaragala,Nadu,Maha,2385,109
+Kandy,Nadu,Yala,2781,106
+Kandy,Nadu,Yala,2537,103
+Ampara,Keeri Samba,Maha,2127,141
+Kandy,Samba,Yala,4824,119
+Badulla,Nadu,Maha,3872,113
+Kandy,Nadu,Maha,3624,117
+Monaragala,Keeri Samba,Yala,2882,130
+Badulla,Samba,Yala,3540,123
+Ampara,Nadu,Maha,1302,120
+Ampara,Samba,Yala,3366,128
+Monaragala,Samba,Yala,1827,127
+Kandy,Samba,Maha,2498,136
+Monaragala,Nadu,Yala,3532,97
+Ampara,Samba,Maha,943,130
+Ampara,Samba,Yala,4003,128
+Monaragala,Keeri Samba,Yala,3876,135
+Ampara,Nadu,Yala,4567,110
+Ampara,Samba,Yala,4338,122
+Badulla,Samba,Maha,4733,134
+Ampara,Nadu,Maha,2913,118
+Ampara,Nadu,Yala,2717,108
+Badulla,Samba,Yala,2958,122
+Kandy,Keeri Samba,Yala,3225,137
+Badulla,Samba,Yala,1445,117
+Ampara,Keeri Samba,Yala,3706,139
+Ampara,Nadu,Yala,3256,109
+Ampara,Samba,Maha,1758,135
+Kandy,Nadu,Yala,3601,105
+Ampara,Nadu,Yala,4747,104
+Badulla,Keeri Samba,Maha,4714,143
+Badulla,Keeri Samba,Maha,2612,140
+Ampara,Nadu,Yala,3540,107
+Ampara,Nadu,Yala,3334,100
+Monaragala,Keeri Samba,Maha,1183,146
+Badulla,Keeri Samba,Yala,4456,134
+Ampara,Keeri Samba,Yala,2891,135
+Kandy,Keeri Samba,Yala,1028,137
+Ampara,Keeri Samba,Yala,2592,138
+Badulla,Nadu,Yala,4588,106
+Badulla,Samba,Maha,3814,128
+Monaragala,Samba,Yala,3147,122
+Badulla,Samba,Yala,4629,116
+Ampara,Nadu,Yala,3616,109
+Kandy,Samba,Yala,3534,119
+Badulla,Nadu,Maha,3405,116
+Ampara,Samba,Maha,924,134
+Ampara,Keeri Samba,Yala,3305,139
+Monaragala,Keeri Samba,Maha,2144,139
+Kandy,Keeri Samba,Yala,2873,128
+Monaragala,Nadu,Yala,3501,101
+Badulla,Nadu,Yala,4133,96
+Kandy,Samba,Yala,4607,120
+Monaragala,Keeri Samba,Yala,2030,132
+Badulla,Keeri Samba,Yala,3676,136
+Monaragala,Samba,Yala,1608,120
+Ampara,Samba,Maha,3930,137
+Kandy,Nadu,Yala,4431,99
+Monaragala,Samba,Maha,964,133
+Ampara,Samba,Maha,4356,139
+Kandy,Samba,Maha,3548,131
+Badulla,Nadu,Yala,2029,100
+Monaragala,Keeri Samba,Yala,3691,133
+Kandy,Keeri Samba,Maha,3190,138
+Kandy,Samba,Maha,1633,128
+Monaragala,Nadu,Maha,648,112
+Kandy,Samba,Yala,1784,126
+Monaragala,Samba,Yala,1086,117
+Kandy,Nadu,Maha,3083,110
+Badulla,Nadu,Maha,3460,110
+Badulla,Keeri Samba,Yala,1221,134
+Kandy,Nadu,Yala,3217,108
+Monaragala,Samba,Yala,2253,125
+Kandy,Keeri Samba,Maha,608,146
+Ampara,Keeri Samba,Yala,4589,135
+Monaragala,Keeri Samba,Yala,2424,135
+Monaragala,Keeri Samba,Yala,2780,129
+Ampara,Keeri Samba,Yala,4324,131
+Monaragala,Keeri Samba,Maha,3269,147
+Monaragala,Nadu,Maha,1251,110
+Ampara,Nadu,Maha,3575,119
+Ampara,Samba,Yala,4184,130
+Ampara,Keeri Samba,Maha,3025,150
+Kandy,Keeri Samba,Yala,894,135
+Kandy,Keeri Samba,Yala,2488,135
+Badulla,Samba,Maha,2622,132
+Kandy,Nadu,Maha,503,110
+Badulla,Nadu,Maha,2725,106
+Kandy,Samba,Maha,3270,130
+Badulla,Keeri Samba,Yala,2030,128
+Ampara,Samba,Yala,1415,130
+Kandy,Keeri Samba,Maha,4207,143
+Monaragala,Samba,Maha,4703,134
+Ampara,Nadu,Yala,3294,103
+Ampara,Keeri Samba,Maha,1207,141
+Monaragala,Keeri Samba,Yala,1379,137
+Ampara,Nadu,Maha,954,117
+Ampara,Samba,Yala,3500,129
+Ampara,Samba,Yala,4821,122
+Badulla,Nadu,Maha,3285,113
+Monaragala,Nadu,Maha,3772,115
+Monaragala,Keeri Samba,Maha,2617,142
+Badulla,Samba,Yala,2508,119
+Monaragala,Keeri Samba,Yala,3520,128
+Monaragala,Keeri Samba,Yala,4826,137
+Monaragala,Keeri Samba,Yala,2098,127
+Ampara,Samba,Maha,666,133
+Badulla,Nadu,Maha,2548,108
+Monaragala,Samba,Maha,3059,135
+Ampara,Keeri Samba,Maha,1537,140
+Monaragala,Nadu,Yala,2700,97
+Ampara,Nadu,Yala,4440,101
+Monaragala,Nadu,Yala,3907,98
+Monaragala,Keeri Samba,Yala,3868,127
+Kandy,Samba,Maha,4377,134
+Ampara,Nadu,Maha,3502,112
+Kandy,Samba,Maha,4405,132
+Kandy,Keeri Samba,Maha,2430,147
+Kandy,Nadu,Yala,2025,102
+Monaragala,Nadu,Maha,2858,112
+Badulla,Keeri Samba,Maha,906,145
+Badulla,Keeri Samba,Yala,1229,131
+Badulla,Samba,Yala,3365,125
+Ampara,Nadu,Maha,1780,110
+Badulla,Keeri Samba,Yala,1891,129
+Badulla,Keeri Samba,Maha,3904,139
+Kandy,Keeri Samba,Maha,3976,145
+Ampara,Keeri Samba,Maha,4983,148
+Ampara,Nadu,Maha,1148,116
+Kandy,Samba,Maha,624,136
+Kandy,Samba,Maha,2690,130
+Kandy,Keeri Samba,Yala,3927,134
+Ampara,Keeri Samba,Maha,2625,146
+Kandy,Keeri Samba,Yala,3321,131
+Badulla,Samba,Yala,4975,125
+Ampara,Samba,Maha,2591,140
+Badulla,Keeri Samba,Maha,2505,142
+Kandy,Keeri Samba,Yala,4221,130
+Badulla,Nadu,Maha,1892,113
+Ampara,Keeri Samba,Maha,4074,145
+Ampara,Nadu,Yala,2085,107
+Ampara,Nadu,Yala,2218,104
+Badulla,Nadu,Maha,2444,108
+Kandy,Samba,Yala,4550,119
+Kandy,Nadu,Yala,2704,107
+Monaragala,Samba,Yala,3875,121
+Badulla,Keeri Samba,Yala,2684,133
+Ampara,Nadu,Maha,1791,110
+Monaragala,Samba,Maha,4501,133
+Monaragala,Keeri Samba,Maha,4477,144
+Ampara,Keeri Samba,Yala,4121,132
+Badulla,Keeri Samba,Yala,4817,136
+Badulla,Samba,Maha,1617,127
+Monaragala,Samba,Maha,4203,127
+Badulla,Nadu,Maha,3305,107
+Badulla,Samba,Yala,2820,118
+Monaragala,Samba,Yala,4318,121
+Badulla,Nadu,Maha,1947,112
+Ampara,Samba,Yala,4352,129
+Badulla,Samba,Yala,1537,122
+Ampara,Nadu,Maha,2861,112
+Kandy,Samba,Maha,3491,133
+Ampara,Nadu,Maha,1884,118
+Monaragala,Nadu,Yala,3269,104
+Ampara,Keeri Samba,Yala,2019,137
+Ampara,Keeri Samba,Yala,1865,131
+Badulla,Keeri Samba,Yala,3966,130
+Kandy,Keeri Samba,Yala,2150,128
+Ampara,Samba,Maha,1175,133
+Monaragala,Samba,Yala,3149,123
+Kandy,Nadu,Yala,2619,104
+Badulla,Samba,Maha,1074,136
+Monaragala,Keeri Samba,Yala,2555,128
+Monaragala,Keeri Samba,Yala,2359,137
+Badulla,Samba,Maha,4263,129
+Kandy,Samba,Maha,3741,131
+Kandy,Nadu,Yala,1283,106
+Ampara,Samba,Yala,2427,125
+Ampara,Keeri Samba,Maha,1421,142
+Badulla,Samba,Maha,1024,135
+Kandy,Nadu,Maha,2681,113
+Badulla,Keeri Samba,Maha,4319,137
+Ampara,Nadu,Yala,1559,103
+Badulla,Keeri Samba,Maha,3947,141
+Kandy,Keeri Samba,Maha,3369,143
+Kandy,Samba,Maha,2863,135
+Ampara,Nadu,Yala,787,110
+Kandy,Nadu,Maha,4080,109
+Kandy,Nadu,Yala,2867,103
+Kandy,Samba,Yala,4330,127
+Kandy,Samba,Maha,2363,134
+Badulla,Keeri Samba,Maha,4530,140
+Ampara,Nadu,Maha,2848,115
+Monaragala,Samba,Maha,3459,135
+Ampara,Keeri Samba,Maha,1396,142
+Badulla,Keeri Samba,Maha,3506,143
+Monaragala,Keeri Samba,Yala,645,132
+Badulla,Keeri Samba,Maha,2755,140
+Ampara,Keeri Samba,Maha,1530,142
+Ampara,Samba,Yala,2018,128
+Monaragala,Samba,Yala,1020,121
+Kandy,Nadu,Yala,2848,101
+Kandy,Samba,Yala,862,119
+Ampara,Nadu,Maha,3240,114
+Kandy,Keeri Samba,Yala,3839,134
+Badulla,Keeri Samba,Yala,4921,127
+Ampara,Keeri Samba,Yala,2509,133
+Kandy,Samba,Yala,2156,119
+Badulla,Keeri Samba,Maha,3521,139
+Ampara,Nadu,Maha,707,114
+Kandy,Nadu,Yala,2551,105
+Ampara,Samba,Yala,3581,125
+Kandy,Keeri Samba,Maha,4338,141
+Ampara,Samba,Maha,4765,138
+Badulla,Keeri Samba,Yala,1177,127
+Kandy,Samba,Yala,1097,126
+Badulla,Samba,Yala,809,121
+Kandy,Nadu,Maha,3878,114
+Badulla,Keeri Samba,Maha,4533,140
+Kandy,Samba,Maha,3155,132
+Ampara,Nadu,Yala,728,109
+Monaragala,Keeri Samba,Yala,1056,134
+Badulla,Keeri Samba,Yala,1433,133
+Ampara,Keeri Samba,Yala,3798,130
+Monaragala,Samba,Maha,1636,134
+Kandy,Nadu,Maha,2180,113
+Kandy,Nadu,Maha,1264,112
+Badulla,Nadu,Maha,3715,111
+Ampara,Keeri Samba,Yala,1396,140
+Ampara,Samba,Maha,4561,139
+Ampara,Samba,Yala,1422,121
+Badulla,Keeri Samba,Yala,2425,126
+Kandy,Nadu,Yala,558,98
+Ampara,Samba,Maha,3396,140
+Kandy,Nadu,Yala,4660,102
+Ampara,Keeri Samba,Maha,2718,150
+Kandy,Samba,Yala,2395,122
+Monaragala,Keeri Samba,Yala,4761,135
+Badulla,Samba,Maha,1884,132
+Kandy,Nadu,Yala,2216,100
+Badulla,Nadu,Yala,3851,104
+Ampara,Nadu,Maha,867,120
+Badulla,Keeri Samba,Maha,4127,137
+Badulla,Nadu,Yala,3459,105
+Kandy,Keeri Samba,Yala,1849,136
+Badulla,Keeri Samba,Maha,4198,137
+Monaragala,Keeri Samba,Maha,2098,139
+Badulla,Nadu,Maha,4745,111
+Ampara,Nadu,Yala,851,106
+Kandy,Nadu,Maha,604,116
+Kandy,Samba,Yala,3552,123
+Monaragala,Samba,Maha,4800,127
+Monaragala,Samba,Yala,3844,120
+Kandy,Samba,Maha,1227,138
+Ampara,Keeri Samba,Maha,842,149
+Monaragala,Nadu,Yala,3190,103
+Ampara,Nadu,Maha,2115,111
+Kandy,Nadu,Yala,3471,105
+Badulla,Nadu,Yala,3466,105
+Kandy,Samba,Maha,4924,134
+Monaragala,Samba,Yala,3319,127
+Monaragala,Nadu,Yala,3266,102
+Monaragala,Nadu,Maha,3186,113
+Badulla,Nadu,Yala,1658,104
+Badulla,Keeri Samba,Yala,3821,135
+Ampara,Samba,Yala,2487,123
+Monaragala,Samba,Maha,4120,131
+Ampara,Samba,Maha,4655,131
+Ampara,Samba,Maha,3279,130
+Kandy,Nadu,Maha,3324,114
+Ampara,Samba,Yala,3280,120
+Badulla,Samba,Maha,1139,133
+Monaragala,Nadu,Yala,3158,104
+Monaragala,Nadu,Yala,3071,107
+Kandy,Keeri Samba,Yala,4771,138
+Ampara,Keeri Samba,Maha,1398,147
+Monaragala,Nadu,Maha,919,111
+Monaragala,Keeri Samba,Maha,2689,137
+Monaragala,Samba,Yala,1605,127
+Badulla,Samba,Maha,4178,133
+Kandy,Keeri Samba,Yala,3490,132
+Kandy,Samba,Yala,4456,124
+Badulla,Keeri Samba,Maha,4631,137
+Kandy,Samba,Maha,4739,136
+Kandy,Samba,Maha,2436,138
+Ampara,Samba,Yala,4054,127
+Ampara,Nadu,Yala,3122,100
+Kandy,Nadu,Yala,2713,106
+Monaragala,Nadu,Maha,1924,114
+Kandy,Keeri Samba,Maha,4708,139
+Kandy,Samba,Yala,3688,119
+Badulla,Samba,Yala,690,119
+Badulla,Keeri Samba,Yala,4692,135
+Ampara,Samba,Maha,2051,135
+Badulla,Samba,Yala,576,122
+Badulla,Nadu,Maha,2161,110
+Badulla,Nadu,Maha,551,108
+Monaragala,Keeri Samba,Maha,1806,142
+Monaragala,Samba,Yala,3366,125
+Monaragala,Samba,Yala,1184,118
+Badulla,Nadu,Yala,1573,102
+Ampara,Samba,Yala,3494,127
+Kandy,Samba,Yala,720,124
+Badulla,Samba,Yala,1810,120
+Ampara,Samba,Yala,4674,130
+Monaragala,Nadu,Yala,791,98
+Monaragala,Keeri Samba,Maha,2528,138
+Monaragala,Keeri Samba,Yala,1548,137
+Ampara,Keeri Samba,Maha,1986,141
+Badulla,Keeri Samba,Yala,2989,135
+Monaragala,Samba,Maha,1169,135
+Monaragala,Samba,Yala,4938,123
+Ampara,Nadu,Yala,1424,106
+Ampara,Keeri Samba,Maha,4303,150
