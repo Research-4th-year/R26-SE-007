@@ -10,6 +10,7 @@ import {
   CreateRedistributionInput,
   DisasterQueryInput,
 } from '../utils/disaster.validators';
+import * as fabricService from './fabric.service';
 
 export class DisasterService {
 
@@ -60,6 +61,25 @@ export class DisasterService {
         },
       },
     });
+
+        try {
+  await fabricService.recordDisasterEvent({
+    id:                  disaster.id,
+    disasterType:        dto.disasterType.toString(),
+    affectedWarehouseId: dto.affectedWarehouseId,
+    estimatedLossTons:   dto.estimatedLossTons ?? 0,
+    description:         dto.description ?? '',
+    reportedById:        caller.sub,
+    occurredAt:          dto.occurredAt.toISOString(),
+  });
+  await prisma.disasterEvent.update({
+    where: { id: disaster.id },
+    data:  { blockchainTxId: `fabric:${disaster.id}` },
+  });
+  console.log(`[Fabric] Disaster event anchored: ${disaster.id}`);
+} catch (fabricErr) {
+  console.error('[Fabric] Failed to anchor disaster event:', fabricErr);
+}
 
     return disaster;
   }
@@ -258,6 +278,25 @@ export class DisasterService {
         disasterEvent:        { select: { id: true, disasterType: true, status: true } },
       },
     });
+
+    try {
+  await fabricService.issueRedistributionOrder({
+    id:                     order.id,
+    disasterEventId:        disasterId,
+    sourceWarehouseId:      dto.sourceWarehouseId,
+    destinationWarehouseId: disaster.affectedWarehouseId,
+    quantityTons:           dto.quantityTons,
+    compositeScore:         compositeScore,
+    issuedById:             caller.sub,
+  });
+  await prisma.redistributionOrder.update({
+    where: { id: order.id },
+    data:  { blockchainTxId: `fabric:${order.id}` },
+  });
+  console.log(`[Fabric] Redistribution order anchored: ${order.id}`);
+} catch (fabricErr) {
+  console.error('[Fabric] Failed to anchor redistribution order:', fabricErr);
+}
 
     // Auto-advance disaster to IN_PROGRESS if still OPEN
     if (disaster.status === DisasterStatus.OPEN) {

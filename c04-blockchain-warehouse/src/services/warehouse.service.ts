@@ -10,6 +10,7 @@ import {
   StockEventQueryInput,
 } from '../utils/warehouse.validators';
 import { JwtPayload } from '../types';
+import * as fabricService from './fabric.service';
 
 export class WarehouseService {
 
@@ -231,6 +232,26 @@ export class WarehouseService {
         warehouse:  { select: { id: true, name: true, code: true } },
       },
     });
+
+    try {
+  await fabricService.recordStockEvent({
+    id:           event.id,
+    warehouseId:  warehouseId,
+    eventType:    dto.eventType.toString(),
+    quantityTons: dto.quantityTons,
+    documentHash: documentHash,
+    reportedById: caller.sub,
+    notes:        dto.notes ?? '',
+  });
+  await prisma.stockEvent.update({
+    where: { id: event.id },
+    data:  { blockchainTxId: `fabric:${event.id}` },
+  });
+  console.log(`[Fabric] Stock event anchored: ${event.id}`);
+} catch (fabricErr) {
+  console.error('[Fabric] Failed to anchor stock event:', fabricErr);
+}
+
 
     // Return event with updated stock level
     const newStockLevel = await this.computeCurrentStock(warehouseId);
