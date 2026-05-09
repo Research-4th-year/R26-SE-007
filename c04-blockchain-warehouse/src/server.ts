@@ -1,7 +1,8 @@
 import { config } from './config/env';
 import { prisma } from './config/prisma';
 import app from './app';
- 
+import { disconnectFabric } from './services/fabric.service';
+
 const PORT = config.server.port;
  
 async function bootstrap() {
@@ -26,6 +27,9 @@ async function bootstrap() {
     server.close(async () => {
       await prisma.$disconnect();
       console.log('✅ Shutdown complete');
+      await disconnectFabric();
+      console.log('✅ Fabric gateway disconnected');
+
       process.exit(0);
     });
     setTimeout(() => process.exit(1), 10_000);

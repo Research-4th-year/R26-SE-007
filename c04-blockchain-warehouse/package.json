@@ -16,6 +16,8 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@grpc/grpc-js": "^1.14.3",
+    "@hyperledger/fabric-gateway": "^1.11.0",
     "@prisma/client": "^6.19.3",
     "axios": "^1.15.2",
     "bcryptjs": "^3.0.3",

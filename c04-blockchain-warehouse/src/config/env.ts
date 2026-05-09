@@ -27,4 +27,16 @@ export const config = {
     allowedOrigins: (process.env.ALLOWED_ORIGINS || 'http://localhost:5173').split(','),
   },
   gnn: { serviceUrl: process.env.GNN_SERVICE_URL || 'http://localhost:8000' },
+
+  fabric: {
+  peerEndpoint:  requireEnv('FABRIC_PEER_ENDPOINT'),
+  peerHostAlias: requireEnv('FABRIC_PEER_HOST_ALIAS'),
+  channelName:   requireEnv('FABRIC_CHANNEL_NAME'),
+  chaincodeName: requireEnv('FABRIC_CHAINCODE_NAME'),
+  mspId:         requireEnv('FABRIC_MSP_ID'),
+  certPath:      requireEnv('FABRIC_CERT_PATH'),
+  keyPath:       requireEnv('FABRIC_KEY_PATH'),
+  tlsCertPath:   requireEnv('FABRIC_TLS_CERT_PATH'),
+},
+
 } as const;
