@@ -40,7 +40,7 @@ millers_data = list(millers_collection.find())
 # ---------------------------
 # LOAD MODEL
 # ---------------------------
-# Keep stderr suppressed during model load as well if it outputs logs
+# Convert text into vectors
 sys.stderr = open(os.devnull, 'w')
 model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
 sys.stderr = old_stderr

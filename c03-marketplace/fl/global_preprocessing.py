@@ -5,17 +5,33 @@ import pickle
 import os
 
 
-def load_and_preprocess(path):
-
-    df = pd.read_csv(path)
+def preprocess_global_dataset():
 
     # =========================
-    # LABEL ENCODERS
+    # LOAD DATASET
+    # =========================
+
+    df = pd.read_csv("data/paddy_dataset.csv")
+
+    # =========================
+    # CLEAN TEXT
+    # =========================
+
+    df['district'] = df['district'].str.strip().str.lower()
+    df['paddyType'] = df['paddyType'].str.strip().str.lower()
+    df['season'] = df['season'].str.strip().str.lower()
+
+    # =========================
+    # CREATE ENCODERS
     # =========================
 
     le_district = LabelEncoder()
     le_paddy = LabelEncoder()
     le_season = LabelEncoder()
+
+    # =========================
+    # FIT ENCODERS
+    # =========================
 
     df['district'] = le_district.fit_transform(df['district'])
     df['paddyType'] = le_paddy.fit_transform(df['paddyType'])
@@ -26,7 +42,6 @@ def load_and_preprocess(path):
     # =========================
 
     X = df[['district', 'paddyType', 'season', 'quantity']]
-
     y = df['price']
 
     # =========================
@@ -35,10 +50,10 @@ def load_and_preprocess(path):
 
     scaler = StandardScaler()
 
-    X = scaler.fit_transform(X)
+    X_scaled = scaler.fit_transform(X)
 
     # =========================
-    # SAVE PREPROCESS OBJECTS
+    # SAVE PREPROCESSING
     # =========================
 
     os.makedirs("models", exist_ok=True)
@@ -52,4 +67,4 @@ def load_and_preprocess(path):
             "scaler": scaler
         }, f)
 
-    return X, y
+    return df, X_scaled, y

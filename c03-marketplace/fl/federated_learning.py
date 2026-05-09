@@ -1,20 +1,34 @@
 import os
 import pickle
 
-from preprocess import load_and_preprocess
+from global_preprocessing import preprocess_global_dataset
 from fl_client import FLClient
 from fl_server import FLServer
 
 
 # =========================
-# LOAD CLIENT DATASETS
+# GLOBAL PREPROCESSING
 # =========================
 
-X1, y1 = load_and_preprocess("clients/client_1.csv")
-X2, y2 = load_and_preprocess("clients/client_2.csv")
-X3, y3 = load_and_preprocess("clients/client_3.csv")
-X4, y4 = load_and_preprocess("clients/client_4.csv")
+df, X, y = preprocess_global_dataset()
 
+# =========================
+# SPLIT CLIENTS
+# =========================
+
+client1_idx = df[df['district'] == 0].index
+client2_idx = df[df['district'] == 1].index
+client3_idx = df[df['district'] == 2].index
+client4_idx = df[df['district'] == 3].index
+
+# =========================
+# CLIENT DATA
+# =========================
+
+X1, y1 = X[client1_idx], y.iloc[client1_idx]
+X2, y2 = X[client2_idx], y.iloc[client2_idx]
+X3, y3 = X[client3_idx], y.iloc[client3_idx]
+X4, y4 = X[client4_idx], y.iloc[client4_idx]
 
 # =========================
 # CREATE CLIENTS

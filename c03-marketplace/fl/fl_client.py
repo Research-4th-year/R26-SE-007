@@ -12,7 +12,7 @@ class FLClient:
         model = SGDRegressor(
             max_iter=1,
             learning_rate='constant',
-            eta0=0.0000001,
+            eta0=0.01,
             warm_start=True
         )
 
