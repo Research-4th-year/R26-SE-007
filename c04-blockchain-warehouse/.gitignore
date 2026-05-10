@@ -3,3 +3,7 @@ node_modules
 .env
 
 /generated/prisma
+
+# Fabric certificates and private keys (security-sensitive)
+fabric-wallet/
+fabric-samples/test-network/organizations/

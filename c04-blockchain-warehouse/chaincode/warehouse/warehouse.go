@@ -13,9 +13,6 @@ type WarehouseContract struct {
 	contractapi.Contract
 }
 
-// ── RecordStockEvent ───────────────────────────────────────────
-// Called by Node.js backend after writing a stock event to MySQL.
-// Anchors the event ID and document hash on the ledger.
 func (s *WarehouseContract) RecordStockEvent(
 	ctx contractapi.TransactionContextInterface,
 	id string,
@@ -26,7 +23,6 @@ func (s *WarehouseContract) RecordStockEvent(
 	reportedByID string,
 	notes string,
 ) error {
-	// Prevent duplicate entries
 	exists, err := s.assetExists(ctx, "SE_"+id)
 	if err != nil {
 		return err
@@ -35,7 +31,6 @@ func (s *WarehouseContract) RecordStockEvent(
 		return fmt.Errorf("stock event %s already recorded on ledger", id)
 	}
 
-	// Get the MSP ID of whoever submitted this transaction
 	mspID, err := ctx.GetClientIdentity().GetMSPID()
 	if err != nil {
 		return fmt.Errorf("failed to get MSP ID: %v", err)
@@ -50,7 +45,7 @@ func (s *WarehouseContract) RecordStockEvent(
 		DocumentHash:  documentHash,
 		ReportedByID:  reportedByID,
 		ReportedByMSP: mspID,
-		Timestamp:     time.Now().UTC().Format(time.RFC3339),
+		Timestamp:     s.getTxTimestamp(ctx),
 		Notes:         notes,
 	}
 
@@ -62,8 +57,6 @@ func (s *WarehouseContract) RecordStockEvent(
 	return ctx.GetStub().PutState("SE_"+id, assetJSON)
 }
 
-// ── RecordDisasterEvent ────────────────────────────────────────
-// Called when an RM reports a disaster through the Node.js API.
 func (s *WarehouseContract) RecordDisasterEvent(
 	ctx contractapi.TransactionContextInterface,
 	id string,
@@ -97,7 +90,7 @@ func (s *WarehouseContract) RecordDisasterEvent(
 		ReportedByID:        reportedByID,
 		ReportedByMSP:       mspID,
 		OccurredAt:          occurredAt,
-		Timestamp:           time.Now().UTC().Format(time.RFC3339),
+		Timestamp:           s.getTxTimestamp(ctx),
 	}
 
 	assetJSON, err := json.Marshal(asset)
@@ -108,11 +101,6 @@ func (s *WarehouseContract) RecordDisasterEvent(
 	return ctx.GetStub().PutState("DE_"+id, assetJSON)
 }
 
-// ── IssueRedistributionOrder ───────────────────────────────────
-// Called when an RM issues a redistribution order.
-// The rmSignature is a SHA-256 of the order data — in Phase 4
-// this becomes a real cryptographic signature from the RM's
-// Fabric enrollment certificate.
 func (s *WarehouseContract) IssueRedistributionOrder(
 	ctx contractapi.TransactionContextInterface,
 	id string,
@@ -136,7 +124,6 @@ func (s *WarehouseContract) IssueRedistributionOrder(
 		return fmt.Errorf("failed to get MSP ID: %v", err)
 	}
 
-	// Build a deterministic signature from the order fields
 	sigData := fmt.Sprintf("%s:%s:%s:%s:%.2f:%.4f",
 		id, disasterEventID, sourceWarehouseID,
 		destinationWarehouseID, quantityTons, compositeScore,
@@ -154,7 +141,7 @@ func (s *WarehouseContract) IssueRedistributionOrder(
 		IssuedByID:             issuedByID,
 		IssuedByMSP:            mspID,
 		RMSignature:            rmSignature,
-		Timestamp:              time.Now().UTC().Format(time.RFC3339),
+		Timestamp:              s.getTxTimestamp(ctx),
 	}
 
 	assetJSON, err := json.Marshal(asset)
@@ -165,10 +152,6 @@ func (s *WarehouseContract) IssueRedistributionOrder(
 	return ctx.GetStub().PutState("RO_"+id, assetJSON)
 }
 
-// ── RecordZKPVerification ──────────────────────────────────────
-// Records the result of a ZKP capacity proof verification.
-// The full proof JSON lives off-chain; only its hash and the
-// pass/fail result are stored on the ledger.
 func (s *WarehouseContract) RecordZKPVerification(
 	ctx contractapi.TransactionContextInterface,
 	id string,
@@ -191,9 +174,8 @@ func (s *WarehouseContract) RecordZKPVerification(
 		return fmt.Errorf("failed to get MSP ID: %v", err)
 	}
 
-	// Hash the proof and public signals — store fingerprints not full data
-	proofHash := fmt.Sprintf("%x", sha256.Sum256([]byte(proofJSON)))
-	signalsHash := fmt.Sprintf("%x", sha256.Sum256([]byte(publicSignalsJSON)))
+	proofHash    := fmt.Sprintf("%x", sha256.Sum256([]byte(proofJSON)))
+	signalsHash  := fmt.Sprintf("%x", sha256.Sum256([]byte(publicSignalsJSON)))
 
 	asset := ZKPProofAsset{
 		AssetType:          "ZKP_PROOF",
@@ -204,7 +186,7 @@ func (s *WarehouseContract) RecordZKPVerification(
 		PublicSignalsHash:  signalsHash,
 		VerificationResult: verificationResult,
 		VerifiedByMSP:      mspID,
-		Timestamp:          time.Now().UTC().Format(time.RFC3339),
+		Timestamp:          s.getTxTimestamp(ctx),
 	}
 
 	assetJSON, err := json.Marshal(asset)
@@ -215,7 +197,6 @@ func (s *WarehouseContract) RecordZKPVerification(
 	return ctx.GetStub().PutState("ZKP_"+id, assetJSON)
 }
 
-// ── QueryStockEvent ────────────────────────────────────────────
 func (s *WarehouseContract) QueryStockEvent(
 	ctx contractapi.TransactionContextInterface,
 	id string,
@@ -227,7 +208,6 @@ func (s *WarehouseContract) QueryStockEvent(
 	if data == nil {
 		return nil, fmt.Errorf("stock event %s not found on ledger", id)
 	}
-
 	var asset StockEventAsset
 	if err := json.Unmarshal(data, &asset); err != nil {
 		return nil, err
@@ -235,7 +215,6 @@ func (s *WarehouseContract) QueryStockEvent(
 	return &asset, nil
 }
 
-// ── QueryDisasterEvent ─────────────────────────────────────────
 func (s *WarehouseContract) QueryDisasterEvent(
 	ctx contractapi.TransactionContextInterface,
 	id string,
@@ -247,7 +226,6 @@ func (s *WarehouseContract) QueryDisasterEvent(
 	if data == nil {
 		return nil, fmt.Errorf("disaster event %s not found on ledger", id)
 	}
-
 	var asset DisasterEventAsset
 	if err := json.Unmarshal(data, &asset); err != nil {
 		return nil, err
@@ -255,7 +233,6 @@ func (s *WarehouseContract) QueryDisasterEvent(
 	return &asset, nil
 }
 
-// ── QueryRedistributionOrder ───────────────────────────────────
 func (s *WarehouseContract) QueryRedistributionOrder(
 	ctx contractapi.TransactionContextInterface,
 	id string,
@@ -267,7 +244,6 @@ func (s *WarehouseContract) QueryRedistributionOrder(
 	if data == nil {
 		return nil, fmt.Errorf("redistribution order %s not found on ledger", id)
 	}
-
 	var asset RedistributionOrderAsset
 	if err := json.Unmarshal(data, &asset); err != nil {
 		return nil, err
@@ -275,9 +251,6 @@ func (s *WarehouseContract) QueryRedistributionOrder(
 	return &asset, nil
 }
 
-// ── QueryWarehouseHistory ──────────────────────────────────────
-// Returns all stock events for a warehouse in chronological order.
-// Uses CouchDB rich query — works because the test-network uses CouchDB.
 func (s *WarehouseContract) QueryWarehouseHistory(
 	ctx contractapi.TransactionContextInterface,
 	warehouseID string,
@@ -305,13 +278,10 @@ func (s *WarehouseContract) QueryWarehouseHistory(
 	return results, nil
 }
 
-// ── QueryDisasterAuditTrail ────────────────────────────────────
-// Returns all on-chain records linked to a disaster event.
 func (s *WarehouseContract) QueryDisasterAuditTrail(
 	ctx contractapi.TransactionContextInterface,
 	disasterID string,
 ) (map[string]interface{}, error) {
-	// Get the disaster event itself
 	disasterData, err := ctx.GetStub().GetState("DE_" + disasterID)
 	if err != nil {
 		return nil, err
@@ -322,7 +292,6 @@ func (s *WarehouseContract) QueryDisasterAuditTrail(
 		json.Unmarshal(disasterData, &disaster)
 	}
 
-	// Get all redistribution orders for this disaster
 	roQuery := fmt.Sprintf(`{"selector":{"assetType":"REDISTRIBUTION_ORDER","disasterEventId":"%s"}}`, disasterID)
 	roIterator, err := ctx.GetStub().GetQueryResult(roQuery)
 	if err != nil {
@@ -338,7 +307,6 @@ func (s *WarehouseContract) QueryDisasterAuditTrail(
 		orders = append(orders, &asset)
 	}
 
-	// Get all ZKP proofs for this disaster
 	zkpQuery := fmt.Sprintf(`{"selector":{"assetType":"ZKP_PROOF","disasterEventId":"%s"}}`, disasterID)
 	zkpIterator, err := ctx.GetStub().GetQueryResult(zkpQuery)
 	if err != nil {
@@ -361,7 +329,16 @@ func (s *WarehouseContract) QueryDisasterAuditTrail(
 	}, nil
 }
 
-// ── Private helper ─────────────────────────────────────────────
+// getTxTimestamp uses the Fabric transaction timestamp — deterministic
+// across all peers, unlike time.Now() which caused endorsement mismatches.
+func (s *WarehouseContract) getTxTimestamp(ctx contractapi.TransactionContextInterface) string {
+	txTime, err := ctx.GetStub().GetTxTimestamp()
+	if err != nil {
+		return time.Now().UTC().Format(time.RFC3339)
+	}
+	return time.Unix(txTime.Seconds, int64(txTime.Nanos)).UTC().Format(time.RFC3339)
+}
+
 func (s *WarehouseContract) assetExists(
 	ctx contractapi.TransactionContextInterface,
 	key string,
