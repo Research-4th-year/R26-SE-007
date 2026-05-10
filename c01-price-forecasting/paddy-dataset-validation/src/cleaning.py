@@ -7,6 +7,6 @@ def clean_data(df):
 
     df = df.sort_values(by=['district', 'paddy_type', 'date'])
 
-    print("✔ Data sorted correctly for lag validation")
+    print(" Data sorted correctly for lag validation")
 
     return df

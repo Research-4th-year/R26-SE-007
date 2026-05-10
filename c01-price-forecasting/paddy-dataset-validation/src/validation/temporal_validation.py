@@ -11,7 +11,7 @@ def validate_temporal(df):
         expected = pd.date_range(
             temp['date'].min(),
             temp['date'].max(),
-            freq='W-THU'  # IMPORTANT (your data is weekly Thursday)
+            freq='W-THU'  # IMPORTANT - weekly Thursday
         )
 
         actual = temp['date']
@@ -28,10 +28,10 @@ def validate_temporal(df):
             })
 
             temp_df.to_csv(f"reports/missing_weeks_{district}.csv", index=False)
-            print(f"✔ Saved → reports/missing_weeks_{district}.csv")
+            print(f" Saved → reports/missing_weeks_{district}.csv")
 
         all_missing.extend(missing)
 
-    print(f"✔ Total missing time points: {len(all_missing)}")
+    print(f" Total missing time points: {len(all_missing)}")
 
     return df

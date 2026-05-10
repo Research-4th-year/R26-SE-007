@@ -49,5 +49,5 @@ statistical_checks(df)
 # Save cleaned version
 df.to_csv("data/final/validated_dataset.csv", index=False)
 
-print("\n[FINAL] Dataset validated successfully ✅")
+print("\n[FINAL] Dataset validated successfully")
 print("=====================================================")

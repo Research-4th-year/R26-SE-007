@@ -9,8 +9,8 @@ def check_missing(df):
 
         # Explain expected NaN
         if "price_t-" in col or "avg" in col:
-            print(f"✔ {col}: {val} ({percent:.2f}%) → Expected (lag/rolling)")
+            print(f" {col}: {val} ({percent:.2f}%) → Expected (lag/rolling)")
         else:
-            print(f"⚠ {col}: {val} ({percent:.2f}%) → Check")
+            print(f" {col}: {val} ({percent:.2f}%) → Check")
 
     return df

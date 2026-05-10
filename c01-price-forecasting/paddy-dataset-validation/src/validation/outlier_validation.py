@@ -10,6 +10,6 @@ def detect_outliers(df):
 
     outliers = df[(df['avg_price'] < lower) | (df['avg_price'] > upper)]
 
-    print(f"✔ Outliers detected: {len(outliers)}")
+    print(f" Outliers detected: {len(outliers)}")
 
     return df

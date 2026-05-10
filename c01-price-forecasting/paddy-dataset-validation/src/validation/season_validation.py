@@ -18,10 +18,10 @@ def validate_season(df):
 
     invalid = df[~df['season_valid']]
 
-    print(f"✔ Invalid season records: {len(invalid)}")
+    print(f" Invalid season records: {len(invalid)}")
 
     if len(invalid) > 0:
-        print("⚠ Sample invalid rows:")
+        print(" Sample invalid rows:")
         print(invalid[['date', 'district', 'season']].head())
 
     return df

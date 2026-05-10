@@ -3,7 +3,7 @@ def statistical_checks(df):
 
     corr = df[['avg_price', 'production_total']].corr()
 
-    print("✔ Correlation:")
+    print(" Correlation:")
     print(corr)
 
     return df
