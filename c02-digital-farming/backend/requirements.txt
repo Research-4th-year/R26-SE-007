@@ -1,0 +1,16 @@
+fastapi
+uvicorn
+scikit-learn
+pandas
+numpy
+tensorflow
+firebase-admin
+python-multipart
+joblib
+Pillow
+pydantic
+gradio
+matplotlib
+seaborn
+tf2onnx
+opencv-python

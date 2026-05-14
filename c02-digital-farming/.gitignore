@@ -1,0 +1,27 @@
+# General
+.DS_Store
+*.log
+__pycache__/
+*.pyc
+
+# Backend (Python)
+backend/venv/
+backend/.env
+backend/firebase_service_account.json
+backend/models/*.h5
+backend/models/*.pkl
+backend/models/*.joblib
+
+# Frontend (Node.js)
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+frontend/.env.local
+
+# Research Data
+datasets/
+researchPapers/
+
+# OS/IDE
+.vscode/
+.idea/
