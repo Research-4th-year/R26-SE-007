@@ -1,13 +1,18 @@
 import pickle
 import numpy as np
 import pandas as pd
+import sys
+import json
+import os
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+MODELS_DIR = os.path.join(BASE_DIR, "models")
 
 # =========================
 # LOAD GLOBAL MODEL
 # =========================
 
-with open("models/global_model.pkl", "rb") as f:
+with open(os.path.join(MODELS_DIR, "global_model.pkl"), "rb") as f:
 
     model_data = pickle.load(f)
 
@@ -19,7 +24,7 @@ bias = model_data["bias"]
 # LOAD PREPROCESSING
 # =========================
 
-with open("models/preprocessing.pkl", "rb") as f:
+with open(os.path.join(MODELS_DIR, "preprocessing.pkl"), "rb") as f:
 
     preprocess = pickle.load(f)
 
@@ -30,56 +35,86 @@ scaler = preprocess["scaler"]
 
 
 # =========================
-# USER INPUT
+# GET INPUT FROM NODE.JS
 # =========================
 
-district = "monaragala"
-paddy_type = "samba"
-season = "maha"
-quantity = 1000
+if len(sys.argv) < 5:
 
+    print(json.dumps({
+        "error": "Missing input parameters"
+    }))
 
-# =========================
-# ENCODE INPUT
-# =========================
+    sys.exit(1)
 
-district_encoded = district_encoder.transform([district])[0]
-
-paddy_encoded = paddy_encoder.transform([paddy_type])[0]
-
-season_encoded = season_encoder.transform([season])[0]
+district = sys.argv[1].strip().lower()
+paddy_type = sys.argv[2].strip().lower()
+season = sys.argv[3].strip().lower()
+quantity = float(sys.argv[4])
 
 
 # =========================
-# CREATE FEATURE ARRAY
+# PREDICTION
 # =========================
 
-X = pd.DataFrame([[
-    district_encoded,
-    paddy_encoded,
-    season_encoded,
-    quantity
-]], columns=[
-    "district",
-    "paddyType",
-    "season",
-    "quantity"
-])
+try:
 
-# =========================
-# SCALE INPUT
-# =========================
+    # =========================
+    # ENCODE INPUT
+    # =========================
 
-X_scaled = scaler.transform(X)
+    district_encoded = district_encoder.transform([district])[0]
+
+    paddy_encoded = paddy_encoder.transform([paddy_type])[0]
+
+    season_encoded = season_encoder.transform([season])[0]
 
 
-# =========================
-# PREDICT PRICE
-# =========================
+    # =========================
+    # CREATE FEATURE ARRAY
+    # =========================
 
-predicted_price = np.dot(X_scaled, weights) + bias
+    X = pd.DataFrame([[
+        district_encoded,
+        paddy_encoded,
+        season_encoded,
+        quantity
+    ]], columns=[
+        "district",
+        "paddyType",
+        "season",
+        "quantity"
+    ])
 
 
-print("\n===== PRICE PREDICTION =====")
+    # =========================
+    # SCALE INPUT
+    # =========================
 
-print(f"Predicted Price: Rs.{predicted_price[0]:.2f}")
+    X_scaled = scaler.transform(X)
+
+
+    # =========================
+    # PREDICT PRICE
+    # =========================
+
+    predicted_price = np.dot(X_scaled, weights) + bias
+
+
+    # =========================
+    # RETURN JSON
+    # =========================
+
+    output = {
+        "predictedPrice": round(float(predicted_price[0]), 2)
+    }
+
+    print(json.dumps(output))
+
+
+except Exception as e:
+
+    print(json.dumps({
+        "error": str(e)
+    }))
+
+    sys.exit(1)
