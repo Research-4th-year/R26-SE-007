@@ -271,7 +271,7 @@ export class DisasterService {
         compositeScore,
         issuedById:            caller.sub,
       },
-      include: {
+      include: { 
         sourceWarehouse:      { select: { id: true, name: true, code: true, district: true } },
         destinationWarehouse: { select: { id: true, name: true, code: true, district: true } },
         issuedBy:             { select: { id: true, fullName: true, role: true } },

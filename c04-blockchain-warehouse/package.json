@@ -33,6 +33,7 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
+    "@tsconfig/node20": "^20.1.9",
     "@types/bcryptjs": "^2.4.6",
     "@types/cookie-parser": "^1.4.10",
     "@types/cors": "^2.8.19",
