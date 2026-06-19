@@ -8,6 +8,7 @@ const farmerRoutes = require('./routes/farmer.routes');
 const harvestRoutes = require('./routes/harvest.routes');
 const matchingRoutes = require('./routes/matching.routes');
 const millerDemandRoutes = require('./routes/millerDemand.routes');
+const flRoutes = require('./routes/fl.routes');
 
 const app = express();
 
@@ -28,6 +29,7 @@ app.use('/api/farmers', farmerRoutes);
 app.use('/api/harvests', harvestRoutes);
 app.use('/api/matching', matchingRoutes);
 app.use('/api/miller-demand', millerDemandRoutes);
+app.use('/api/fl', flRoutes);
 
 
 // send back a 404 error for any unknown api request
