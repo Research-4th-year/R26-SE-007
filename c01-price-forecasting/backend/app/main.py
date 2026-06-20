@@ -1,18 +1,11 @@
 from fastapi import FastAPI # type: ignore
 
+from app.api.routes import router
+
 app = FastAPI(
     title="Digital Goviya Price Forecasting API",
     description="AI-powered paddy price forecasting API",
-    version="1.0.0",
-    docs_url="/docs",
-    redoc_url="/redoc"
+    version="1.0.0"
 )
 
-
-@app.get("/", tags=["Health"])
-def root():
-    return {
-        "message": "Digital Goviya Backend is Running",
-        "version": "1.0.0",
-        "status": "Healthy"
-    }
+app.include_router(router)
