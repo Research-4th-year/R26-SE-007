@@ -1,5 +1,6 @@
 from fastapi import APIRouter # type: ignore
 from app.services.model_loader import model_loader
+from app.services.data_loader import data_loader
 
 router = APIRouter()
 
@@ -39,4 +40,16 @@ def model_status():
         "model": model_loader.get_model().__class__.__name__,
         "feature_count": model_loader.get_feature_count(),
         "features": model_loader.get_feature_names()
+    }
+
+
+@router.get("/dataset")
+def dataset_status():
+
+    df = data_loader.get_data()
+
+    return {
+        "rows": len(df),
+        "columns": len(df.columns),
+        "districts": sorted(df["district"].unique().tolist())
     }
