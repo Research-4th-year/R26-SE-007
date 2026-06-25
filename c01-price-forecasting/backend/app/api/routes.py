@@ -1,6 +1,10 @@
 from fastapi import APIRouter # type: ignore
+from fastapi import Body # type: ignore
 from app.services.model_loader import model_loader
 from app.services.data_loader import data_loader
+from app.services.feature_service import feature_service
+from app.schemas.prediction import PredictionRequest
+from app.services.prediction_service import prediction_service
 
 router = APIRouter()
 
@@ -25,11 +29,12 @@ def health():
 
 
 @router.post("/predict")
-def predict():
+def predict(request: PredictionRequest):
 
-    return {
-        "message": "Prediction endpoint is under development."
-    }
+    return prediction_service.predict(
+        request.district,
+        request.date
+    )
 
 
 @router.get("/model")
@@ -53,3 +58,13 @@ def dataset_status():
         "columns": len(df.columns),
         "districts": sorted(df["district"].unique().tolist())
     }
+
+@router.get("/features")
+def test_features():
+
+    features = feature_service.create_features(
+        district="Anuradhapura",
+        input_date="2025-01-05"
+    )
+
+    return features.to_dict(orient="records")[0]
