@@ -12,6 +12,7 @@ import disasterRoutes  from './routes/disaster.routes';
 import documentRoutes  from './routes/document.routes';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.middleware';
 import blockchainRoutes from './routes/blockchain.routes';
+import zkpRoutes from './routes/zkp.routes';
 
 const app = express();
 
@@ -77,6 +78,7 @@ app.use('/api/warehouses', warehouseRoutes);
 app.use('/api/disasters',  disasterRoutes);
 app.use('/api/documents',  documentRoutes);
 app.use('/api/blockchain', blockchainRoutes);
+app.use('/api/zkp', zkpRoutes);
 
 // ── 404 & error handling ───────────────────────────────────────
 app.use(notFoundHandler);
