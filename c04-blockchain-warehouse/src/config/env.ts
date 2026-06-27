@@ -38,5 +38,10 @@ export const config = {
   keyPath:       requireEnv('FABRIC_KEY_PATH'),
   tlsCertPath:   requireEnv('FABRIC_TLS_CERT_PATH'),
 },
+zkp: {
+  wasmPath: requireEnv('ZKP_WASM_PATH'),
+  zkeyPath: requireEnv('ZKP_ZKEY_PATH'),
+  vkeyPath: requireEnv('ZKP_VKEY_PATH'),
+},
 
 } as const;
