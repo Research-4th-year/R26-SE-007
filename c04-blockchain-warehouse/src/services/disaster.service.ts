@@ -160,7 +160,8 @@ export class DisasterService {
         disaster.affectedWarehouseId,
         disaster.affectedWarehouse.latitude,
         disaster.affectedWarehouse.longitude,
-        disaster.estimatedLossTons ?? 0
+        disaster.estimatedLossTons ?? 0,
+        disaster.id
       );
     }
 
@@ -448,7 +449,8 @@ export class DisasterService {
     affectedWarehouseId: string,
     affectedLat: number,
     affectedLon: number,
-    requiredTons: number
+    requiredTons: number,
+    disasterId: string 
   ): Promise<RankedWarehouse[]> {
     // Get all active warehouses except the affected one
     const candidates = await prisma.warehouse.findMany({
@@ -474,6 +476,14 @@ export class DisasterService {
         const compositeScore = computeRankingScore(distanceKm, availableTons, wh.capacityTons, reliability);
         const canFulfil      = availableTons >= requiredTons;
 
+const zkpProof = await prisma.zKPProof.findFirst({
+  where: {
+    warehouseId:        wh.id,
+    disasterEventId:    disasterId, // pass disasterId through
+    verificationResult: true,
+  },
+});
+
         return {
           warehouseId:      wh.id,
           name:             wh.name,
@@ -488,7 +498,9 @@ export class DisasterService {
           reliabilityScore: reliability,
           compositeScore:   Math.round(compositeScore * 1000) / 1000,
           canFulfil,
-          zkpVerified:      false, // will be true after Phase 4 ZKP submission
+          // zkpVerified:      false,
+          zkpVerified:      !!zkpProof,
+
         };
       })
     );
