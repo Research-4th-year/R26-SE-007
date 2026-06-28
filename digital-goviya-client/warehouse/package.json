@@ -8,7 +8,7 @@
     "@tanstack/react-query": "^5.101.2",
     "axios": "^1.18.1",
     "babel-preset-expo": "^57.0.1",
-    "expo": "~57.0.2",
+    "expo": "~57.0.8",
     "expo-constants": "~57.0.3",
     "expo-document-picker": "~57.0.0",
     "expo-linking": "~57.0.1",
@@ -16,9 +16,11 @@
     "expo-router": "~57.0.3",
     "expo-status-bar": "~57.0.0",
     "react": "19.2.3",
+    "react-dom": "19.2.3",
     "react-native": "0.86.0",
     "react-native-safe-area-context": "~5.7.0",
     "react-native-screens": "4.25.2",
+    "react-native-web": "^0.21.2",
     "react-native-worklets": "^0.10.1"
   },
   "devDependencies": {

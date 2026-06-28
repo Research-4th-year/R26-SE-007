@@ -13,6 +13,23 @@ class PredictionService:
         input_date: str
     ):
 
+        prediction, _ = self.predict_with_features(
+            district,
+            input_date
+        )
+
+        return {
+            "district": district,
+            "date": input_date,
+            "predicted_price": round(float(prediction), 2)
+        }
+    
+    def predict_with_features(
+        self,
+        district: str,
+        input_date: str
+    ):
+
         X = feature_service.create_features(
             district,
             input_date
@@ -20,11 +37,7 @@ class PredictionService:
 
         prediction = self.model.predict(X)[0]
 
-        return {
-            "district": district,
-            "date": input_date,
-            "predicted_price": round(float(prediction), 2)
-        }
+        return prediction, X
 
 
 prediction_service = PredictionService()
