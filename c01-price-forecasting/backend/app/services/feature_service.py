@@ -3,6 +3,7 @@ import pandas as pd
 
 from app.services.data_loader import data_loader
 from app.services.model_loader import model_loader
+from app.core.exceptions import FeatureGenerationException
 
 
 class FeatureService:
@@ -46,8 +47,8 @@ class FeatureService:
         )
 
         if len(history) < 12:
-            raise ValueError(
-                f"Not enough historical data for {district}."
+            raise FeatureGenerationException(
+                "Not enough historical records to generate prediction features."
             )
 
         last = history.iloc[-1]

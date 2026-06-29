@@ -15,6 +15,7 @@ from app.xai.recommendation import (
     assess_risk,
 )
 from app.xai.summary import generate_summary
+from app.core.exceptions import PredictionException
 
 class ExplanationService:
 
@@ -24,51 +25,59 @@ class ExplanationService:
 
     def explain(self, district: str, input_date: str):
 
-        prediction, X = prediction_service.predict_with_features(
-            district,
-            input_date
-        )
+        try:
+            prediction, X = prediction_service.predict_with_features(
+                district,
+                input_date
+            )
 
-        previous_price = X["lag_1"].values[0]
+            previous_price = X["lag_1"].values[0]
 
-        shap_values = self.explainer.shap_values(X)
+            shap_values = self.explainer.shap_values(X)
 
-        if isinstance(shap_values, list):
-            shap_values = shap_values[0]
+            if isinstance(shap_values, list):
+                shap_values = shap_values[0]
 
-        shap_values = np.asarray(shap_values).reshape(-1)
+            shap_values = np.asarray(shap_values).reshape(-1)
 
-        explanation = self.generate_explanation(
-            X,
-            prediction,
-            previous_price,
-            shap_values
-        )
+            explanation = self.generate_explanation(
+                X,
+                prediction,
+                previous_price,
+                shap_values
+            )
 
-        explanation["market_outlook"] = generate_market_outlook(
-            explanation["trend"],
-            
-        )
+            explanation["market_outlook"] = generate_market_outlook(
+                explanation["trend"],
+                
+            )
 
-        explanation["recommendation"] = generate_recommendation(
-            explanation["trend"],
-            explanation["confidence"]
-        )
+            explanation["recommendation"] = generate_recommendation(
+                explanation["trend"],
+                explanation["confidence"]
+            )
 
-        explanation["risk_level"] = assess_risk(
-            explanation["trend"],
-            explanation["confidence"]
-        )
+            explanation["risk_level"] = assess_risk(
+                explanation["trend"],
+                explanation["confidence"]
+            )
 
-        explanation["summary"] = generate_summary(
-            explanation
-        )
+            explanation["summary"] = generate_summary(
+                explanation
+            )
 
-        return {
-            "district": district,
-            "date": input_date,
-            **explanation
-        }
+            return {
+                "district": district,
+                "date": input_date,
+                **explanation
+            }
+
+        except Exception as e:
+
+            raise PredictionException(
+                f"Failed to generate explaination: {str(e)}"
+            ) from e
+
     
     def generate_explanation(self, 
                             sample,

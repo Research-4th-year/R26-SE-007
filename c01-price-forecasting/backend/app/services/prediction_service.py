@@ -1,6 +1,6 @@
 from app.services.feature_service import feature_service
 from app.services.model_loader import model_loader
-
+from app.core.exceptions import PredictionException
 
 class PredictionService:
 
@@ -30,14 +30,22 @@ class PredictionService:
         input_date: str
     ):
 
-        X = feature_service.create_features(
-            district,
-            input_date
-        )
+        try:
 
-        prediction = self.model.predict(X)[0]
+            X = feature_service.create_features(
+                district,
+                input_date
+            )
 
-        return prediction, X
+            prediction = self.model.predict(X)[0]
+
+            return prediction, X
+
+        except Exception as e:
+
+            raise PredictionException(
+                f"Prediction failed: {str(e)}"
+            ) from e
 
 
 prediction_service = PredictionService()

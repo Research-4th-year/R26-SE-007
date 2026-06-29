@@ -1,6 +1,7 @@
 import joblib
 
 from app.core.config import MODEL_PATH
+from app.core.exceptions import ModelException
 
 
 class ModelLoader:
@@ -12,8 +13,8 @@ class ModelLoader:
     def load_model(self):
 
         if not MODEL_PATH.exists():
-            raise FileNotFoundError(
-                f"Model not found: {MODEL_PATH}"
+            raise ModelException(
+                "Prediction model could not be loaded."
             )
 
         self.model = joblib.load(MODEL_PATH)

@@ -4,8 +4,11 @@ from app.services.model_loader import model_loader
 from app.services.data_loader import data_loader
 from app.services.feature_service import feature_service
 from app.schemas.prediction import PredictionRequest
-from app.services.prediction_service import prediction_service
 from app.services.explanation_service import explanation_service
+from app.schemas.prediction import (
+    PredictionRequest,
+    PredictionResponse
+)
 
 router = APIRouter()
 
@@ -29,7 +32,10 @@ def health():
     }
 
 
-@router.post("/predict")
+@router.post(
+    "/predict",
+    response_model=PredictionResponse
+)
 def predict(request: PredictionRequest):
 
     return explanation_service.explain(
