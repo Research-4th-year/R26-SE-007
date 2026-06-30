@@ -5,9 +5,12 @@ from app.services.data_loader import data_loader
 from app.services.feature_service import feature_service
 from app.schemas.prediction import PredictionRequest
 from app.services.explanation_service import explanation_service
+from app.services.forecasting_service import forecasting_service
 from app.schemas.prediction import (
     PredictionRequest,
-    PredictionResponse
+    PredictionResponse,
+    ForecastRequest,
+    ForecastResponse
 )
 
 router = APIRouter()
@@ -42,6 +45,25 @@ def predict(request: PredictionRequest):
         request.district,
         request.date
     )
+
+@router.post(
+    "/forecast",
+    response_model=ForecastResponse
+)
+def forecast(request: ForecastRequest):
+
+    forecasts = forecasting_service.forecast(
+        district=request.district,
+        start_date=request.date,
+        weeks=request.weeks
+    )
+
+    return {
+        "district": request.district,
+        "start_date": request.date,
+        "weeks": request.weeks,
+        "forecast": forecasts
+    }
 
 
 @router.get("/model")
