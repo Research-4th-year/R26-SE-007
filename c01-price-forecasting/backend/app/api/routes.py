@@ -66,6 +66,15 @@ def forecast(request: ForecastRequest):
     }
 
 
+@router.get("/forecast/info")
+def forecast_info():
+
+    return {
+        "latest_dataset_date":
+            forecasting_service.get_latest_dataset_date()
+    }
+
+
 @router.get("/model")
 def model_status():
 

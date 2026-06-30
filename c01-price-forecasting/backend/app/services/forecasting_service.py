@@ -5,6 +5,8 @@ from datetime import timedelta
 from app.services.data_loader import data_loader
 from app.services.model_loader import model_loader
 from app.services.feature_service import feature_service
+from app.core.exceptions import FeatureGenerationException
+
 
 class ForecastingService:
 
@@ -14,6 +16,14 @@ class ForecastingService:
 
         self.df = data_loader.get_data().copy()
 
+    def get_latest_dataset_date(self):
+
+        return (
+            pd.to_datetime(self.df["date"])
+            .max()
+            .strftime("%Y-%m-%d")
+        )
+
     def forecast(
         self,
         district: str,
@@ -21,79 +31,111 @@ class ForecastingService:
         weeks: int = 8
     ):
 
-        start_date = pd.to_datetime(start_date)
+        try:
 
-        df_future = self.df.copy()
+            start_date = pd.to_datetime(start_date)
 
-        forecasts = []
+            today = pd.Timestamp.now().normalize()
 
-        current_date = start_date
+            last_dataset_date = pd.to_datetime(
+                self.df["date"]
+            ).max().normalize()
 
-        for week in range(weeks):
+            if start_date < today:
+                raise FeatureGenerationException(
+                    "Forecasting is only available for today or future dates."
+                )
 
-            # Create features
-            X = feature_service.create_features(
-                district,
-                current_date,
-                df_future
-            )
+            if start_date <= last_dataset_date:
+                raise FeatureGenerationException(
+                    f"Forecasting must start after the latest available dataset date ({last_dataset_date.strftime('%Y-%m-%d')})."
+                )
 
-            # Predict
-            prediction = float(
-                self.model.predict(X)[0]
-            )
+            df_future = self.df.copy()
 
-            # Save result
-            forecasts.append({
+            forecasts = []
 
-                "week": week + 1,
+            current_date = start_date
 
-                "date": current_date.strftime("%Y-%m-%d"),
-
-                "predicted_price": round(prediction, 2)
-
-            })
-
-            # Append new row
-            new_row = {
-
-                "date": current_date,
-
-                "district": district,
-
-                "avg_price": prediction
-            }
-
+            # Validate that enough historical data exists
             history = df_future[
-                df_future["district"] == district
+                (df_future["district"] == district)
+                &
+                (df_future["date"] < start_date)
             ].sort_values("date")
 
-            last = history.iloc[-1]
+            if len(history) < 12:
+                raise FeatureGenerationException(
+                    "Not enough historical data for forecasting."
+                )
 
-            new_row["min_price"] = last["min_price"]
+            for week in range(weeks):
 
-            new_row["max_price"] = last["max_price"]
+                # Create features
+                X = feature_service.create_features(
+                    district,
+                    current_date,
+                    df_future
+                )
 
-            new_row["production_total"] = last["production_total"]
+                # Predict
+                prediction = float(
+                    self.model.predict(X)[0]
+                )
 
-            new_row["season_Yala"] = last["season_Yala"]
+                # Save forecast
+                forecasts.append({
 
-            new_row["price_range"] = last["price_range"]
+                    "week": week + 1,
 
-            df_future = pd.concat(
-                [
-                    df_future,
-                    pd.DataFrame([new_row])
-                ],
-                ignore_index=True
-            )
+                    "date": current_date.strftime("%Y-%m-%d"),
 
-            df_future = df_future.sort_values("date")
+                    "predicted_price": round(prediction, 2)
 
-            # Move to next week
-            current_date += timedelta(days=7)
+                })
 
-        return forecasts
+                # Get latest available record
+                history = df_future[
+                    (df_future["district"] == district)
+                    &
+                    (df_future["date"] < current_date)
+                ].sort_values("date")
 
+                last = history.iloc[-1].copy()
 
+                # Create new predicted row
+                new_row = last.copy()
+
+                new_row["date"] = current_date
+
+                new_row["avg_price"] = prediction
+
+                # Append prediction back into dataset
+                df_future = pd.concat(
+                    [
+                        df_future,
+                        pd.DataFrame([new_row])
+                    ],
+                    ignore_index=True
+                )
+
+                df_future = (
+                    df_future
+                    .sort_values("date")
+                    .reset_index(drop=True)
+                )
+
+                # Next forecast week
+                current_date += timedelta(days=7)
+
+            return forecasts
+
+        except FeatureGenerationException:
+            raise
+
+        except Exception as e:
+            raise FeatureGenerationException(
+                f"Forecast generation failed: {str(e)}"
+            ) from e
+        
 forecasting_service = ForecastingService()
