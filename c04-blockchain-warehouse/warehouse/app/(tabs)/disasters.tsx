@@ -1,0 +1,192 @@
+import { useEffect, useState } from "react";
+import {
+  View, Text, ScrollView, TouchableOpacity,
+  ActivityIndicator, RefreshControl, Alert, StyleSheet
+} from "react-native";
+import { router } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { disasterService, Disaster } from "../../services/disaster.service";
+import { COLORS, getStatusColors, DISASTER_ICONS } from "../../constants/theme";
+
+const FILTERS: (string | undefined)[] = [undefined, "OPEN", "IN_PROGRESS", "RESOLVED"];
+
+export default function DisastersScreen() {
+  const [disasters, setDisasters]   = useState<Disaster[]>([]);
+  const [loading, setLoading]       = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [filter, setFilter]         = useState<string | undefined>(undefined);
+
+  const load = async () => {
+    try {
+      const data = await disasterService.listDisasters(filter);
+      setDisasters(data);
+    } catch {
+      Alert.alert("Error", "Failed to load disasters");
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(() => { load(); }, [filter]);
+
+  const onRefresh = () => { setRefreshing(true); load(); };
+
+  if (loading) {
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.screen}>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Disaster Events</Text>
+        <Text style={styles.headerSubtitle}>PMB Warehouse Network</Text>
+      </View>
+
+      {/* Filter tabs */}
+      <View style={styles.filterRow}>
+        {FILTERS.map((s) => {
+          const active = filter === s;
+          return (
+            <TouchableOpacity
+              key={s ?? "ALL"}
+              onPress={() => setFilter(s)}
+              style={[styles.filterChip, active && styles.filterChipActive]}
+            >
+              <Text style={[styles.filterChipText, active && styles.filterChipTextActive]}>
+                {s ?? "All"}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+
+      <ScrollView
+        style={styles.list}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+      >
+        <View style={styles.listContent}>
+          {disasters.length === 0 ? (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyIcon}>✅</Text>
+              <Text style={styles.emptyTitle}>No disasters found</Text>
+              <Text style={styles.emptySubtitle}>
+                {filter ? `No ${filter.toLowerCase()} disasters` : "All clear"}
+              </Text>
+            </View>
+          ) : (
+            disasters.map((d) => {
+              const status = getStatusColors(d.status);
+              return (
+                <TouchableOpacity
+                  key={d.id}
+                  style={styles.card}
+                  onPress={() => router.push(`/disaster/${d.id}`)}
+                >
+                  <View style={styles.cardHeader}>
+                    <View style={styles.cardHeaderLeft}>
+                      <Text style={styles.disasterIcon}>{DISASTER_ICONS[d.disasterType] ?? "⚠️"}</Text>
+                      <View style={styles.cardHeaderInfo}>
+                        <Text style={styles.disasterType}>{d.disasterType.replace("_", " ")}</Text>
+                        <Text style={styles.warehouseName}>{d.affectedWarehouse.name}</Text>
+                        <Text style={styles.warehouseDistrict}>{d.affectedWarehouse.district}</Text>
+                      </View>
+                    </View>
+                    <View style={[styles.statusBadge, { backgroundColor: status.bg }]}>
+                      <Text style={[styles.statusBadgeText, { color: status.text }]}>
+                        {d.status.replace("_", " ")}
+                      </Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.cardFooter}>
+                    <View style={styles.cardFooterItem}>
+                      <Text style={styles.footerLabel}>Estimated Loss</Text>
+                      <Text style={styles.footerValue}>{d.estimatedLossTons ?? "—"} tons</Text>
+                    </View>
+                    <View style={styles.cardFooterItem}>
+                      <Text style={styles.footerLabel}>Reported by</Text>
+                      <Text style={styles.footerValue}>{d.reportedBy.fullName}</Text>
+                    </View>
+                    <View style={styles.cardFooterEnd}>
+                      {d.blockchainTxId ? (
+                        <View style={styles.onChainBadge}>
+                          <Ionicons name="lock-closed" size={10} color={COLORS.info} />
+                          <Text style={styles.onChainText}>On-chain</Text>
+                        </View>
+                      ) : (
+                        <Text style={styles.notAnchoredText}>Not anchored</Text>
+                      )}
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              );
+            })
+          )}
+          <View style={styles.bottomSpacer} />
+        </View>
+      </ScrollView>
+
+      {/* FAB — create disaster */}
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={() => router.push("/create-disaster")}
+      >
+        <Ionicons name="add" size={28} color={COLORS.white} />
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  screen: { flex: 1, backgroundColor: COLORS.bgScreen },
+  centered: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: COLORS.bgScreen },
+
+  header: { backgroundColor: COLORS.primaryDark, paddingHorizontal: 16, paddingTop: 48, paddingBottom: 16 },
+  headerTitle: { color: COLORS.white, fontSize: 20, fontWeight: "bold" },
+  headerSubtitle: { color: COLORS.primaryLight, fontSize: 14 },
+
+  filterRow: { flexDirection: "row", paddingHorizontal: 16, paddingVertical: 12, backgroundColor: COLORS.bgCard, borderBottomWidth: 1, borderBottomColor: COLORS.borderLight },
+  filterChip: { marginRight: 8, paddingHorizontal: 12, paddingVertical: 4, borderRadius: 999, backgroundColor: COLORS.borderLight },
+  filterChipActive: { backgroundColor: COLORS.primary },
+  filterChipText: { fontSize: 12, fontWeight: "500", color: COLORS.textMuted },
+  filterChipTextActive: { color: COLORS.white },
+
+  list: { flex: 1 },
+  listContent: { paddingHorizontal: 16, paddingTop: 16 },
+
+  emptyState: { alignItems: "center", paddingVertical: 48 },
+  emptyIcon: { fontSize: 36, marginBottom: 12 },
+  emptyTitle: { color: COLORS.textSecondary, fontWeight: "500" },
+  emptySubtitle: { color: COLORS.textFaint, fontSize: 14 },
+
+  card: { backgroundColor: COLORS.bgCard, borderRadius: 12, padding: 16, marginBottom: 12, shadowColor: "#000", shadowOpacity: 0.05, shadowRadius: 4, shadowOffset: { width: 0, height: 1 }, elevation: 1 },
+  cardHeader: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between" },
+  cardHeaderLeft: { flexDirection: "row", alignItems: "center", flex: 1 },
+  disasterIcon: { fontSize: 24, marginRight: 12 },
+  cardHeaderInfo: { flex: 1 },
+  disasterType: { color: COLORS.textPrimary, fontWeight: "bold" },
+  warehouseName: { color: COLORS.textMuted, fontSize: 12 },
+  warehouseDistrict: { color: COLORS.textFaint, fontSize: 12 },
+  statusBadge: { borderRadius: 999, paddingHorizontal: 8, paddingVertical: 4 },
+  statusBadgeText: { fontSize: 12, fontWeight: "bold" },
+
+  cardFooter: { flexDirection: "row", marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: COLORS.borderLight },
+  cardFooterItem: { flex: 1 },
+  cardFooterEnd: { alignItems: "flex-end" },
+  footerLabel: { color: COLORS.textFaint, fontSize: 12 },
+  footerValue: { color: COLORS.textSecondary, fontSize: 14, fontWeight: "500" },
+
+  onChainBadge: { flexDirection: "row", alignItems: "center", backgroundColor: COLORS.infoBg, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 999 },
+  onChainText: { color: COLORS.info, fontSize: 12, marginLeft: 4 },
+  notAnchoredText: { color: COLORS.textDisabled, fontSize: 12 },
+
+  bottomSpacer: { height: 32 },
+
+  fab: { position: "absolute", bottom: 24, right: 24, backgroundColor: COLORS.danger, width: 56, height: 56, borderRadius: 28, alignItems: "center", justifyContent: "center", shadowColor: "#000", shadowOpacity: 0.2, shadowRadius: 6, shadowOffset: { width: 0, height: 2 }, elevation: 4 },
+});
