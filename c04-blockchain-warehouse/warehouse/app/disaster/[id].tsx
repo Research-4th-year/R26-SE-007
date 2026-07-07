@@ -220,6 +220,26 @@ export default function DisasterDetailScreen() {
             </View>
           )}
 
+          {/* ZKP Proofs button */}
+          {disaster.status !== "RESOLVED" && (
+            <TouchableOpacity
+              style={styles.zkpButton}
+              onPress={() => router.push(`/disaster/zkp/${id}`)}
+            >
+              <Ionicons
+                name="shield-checkmark"
+                size={16}
+                color={COLORS.success}
+              />
+              <Text style={styles.zkpButtonText}>ZKP Capacity Proofs</Text>
+              <Ionicons
+                name="chevron-forward"
+                size={16}
+                color={COLORS.success}
+              />
+            </TouchableOpacity>
+          )}
+
           {/* Ranked Candidates */}
           {disaster.rankedCandidates &&
             disaster.rankedCandidates.length > 0 && (
@@ -574,6 +594,21 @@ const styles = StyleSheet.create({
   },
   auditButtonText: {
     color: COLORS.info,
+    fontWeight: "600",
+    fontSize: 14,
+  },
+  zkpButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: COLORS.successBg,
+    borderRadius: 12,
+    paddingVertical: 14,
+    marginBottom: 12,
+    gap: 8,
+  },
+  zkpButtonText: {
+    color: COLORS.successText,
     fontWeight: "600",
     fontSize: 14,
   },
