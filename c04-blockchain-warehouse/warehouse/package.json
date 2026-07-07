@@ -11,6 +11,7 @@
     "expo": "~57.0.2",
     "expo-constants": "~57.0.3",
     "expo-linking": "~57.0.1",
+    "expo-location": "~57.0.2",
     "expo-router": "~57.0.3",
     "expo-status-bar": "~57.0.0",
     "react": "19.2.3",
