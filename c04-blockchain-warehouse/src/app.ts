@@ -14,6 +14,7 @@ import { errorHandler, notFoundHandler } from './middleware/errorHandler.middlew
 import blockchainRoutes from './routes/blockchain.routes';
 import zkpRoutes from './routes/zkp.routes';
 import gnnRoutes from './routes/gnn.routes';
+import userRoutes from './routes/user.routes';
 
 const app = express();
 
@@ -81,6 +82,7 @@ app.use('/api/documents',  documentRoutes);
 app.use('/api/blockchain', blockchainRoutes);
 app.use('/api/zkp', zkpRoutes);
 app.use('/api/scores', gnnRoutes);
+app.use('/api/users', userRoutes);
 
 // ── 404 & error handling ───────────────────────────────────────
 app.use(notFoundHandler);
