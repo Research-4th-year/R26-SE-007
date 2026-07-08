@@ -5,13 +5,18 @@ import { authService } from "../services/auth.service";
 
 export default function IndexScreen() {
   useEffect(() => {
-    authService.isLoggedIn().then((loggedIn) => {
-      if (loggedIn) {
-        router.replace("/(tabs)/dashboard");
-      } else {
-        router.replace("/(auth)/login");
-      }
-    });
+authService.isLoggedIn().then(async (loggedIn) => {
+  if (loggedIn) {
+    const user = await authService.getStoredUser();
+    if (user?.role === "WAREHOUSE_SUPERVISOR") {
+      router.replace("/(supervisor)/my-warehouse" as any);
+    } else {
+      router.replace("/(tabs)/dashboard");
+    }
+  } else {
+    router.replace("/(auth)/login");
+  }
+});
   }, []);
 
   return (

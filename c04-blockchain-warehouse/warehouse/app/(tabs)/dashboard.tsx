@@ -36,6 +36,15 @@ export default function DashboardScreen() {
 
   useEffect(() => { load(); }, []);
 
+  // Redirect supervisors to their own warehouse view
+useEffect(() => {
+  authService.getStoredUser().then((u) => {
+    if (u?.role === "WAREHOUSE_SUPERVISOR") {
+      router.replace("/(supervisor)/my-warehouse" as any);
+    }
+  });
+}, []);
+
   const onRefresh = () => { setRefreshing(true); load(); };
 
   const handleLogout = async () => {
