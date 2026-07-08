@@ -164,7 +164,7 @@ useEffect(() => {
             <TouchableOpacity
               key={wh.id}
               style={styles.warehouseCard}
-              onPress={() => router.push(`/(tabs)/warehouses`)}
+              onPress={() => router.push(`/warehouse/${wh.id}` as any)}
             >
               <View style={styles.warehouseCardHeader}>
                 <View style={styles.warehouseCardInfo}>
