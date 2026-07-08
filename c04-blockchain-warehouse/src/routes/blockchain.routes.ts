@@ -22,32 +22,41 @@ router.get(
   allStaff,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      // Get MySQL record alongside ledger record for comparison
-      const [ledgerRecord, dbRecord] = await Promise.all([
-        fabricService.queryStockEvent(req.params.eventId),
-        prisma.stockEvent.findUnique({
-          where:   { id: req.params.eventId },
-          include: {
-            warehouse:  { select: { id: true, name: true, code: true } },
-            reportedBy: { select: { id: true, fullName: true, role: true } },
-          },
-        }),
-      ]);
+      const dbRecord = await prisma.stockEvent.findUnique({
+        where:   { id: req.params.eventId },
+        include: {
+          warehouse:  { select: { id: true, name: true, code: true } },
+          reportedBy: { select: { id: true, fullName: true, role: true } },
+        },
+      });
 
-      if (!dbRecord) {
-        throw AppError.notFound('Stock event not found in database');
+      if (!dbRecord) throw AppError.notFound('Stock event not found in database');
+
+      // Try ledger — gracefully handle events not yet anchored
+      let ledgerRecord = null;
+      let blockchainAnchored = !!dbRecord.blockchainTxId;
+      let hashMatch = false;
+
+      if (blockchainAnchored) {
+        try {
+          ledgerRecord = await fabricService.queryStockEvent(req.params.eventId);
+          hashMatch = dbRecord.documentHash === (ledgerRecord as any).documentHash;
+        } catch {
+          // Event has a txId in DB but isn't found on ledger
+          // This can happen after network restart — ledger was wiped
+          blockchainAnchored = false;
+        }
       }
 
-      // Verify document hash matches between DB and ledger
-      const hashMatch = dbRecord.documentHash === (ledgerRecord as any).documentHash;
-
       sendSuccess(res, {
-        ledger:    ledgerRecord,
-        database:  dbRecord,
+        ledger:   ledgerRecord,
+        database: dbRecord,
         integrity: {
           hashMatch,
-          blockchainAnchored: !!dbRecord.blockchainTxId,
-          message: hashMatch
+          blockchainAnchored,
+          message: !blockchainAnchored
+            ? 'Event not yet anchored on blockchain'
+            : hashMatch
             ? 'Document hash matches ledger record — data integrity confirmed'
             : 'WARNING: Document hash mismatch — possible tampering detected',
         },
@@ -101,25 +110,37 @@ router.get(
   allStaff,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const [ledgerRecord, dbRecord] = await Promise.all([
-        fabricService.queryDisasterEvent(req.params.disasterId),
-        prisma.disasterEvent.findUnique({
-          where:   { id: req.params.disasterId },
-          include: {
-            affectedWarehouse: { select: { id: true, name: true, code: true } },
-            reportedBy:        { select: { id: true, fullName: true, role: true } },
-          },
-        }),
-      ]);
+      const dbRecord = await prisma.disasterEvent.findUnique({
+        where:   { id: req.params.disasterId },
+        include: {
+          affectedWarehouse: { select: { id: true, name: true, code: true } },
+          reportedBy:        { select: { id: true, fullName: true, role: true } },
+        },
+      });
 
       if (!dbRecord) throw AppError.notFound('Disaster event not found in database');
+
+      // Try ledger — gracefully handle records not found (e.g. after network restart)
+      let ledgerRecord = null;
+      let blockchainAnchored = !!dbRecord.blockchainTxId;
+
+      if (blockchainAnchored) {
+        try {
+          ledgerRecord = await fabricService.queryDisasterEvent(req.params.disasterId);
+        } catch {
+          blockchainAnchored = false;
+        }
+      }
 
       sendSuccess(res, {
         ledger:   ledgerRecord,
         database: dbRecord,
         integrity: {
-          blockchainAnchored: !!dbRecord.blockchainTxId,
-          mspId: (ledgerRecord as any).reportedByMsp,
+          blockchainAnchored,
+          mspId: blockchainAnchored ? (ledgerRecord as any)?.reportedByMsp : null,
+          message: !blockchainAnchored
+            ? 'Event not yet anchored on blockchain'
+            : 'Disaster event confirmed on ledger',
         },
       });
     } catch (err) {
@@ -202,28 +223,39 @@ router.get(
   allStaff,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const [ledgerRecord, dbRecord] = await Promise.all([
-        fabricService.queryRedistributionOrder(req.params.orderId),
-        prisma.redistributionOrder.findUnique({
-          where:   { id: req.params.orderId },
-          include: {
-            sourceWarehouse:      { select: { id: true, name: true, code: true } },
-            destinationWarehouse: { select: { id: true, name: true, code: true } },
-            issuedBy:             { select: { id: true, fullName: true, role: true } },
-            disasterEvent:        { select: { id: true, disasterType: true, status: true } },
-          },
-        }),
-      ]);
+      const dbRecord = await prisma.redistributionOrder.findUnique({
+        where:   { id: req.params.orderId },
+        include: {
+          sourceWarehouse:      { select: { id: true, name: true, code: true } },
+          destinationWarehouse: { select: { id: true, name: true, code: true } },
+          issuedBy:             { select: { id: true, fullName: true, role: true } },
+          disasterEvent:        { select: { id: true, disasterType: true, status: true } },
+        },
+      });
 
       if (!dbRecord) throw AppError.notFound('Redistribution order not found in database');
+
+      let ledgerRecord = null;
+      let blockchainAnchored = !!dbRecord.blockchainTxId;
+
+      if (blockchainAnchored) {
+        try {
+          ledgerRecord = await fabricService.queryRedistributionOrder(req.params.orderId);
+        } catch {
+          blockchainAnchored = false;
+        }
+      }
 
       sendSuccess(res, {
         ledger:   ledgerRecord,
         database: dbRecord,
         integrity: {
-          blockchainAnchored: !!dbRecord.blockchainTxId,
-          rmSignature:        (ledgerRecord as any).rmSignature,
-          issuedByMsp:        (ledgerRecord as any).issuedByMsp,
+          blockchainAnchored,
+          rmSignature: blockchainAnchored ? (ledgerRecord as any)?.rmSignature : null,
+          issuedByMsp: blockchainAnchored ? (ledgerRecord as any)?.issuedByMsp : null,
+          message: !blockchainAnchored
+            ? 'Order not yet anchored on blockchain'
+            : 'Redistribution order confirmed on ledger',
         },
       });
     } catch (err) {
