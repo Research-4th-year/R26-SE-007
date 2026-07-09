@@ -41,6 +41,8 @@ useEffect(() => {
   authService.getStoredUser().then((u) => {
     if (u?.role === "WAREHOUSE_SUPERVISOR") {
       router.replace("/(supervisor)/my-warehouse" as any);
+    } else if (u?.role === "AUDITOR") {
+      router.replace("/(auditor)/dashboard" as any);
     }
   });
 }, []);

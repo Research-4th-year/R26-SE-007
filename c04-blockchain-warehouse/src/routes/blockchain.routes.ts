@@ -274,7 +274,7 @@ router.get(
  */
 router.get(
   '/status',
-  adminOrRM,
+  allStaff,
   async (_req: Request, res: Response, next: NextFunction) => {
     try {
       // Count anchored records in DB
