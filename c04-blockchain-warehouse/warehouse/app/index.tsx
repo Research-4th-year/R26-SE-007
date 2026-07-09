@@ -10,6 +10,8 @@ authService.isLoggedIn().then(async (loggedIn) => {
     const user = await authService.getStoredUser();
     if (user?.role === "WAREHOUSE_SUPERVISOR") {
       router.replace("/(supervisor)/my-warehouse" as any);
+    } else if (user?.role === "AUDITOR") {
+      router.replace("/(auditor)/dashboard" as any);
     } else {
       router.replace("/(tabs)/dashboard");
     }

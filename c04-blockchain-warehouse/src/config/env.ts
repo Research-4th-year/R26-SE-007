@@ -18,9 +18,9 @@ export const config = {
   db: { url: requireEnv('DATABASE_URL') },
   jwt: {
     secret: requireEnv('JWT_SECRET'),
-    expiresIn: process.env.JWT_EXPIRES_IN || '7d',
+    expiresIn: process.env.JWT_EXPIRES_IN || '15m',
     refreshSecret: requireEnv('JWT_REFRESH_SECRET'),
-    refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '30d',
+    refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
   },
   bcrypt: { rounds: parseInt(process.env.BCRYPT_ROUNDS || '12', 10) },
   cors: {
