@@ -7,6 +7,7 @@ import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { api } from "../../services/api";
 import { COLORS } from "../../constants/theme";
+import { useDebouncedCallback } from "../../hooks/useDebounce";
 
 interface SearchResult {
   place_id:    number;
@@ -64,7 +65,7 @@ export default function CreateWarehouseScreen() {
     }
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = useDebouncedCallback(async () => {
     if (!name.trim())     { Alert.alert("Required", "Enter warehouse name"); return; }
     if (!code.trim())     { Alert.alert("Required", "Enter warehouse code (e.g. AMP-02)"); return; }
     if (!district.trim()) { Alert.alert("Required", "Enter district"); return; }
@@ -93,7 +94,7 @@ export default function CreateWarehouseScreen() {
     } finally {
       setSubmitting(false);
     }
-  };
+  },1000);
 
   return (
     <View style={styles.screen}>

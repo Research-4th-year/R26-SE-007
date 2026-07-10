@@ -6,15 +6,18 @@ export const createWarehouseSchema = z.object({
   name: z
     .string({ required_error: 'Name is required' })
     .min(3, 'Name must be at least 3 characters')
+    .max(100, 'Name must be at most 100 characters')
     .trim(),
   code: z
     .string({ required_error: 'Code is required' })
     .min(2, 'Code must be at least 2 characters')
+    .max(20, 'Code must be at most 20 characters')
     .toUpperCase()
     .trim(),
   district: z
     .string({ required_error: 'District is required' })
     .min(2, 'District must be at least 2 characters')
+    .max(50, 'District must be at most 50 characters')
     .trim(),
   address: z.string().trim().optional(),
   latitude: z

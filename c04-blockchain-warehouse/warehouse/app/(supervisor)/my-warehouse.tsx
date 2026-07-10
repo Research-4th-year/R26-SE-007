@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   View, Text, ScrollView, TouchableOpacity,
   ActivityIndicator, Alert, StyleSheet, RefreshControl
@@ -34,8 +34,11 @@ export default function MyWarehouseScreen() {
   const [events, setEvents]       = useState<StockEvent[]>([]);
   const [loading, setLoading]     = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+const loadingRef = useRef(false);   //prevent multiple simultaneous loads
 
   const load = async () => {
+    if (loadingRef.current) return;
+    loadingRef.current = true;
     try {
       const user = await authService.getStoredUser();
       if (!user?.warehouseId) {

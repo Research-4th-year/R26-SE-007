@@ -7,6 +7,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { api } from "../../services/api";
 import { COLORS } from "../../constants/theme";
+import { useDebouncedCallback } from "../../hooks/useDebounce";
 
 const EVENT_TYPES = [
   { value: "INFLOW",         label: "Inflow",         icon: "arrow-down-circle", color: COLORS.success, desc: "Stock received from farmers" },
@@ -28,7 +29,7 @@ export default function RecordEventScreen() {
   const [submitting, setSubmitting]   = useState(false);
   const [lastEventId, setLastEventId] = useState<string | null>(null);
 
-  const handleSubmit = async () => {
+  const handleSubmit = useDebouncedCallback(async () => {
     if (!eventType)  { Alert.alert("Required", "Select an event type"); return; }
     if (!quantity || isNaN(Number(quantity)) || Number(quantity) <= 0) {
       Alert.alert("Required", "Enter a valid quantity in tons");
@@ -69,7 +70,7 @@ export default function RecordEventScreen() {
     } finally {
       setSubmitting(false);
     }
-  };
+  },1000);
 
   return (
     <View style={styles.screen}>
