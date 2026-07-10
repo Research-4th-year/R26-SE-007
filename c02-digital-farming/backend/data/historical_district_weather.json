@@ -1,0 +1,74 @@
+{
+  "Dry Zone": {
+    "Anuradhapura": {
+      "Yala": { "temperature": 32.5, "humidity": 65.0, "rainfall": 50.0, "sunlight": 8.5, "seasonal_rainfall": 200.0 },
+      "Maha": { "temperature": 28.0, "humidity": 78.0, "rainfall": 180.0, "sunlight": 6.0, "seasonal_rainfall": 950.0 }
+    },
+    "Polonnaruwa": {
+      "Yala": { "temperature": 33.0, "humidity": 63.0, "rainfall": 45.0, "sunlight": 8.8, "seasonal_rainfall": 180.0 },
+      "Maha": { "temperature": 27.5, "humidity": 80.0, "rainfall": 195.0, "sunlight": 5.8, "seasonal_rainfall": 1100.0 }
+    },
+    "Kurunegala": {
+      "Yala": { "temperature": 31.0, "humidity": 72.0, "rainfall": 110.0, "sunlight": 7.5, "seasonal_rainfall": 450.0 },
+      "Maha": { "temperature": 27.0, "humidity": 82.0, "rainfall": 160.0, "sunlight": 6.2, "seasonal_rainfall": 800.0 }
+    },
+    "Hambantota": {
+      "Yala": { "temperature": 31.5, "humidity": 70.0, "rainfall": 40.0, "sunlight": 8.2, "seasonal_rainfall": 150.0 },
+      "Maha": { "temperature": 28.5, "humidity": 75.0, "rainfall": 120.0, "sunlight": 6.8, "seasonal_rainfall": 600.0 }
+    },
+    "Monaragala": {
+      "Yala": { "temperature": 32.0, "humidity": 68.0, "rainfall": 65.0, "sunlight": 8.0, "seasonal_rainfall": 250.0 },
+      "Maha": { "temperature": 27.8, "humidity": 80.0, "rainfall": 170.0, "sunlight": 6.0, "seasonal_rainfall": 900.0 }
+    },
+    "Ampara": {
+      "Yala": { "temperature": 33.2, "humidity": 64.0, "rainfall": 50.0, "sunlight": 8.6, "seasonal_rainfall": 220.0 },
+      "Maha": { "temperature": 27.4, "humidity": 82.0, "rainfall": 210.0, "sunlight": 5.5, "seasonal_rainfall": 1200.0 }
+    },
+    "Trincomalee": {
+      "Yala": { "temperature": 34.0, "humidity": 62.0, "rainfall": 55.0, "sunlight": 8.9, "seasonal_rainfall": 210.0 },
+      "Maha": { "temperature": 27.0, "humidity": 84.0, "rainfall": 220.0, "sunlight": 5.4, "seasonal_rainfall": 1250.0 }
+    }
+  },
+  "Wet Zone": {
+    "Kandy": {
+      "Yala": { "temperature": 27.5, "humidity": 78.0, "rainfall": 150.0, "sunlight": 6.5, "seasonal_rainfall": 600.0 },
+      "Maha": { "temperature": 24.5, "humidity": 85.0, "rainfall": 220.0, "sunlight": 5.2, "seasonal_rainfall": 1100.0 }
+    },
+    "Matale": {
+      "Yala": { "temperature": 29.0, "humidity": 75.0, "rainfall": 120.0, "sunlight": 7.0, "seasonal_rainfall": 500.0 },
+      "Maha": { "temperature": 25.5, "humidity": 83.0, "rainfall": 200.0, "sunlight": 5.5, "seasonal_rainfall": 950.0 }
+    },
+    "Nuwara Eliya": {
+      "Yala": { "temperature": 19.0, "humidity": 84.0, "rainfall": 210.0, "sunlight": 5.0, "seasonal_rainfall": 850.0 },
+      "Maha": { "temperature": 15.5, "humidity": 90.0, "rainfall": 280.0, "sunlight": 4.0, "seasonal_rainfall": 1400.0 }
+    },
+    "Galle": {
+      "Yala": { "temperature": 29.5, "humidity": 80.0, "rainfall": 230.0, "sunlight": 6.8, "seasonal_rainfall": 1000.0 },
+      "Maha": { "temperature": 27.0, "humidity": 85.0, "rainfall": 250.0, "sunlight": 5.6, "seasonal_rainfall": 1300.0 }
+    },
+    "Matara": {
+      "Yala": { "temperature": 29.8, "humidity": 79.0, "rainfall": 220.0, "sunlight": 7.0, "seasonal_rainfall": 950.0 },
+      "Maha": { "temperature": 27.2, "humidity": 84.0, "rainfall": 240.0, "sunlight": 5.8, "seasonal_rainfall": 1200.0 }
+    },
+    "Kalutara": {
+      "Yala": { "temperature": 29.0, "humidity": 83.0, "rainfall": 290.0, "sunlight": 6.2, "seasonal_rainfall": 1300.0 },
+      "Maha": { "temperature": 26.5, "humidity": 88.0, "rainfall": 310.0, "sunlight": 5.0, "seasonal_rainfall": 1600.0 }
+    },
+    "Colombo": {
+      "Yala": { "temperature": 30.5, "humidity": 77.0, "rainfall": 200.0, "sunlight": 7.2, "seasonal_rainfall": 800.0 },
+      "Maha": { "temperature": 27.8, "humidity": 82.0, "rainfall": 240.0, "sunlight": 6.0, "seasonal_rainfall": 1100.0 }
+    },
+    "Ratnapura": {
+      "Yala": { "temperature": 28.5, "humidity": 84.0, "rainfall": 280.0, "sunlight": 6.0, "seasonal_rainfall": 1200.0 },
+      "Maha": { "temperature": 25.8, "humidity": 89.0, "rainfall": 320.0, "sunlight": 4.8, "seasonal_rainfall": 1550.0 }
+    },
+    "Kegalle": {
+      "Yala": { "temperature": 28.8, "humidity": 82.0, "rainfall": 270.0, "sunlight": 6.3, "seasonal_rainfall": 1150.0 },
+      "Maha": { "temperature": 26.0, "humidity": 87.0, "rainfall": 300.0, "sunlight": 5.1, "seasonal_rainfall": 1450.0 }
+    },
+    "Badulla": {
+      "Yala": { "temperature": 26.0, "humidity": 76.0, "rainfall": 110.0, "sunlight": 7.0, "seasonal_rainfall": 450.0 },
+      "Maha": { "temperature": 22.5, "humidity": 84.0, "rainfall": 190.0, "sunlight": 5.5, "seasonal_rainfall": 950.0 }
+    }
+  }
+}

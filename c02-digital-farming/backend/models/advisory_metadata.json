@@ -1,0 +1,29 @@
+{
+    "districts": [
+        "Ampara",
+        "Anuradhapura",
+        "Badulla",
+        "Colombo",
+        "Galle",
+        "Hambantota",
+        "Kalutara",
+        "Kandy",
+        "Kegalle",
+        "Kurunegala",
+        "Matale",
+        "Matara",
+        "Monaragala",
+        "Nuwara Eliya",
+        "Polonnaruwa",
+        "Ratnapura",
+        "Trincomalee"
+    ],
+    "varieties": [
+        "At362",
+        "Bg300",
+        "Bg352",
+        "Bg366",
+        "Bw367",
+        "Ld368"
+    ]
+}

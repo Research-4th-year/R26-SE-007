@@ -103,3 +103,54 @@ export const getVarietyMetrics = async () => {
     return null;
   }
 };
+
+export const recommendVariety = async (payload) => {
+  try {
+    const response = await axios.post(`${API_URL}/recommend-variety`, payload);
+    return response.data;
+  } catch (error) {
+    console.error("Error recommending variety:", error);
+    throw error;
+  }
+};
+
+export const generateCultivationPlan = async (payload) => {
+  try {
+    const response = await axios.post(`${API_URL}/generate-cultivation-plan`, payload);
+    return response.data;
+  } catch (error) {
+    console.error("Error generating cultivation plan:", error);
+    throw error;
+  }
+};
+
+export const getVarietyDetails = async (variety) => {
+  try {
+    const response = await axios.get(`${API_URL}/get-variety-details?variety=${variety}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error getting variety details:", error);
+    return null;
+  }
+};
+
+export const getDiseaseGuide = async (variety) => {
+  try {
+    const response = await axios.get(`${API_URL}/get-disease-guide?variety=${variety}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error getting disease guide:", error);
+    return null;
+  }
+};
+
+export const getFertilizerPlan = async (variety) => {
+  try {
+    const response = await axios.get(`${API_URL}/get-fertilizer-plan?variety=${variety}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error getting fertilizer plan:", error);
+    return null;
+  }
+};
+

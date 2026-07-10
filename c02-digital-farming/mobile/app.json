@@ -1,0 +1,26 @@
+{
+  "expo": {
+    "name": "Digital Farming",
+    "slug": "digital-farming-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "scheme": "digitalfarming",
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.r26se007.digitalfarming"
+    },
+    "android": {
+      "package": "com.r26se007.digitalfarming"
+    },
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow Digital Farming to access your photos to select leaf images."
+        }
+      ]
+    ]
+  }
+}

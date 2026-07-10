@@ -1,0 +1,127 @@
+{
+  "Ampara": {
+    "latitude": 7.2912,
+    "longitude": 81.6747,
+    "zone": "Dry Zone"
+  },
+  "Anuradhapura": {
+    "latitude": 8.3114,
+    "longitude": 80.4037,
+    "zone": "Dry Zone"
+  },
+  "Badulla": {
+    "latitude": 6.9842,
+    "longitude": 81.0560,
+    "zone": "Wet Zone"
+  },
+  "Batticaloa": {
+    "latitude": 7.7170,
+    "longitude": 81.7010,
+    "zone": "Dry Zone"
+  },
+  "Colombo": {
+    "latitude": 6.9271,
+    "longitude": 79.8612,
+    "zone": "Wet Zone"
+  },
+  "Galle": {
+    "latitude": 6.0535,
+    "longitude": 80.2210,
+    "zone": "Wet Zone"
+  },
+  "Gampaha": {
+    "latitude": 7.0873,
+    "longitude": 79.9924,
+    "zone": "Wet Zone"
+  },
+  "Hambantota": {
+    "latitude": 6.1246,
+    "longitude": 81.1244,
+    "zone": "Dry Zone"
+  },
+  "Jaffna": {
+    "latitude": 9.6615,
+    "longitude": 80.0074,
+    "zone": "Dry Zone"
+  },
+  "Kalutara": {
+    "latitude": 6.5854,
+    "longitude": 79.9607,
+    "zone": "Wet Zone"
+  },
+  "Kandy": {
+    "latitude": 7.2906,
+    "longitude": 80.6337,
+    "zone": "Wet Zone"
+  },
+  "Kegalle": {
+    "latitude": 7.2513,
+    "longitude": 80.3464,
+    "zone": "Wet Zone"
+  },
+  "Kilinochchi": {
+    "latitude": 9.3803,
+    "longitude": 80.3792,
+    "zone": "Dry Zone"
+  },
+  "Kurunegala": {
+    "latitude": 7.4863,
+    "longitude": 80.3647,
+    "zone": "Intermediate Zone"
+  },
+  "Mannar": {
+    "latitude": 8.9810,
+    "longitude": 79.9044,
+    "zone": "Dry Zone"
+  },
+  "Matale": {
+    "latitude": 7.4675,
+    "longitude": 80.6234,
+    "zone": "Wet Zone"
+  },
+  "Matara": {
+    "latitude": 5.9549,
+    "longitude": 80.5550,
+    "zone": "Wet Zone"
+  },
+  "Monaragala": {
+    "latitude": 6.8724,
+    "longitude": 81.3507,
+    "zone": "Dry Zone"
+  },
+  "Mullaitivu": {
+    "latitude": 9.2671,
+    "longitude": 80.8143,
+    "zone": "Dry Zone"
+  },
+  "Nuwara Eliya": {
+    "latitude": 6.9497,
+    "longitude": 80.7891,
+    "zone": "Wet Zone"
+  },
+  "Polonnaruwa": {
+    "latitude": 7.9403,
+    "longitude": 81.0188,
+    "zone": "Dry Zone"
+  },
+  "Puttalam": {
+    "latitude": 8.0362,
+    "longitude": 79.8283,
+    "zone": "Dry Zone"
+  },
+  "Ratnapura": {
+    "latitude": 6.6828,
+    "longitude": 80.3992,
+    "zone": "Wet Zone"
+  },
+  "Trincomalee": {
+    "latitude": 8.5775,
+    "longitude": 81.2336,
+    "zone": "Dry Zone"
+  },
+  "Vavuniya": {
+    "latitude": 8.7542,
+    "longitude": 80.4982,
+    "zone": "Dry Zone"
+  }
+}

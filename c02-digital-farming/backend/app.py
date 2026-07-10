@@ -20,6 +20,7 @@ from knowledge_base import VARIETIES, FERTILIZER_PLAN, WATER_PLAN, DISEASE_GUIDE
 from fertilizer_recommendation import recommend_fertilizer
 from fungicide_recommendation import get_fungicide_recommendation
 from auto_prediction import predict_soil_type, predict_water_condition, suggest_paddy_variety
+from services.weather_service import WeatherService
 
 # Try importing TF, handle gracefully if not installed yet
 try:
@@ -46,12 +47,20 @@ initialize_firebase()
 npk_model = None
 yield_model = None
 cnn_model = None
+variety_advisory_model = None
+yield_advisory_model = None
+advisory_metadata = {}
+sri_lankan_paddy_varieties_db = {}
+historical_district_weather_db = {}
 
 # Model paths
 MODELS_DIR = os.path.join(os.path.dirname(__file__), "models")
+DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
 NPK_MODEL_PATH = os.path.join(MODELS_DIR, "npk_model.pkl")
 YIELD_MODEL_PATH = os.path.join(MODELS_DIR, "yield_model.pkl")
 CNN_MODEL_PATH = os.path.join(MODELS_DIR, "disease_model.h5")
+VARIETY_ADVISORY_MODEL_PATH = os.path.join(MODELS_DIR, "variety_advisory_model.pkl")
+YIELD_ADVISORY_MODEL_PATH = os.path.join(MODELS_DIR, "yield_advisory_model.pkl")
 
 # Class names for disease detection mapped to categories
 DISEASE_MAPPING = {
@@ -75,6 +84,8 @@ except:
 @app.on_event("startup")
 def load_models():
     global npk_model, yield_model, cnn_model
+    global variety_advisory_model, yield_advisory_model, advisory_metadata
+    global sri_lankan_paddy_varieties_db, historical_district_weather_db
     try:
         if os.path.exists(NPK_MODEL_PATH):
             npk_model = joblib.load(NPK_MODEL_PATH)
@@ -85,8 +96,56 @@ def load_models():
         if TF_AVAILABLE and os.path.exists(CNN_MODEL_PATH):
             cnn_model = tf.keras.models.load_model(CNN_MODEL_PATH)
             print("CNN model loaded.")
+            
+        # Load new advisory models and metadata
+        if os.path.exists(VARIETY_ADVISORY_MODEL_PATH):
+            variety_advisory_model = joblib.load(VARIETY_ADVISORY_MODEL_PATH)
+            print("Variety Advisory model loaded.")
+        if os.path.exists(YIELD_ADVISORY_MODEL_PATH):
+            yield_advisory_model = joblib.load(YIELD_ADVISORY_MODEL_PATH)
+            print("Yield Advisory model loaded.")
+        if os.path.exists(os.path.join(MODELS_DIR, 'advisory_metadata.json')):
+            with open(os.path.join(MODELS_DIR, 'advisory_metadata.json'), 'r') as f:
+                advisory_metadata = json.load(f)
+                
+        # Load JSON databases
+        if os.path.exists(os.path.join(DATA_DIR, 'sri_lankan_paddy_varieties.json')):
+            with open(os.path.join(DATA_DIR, 'sri_lankan_paddy_varieties.json'), 'r') as f:
+                sri_lankan_paddy_varieties_db = json.load(f)
+        if os.path.exists(os.path.join(DATA_DIR, 'historical_district_weather.json')):
+            with open(os.path.join(DATA_DIR, 'historical_district_weather.json'), 'r') as f:
+                historical_district_weather_db = json.load(f)
+                
     except Exception as e:
         print(f"Error loading models: {e}")
+
+class RecommendVarietyRequest(BaseModel):
+    season: str
+    zone: str
+    district: str
+    field_area_hectares: float
+    sensor_data: Optional[dict] = None
+
+class PredictYieldRequest(BaseModel):
+    variety: str
+    season: str
+    district: str
+    zone: str
+    field_area_hectares: float
+    temperature: float
+    humidity: float
+    rainfall: float
+    light: float
+    n: float
+    p: float
+    k: float
+
+class GeneratePlanRequest(BaseModel):
+    variety: str
+    season: str
+    district: str
+    field_area_hectares: float
+
 
 class SensorData(BaseModel):
     temperature: float
@@ -411,7 +470,90 @@ async def auto_predict(req: AutoPredictRequest):
 
 @app.get("/varieties")
 async def get_varieties():
-    return VARIETIES
+    return sri_lankan_paddy_varieties_db if sri_lankan_paddy_varieties_db else VARIETIES
+
+def calculate_disease_risk(weather_data):
+    temp = weather_data.get("temperature", 28.5)
+    hum = weather_data.get("humidity", 75.0)
+    rain = weather_data.get("rainfall", 0.0)
+    wind = weather_data.get("windSpeed", 10.0)
+    
+    # 1. Rice Blast Risk (Fungal)
+    # Cool-moderate (20-28°C), high humidity (>85%), wet leaf (rainfall > 0)
+    blast_score = 0
+    if 20.0 <= temp <= 28.0:
+        blast_score += 35
+    elif 18.0 <= temp < 20.0 or 28.0 < temp <= 32.0:
+        blast_score += 15
+        
+    if hum >= 85.0:
+        blast_score += 40
+    elif 75.0 <= hum < 85.0:
+        blast_score += 20
+        
+    if rain > 0.0:
+        blast_score += 25
+        
+    blast_risk = min(95.0, max(10.0, float(blast_score)))
+    
+    # 2. Brown Spot Risk (Fungal)
+    # Warm (25-32°C), high humidity (>80%), nutrient/water stress (rain == 0 is stress)
+    brown_score = 0
+    if 25.0 <= temp <= 32.0:
+        brown_score += 35
+    elif 20.0 <= temp < 25.0 or 32.0 < temp <= 35.0:
+        brown_score += 15
+        
+    if hum >= 80.0:
+        brown_score += 35
+    elif 70.0 <= hum < 80.0:
+        brown_score += 15
+        
+    if rain > 0.0:
+        brown_score += 20
+    else:
+        brown_score += 30
+        
+    brown_risk = min(95.0, max(15.0, float(brown_score)))
+    
+    # 3. Bacterial Leaf Blight (BLB) Risk (Bacterial)
+    # Warm (25-34°C), high humidity (>80%), heavy rain/wind causing wounds
+    blb_score = 0
+    if 25.0 <= temp <= 34.0:
+        blb_score += 35
+        
+    if hum >= 80.0:
+        blb_score += 35
+        
+    if rain > 5.0:
+        blb_score += 30
+    elif rain > 0.0:
+        blb_score += 15
+        
+    if wind > 15.0:
+        blb_score += 20
+        
+    blb_risk = min(95.0, max(10.0, float(blb_score)))
+    
+    return {
+        "rice_blast_pct": round(blast_risk, 1),
+        "brown_spot_pct": round(brown_risk, 1),
+        "bacterial_blight_pct": round(blb_risk, 1)
+    }
+
+@app.get("/current-weather")
+async def get_current_weather(district: str):
+    try:
+        weather_data = WeatherService.getCurrentWeather(district)
+        risks = calculate_disease_risk(weather_data)
+        iot_status = WeatherService.checkIoTStatus()
+        return {
+            "weather": weather_data,
+            "iot_status": iot_status,
+            "disease_risks": risks
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/fertilizer-plan")
 async def get_fertilizer_plan():
@@ -431,13 +573,312 @@ async def get_soil_types():
 
 @app.get("/cultivation-plan")
 async def get_cultivation_plan(variety: str = "Samba_BG300"):
-    # Dynamically generate the timeline-based plan
     var_info = VARIETIES.get(variety, VARIETIES["Samba_BG300"])
-    
     return {
         "variety": var_info,
         "fertilizer_schedule": FERTILIZER_PLAN,
         "water_schedule": WATER_PLAN
+    }
+
+# ========================================================
+# UPGRADED AI ADVISORY & RECOMMENDATION ENDPOINTS
+# ========================================================
+
+@app.post("/recommend-variety")
+async def recommend_variety(req: RecommendVarietyRequest):
+    if not variety_advisory_model or not yield_advisory_model:
+        raise HTTPException(status_code=500, detail="Advisory recommendation ML models not loaded.")
+        
+    # Get dynamic weather details from WeatherService
+    weather_data = WeatherService.getCurrentWeather(req.district)
+    
+    # Retrieve weather statistics from database for sunlight and seasonal averages
+    zone_data = historical_district_weather_db.get(req.zone, {})
+    dist_weather = zone_data.get(req.district, {}).get(req.season, {
+        "temperature": 28.0,
+        "humidity": 75.0,
+        "rainfall": 120.0,
+        "sunlight": 7.0,
+        "seasonal_rainfall": 800.0
+    })
+    
+    # If IoT Device is active, use IoT weather data. Otherwise use historical weather.
+    if weather_data.get("source") == "IOT_DEVICE":
+        temp = weather_data["temperature"]
+        hum = weather_data["humidity"]
+        rain_val = weather_data["rainfall"]
+        rain = 0 if rain_val > 100 else 1
+    else:
+        temp = dist_weather["temperature"]
+        hum = dist_weather["humidity"]
+        rain_val = dist_weather["rainfall"]
+        rain = 0 if rain_val > 100 else 1
+        
+    avg_soil = 50.0
+    if req.sensor_data:
+        temp = req.sensor_data.get("temperature", temp)
+        hum = req.sensor_data.get("humidity", hum)
+        rain_val = req.sensor_data.get("rain", rain_val)
+        rain = 0 if rain_val > 100 else 1
+        avg_soil = (req.sensor_data.get("soil1", 50) + req.sensor_data.get("soil2", 50)) / 2
+        
+    npk_pred, _ = predict_npk_yield(temp, hum, rain_val, avg_soil)
+    
+    # Encoders lists
+    district_list = advisory_metadata.get("districts", [])
+    variety_list = advisory_metadata.get("varieties", [])
+    
+    dist_encoded = district_list.index(req.district) if req.district in district_list else 0
+    zone_encoded = 0 if req.zone == "Dry Zone" else 1
+    season_encoded = 0 if req.season == "Yala" else 1
+    
+    # Run variety prediction probabilities
+    features_cls = np.array([[
+        season_encoded,
+        dist_encoded,
+        zone_encoded,
+        temp,
+        hum,
+        rain_val,
+        dist_weather["sunlight"],
+        npk_pred["N"],
+        npk_pred["P"],
+        npk_pred["K"]
+    ]])
+    
+    proba = variety_advisory_model.predict_proba(features_cls)[0]
+    
+    ranked_list = []
+    for idx, score in enumerate(proba):
+        var_id = variety_list[idx]
+        var_info = sri_lankan_paddy_varieties_db.get(var_id, {})
+        
+        # Predict yield for this specific variety
+        features_reg = np.array([[
+            season_encoded,
+            dist_encoded,
+            zone_encoded,
+            temp,
+            hum,
+            rain_val,
+            dist_weather["sunlight"],
+            npk_pred["N"],
+            npk_pred["P"],
+            npk_pred["K"],
+            idx
+        ]])
+        predicted_yield = round(float(yield_advisory_model.predict(features_reg)[0]), 2)
+        
+        # Build explanation/reasoning:
+        # e.g., "Bg352: Best for current weather, high yield potential"
+        reason = ""
+        if idx == np.argmax(proba):
+            reason = f"Top recommended variety for {req.season} in {req.district}. Best suited for {temp}°C climate with strong NPK utilization."
+        else:
+            reason = f"Excellent alternative. Good yield potential of {predicted_yield} t/ha under current district weather constraints."
+            
+        ranked_list.append({
+            "id": var_id,
+            "name": var_info.get("name", var_id),
+            "score": round(float(score) * 100, 1),
+            "predicted_yield_t_ha": predicted_yield,
+            "growing_period_months": var_info.get("age_group_months", 3.5),
+            "growing_days": var_info.get("duration_days", 105),
+            "suitable_season": var_info.get("suitable_season", "All"),
+            "disease_resistance": var_info.get("disease_resistance", {}),
+            "grain_type": var_info.get("grain_type", "White Nadu"),
+            "description": var_info.get("description", ""),
+            "reason": reason
+        })
+        
+    ranked_list = sorted(ranked_list, key=lambda x: x["score"], reverse=True)
+    
+    return {
+        "ranked_recommendations": ranked_list,
+        "inputs": {
+            "season": req.season,
+            "district": req.district,
+            "zone": req.zone,
+            "field_area_hectares": req.field_area_hectares,
+            "weather": dist_weather,
+            "npk": npk_pred
+        }
+    }
+
+@app.post("/predict-yield")
+async def predict_yield(req: PredictYieldRequest):
+    if not yield_advisory_model:
+        raise HTTPException(status_code=500, detail="Yield model not loaded.")
+        
+    district_list = advisory_metadata.get("districts", [])
+    variety_list = advisory_metadata.get("varieties", [])
+    
+    dist_encoded = district_list.index(req.district) if req.district in district_list else 0
+    variety_encoded = variety_list.index(req.variety) if req.variety in variety_list else 0
+    zone_encoded = 0 if req.zone == "Dry Zone" else 1
+    season_encoded = 0 if req.season == "Yala" else 1
+    
+    features = np.array([[
+        season_encoded,
+        dist_encoded,
+        zone_encoded,
+        req.temperature,
+        req.humidity,
+        req.rainfall,
+        req.light,
+        req.n,
+        req.p,
+        req.k,
+        variety_encoded
+    ]])
+    
+    pred_val = float(yield_advisory_model.predict(features)[0])
+    return {"predicted_yield_t_ha": round(pred_val, 2)}
+
+@app.post("/generate-cultivation-plan")
+async def generate_cultivation_plan(req: GeneratePlanRequest):
+    variety_data = sri_lankan_paddy_varieties_db.get(req.variety)
+    if variety_data:
+        variety_info = dict(variety_data)
+        variety_info["name"] = variety_info.get("english_name", req.variety)
+    else:
+        variety_info = {
+            "name": req.variety,
+            "age_group_months": 3.5,
+            "duration_days": 105,
+            "grain_type": "White Nadu",
+            "expected_yield_t_ha": 6.0,
+            "suitable_season": "All",
+            "suitable_zone": "All"
+        }
+    
+    duration = variety_info.get("duration_days", 105)
+    scale = duration / 105.0
+    area = req.field_area_hectares
+    
+    timeline = [
+        {"week": "Week 0", "phase": "Land Preparation", "action": f"Begin primary tillage and land preparation. Apply basal organic manure to the {area} hectares."},
+        {"week": f"Week {int(2 * scale)}", "phase": "Seed Treatment", "action": f"Soak {variety_info['name']} seeds for 24 hours and incubate for 48 hours. Sow sprouted seeds in nursery bed."},
+        {"week": f"Week {int(4 * scale)}", "phase": "First Fertilizer Application", "action": "Apply first top dressing of Nitrogen (Urea) to boost vegetative shoot growth."},
+        {"week": f"Week {int(6 * scale)}", "phase": "Water Management", "action": "Maintain shallow water levels (2-3 cm) to promote maximum tillering of roots."},
+        {"week": f"Week {int(8 * scale)}", "phase": "Weed Control", "action": "Conduct manual weeding or apply selective post-emergence weed control measures."},
+        {"week": f"Week {int(10 * scale)}", "phase": "Disease Monitoring", "action": f"Inspect crop closely for signs of disease or general yellowing."},
+        {"week": f"Week {int(12 * scale)}", "phase": "Second Fertilizer Application", "action": "Apply second top dressing of Urea along with Muriate of Potash (MOP) at panicle initiation stage."},
+        {"week": f"Week {int(14 * scale)}", "phase": "Pest Monitoring", "action": "Monitor fields for brown plant hoppers (BPH) or stem borers. Set pheromone traps."},
+        {"week": f"Week {int(16 * scale)}", "phase": "Harvest Preparation", "action": "Begin draining the paddy field water gradually to accelerate grain drying and hardiness."},
+        {"week": f"Week {int(18 * scale)}", "phase": "Harvesting & Milling", "action": f"Reap crop at 80-85% maturity. Thresh and dry paddy grains to 14% moisture level for optimal storage."}
+    ]
+    
+    fertilizer_schedule = [
+        {
+            "week": f"Week {int(2 * scale)}",
+            "fertilizer": "Organic Basal Manure",
+            "image": "compost.jpg",
+            "purpose": "Improves soil structure and organic matter.",
+            "amount": f"{round(1000 * area, 1)} kg"
+        },
+        {
+            "week": f"Week {int(4 * scale)}",
+            "fertilizer": "Urea",
+            "image": "urea.jpg",
+            "purpose": "Nitrogen booster for vegetative shoot growth.",
+            "amount": f"{round(50 * area, 1)} kg"
+        },
+        {
+            "week": f"Week {int(8 * scale)}",
+            "fertilizer": "TSP (Triple Super Phosphate)",
+            "image": "tsp.jpg",
+            "purpose": "Phosphorus booster for strong root development.",
+            "amount": f"{round(25 * area, 1)} kg"
+        },
+        {
+            "week": f"Week {int(12 * scale)}",
+            "fertilizer": "MOP (Muriate of Potash)",
+            "image": "mop.jpg",
+            "purpose": "Potassium booster for grain size and weight filling.",
+            "amount": f"{round(35 * area, 1)} kg"
+        }
+    ]
+    
+    diseases = [
+        {
+            "name": "Rice Blast",
+            "symptoms": "Spindle-shaped spots on leaves, grey in center with reddish margins.",
+            "image": "rice_blast.jpg",
+            "prevention": "Avoid excess Nitrogen fertilizer and maintain optimal water level.",
+            "treatment": "Spray Tricyclazole 75 WP or Tebuconazole.",
+            "recommended_fungicide": "Tricyclazole (500 g/ha)"
+        },
+        {
+            "name": "Brown Spot",
+            "symptoms": "Oval spots on leaves with grey-brown centers. Leads to seed discoloration.",
+            "image": "brown_spot.jpg",
+            "prevention": "Maintain balanced NPK fertilizer schedule. Avoid silica deficiency.",
+            "treatment": "Apply Mancozeb or Propiconazole EC.",
+            "recommended_fungicide": "Mancozeb 75 WP (1000 g/ha)"
+        },
+        {
+            "name": "Bacterial Leaf Blight",
+            "symptoms": "Yellowing/waving of leaf tips. Prominent white-grey streaks on leaf margins.",
+            "image": "bacterial_blight.jpg",
+            "prevention": "Cultivate resistant varieties, avoid leaf clipping during transplanting.",
+            "treatment": "Apply Copper hydroxide bactericide.",
+            "recommended_fungicide": "Copper Hydroxide (1250 g/ha)"
+        },
+        {
+            "name": "Nitrogen Deficiency",
+            "symptoms": "Stunted plant growth and general yellowing of older leaves.",
+            "image": "nitrogen_deficiency.jpg",
+            "prevention": "Apply split doses of Urea correctly based on DOA calendar.",
+            "treatment": "Top dress with Urea fertilizer immediately.",
+            "recommended_fungicide": "Urea (Soluble foliar spray)"
+        }
+    ]
+    
+    expected_yield_total = round(variety_info.get("expected_yield_t_ha", 6.0) * area, 2)
+    expected_income = int(expected_yield_total * 1000 * 120)
+    
+    return {
+        "variety": variety_info,
+        "timeline": timeline,
+        "fertilizer_schedule": fertilizer_schedule,
+        "diseases": diseases,
+        "harvest_estimation": {
+            "expected_yield_tons": expected_yield_total,
+            "estimated_harvest_days": duration,
+            "expected_income_lkr": expected_income,
+            "confidence_pct": 92
+        }
+    }
+
+@app.get("/get-variety-details")
+async def get_variety_details(variety: str):
+    var_info = sri_lankan_paddy_varieties_db.get(variety)
+    if not var_info:
+        raise HTTPException(status_code=404, detail="Variety not found")
+    return var_info
+
+@app.get("/get-disease-guide")
+async def get_disease_guide_endpoint(variety: str = "Bg352"):
+    var_info = sri_lankan_paddy_varieties_db.get(variety, {})
+    resistance = var_info.get("disease_resistance", {})
+    custom_warnings = []
+    for d_name, res in resistance.items():
+        if res == "Low":
+            custom_warnings.append(f"WARNING: {variety} has low resistance to {d_name}. Early detection is critical.")
+            
+    return {
+        "variety": variety,
+        "resistance_profile": resistance,
+        "warnings": custom_warnings,
+        "general_diseases": DISEASE_GUIDE
+    }
+
+@app.get("/get-fertilizer-plan")
+async def get_fertilizer_plan_endpoint(variety: str = "Bg352"):
+    return {
+        "fertilizer_plan": FERTILIZER_PLAN,
+        "target_variety": variety
     }
 
 @app.get("/metrics/variety")

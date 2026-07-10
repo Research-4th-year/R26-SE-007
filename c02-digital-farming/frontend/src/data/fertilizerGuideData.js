@@ -1,0 +1,53 @@
+export const FERTILIZER_GUIDE = [
+  {
+    id: 'urea',
+    name: 'Urea',
+    sinhalaName: 'යූරියා',
+    image: 'urea.png',
+    formula: '46-0-0',
+    nutrient: 'Nitrogen (N)',
+    purpose: 'Promotes leaf expansion, tillering and greener canopy.',
+    purposeSi: 'කොළ විහිදීම, ශාඛා වර්ධනය සහ හරිත කොළ පෙනුම වැඩි කරයි.',
+    timing: 'Vegetative stage',
+    timingSi: 'ශාක වර්ධන අවස්ථාව',
+    bestWindow: '14–21 days after planting',
+    historicalDose: '120–160 kg/ha',
+    accent: '#2E7D32',
+    note: 'Apply in split doses when the crop shows pale green leaves or slow growth.',
+    noteSi: 'කොළ මැදුරු පාට අඳුරු වූ විට හෝ වර්ධනය මන්දගාමී වූ විට විභේදනය කර යෙදීම සුදුසුය.'
+  },
+  {
+    id: 'tsp',
+    name: 'TSP',
+    sinhalaName: 'TSP පොහොර',
+    image: 'tsp.png',
+    formula: '0-46-0',
+    nutrient: 'Phosphorus (P)',
+    purpose: 'Builds a stronger root system and supports early establishment.',
+    purposeSi: 'ශක්තිමත් මූල පද්ධතියක් ගොඩනඟා මුල් වර්ධනයට සහාය දෙයි.',
+    timing: 'Basal dressing',
+    timingSi: 'මූලික යෙදීම',
+    bestWindow: 'Before transplanting or at land preparation',
+    historicalDose: '40–60 kg/ha',
+    accent: '#C49A00',
+    note: 'Use when roots are weak, seedlings are slow to establish, or the field is low in phosphorus.',
+    noteSi: 'මූල පද්ධතිය දුර්වල වන විට, රෝපණය කළ පසු වර්ධනය මන්දගාමී වන විට හෝ පොස්පරස් අඩු විට යෙදීම සුදුසුය.'
+  },
+  {
+    id: 'mop',
+    name: 'MOP',
+    sinhalaName: 'MOP පොහොර',
+    image: 'mop.png',
+    formula: '0-0-60',
+    nutrient: 'Potassium (K)',
+    purpose: 'Supports grain filling, stress tolerance and disease resilience.',
+    purposeSi: 'ධාන්‍ය පිරවීම, පීඩන ඔරොත්තු දීම සහ රෝග ප්‍රතිරෝධය වැඩි කරයි.',
+    timing: 'Panicle initiation',
+    timingSi: 'කරල් ඇතිවීමේ අවස්ථාව',
+    bestWindow: 'Panicle initiation to grain filling',
+    historicalDose: '35–55 kg/ha',
+    accent: '#1D4ED8',
+    note: 'Use when the crop is under stress, grain filling is weak, or the field shows low potassium reserve.',
+    noteSi: 'ශාකය පීඩනයට ලක්වෙන විට, ධාන්‍ය පිරවීම මන්දගාමී වූ විට හෝ පොටෑසියම් අවම වශයෙන් පෙනෙන විට යෙදීම සුදුසුය.'
+  }
+];
