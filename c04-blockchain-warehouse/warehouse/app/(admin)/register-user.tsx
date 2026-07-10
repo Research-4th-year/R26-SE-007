@@ -7,12 +7,20 @@ import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { api } from "../../services/api";
 import { COLORS } from "../../constants/theme";
+import { useDebouncedCallback } from "../../hooks/useDebounce";
 
 const ROLES = [
   { value: "REGIONAL_MANAGER",     label: "Regional Manager",     icon: "person-circle",   desc: "Can trigger disasters and issue redistribution orders" },
   { value: "WAREHOUSE_SUPERVISOR", label: "Warehouse Supervisor",  icon: "business",        desc: "Records stock events for their assigned warehouse" },
   { value: "AUDITOR",              label: "Auditor",               icon: "search",          desc: "Read-only access to all data and blockchain trails" },
   { value: "ADMIN",                label: "Admin",                 icon: "shield-checkmark",desc: "Full system access including user and warehouse management" },
+];
+
+// Password rules — keep these in sync with the backend zod schema
+const PASSWORD_RULES = [
+  { key: "length", label: "At least 8 characters", test: (p: string) => p.length >= 8 },
+  { key: "upper",  label: "One uppercase letter",   test: (p: string) => /[A-Z]/.test(p) },
+  { key: "number", label: "One number",             test: (p: string) => /[0-9]/.test(p) },
 ];
 
 export default function RegisterUserScreen() {
@@ -24,6 +32,10 @@ export default function RegisterUserScreen() {
   const [warehouses, setWarehouses]   = useState<any[]>([]);
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting]   = useState(false);
+  const [passwordTouched, setPasswordTouched] = useState(false);
+
+  // field-level errors, keyed by field name — populated from backend or client checks
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
 
   useEffect(() => {
     api.get("/api/warehouses?limit=50").then((res) => {
@@ -31,16 +43,37 @@ export default function RegisterUserScreen() {
     });
   }, []);
 
-  const handleSubmit = async () => {
-    if (!email.trim())    { Alert.alert("Required", "Enter email address"); return; }
-    if (!password.trim()) { Alert.alert("Required", "Enter password"); return; }
-    if (!fullName.trim()) { Alert.alert("Required", "Enter full name"); return; }
-    if (!role)            { Alert.alert("Required", "Select a role"); return; }
+  const clearFieldError = (field: string) => {
+    if (fieldErrors[field]) {
+      setFieldErrors((prev) => {
+        const next = { ...prev };
+        delete next[field];
+        return next;
+      });
+    }
+  };
+
+  const passwordFailures = PASSWORD_RULES.filter((r) => !r.test(password));
+
+  const handleSubmit = useDebouncedCallback(async () => {
+    const errors: Record<string, string[]> = {};
+
+    if (!email.trim())    errors.email = ["Enter email address"];
+    if (!fullName.trim()) errors.fullName = ["Enter full name"];
+    if (!role)             errors.role = ["Select a role"];
+    if (passwordFailures.length > 0) {
+      errors.password = passwordFailures.map((r) => r.label);
+    }
     if (role === "WAREHOUSE_SUPERVISOR" && !warehouseId) {
-      Alert.alert("Required", "Select a warehouse for this supervisor");
+      errors.warehouseId = ["Select a warehouse for this supervisor"];
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
       return;
     }
 
+    setFieldErrors({});
     setSubmitting(true);
     try {
       await api.post("/api/auth/register", {
@@ -54,15 +87,21 @@ export default function RegisterUserScreen() {
         { text: "Done", onPress: () => router.back() },
         { text: "Add Another", onPress: () => {
           setEmail(""); setPassword(""); setFullName("");
-          setRole(""); setWarehouseId("");
+          setRole(""); setWarehouseId(""); setFieldErrors({}); setPasswordTouched(false);
         }},
       ]);
     } catch (err: any) {
-      Alert.alert("Error", err?.response?.data?.message || "Failed to register user");
+      const data = err?.response?.data;
+      if (data?.errors) {
+        // backend returned field-level zod errors — show them inline
+        setFieldErrors(data.errors);
+      } else {
+        Alert.alert("Error", data?.message || "Failed to register user");
+      }
     } finally {
       setSubmitting(false);
     }
-  };
+  }, 1000);
 
   return (
     <View style={styles.screen}>
@@ -79,38 +118,48 @@ export default function RegisterUserScreen() {
       <ScrollView style={styles.scroll} keyboardShouldPersistTaps="handled">
         <View style={styles.content}>
 
-          {/* Basic info */}
           <Text style={styles.sectionTitle}>👤 User Details</Text>
 
           <Text style={styles.label}>Full Name *</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, fieldErrors.fullName && styles.inputError]}
             placeholder="e.g. Nimal Perera"
             placeholderTextColor={COLORS.textFaint}
             value={fullName}
-            onChangeText={setFullName}
+            onChangeText={(v) => { setFullName(v); clearFieldError("fullName"); }}
           />
+          {fieldErrors.fullName?.map((msg, i) => (
+            <Text key={i} style={styles.errorText}>{msg}</Text>
+          ))}
 
           <Text style={styles.label}>Email *</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, fieldErrors.email && styles.inputError]}
             placeholder="e.g. nimal@pmb.lk"
             placeholderTextColor={COLORS.textFaint}
             autoCapitalize="none"
             keyboardType="email-address"
             value={email}
-            onChangeText={setEmail}
+            onChangeText={(v) => { setEmail(v); clearFieldError("email"); }}
           />
+          {fieldErrors.email?.map((msg, i) => (
+            <Text key={i} style={styles.errorText}>{msg}</Text>
+          ))}
 
           <Text style={styles.label}>Password *</Text>
-          <View style={styles.passwordRow}>
+          <View style={[styles.passwordRow, fieldErrors.password && styles.inputError]}>
             <TextInput
               style={styles.passwordInput}
               placeholder="Min 8 chars, 1 uppercase, 1 number"
               placeholderTextColor={COLORS.textFaint}
               secureTextEntry={!showPassword}
               value={password}
-              onChangeText={setPassword}
+              onChangeText={(v) => {
+                setPassword(v);
+                setPasswordTouched(true);
+                clearFieldError("password");
+              }}
+              onFocus={() => setPasswordTouched(true)}
             />
             <TouchableOpacity
               style={styles.eyeBtn}
@@ -123,17 +172,45 @@ export default function RegisterUserScreen() {
               />
             </TouchableOpacity>
           </View>
-          <Text style={styles.passwordHint}>
-            e.g. PMBStaff@123
-          </Text>
+
+          {/* Live requirement checklist — shows once user starts typing */}
+          {passwordTouched && (
+            <View style={styles.checklist}>
+              {PASSWORD_RULES.map((rule) => {
+                const passed = rule.test(password);
+                return (
+                  <View key={rule.key} style={styles.checklistRow}>
+                    <Ionicons
+                      name={passed ? "checkmark-circle" : "ellipse-outline"}
+                      size={14}
+                      color={passed ? COLORS.primary : COLORS.textFaint}
+                    />
+                    <Text style={[styles.checklistText, passed && styles.checklistTextPassed]}>
+                      {rule.label}
+                    </Text>
+                  </View>
+                );
+              })}
+            </View>
+          )}
+
+          {/* Backend-returned password errors not covered by the live checklist */}
+          {fieldErrors.password
+            ?.filter((msg) => !PASSWORD_RULES.some((r) => r.label === msg))
+            .map((msg, i) => (
+              <Text key={i} style={styles.errorText}>{msg}</Text>
+            ))}
 
           {/* Role selection */}
           <Text style={styles.sectionTitle}>🎭 Role</Text>
+          {fieldErrors.role?.map((msg, i) => (
+            <Text key={i} style={styles.errorText}>{msg}</Text>
+          ))}
           {ROLES.map((r) => (
             <TouchableOpacity
               key={r.value}
               style={[styles.roleCard, role === r.value && styles.roleCardSelected]}
-              onPress={() => { setRole(r.value); setWarehouseId(""); }}
+              onPress={() => { setRole(r.value); setWarehouseId(""); clearFieldError("role"); }}
             >
               <View style={[styles.roleIconBox, { backgroundColor: role === r.value ? COLORS.primaryLight : COLORS.borderLight }]}>
                 <Ionicons
@@ -154,16 +231,18 @@ export default function RegisterUserScreen() {
             </TouchableOpacity>
           ))}
 
-          {/* Warehouse selector — only for supervisors */}
           {role === "WAREHOUSE_SUPERVISOR" && (
             <>
               <Text style={styles.sectionTitle}>🏭 Assign Warehouse *</Text>
               <Text style={styles.hint}>Supervisors can only record events for their assigned warehouse</Text>
+              {fieldErrors.warehouseId?.map((msg, i) => (
+                <Text key={i} style={styles.errorText}>{msg}</Text>
+              ))}
               {warehouses.map((wh) => (
                 <TouchableOpacity
                   key={wh.id}
                   style={[styles.warehouseRow, warehouseId === wh.id && styles.warehouseRowSelected]}
-                  onPress={() => setWarehouseId(wh.id)}
+                  onPress={() => { setWarehouseId(wh.id); clearFieldError("warehouseId"); }}
                 >
                   <View style={styles.warehouseInfo}>
                     <Text style={styles.warehouseName}>{wh.name}</Text>
@@ -222,6 +301,8 @@ const styles = StyleSheet.create({
     fontSize: 14, color: COLORS.textPrimary,
     backgroundColor: COLORS.bgCard, marginBottom: 4,
   },
+  inputError: { borderColor: "#DC2626" },
+  errorText:  { fontSize: 11, color: "#DC2626", marginBottom: 6, marginTop: 2 },
 
   passwordRow: {
     flexDirection: "row", borderWidth: 1, borderColor: COLORS.border,
@@ -231,8 +312,12 @@ const styles = StyleSheet.create({
     flex: 1, paddingHorizontal: 12, paddingVertical: 12,
     fontSize: 14, color: COLORS.textPrimary,
   },
-  eyeBtn:       { padding: 12, justifyContent: "center" },
-  passwordHint: { fontSize: 11, color: COLORS.textFaint, marginBottom: 4 },
+  eyeBtn: { padding: 12, justifyContent: "center" },
+
+  checklist:    { marginBottom: 8, marginTop: 4, gap: 4 },
+  checklistRow: { flexDirection: "row", alignItems: "center", gap: 6 },
+  checklistText:        { fontSize: 12, color: COLORS.textFaint },
+  checklistTextPassed:  { color: COLORS.primaryDark },
 
   roleCard: {
     flexDirection: "row", alignItems: "center",
