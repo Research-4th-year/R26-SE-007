@@ -1,0 +1,258 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────
+// Enums
+// ─────────────────────────────────────────────
+
+enum Role {
+  ADMIN       // PMB HQ system administrator
+  REGIONAL_MANAGER
+  WAREHOUSE_SUPERVISOR
+  AUDITOR
+}
+
+enum StockEventType {
+  INFLOW         // Paddy purchased from farmers
+  OUTFLOW        // Stock dispatched to millers/traders
+  REDISTRIBUTION // Inter-warehouse transfer
+  DAMAGE         // Loss from disaster / spoilage
+  ADJUSTMENT     // Manual stock correction (audited)
+}
+
+enum DisasterType {
+  FLOOD
+  CYCLONE
+  ELEPHANT_ATTACK
+  FIRE
+  OTHER
+}
+
+enum DisasterStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+}
+
+// ─────────────────────────────────────────────
+// Core Models
+// ─────────────────────────────────────────────
+
+model User {
+  id                  String    @id @default(uuid())
+  email               String    @unique
+  passwordHash        String
+  fullName            String
+  role                Role
+  isActive            Boolean   @default(true)
+
+  // Fabric identity (populated after enrollment — Phase 4)
+  fabricEnrollmentId  String?   @unique
+  fabricMspId         String?
+
+  // Optional: supervisors belong to one warehouse
+  warehouseId         String?
+  warehouse           Warehouse? @relation(fields: [warehouseId], references: [id])
+
+  // Refresh tokens (supports multiple devices)
+  refreshTokens       RefreshToken[]
+
+  // Audit
+  stockEvents         StockEvent[]    @relation("ReportedBy")
+  disasterEvents      DisasterEvent[] @relation("ReportedBy")
+  redistributionOrders RedistributionOrder[] @relation("IssuedBy")
+  uploadedDocuments   DocumentStore[]  @relation("UploadedDocuments")
+
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@index([email])
+  @@index([role])
+  @@map("users")
+}
+
+model RefreshToken {
+  id          String    @id @default(uuid())
+  token       String    @unique @db.VarChar(512)
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt   DateTime
+  revokedAt   DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([token])
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+model Warehouse {
+  id              String    @id @default(uuid())
+  name            String
+  code            String    @unique  // e.g. "AMP-01" (Ampara district, warehouse 1)
+  district        String
+  address         String?
+  latitude        Float
+  longitude       Float
+  capacityTons    Float     // Total storage capacity
+  isActive        Boolean   @default(true)
+
+  // Fabric peer (Phase 4)
+  fabricPeerId    String?
+
+  // Relations
+  supervisors     User[]
+  stockEvents     StockEvent[]
+  disasterEvents  DisasterEvent[]
+  gnnScores       WarehouseScore[]
+
+  // Redistribution
+  outboundOrders  RedistributionOrder[] @relation("SourceWarehouse")
+  inboundOrders   RedistributionOrder[] @relation("DestinationWarehouse")
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([district])
+  @@map("warehouses")
+}
+
+model StockEvent {
+  id              String          @id @default(uuid())
+  warehouseId     String
+  warehouse       Warehouse       @relation(fields: [warehouseId], references: [id])
+  eventType       StockEventType
+  quantityTons    Float
+  notes           String?         @db.Text
+
+  // Off-chain document reference
+  documentHash    String?         // SHA-256 of the stock report document
+  documentPath    String?         // Path in off-chain store
+
+  // Blockchain record (Phase 4)
+  blockchainTxId  String?         @unique
+
+  reportedById    String
+  reportedBy      User            @relation("ReportedBy", fields: [reportedById], references: [id])
+
+  timestamp       DateTime        @default(now())
+  createdAt       DateTime        @default(now())
+
+  @@index([warehouseId])
+  @@index([eventType])
+  @@index([timestamp])
+  @@map("stock_events")
+}
+
+model DisasterEvent {
+  id                  String          @id @default(uuid())
+  disasterType        DisasterType
+  description         String?         @db.Text
+  estimatedLossTons   Float?
+  status              DisasterStatus  @default(OPEN)
+
+  affectedWarehouseId String
+  affectedWarehouse   Warehouse       @relation(fields: [affectedWarehouseId], references: [id])
+
+  reportedById        String
+  reportedBy          User            @relation("ReportedBy", fields: [reportedById], references: [id])
+
+  // Blockchain record (Phase 4)
+  blockchainTxId      String?         @unique
+
+  zkpProofs           ZKPProof[]
+  redistributionOrders RedistributionOrder[]
+
+  occurredAt          DateTime
+  resolvedAt          DateTime?
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+
+  @@index([status])
+  @@index([affectedWarehouseId])
+  @@map("disaster_events")
+}
+
+model RedistributionOrder {
+  id                    String        @id @default(uuid())
+  disasterEventId       String
+  disasterEvent         DisasterEvent @relation(fields: [disasterEventId], references: [id])
+
+  sourceWarehouseId     String
+  sourceWarehouse       Warehouse     @relation("SourceWarehouse", fields: [sourceWarehouseId], references: [id])
+
+  destinationWarehouseId String
+  destinationWarehouse  Warehouse     @relation("DestinationWarehouse", fields: [destinationWarehouseId], references: [id])
+
+  quantityTons          Float
+  compositeScore        Float?        // Ranking score used to select this warehouse
+  rmSignature           String?       @db.Text  // Digital signature (Phase 4)
+
+  // Blockchain record (Phase 4)
+  blockchainTxId        String?       @unique
+
+  issuedById            String
+  issuedBy              User          @relation("IssuedBy", fields: [issuedById], references: [id])
+
+  issuedAt              DateTime      @default(now())
+
+  @@index([disasterEventId])
+  @@map("redistribution_orders")
+}
+
+model ZKPProof {
+  id                  String        @id @default(uuid())
+  warehouseId         String
+  disasterEventId     String
+  disasterEvent       DisasterEvent @relation(fields: [disasterEventId], references: [id])
+
+  proofJson           Json          // The full Groth16 proof object
+  publicSignals       Json          // Public signals (threshold, etc.)
+  verificationResult  Boolean?      // null = pending, true/false = verified
+
+  // Blockchain verification record (Phase 4)
+  blockchainTxId      String?       @unique
+
+  submittedAt         DateTime      @default(now())
+  verifiedAt          DateTime?
+
+  @@index([warehouseId])
+  @@index([disasterEventId])
+  @@map("zkp_proofs")
+}
+
+model WarehouseScore {
+  id                  String    @id @default(uuid())
+  warehouseId         String
+  warehouse           Warehouse @relation(fields: [warehouseId], references: [id])
+  reliabilityScore    Float     // 0.0 – 1.0 from GNN
+  anomalyFlags        Json?     // Array of flagged behaviors
+  computedAt          DateTime  @default(now())
+
+  @@index([warehouseId])
+  @@index([computedAt])
+  @@map("warehouse_scores")
+}
+
+model DocumentStore {
+  id           String   @id @default(uuid())
+  hash         String   @unique
+  originalName String
+  mimeType     String
+  sizeBytes    Int
+  filePath     String
+
+  uploadedById String
+  uploadedBy   User     @relation("UploadedDocuments", fields: [uploadedById], references: [id])
+
+  createdAt    DateTime @default(now())
+
+  @@index([hash])
+  @@index([uploadedById])
+  @@map("document_store")
+}
