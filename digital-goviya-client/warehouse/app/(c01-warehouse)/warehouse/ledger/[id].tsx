@@ -5,8 +5,8 @@ import {
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { api } from "../../../services/api";
-import { COLORS } from "../../../constants/theme";
+import { api } from "@/services/shared/api";
+import { COLORS } from "@/constants/theme";
 
 export default function LedgerHistoryScreen() {
   const { id }                      = useLocalSearchParams<{ id: string }>();
@@ -68,10 +68,10 @@ export default function LedgerHistoryScreen() {
               <Text style={styles.summaryTitle}>
                 {events.length} events on-chain
               </Text>
-              <Text style={styles.summaryDesc}>
+              {/* <Text style={styles.summaryDesc}>
                 All records are immutable and tamper-proof on Hyperledger Fabric.
                 Even if MySQL is modified, this ledger remains unchanged.
-              </Text>
+              </Text> */}
             </View>
           </View>
 

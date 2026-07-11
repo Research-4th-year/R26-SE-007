@@ -11,12 +11,8 @@ import {
 } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import {
-  disasterService,
-  Disaster,
-  RankedCandidate,
-} from "../../services/disaster.service";
-import { COLORS, getStatusColors, DISASTER_ICONS } from "../../constants/theme";
+import { disasterService, Disaster, RankedCandidate } from "@/services/warehouse/disaster.service";
+import { COLORS, getStatusColors, DISASTER_ICONS } from "@/constants/theme";
 
 export default function DisasterDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();

@@ -1,18 +1,23 @@
 import { useState } from "react";
 import {
-  View, Text, ScrollView, TouchableOpacity,
-  ActivityIndicator, Alert, StyleSheet
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  ActivityIndicator,
+  Alert,
+  StyleSheet,
 } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as DocumentPicker from "expo-document-picker";
-import { api } from "../../services/api";
-import { COLORS } from "../../constants/theme";
+import { api } from "@/services/shared/api";
+import { COLORS } from "@/constants/theme";
 
 export default function VerifyDocumentScreen() {
-  const [file, setFile]           = useState<any>(null);
+  const [file, setFile] = useState<any>(null);
   const [verifying, setVerifying] = useState(false);
-  const [result, setResult]       = useState<any>(null);
+  const [result, setResult] = useState<any>(null);
 
   const handlePickFile = async () => {
     try {
@@ -36,7 +41,7 @@ export default function VerifyDocumentScreen() {
     try {
       const formData = new FormData();
       formData.append("document", {
-        uri:  file.uri,
+        uri: file.uri,
         name: file.name,
         type: file.mimeType ?? "application/pdf",
       } as any);
@@ -46,7 +51,10 @@ export default function VerifyDocumentScreen() {
       });
       setResult(res.data.data);
     } catch (err: any) {
-      Alert.alert("Error", err?.response?.data?.message || "Verification failed");
+      Alert.alert(
+        "Error",
+        err?.response?.data?.message || "Verification failed",
+      );
     } finally {
       setVerifying(false);
     }
@@ -66,14 +74,13 @@ export default function VerifyDocumentScreen() {
 
       <ScrollView style={styles.scroll}>
         <View style={styles.content}>
-
           {/* Explanation */}
           <View style={styles.explainCard}>
             <Ionicons name="information-circle" size={16} color={COLORS.info} />
             <Text style={styles.explainText}>
-              Upload any stock report document. The system computes its SHA-256 hash
-              and checks it against the blockchain record. If the file has been altered
-              even by one byte, verification will fail.
+              Upload any stock report document. The system computes its SHA-256
+              hash and checks it against the blockchain record. If the file has
+              been altered even by one byte, verification will fail.
             </Text>
           </View>
 
@@ -96,38 +103,73 @@ export default function VerifyDocumentScreen() {
           )}
 
           <TouchableOpacity
-            style={[styles.verifyBtn, (!file || verifying) && styles.btnDisabled]}
+            style={[
+              styles.verifyBtn,
+              (!file || verifying) && styles.btnDisabled,
+            ]}
             onPress={handleVerify}
             disabled={!file || verifying}
           >
-            {verifying
-              ? <><ActivityIndicator size="small" color={COLORS.white} /><Text style={styles.verifyBtnText}>Computing hash...</Text></>
-              : <><Ionicons name="search" size={18} color={COLORS.white} /><Text style={styles.verifyBtnText}>Verify Integrity</Text></>
-            }
+            {verifying ? (
+              <>
+                <ActivityIndicator size="small" color={COLORS.white} />
+                <Text style={styles.verifyBtnText}>Computing hash...</Text>
+              </>
+            ) : (
+              <>
+                <Ionicons name="search" size={18} color={COLORS.white} />
+                <Text style={styles.verifyBtnText}>Verify Integrity</Text>
+              </>
+            )}
           </TouchableOpacity>
 
           {/* Result */}
           {result && (
             <View style={styles.resultSection}>
               {/* Verdict */}
-              <View style={[styles.verdictCard, {
-                backgroundColor: result.verified ? COLORS.successBg : COLORS.dangerBg,
-                borderColor:     result.verified ? COLORS.success   : COLORS.danger,
-              }]}>
+              <View
+                style={[
+                  styles.verdictCard,
+                  {
+                    backgroundColor: result.verified
+                      ? COLORS.successBg
+                      : COLORS.dangerBg,
+                    borderColor: result.verified
+                      ? COLORS.success
+                      : COLORS.danger,
+                  },
+                ]}
+              >
                 <Ionicons
                   name={result.verified ? "shield-checkmark" : "shield"}
                   size={32}
                   color={result.verified ? COLORS.success : COLORS.danger}
                 />
                 <View style={styles.verdictText}>
-                  <Text style={[styles.verdictTitle, {
-                    color: result.verified ? COLORS.successText : COLORS.dangerText
-                  }]}>
-                    {result.verified ? "Document Verified ✅" : "Verification Failed ❌"}
+                  <Text
+                    style={[
+                      styles.verdictTitle,
+                      {
+                        color: result.verified
+                          ? COLORS.successText
+                          : COLORS.dangerText,
+                      },
+                    ]}
+                  >
+                    {result.verified
+                      ? "Document Verified ✅"
+                      : "Verification Failed ❌"}
                   </Text>
-                  <Text style={[styles.verdictDesc, {
-                    color: result.verified ? COLORS.successText : COLORS.dangerText
-                  }]}>
+                  <Text
+                    style={[
+                      styles.verdictDesc,
+                      {
+                        color: result.verified
+                          ? COLORS.successText
+                          : COLORS.dangerText,
+                      },
+                    ]}
+                  >
                     {result.verified
                       ? "This document matches the stored hash. It has not been tampered with."
                       : "No matching hash found. This document may have been altered or was never registered."}
@@ -147,11 +189,15 @@ export default function VerifyDocumentScreen() {
                   <Text style={styles.recordTitle}>Stored Record</Text>
                   <View style={styles.recordRow}>
                     <Text style={styles.recordLabel}>Original name</Text>
-                    <Text style={styles.recordValue}>{result.storedRecord.originalName}</Text>
+                    <Text style={styles.recordValue}>
+                      {result.storedRecord.originalName}
+                    </Text>
                   </View>
                   <View style={styles.recordRow}>
                     <Text style={styles.recordLabel}>Uploaded by</Text>
-                    <Text style={styles.recordValue}>{result.storedRecord.uploadedBy?.fullName}</Text>
+                    <Text style={styles.recordValue}>
+                      {result.storedRecord.uploadedBy?.fullName}
+                    </Text>
                   </View>
                   <View style={styles.recordRow}>
                     <Text style={styles.recordLabel}>Uploaded at</Text>
@@ -172,24 +218,37 @@ export default function VerifyDocumentScreen() {
               {result.linkedEvents && result.linkedEvents.length > 0 && (
                 <View style={styles.linkedCard}>
                   <Text style={styles.linkedTitle}>
-                    Linked to {result.linkedEvents.length} stock event{result.linkedEvents.length > 1 ? "s" : ""}
+                    Linked to {result.linkedEvents.length} stock event
+                    {result.linkedEvents.length > 1 ? "s" : ""}
                   </Text>
                   {result.linkedEvents.map((ev: any) => (
                     <TouchableOpacity
                       key={ev.id}
                       style={styles.linkedEvent}
-                      onPress={() => router.push({
-                        pathname: "/(supervisor)/event-detail" as any,
-                        params: { eventId: ev.id, warehouseId: ev.warehouseId }
-                      })}
+                      onPress={() =>
+                        router.push({
+                          pathname:
+                            "/(c01-warehouse)/(supervisor)/event-detail" as any,
+                          params: {
+                            eventId: ev.id,
+                            warehouseId: ev.warehouseId,
+                          },
+                        })
+                      }
                     >
                       <View style={styles.linkedEventLeft}>
-                        <Text style={styles.linkedEventType}>{ev.eventType}</Text>
+                        <Text style={styles.linkedEventType}>
+                          {ev.eventType}
+                        </Text>
                         <Text style={styles.linkedEventTime}>
                           {new Date(ev.timestamp).toLocaleDateString()}
                         </Text>
                       </View>
-                      <Ionicons name="chevron-forward" size={16} color={COLORS.textFaint} />
+                      <Ionicons
+                        name="chevron-forward"
+                        size={16}
+                        color={COLORS.textFaint}
+                      />
                     </TouchableOpacity>
                   ))}
                 </View>
@@ -205,88 +264,170 @@ export default function VerifyDocumentScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen:  { flex: 1, backgroundColor: COLORS.bgScreen },
-  scroll:  { flex: 1 },
+  screen: { flex: 1, backgroundColor: COLORS.bgScreen },
+  scroll: { flex: 1 },
   content: { padding: 16 },
 
   header: {
     backgroundColor: COLORS.primaryDark,
-    paddingHorizontal: 16, paddingTop: 52, paddingBottom: 16,
-    flexDirection: "row", alignItems: "center",
+    paddingHorizontal: 16,
+    paddingTop: 52,
+    paddingBottom: 16,
+    flexDirection: "row",
+    alignItems: "center",
   },
-  backBtn:     { marginRight: 12 },
+  backBtn: { marginRight: 12 },
   headerTitle: { color: COLORS.white, fontSize: 18, fontWeight: "bold" },
-  headerSub:   { color: COLORS.primaryLight, fontSize: 12 },
+  headerSub: { color: COLORS.primaryLight, fontSize: 12 },
 
   explainCard: {
-    flexDirection: "row", backgroundColor: COLORS.infoBg,
-    borderRadius: 12, padding: 12, marginBottom: 16, gap: 8,
+    flexDirection: "row",
+    backgroundColor: COLORS.infoBg,
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 16,
+    gap: 8,
   },
-  explainText: { flex: 1, fontSize: 12, color: COLORS.infoText, lineHeight: 18 },
+  explainText: {
+    flex: 1,
+    fontSize: 12,
+    color: COLORS.infoText,
+    lineHeight: 18,
+  },
 
   pickBtn: {
-    flexDirection: "row", alignItems: "center",
-    borderWidth: 1.5, borderColor: COLORS.primary, borderStyle: "dashed",
-    borderRadius: 12, padding: 16, gap: 10, justifyContent: "center",
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1.5,
+    borderColor: COLORS.primary,
+    borderStyle: "dashed",
+    borderRadius: 12,
+    padding: 16,
+    gap: 10,
+    justifyContent: "center",
     marginBottom: 10,
   },
   pickBtnText: { fontSize: 14, color: COLORS.primary, fontWeight: "600" },
 
   fileInfo: {
-    flexDirection: "row", alignItems: "center",
-    gap: 6, marginBottom: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginBottom: 16,
   },
   fileInfoText: { flex: 1, fontSize: 12, color: COLORS.textMuted },
-  fileSize:     { fontSize: 11, color: COLORS.textFaint },
+  fileSize: { fontSize: 11, color: COLORS.textFaint },
 
   verifyBtn: {
-    backgroundColor: COLORS.info, borderRadius: 12,
-    paddingVertical: 14, flexDirection: "row",
-    alignItems: "center", justifyContent: "center",
-    gap: 8, marginBottom: 20,
+    backgroundColor: COLORS.info,
+    borderRadius: 12,
+    paddingVertical: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    marginBottom: 20,
   },
   verifyBtnText: { color: COLORS.white, fontWeight: "bold", fontSize: 15 },
-  btnDisabled:   { opacity: 0.5 },
+  btnDisabled: { opacity: 0.5 },
 
   resultSection: { gap: 12 },
 
   verdictCard: {
-    flexDirection: "row", alignItems: "flex-start",
-    borderRadius: 14, padding: 16, gap: 14,
+    flexDirection: "row",
+    alignItems: "flex-start",
+    borderRadius: 14,
+    padding: 16,
+    gap: 14,
     borderWidth: 1.5,
   },
-  verdictText:  { flex: 1 },
+  verdictText: { flex: 1 },
   verdictTitle: { fontSize: 16, fontWeight: "bold", marginBottom: 4 },
-  verdictDesc:  { fontSize: 13, lineHeight: 18 },
+  verdictDesc: { fontSize: 13, lineHeight: 18 },
 
   hashCard: {
-    backgroundColor: COLORS.bgCard, borderRadius: 12, padding: 14,
-    shadowColor: "#000", shadowOpacity: 0.04, shadowRadius: 3,
-    shadowOffset: { width: 0, height: 1 }, elevation: 1,
+    backgroundColor: COLORS.bgCard,
+    borderRadius: 12,
+    padding: 14,
+    shadowColor: "#000",
+    shadowOpacity: 0.04,
+    shadowRadius: 3,
+    shadowOffset: { width: 0, height: 1 },
+    elevation: 1,
   },
-  hashLabel: { fontSize: 11, color: COLORS.textMuted, fontWeight: "600", marginBottom: 6 },
-  hashValue: { fontSize: 11, color: COLORS.textPrimary, fontFamily: "monospace", lineHeight: 18 },
+  hashLabel: {
+    fontSize: 11,
+    color: COLORS.textMuted,
+    fontWeight: "600",
+    marginBottom: 6,
+  },
+  hashValue: {
+    fontSize: 11,
+    color: COLORS.textPrimary,
+    fontFamily: "monospace",
+    lineHeight: 18,
+  },
 
   recordCard: {
-    backgroundColor: COLORS.bgCard, borderRadius: 12, padding: 14,
-    shadowColor: "#000", shadowOpacity: 0.04, shadowRadius: 3,
-    shadowOffset: { width: 0, height: 1 }, elevation: 1,
+    backgroundColor: COLORS.bgCard,
+    borderRadius: 12,
+    padding: 14,
+    shadowColor: "#000",
+    shadowOpacity: 0.04,
+    shadowRadius: 3,
+    shadowOffset: { width: 0, height: 1 },
+    elevation: 1,
   },
-  recordTitle: { fontSize: 13, fontWeight: "700", color: COLORS.textSecondary, marginBottom: 10 },
-  recordRow:   { flexDirection: "row", paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: COLORS.borderLight },
-  recordLabel: { width: 110, fontSize: 12, color: COLORS.textFaint, fontWeight: "600" },
+  recordTitle: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: COLORS.textSecondary,
+    marginBottom: 10,
+  },
+  recordRow: {
+    flexDirection: "row",
+    paddingVertical: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.borderLight,
+  },
+  recordLabel: {
+    width: 110,
+    fontSize: 12,
+    color: COLORS.textFaint,
+    fontWeight: "600",
+  },
   recordValue: { flex: 1, fontSize: 12, color: COLORS.textPrimary },
 
   linkedCard: {
-    backgroundColor: COLORS.bgCard, borderRadius: 12, padding: 14,
-    shadowColor: "#000", shadowOpacity: 0.04, shadowRadius: 3,
-    shadowOffset: { width: 0, height: 1 }, elevation: 1,
+    backgroundColor: COLORS.bgCard,
+    borderRadius: 12,
+    padding: 14,
+    shadowColor: "#000",
+    shadowOpacity: 0.04,
+    shadowRadius: 3,
+    shadowOffset: { width: 0, height: 1 },
+    elevation: 1,
   },
-  linkedTitle:      { fontSize: 13, fontWeight: "700", color: COLORS.textSecondary, marginBottom: 10 },
-  linkedEvent:      { flexDirection: "row", alignItems: "center", paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: COLORS.borderLight },
-  linkedEventLeft:  { flex: 1 },
-  linkedEventType:  { fontSize: 13, fontWeight: "600", color: COLORS.textPrimary },
-  linkedEventTime:  { fontSize: 11, color: COLORS.textMuted },
+  linkedTitle: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: COLORS.textSecondary,
+    marginBottom: 10,
+  },
+  linkedEvent: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.borderLight,
+  },
+  linkedEventLeft: { flex: 1 },
+  linkedEventType: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: COLORS.textPrimary,
+  },
+  linkedEventTime: { fontSize: 11, color: COLORS.textMuted },
 
   bottomSpacer: { height: 40 },
 });

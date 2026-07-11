@@ -6,8 +6,8 @@ import {
 import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as DocumentPicker from "expo-document-picker";
-import { api } from "../../services/api";
-import { COLORS } from "../../constants/theme";
+import { api } from "@/services/shared/api";
+import { COLORS } from "@/constants/theme";
 
 export default function UploadDocumentScreen() {
   const { eventId, warehouseId } = useLocalSearchParams<{

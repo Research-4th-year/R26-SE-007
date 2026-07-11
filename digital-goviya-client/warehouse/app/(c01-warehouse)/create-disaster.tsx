@@ -5,9 +5,9 @@ import {
 } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { disasterService } from "../services/disaster.service";
-import { warehouseService, Warehouse } from "../services/warehouse.service";
-import { COLORS } from "../constants/theme";
+import { disasterService } from "@/services/warehouse/disaster.service";
+import { warehouseService, Warehouse } from "@/services/warehouse/warehouse.service";
+import { COLORS } from "@/constants/theme";
 
 const DISASTER_TYPES = ["FLOOD", "CYCLONE", "ELEPHANT_ATTACK", "FIRE", "OTHER"];
 

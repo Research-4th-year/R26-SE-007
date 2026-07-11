@@ -1,20 +1,56 @@
 import { useState } from "react";
 import {
-  View, Text, TextInput, TouchableOpacity, ScrollView,
-  ActivityIndicator, Alert, StyleSheet
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  ScrollView,
+  ActivityIndicator,
+  Alert,
+  StyleSheet,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { api } from "../../services/api";
-import { COLORS } from "../../constants/theme";
-import { useDebouncedCallback } from "../../hooks/useDebounce";
+import { api } from "@/services/shared/api";
+import { COLORS } from "@/constants/theme";
+import { useDebouncedCallback } from "@/hooks/shared/useDebounce";
 
 const EVENT_TYPES = [
-  { value: "INFLOW",         label: "Inflow",         icon: "arrow-down-circle", color: COLORS.success, desc: "Stock received from farmers" },
-  { value: "OUTFLOW",        label: "Outflow",        icon: "arrow-up-circle",   color: COLORS.danger,  desc: "Stock dispatched to millers/traders" },
-  { value: "REDISTRIBUTION", label: "Redistribution", icon: "swap-horizontal",   color: COLORS.info,    desc: "Transfer to/from another warehouse" },
-  { value: "DAMAGE",         label: "Damage",         icon: "warning",           color: COLORS.warning, desc: "Loss from disaster or spoilage" },
-  { value: "ADJUSTMENT",     label: "Adjustment",     icon: "pencil",            color: COLORS.textMuted, desc: "Manual correction after stock count" },
+  {
+    value: "INFLOW",
+    label: "Inflow",
+    icon: "arrow-down-circle",
+    color: COLORS.success,
+    desc: "Stock received from farmers",
+  },
+  {
+    value: "OUTFLOW",
+    label: "Outflow",
+    icon: "arrow-up-circle",
+    color: COLORS.danger,
+    desc: "Stock dispatched to millers/traders",
+  },
+  {
+    value: "REDISTRIBUTION",
+    label: "Redistribution",
+    icon: "swap-horizontal",
+    color: COLORS.info,
+    desc: "Transfer to/from another warehouse",
+  },
+  {
+    value: "DAMAGE",
+    label: "Damage",
+    icon: "warning",
+    color: COLORS.warning,
+    desc: "Loss from disaster or spoilage",
+  },
+  {
+    value: "ADJUSTMENT",
+    label: "Adjustment",
+    icon: "pencil",
+    color: COLORS.textMuted,
+    desc: "Manual correction after stock count",
+  },
 ];
 
 export default function RecordEventScreen() {
@@ -23,14 +59,17 @@ export default function RecordEventScreen() {
     warehouseName: string;
   }>();
 
-  const [eventType, setEventType]     = useState("");
-  const [quantity, setQuantity]       = useState("");
-  const [notes, setNotes]             = useState("");
-  const [submitting, setSubmitting]   = useState(false);
+  const [eventType, setEventType] = useState("");
+  const [quantity, setQuantity] = useState("");
+  const [notes, setNotes] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const [lastEventId, setLastEventId] = useState<string | null>(null);
 
   const handleSubmit = useDebouncedCallback(async () => {
-    if (!eventType)  { Alert.alert("Required", "Select an event type"); return; }
+    if (!eventType) {
+      Alert.alert("Required", "Select an event type");
+      return;
+    }
     if (!quantity || isNaN(Number(quantity)) || Number(quantity) <= 0) {
       Alert.alert("Required", "Enter a valid quantity in tons");
       return;
@@ -38,11 +77,14 @@ export default function RecordEventScreen() {
 
     setSubmitting(true);
     try {
-      const res = await api.post(`/api/warehouses/${warehouseId}/stock-events`, {
-        eventType,
-        quantityTons: parseFloat(quantity),
-        notes: notes.trim() || undefined,
-      });
+      const res = await api.post(
+        `/api/warehouses/${warehouseId}/stock-events`,
+        {
+          eventType,
+          quantityTons: parseFloat(quantity),
+          notes: notes.trim() || undefined,
+        },
+      );
 
       const event = res.data.data.event;
       const summary = res.data.data.warehouseSummary;
@@ -54,23 +96,28 @@ export default function RecordEventScreen() {
         [
           {
             text: "Attach Document",
-            onPress: () => router.push({
-              pathname: "/(supervisor)/upload-document" as any,
-              params: { eventId: event.id, warehouseId }
-            }),
+            onPress: () =>
+              router.push({
+                pathname:
+                  "/(c01-warehouse)/(supervisor)/upload-document" as any,
+                params: { eventId: event.id, warehouseId },
+              }),
           },
           {
             text: "Done",
             onPress: () => router.back(),
           },
-        ]
+        ],
       );
     } catch (err: any) {
-      Alert.alert("Error", err?.response?.data?.message || "Failed to record event");
+      Alert.alert(
+        "Error",
+        err?.response?.data?.message || "Failed to record event",
+      );
     } finally {
       setSubmitting(false);
     }
-  },1000);
+  }, 1000);
 
   return (
     <View style={styles.screen}>
@@ -80,31 +127,46 @@ export default function RecordEventScreen() {
         </TouchableOpacity>
         <View>
           <Text style={styles.headerTitle}>Record Stock Event</Text>
-          <Text style={styles.headerSub} numberOfLines={1}>{warehouseName}</Text>
+          <Text style={styles.headerSub} numberOfLines={1}>
+            {warehouseName}
+          </Text>
         </View>
       </View>
 
       <ScrollView style={styles.scroll} keyboardShouldPersistTaps="handled">
         <View style={styles.content}>
-
           <Text style={styles.sectionTitle}>Event Type *</Text>
           {EVENT_TYPES.map((t) => (
             <TouchableOpacity
               key={t.value}
-              style={[styles.typeCard, eventType === t.value && styles.typeCardSelected]}
+              style={[
+                styles.typeCard,
+                eventType === t.value && styles.typeCardSelected,
+              ]}
               onPress={() => setEventType(t.value)}
             >
-              <View style={[styles.typeIcon, { backgroundColor: t.color + "20" }]}>
+              <View
+                style={[styles.typeIcon, { backgroundColor: t.color + "20" }]}
+              >
                 <Ionicons name={t.icon as any} size={22} color={t.color} />
               </View>
               <View style={styles.typeInfo}>
-                <Text style={[styles.typeLabel, eventType === t.value && { color: COLORS.primaryDark }]}>
+                <Text
+                  style={[
+                    styles.typeLabel,
+                    eventType === t.value && { color: COLORS.primaryDark },
+                  ]}
+                >
                   {t.label}
                 </Text>
                 <Text style={styles.typeDesc}>{t.desc}</Text>
               </View>
               {eventType === t.value && (
-                <Ionicons name="checkmark-circle" size={20} color={COLORS.primary} />
+                <Ionicons
+                  name="checkmark-circle"
+                  size={20}
+                  color={COLORS.primary}
+                />
               )}
             </TouchableOpacity>
           ))}
@@ -133,7 +195,8 @@ export default function RecordEventScreen() {
           <View style={styles.hashNote}>
             <Ionicons name="shield-checkmark" size={14} color={COLORS.info} />
             <Text style={styles.hashNoteText}>
-              A SHA-256 document hash will be automatically generated and can be linked to a physical receipt after submission.
+              A document hash will be automatically generated and can be
+              linked to a physical receipt after submission.
             </Text>
           </View>
 
@@ -142,13 +205,18 @@ export default function RecordEventScreen() {
             onPress={handleSubmit}
             disabled={submitting}
           >
-            {submitting
-              ? <ActivityIndicator color={COLORS.white} />
-              : <>
-                  <Ionicons name="checkmark-circle" size={20} color={COLORS.white} />
-                  <Text style={styles.submitBtnText}>Record Event</Text>
-                </>
-            }
+            {submitting ? (
+              <ActivityIndicator color={COLORS.white} />
+            ) : (
+              <>
+                <Ionicons
+                  name="checkmark-circle"
+                  size={20}
+                  color={COLORS.white}
+                />
+                <Text style={styles.submitBtnText}>Record Event</Text>
+              </>
+            )}
           </TouchableOpacity>
 
           <View style={styles.bottomSpacer} />
@@ -159,56 +227,96 @@ export default function RecordEventScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen:  { flex: 1, backgroundColor: COLORS.bgScreen },
-  scroll:  { flex: 1 },
+  screen: { flex: 1, backgroundColor: COLORS.bgScreen },
+  scroll: { flex: 1 },
   content: { padding: 16 },
 
   header: {
     backgroundColor: COLORS.primaryDark,
-    paddingHorizontal: 16, paddingTop: 52, paddingBottom: 16,
-    flexDirection: "row", alignItems: "center",
+    paddingHorizontal: 16,
+    paddingTop: 52,
+    paddingBottom: 16,
+    flexDirection: "row",
+    alignItems: "center",
   },
-  backBtn:     { marginRight: 12 },
+  backBtn: { marginRight: 12 },
   headerTitle: { color: COLORS.white, fontSize: 18, fontWeight: "bold" },
-  headerSub:   { color: COLORS.primaryLight, fontSize: 12 },
+  headerSub: { color: COLORS.primaryLight, fontSize: 12 },
 
-  sectionTitle: { fontSize: 15, fontWeight: "bold", color: COLORS.textSecondary, marginBottom: 10, marginTop: 16 },
+  sectionTitle: {
+    fontSize: 15,
+    fontWeight: "bold",
+    color: COLORS.textSecondary,
+    marginBottom: 10,
+    marginTop: 16,
+  },
 
   typeCard: {
-    flexDirection: "row", alignItems: "center",
-    backgroundColor: COLORS.bgCard, borderRadius: 12,
-    padding: 14, marginBottom: 8, gap: 12,
-    borderWidth: 1.5, borderColor: "transparent",
-    shadowColor: "#000", shadowOpacity: 0.04, shadowRadius: 3,
-    shadowOffset: { width: 0, height: 1 }, elevation: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: COLORS.bgCard,
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 8,
+    gap: 12,
+    borderWidth: 1.5,
+    borderColor: "transparent",
+    shadowColor: "#000",
+    shadowOpacity: 0.04,
+    shadowRadius: 3,
+    shadowOffset: { width: 0, height: 1 },
+    elevation: 1,
   },
   typeCardSelected: { borderColor: COLORS.primary, backgroundColor: "#F0FDF4" },
-  typeIcon:         { width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center" },
-  typeInfo:         { flex: 1 },
-  typeLabel:        { fontSize: 14, fontWeight: "700", color: COLORS.textPrimary },
-  typeDesc:         { fontSize: 11, color: COLORS.textMuted, marginTop: 2 },
+  typeIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  typeInfo: { flex: 1 },
+  typeLabel: { fontSize: 14, fontWeight: "700", color: COLORS.textPrimary },
+  typeDesc: { fontSize: 11, color: COLORS.textMuted, marginTop: 2 },
 
   input: {
-    borderWidth: 1, borderColor: COLORS.border, borderRadius: 10,
-    paddingHorizontal: 12, paddingVertical: 12,
-    fontSize: 15, color: COLORS.textPrimary,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    fontSize: 15,
+    color: COLORS.textPrimary,
     backgroundColor: COLORS.bgCard,
   },
   textArea: { height: 100, textAlignVertical: "top" },
 
   hashNote: {
-    flexDirection: "row", backgroundColor: COLORS.infoBg,
-    borderRadius: 10, padding: 12, marginTop: 16, gap: 8,
+    flexDirection: "row",
+    backgroundColor: COLORS.infoBg,
+    borderRadius: 10,
+    padding: 12,
+    marginTop: 16,
+    gap: 8,
   },
-  hashNoteText: { flex: 1, fontSize: 12, color: COLORS.infoText, lineHeight: 18 },
+  hashNoteText: {
+    flex: 1,
+    fontSize: 12,
+    color: COLORS.infoText,
+    lineHeight: 18,
+  },
 
   submitBtn: {
-    backgroundColor: COLORS.primary, borderRadius: 12,
-    paddingVertical: 16, flexDirection: "row",
-    alignItems: "center", justifyContent: "center",
-    gap: 8, marginTop: 20,
+    backgroundColor: COLORS.primary,
+    borderRadius: 12,
+    paddingVertical: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    marginTop: 20,
   },
   submitBtnText: { color: COLORS.white, fontWeight: "bold", fontSize: 16 },
-  btnDisabled:   { opacity: 0.6 },
-  bottomSpacer:  { height: 40 },
+  btnDisabled: { opacity: 0.6 },
+  bottomSpacer: { height: 40 },
 });

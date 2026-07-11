@@ -1,4 +1,4 @@
-import { api } from "./api";
+import { api } from "@/services/shared/api";
 
 export interface RankedCandidate {
   warehouseId: string;

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { authService, User } from "../services/auth.service";
+import { authService, User } from "@/services/shared/auth.service";
 
 export function useAuth() {
   const [user, setUser]       = useState<User | null>(null);

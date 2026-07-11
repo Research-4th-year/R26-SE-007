@@ -15,13 +15,14 @@ import {
   warehouseService,
   NetworkSummary,
   Warehouse,
-} from "../../services/warehouse.service";
-import { authService } from "../../services/auth.service";
+} from "@/services/warehouse/warehouse.service";
+import { authService } from "@/services/shared/auth.service";
 import {
   COLORS,
   getUtilizationColors,
   getReliabilityColor,
-} from "../../constants/theme";
+} from "@/constants/theme";
+
 
 export default function DashboardScreen() {
   const [summary, setSummary] = useState<NetworkSummary | null>(null);
@@ -59,9 +60,9 @@ export default function DashboardScreen() {
   useEffect(() => {
     authService.getStoredUser().then((u) => {
       if (u?.role === "WAREHOUSE_SUPERVISOR") {
-        router.replace("/(supervisor)/my-warehouse" as any);
+router.replace("/(c01-warehouse)/(supervisor)/my-warehouse" as any);
       } else if (u?.role === "AUDITOR") {
-        router.replace("/(auditor)/dashboard" as any);
+        router.replace("/(c01-warehouse)/(auditor)/dashboard" as any);
       }
     });
   }, []);
@@ -73,7 +74,7 @@ export default function DashboardScreen() {
 
   const handleLogout = async () => {
     await authService.logout();
-    router.replace("/(auth)/login");
+      router.replace("/(c01-warehouse)/(auth)/login" as any);
   };
 
   if (loading) {
@@ -115,7 +116,7 @@ export default function DashboardScreen() {
         {summary && summary.openDisasters > 0 && (
           <TouchableOpacity
             style={styles.disasterBanner}
-            onPress={() => router.push("/(tabs)/disasters")}
+            onPress={() => router.push("/(c01-warehouse)/(tabs)/disasters" as any)}
           >
             <Ionicons name="warning" size={20} color={COLORS.white} />
             <Text style={styles.disasterBannerText}>
@@ -185,14 +186,14 @@ export default function DashboardScreen() {
         <View style={styles.actionsRow}>
           <TouchableOpacity
             style={[styles.actionButton, { backgroundColor: COLORS.danger }]}
-            onPress={() => router.push("/(tabs)/disasters")}
+            onPress={() => router.push("/(c01-warehouse)/(tabs)/disasters" as any)}
           >
             <Ionicons name="warning" size={24} color={COLORS.white} />
             <Text style={styles.actionButtonText}>Disasters</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.actionButton, { backgroundColor: COLORS.info }]}
-            onPress={() => router.push("/(tabs)/warehouses")}
+            onPress={() => router.push("/(c01-warehouse)/(tabs)/warehouses" as any)}
           >
             <Ionicons name="business" size={24} color={COLORS.white} />
             <Text style={styles.actionButtonText}>Warehouses</Text>

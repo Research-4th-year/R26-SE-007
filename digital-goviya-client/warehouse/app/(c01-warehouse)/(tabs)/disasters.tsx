@@ -5,8 +5,8 @@ import {
 } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { disasterService, Disaster } from "../../services/disaster.service";
-import { COLORS, getStatusColors, DISASTER_ICONS } from "../../constants/theme";
+import { disasterService, Disaster } from "@/services/warehouse/disaster.service";
+import { COLORS, getStatusColors, DISASTER_ICONS } from "@/constants/theme";
 
 const FILTERS: (string | undefined)[] = [undefined, "OPEN", "IN_PROGRESS", "RESOLVED"];
 

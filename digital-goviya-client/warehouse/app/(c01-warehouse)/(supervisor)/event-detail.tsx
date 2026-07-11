@@ -5,8 +5,8 @@ import {
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { api } from "../../services/api";
-import { COLORS } from "../../constants/theme";
+import { api } from "@/services/shared/api";
+import { COLORS } from "@/constants/theme";
 
 export default function EventDetailScreen() {
   const { eventId, warehouseId } = useLocalSearchParams<{
@@ -86,7 +86,7 @@ export default function EventDetailScreen() {
                 <TouchableOpacity
                   style={styles.verifyBtn}
                   onPress={() => router.push({
-                    pathname: "/(supervisor)/upload-document" as any,
+                      pathname: "/(c01-warehouse)/(supervisor)/upload-document" as any,
                     params: { eventId, warehouseId, verifyMode: "true" }
                   })}
                 >
@@ -115,7 +115,7 @@ export default function EventDetailScreen() {
             <TouchableOpacity
               style={styles.attachBtn}
               onPress={() => router.push({
-                pathname: "/(supervisor)/upload-document" as any,
+                  pathname: "/(c01-warehouse)/(supervisor)/upload-document" as any,
                 params: { eventId, warehouseId }
               })}
             >

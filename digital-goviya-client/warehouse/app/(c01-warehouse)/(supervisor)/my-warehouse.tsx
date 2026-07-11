@@ -5,9 +5,9 @@ import {
 } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { api } from "../../services/api";
-import { authService } from "../../services/auth.service";
-import { COLORS, getUtilizationColors } from "../../constants/theme";
+import { api } from "@/services/shared/api";
+import { authService } from "@/services/shared/auth.service";
+import { COLORS, getUtilizationColors } from "@/constants/theme";
 
 
 interface StockEvent {
@@ -61,7 +61,7 @@ const loadingRef = useRef(false);   //prevent multiple simultaneous loads
 
   const handleLogout = async () => {
   await authService.logout();
-  router.replace("/(auth)/login");
+  router.replace("/(c01-warehouse)/(auth)/login" as any);
 };
 
   useEffect(() => { load(); }, []);
@@ -146,7 +146,7 @@ const loadingRef = useRef(false);   //prevent multiple simultaneous loads
           <TouchableOpacity
             style={styles.recordBtn}
             onPress={() => router.push({
-              pathname: "/(supervisor)/record-event" as any,
+                pathname: "/(c01-warehouse)/(supervisor)/record-event" as any,
               params: { warehouseId: warehouse.id, warehouseName: warehouse.name }
             })}
           >
@@ -169,7 +169,7 @@ const loadingRef = useRef(false);   //prevent multiple simultaneous loads
                   key={ev.id}
                   style={styles.eventCard}
                   onPress={() => router.push({
-                    pathname: "/(supervisor)/event-detail" as any,
+                      pathname: "/(c01-warehouse)/(supervisor)/event-detail" as any,
                     params: { eventId: ev.id, warehouseId: warehouse.id }
                   })}
                 >

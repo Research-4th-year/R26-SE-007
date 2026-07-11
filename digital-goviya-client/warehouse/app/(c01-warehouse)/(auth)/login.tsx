@@ -1,17 +1,22 @@
-import { useState } from "react";
+import { useState , useEffect } from "react";
 import {
   View, Text, TextInput, TouchableOpacity,
   ActivityIndicator, Alert, KeyboardAvoidingView,
   Platform, ScrollView, StyleSheet
 } from "react-native";
 import { router } from "expo-router";
-import { useAuth } from "../../hooks/useAuth";
+import { useAuth } from "@/hooks/shared/useAuth";
+import { authService } from "@/services/shared/auth.service";
 
 export default function LoginScreen() {
   const [email, setEmail]       = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading]   = useState(false);
   const { login }               = useAuth();
+
+  useEffect(() => {
+    authService.logout();
+  }, []);
 
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
@@ -20,8 +25,16 @@ export default function LoginScreen() {
     }
     setLoading(true);
     try {
+      // const data = await login(email.trim().toLowerCase(), password);
+      // router.replace("/(tabs)/dashboard");
       const data = await login(email.trim().toLowerCase(), password);
-      router.replace("/(tabs)/dashboard");
+if (data.user?.role === "WAREHOUSE_SUPERVISOR") {
+  router.replace("/(c01-warehouse)/(supervisor)/my-warehouse" as any);
+} else if (data.user?.role === "AUDITOR") {
+  router.replace("/(c01-warehouse)/(auditor)/dashboard" as any);
+} else {
+  router.replace("/(c01-warehouse)/(tabs)/dashboard" as any);
+}
     } catch (err: any) {
       const msg = err?.response?.data?.message || "Login failed. Check your credentials.";
       Alert.alert("Login Failed", msg);

@@ -10,12 +10,12 @@ import {
   StyleSheet,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { warehouseService, Warehouse } from "../../services/warehouse.service";
+import { warehouseService, Warehouse } from "@/services/warehouse/warehouse.service";
 import {
   COLORS,
   getUtilizationColors,
   getReliabilityColor,
-} from "../../constants/theme";
+} from "@/constants/theme";
 import { router } from "expo-router";
 
 export default function WarehousesScreen() {

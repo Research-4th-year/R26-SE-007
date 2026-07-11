@@ -9,8 +9,8 @@ import {
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
-import { authService } from "../../services/auth.service";
-import { COLORS } from "../../constants/theme";
+import { authService } from "@/services/shared/auth.service";
+import { COLORS } from "@/constants/theme";
 
 const ADMIN_ACTIONS = [
   {
@@ -18,21 +18,21 @@ const ADMIN_ACTIONS = [
     desc: "Add a new PMB warehouse with address search",
     icon: "add-circle",
     color: COLORS.primary,
-    route: "/(admin)/create-warehouse",
+    route: "/(c01-warehouse)/(admin)/create-warehouse",
   },
   {
     title: "Register User",
     desc: "Add a new RM, Supervisor, Auditor or Admin",
     icon: "person-add",
     color: COLORS.info,
-    route: "/(admin)/register-user",
+    route: "/(c01-warehouse)/(admin)/register-user",
   },
   {
     title: "Manage Users",
     desc: "Reassign supervisors, deactivate accounts",
     icon: "people",
     color: COLORS.warning,
-    route: "/(admin)/manage-users",
+    route: "/(c01-warehouse)/(admin)/manage-users",
   },
 ];
 

@@ -5,9 +5,9 @@ import {
 } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { api } from "../../services/api";
-import { COLORS } from "../../constants/theme";
-import { useDebouncedCallback } from "../../hooks/useDebounce";
+import { api } from "@/services/shared/api";
+import { COLORS } from "@/constants/theme";
+import { useDebouncedCallback } from "@/hooks/shared/useDebounce";
 
 interface SearchResult {
   place_id:    number;

@@ -57,8 +57,8 @@ router.get(
           message: !blockchainAnchored
             ? 'Event not yet anchored on blockchain'
             : hashMatch
-            ? 'Document hash matches ledger record — data integrity confirmed'
-            : 'WARNING: Document hash mismatch — possible tampering detected',
+            ? 'Document hash matches ledger record → data integrity confirmed'
+            : 'WARNING: Document hash mismatch → possible tampering detected',
         },
       });
     } catch (err) {

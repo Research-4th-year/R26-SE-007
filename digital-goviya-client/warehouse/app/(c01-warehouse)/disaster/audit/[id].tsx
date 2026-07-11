@@ -5,8 +5,9 @@ import {
 } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { api } from "../../../services/api";
-import { COLORS, DISASTER_ICONS } from "../../../constants/theme";
+import { api } from "@/services/shared/api";
+import { COLORS, DISASTER_ICONS } from "@/constants/theme";
+
 
 interface TimelineEntry {
   eventType:   string;

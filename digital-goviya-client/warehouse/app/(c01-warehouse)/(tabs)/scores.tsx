@@ -4,8 +4,8 @@ import {
   ActivityIndicator, RefreshControl, Alert, StyleSheet
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { api } from "../../services/api";
-import { COLORS, getReliabilityColor } from "../../constants/theme";
+import { api } from "@/services/shared/api";
+import { COLORS, getReliabilityColor } from "@/constants/theme";
 
 interface WarehouseScore {
   warehouseId:      string;
@@ -147,7 +147,7 @@ export default function ScoresScreen() {
             <Ionicons name="information-circle" size={16} color={COLORS.info} />
             <Text style={styles.explainText}>
               Scores below 40% indicate anomalous
-              behavior such as high damage ratios or unusual redistribution frequency.
+              behavior 
             </Text>
           </View>
 

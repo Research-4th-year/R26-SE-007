@@ -5,9 +5,9 @@ import {
 } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { api } from "../../services/api";
-import { authService } from "../../services/auth.service";
-import { COLORS, getUtilizationColors, getReliabilityColor } from "../../constants/theme";
+import { api } from "@/services/shared/api";
+import { authService } from "@/services/shared/auth.service";
+import { COLORS, getUtilizationColors, getReliabilityColor } from "@/constants/theme";
 
 export default function AuditorDashboard() {
   const [summary, setSummary]       = useState<any>(null);
@@ -41,7 +41,7 @@ export default function AuditorDashboard() {
 
   const handleLogout = async () => {
     await authService.logout();
-    router.replace("/(auth)/login");
+    router.replace("/(c01-warehouse)/(auth)/login" as any);
   };
 
   if (loading) {
@@ -91,7 +91,7 @@ export default function AuditorDashboard() {
           <View style={styles.toolsGrid}>
             <TouchableOpacity
               style={styles.toolCard}
-              onPress={() => router.push("/(auditor)/verify-document" as any)}
+              onPress={() => router.push("/(c01-warehouse)/(auditor)/verify-document" as any)}
             >
               <View style={[styles.toolIcon, { backgroundColor: COLORS.infoBg }]}>
                 <Ionicons name="shield-checkmark" size={24} color={COLORS.info} />
@@ -102,7 +102,7 @@ export default function AuditorDashboard() {
 
             <TouchableOpacity
               style={styles.toolCard}
-              onPress={() => router.push("/(auditor)/blockchain-explorer" as any)}
+              onPress={() => router.push("/(c01-warehouse)/(auditor)/blockchain-explorer" as any)}
             >
               <View style={[styles.toolIcon, { backgroundColor: COLORS.successBg }]}>
                 <Ionicons name="lock-closed" size={24} color={COLORS.success} />
