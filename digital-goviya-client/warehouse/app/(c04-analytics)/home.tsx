@@ -19,10 +19,6 @@ import {
   Poppins_500Medium,
 } from "@expo-google-fonts/poppins";
 
-// -----------------------------------------------------------------
-// Adjust these routes to match your actual (c04-analytics) file
-// structure once the Prediction and Forecast screens exist.
-// -----------------------------------------------------------------
 const ROUTES = {
   prediction: "/(c04-analytics)/price-prediction/prediction-input",
   forecast: "/(c04-analytics)/price-forecasting/forecast-input",

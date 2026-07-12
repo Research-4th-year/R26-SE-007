@@ -20,11 +20,6 @@ import {
   Poppins_500Medium,
 } from "@expo-google-fonts/poppins";
 
-// -----------------------------------------------------------------
-// Update to your real backend host when deploying (127.0.0.1 will
-// only work from an emulator/simulator on the same machine — use
-// your machine's LAN IP or a deployed URL for a physical device).
-// -----------------------------------------------------------------
 const API_BASE = "http://127.0.0.1:8000";
 const DETAILED_ANALYSIS_ROUTE = "/(c04-analytics)/price-prediction/detailed-analysis";
 
