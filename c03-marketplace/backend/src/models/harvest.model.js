@@ -6,22 +6,31 @@ const harvestSchema = new mongoose.Schema({
         ref: "Farmer",
         required: true
     },
+
     paddyType: {
         type: String,
         required: true
     },
+
     quantity: {
         type: Number,
         required: true
     },
+
     expectedPrice: {
         type: Number,
         required: true
     },
+
+    aiPredictedPrice: {
+        type: Number
+    },
+
     status: {
         type: String,
         default: "available"
     }
+
 }, { timestamps: true });
 
 module.exports = mongoose.model("Harvest", harvestSchema);
