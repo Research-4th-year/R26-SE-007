@@ -23,8 +23,10 @@ const matchHarvest = async (req, res) => {
 
         // 3. Get all active demands
         const demands = await MillerDemand.find({
-            status: "open",
-            paddyType: harvest.paddyType
+          status: "open",
+          paddyType: {
+            $regex: new RegExp(`^${harvest.paddyType}$`, "i"),
+          },
         }).populate("millerId");
 
 
@@ -52,8 +54,18 @@ const matchHarvest = async (req, res) => {
             }
 
             // 🔹 3. Price Match (20)
-            if (harvest.expectedPrice <= demand.offeredPrice) {
-                score += 20;
+            const priceDifference = Math.abs(
+              harvest.aiPredictedPrice - demand.offeredPrice,
+            );
+
+            if (priceDifference <= 5) {
+              score += 20;
+            } else if (priceDifference <= 10) {
+              score += 15;
+            } else if (priceDifference <= 20) {
+              score += 10;
+            } else {
+              score += 5;
             }
 
             // 🔹 4. Quantity Match (10)

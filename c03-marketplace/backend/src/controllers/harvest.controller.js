@@ -1,6 +1,7 @@
 const Harvest = require('../models/harvest.model');
 const Farmer = require("../models/farmer.model");
 const { flService } = require("../services");
+const { getRecommendation } = require("../services/priceRecommendation.service");
 
 // Add Harvest
 const addHarvest = async (req, res) => {
@@ -30,6 +31,11 @@ const addHarvest = async (req, res) => {
 
         });
 
+        const recommendation = getRecommendation(
+          req.body.expectedPrice,
+          prediction.predictedPrice,
+        );
+
         const harvest = await Harvest.create({
 
             farmerId: req.body.farmerId,
@@ -52,7 +58,9 @@ const addHarvest = async (req, res) => {
 
                 harvest,
 
-                aiSuggestedPrice: prediction.predictedPrice
+                aiSuggestedPrice: prediction.predictedPrice,
+                
+                recommendation
 
             }
 
