@@ -1,0 +1,9 @@
+node_modules
+# Keep environment variables out of version control
+.env
+
+/generated/prisma
+
+# Fabric certificates and private keys (security-sensitive)
+fabric-wallet/
+fabric-samples/test-network/organizations/
