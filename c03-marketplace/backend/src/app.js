@@ -9,6 +9,9 @@ const harvestRoutes = require('./routes/harvest.routes');
 const matchingRoutes = require('./routes/matching.routes');
 const millerDemandRoutes = require('./routes/millerDemand.routes');
 const flRoutes = require('./routes/fl.routes');
+const matchSelectionRoutes = require("./routes/matchSelection.routes");
+const notificationRoutes = require("./routes/notification.routes");
+const dashboardRoutes = require("./routes/dashboard.routes");
 
 const app = express();
 
@@ -30,6 +33,9 @@ app.use('/api/harvests', harvestRoutes);
 app.use('/api/matching', matchingRoutes);
 app.use('/api/miller-demand', millerDemandRoutes);
 app.use('/api/fl', flRoutes);
+app.use("/api/match-selections", matchSelectionRoutes);
+app.use("/api/notifications", notificationRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 
 
 // send back a 404 error for any unknown api request

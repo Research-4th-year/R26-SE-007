@@ -1,32 +1,35 @@
 const mongoose = require('mongoose');
 
-const millerDemandSchema = new mongoose.Schema({
+const millerDemandSchema = new mongoose.Schema(
+  {
     millerId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Miller',
-        required: true
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Miller",
+      required: true,
     },
 
     paddyType: {
-        type: String,
-        required: true
+      type: String,
+      required: true,
     },
 
     quantityNeeded: {
-        type: Number,
-        required: true
+      type: Number,
+      required: true,
     },
 
     offeredPrice: {
-        type: Number,
-        required: true
+      type: Number,
+      required: true,
     },
 
     status: {
-        type: String,
-        default: 'open'
-    }
-
-}, { timestamps: true });
+      type: String,
+      enum: ["open", "partially_fulfilled", "fulfilled", "cancelled"],
+      default: "open",
+    },
+  },
+  { timestamps: true },
+);
 
 module.exports = mongoose.model('MillerDemand', millerDemandSchema);
