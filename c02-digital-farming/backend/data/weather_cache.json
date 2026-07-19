@@ -1,18 +1,18 @@
 {
   "Anuradhapura": {
-    "temperature": 25.8,
-    "humidity": 81.0,
+    "temperature": 25.7,
+    "humidity": 85.0,
     "rainfall": 0.0,
-    "windSpeed": 22.7,
-    "windDirection": "SW",
-    "pressure": 1011.0,
-    "cloud": 79,
+    "windSpeed": 21.6,
+    "windDirection": "SSW",
+    "pressure": 1008.0,
+    "cloud": 86,
     "uvIndex": 0.0,
     "visibility": 10.0,
     "weatherCondition": "Cloudy",
     "location": "Anuradhapura",
     "source": "WEATHER_API",
-    "timestamp": "2026-07-10 23:05"
+    "timestamp": "2026-07-12 00:07"
   },
   "Kurunegala": {
     "temperature": 22.2,
