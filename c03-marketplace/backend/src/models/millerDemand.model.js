@@ -24,10 +24,18 @@ const millerDemandSchema = new mongoose.Schema(
     },
 
     status: {
-      type: String,
-      enum: ["open", "partially_fulfilled", "fulfilled", "cancelled"],
-      default: "open",
-    },
+    type: String,
+    enum: [
+        "pending",
+        "negotiation_ready",
+        "negotiating",
+        "agreement_reached",
+        "negotiation_failed",
+        "rejected",
+        "cancelled"
+    ],
+    default: "pending"
+},
   },
   { timestamps: true },
 );
