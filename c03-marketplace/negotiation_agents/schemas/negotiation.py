@@ -198,3 +198,117 @@ class MillerAgentInput(BaseModel):
             )
 
         return self
+    
+
+class NegotiationStatus(str, Enum):
+    AGREED = "agreed"
+    REJECTED_BY_FARMER = "rejected_by_farmer"
+    REJECTED_BY_MILLER = "rejected_by_miller"
+    MAX_ROUNDS_REACHED = "max_rounds_reached"
+    VALIDATION_FAILED = "validation_failed"
+
+
+class NegotiationRequest(BaseModel):
+    negotiation_id: str = Field(
+        min_length=1,
+        max_length=100,
+    )
+
+    paddy_type: str = Field(
+        min_length=1,
+        max_length=100,
+    )
+
+    district: str = Field(
+        min_length=1,
+        max_length=100,
+    )
+
+    quantity_kg: float = Field(
+        gt=0,
+    )
+
+    farmer_expected_price: float = Field(
+        gt=0,
+    )
+
+    farmer_minimum_price: float = Field(
+        gt=0,
+    )
+
+    miller_opening_price: float = Field(
+        gt=0,
+    )
+
+    miller_maximum_price: float = Field(
+        gt=0,
+    )
+
+    fl_reference_price: float = Field(
+        gt=0,
+    )
+
+    matching_score: float = Field(
+        ge=0,
+        le=100,
+    )
+
+    max_rounds: int = Field(
+        default=6,
+        ge=1,
+        le=20,
+    )
+
+    @model_validator(mode="after")
+    def validate_private_price_boundaries(self):
+        if (
+            self.farmer_minimum_price
+            > self.farmer_expected_price
+        ):
+            raise ValueError(
+                "Farmer minimum price cannot exceed "
+                "farmer expected price."
+            )
+
+        if (
+            self.miller_opening_price
+            > self.miller_maximum_price
+        ):
+            raise ValueError(
+                "Miller opening price cannot exceed "
+                "miller maximum price."
+            )
+
+        return self
+
+
+class NegotiationResult(BaseModel):
+    negotiation_id: str
+    status: NegotiationStatus
+
+    agreed_price: Optional[float] = Field(
+        default=None,
+        ge=0,
+    )
+
+    rounds_completed: int = Field(
+        ge=0,
+    )
+
+    final_reason: str
+
+    fl_reference_price: float = Field(
+        gt=0,
+    )
+
+    price_difference_from_reference: Optional[float] = None
+
+    fairness_score: Optional[float] = Field(
+        default=None,
+        ge=0,
+        le=100,
+    )
+
+    history: list[NegotiationHistoryItem] = Field(
+        default_factory=list,
+    )

@@ -8,61 +8,44 @@ from services.ollama_client import OllamaClient
 
 
 FARMER_SYSTEM_PROMPT = """
-You are an autonomous Farmer Negotiation Agent in a
-Sri Lankan paddy marketplace.
+You are an autonomous Farmer Negotiation Agent in a Sri Lankan paddy marketplace.
 
-Your primary goal is to obtain the highest reasonable
-selling price while still attempting to reach an agreement.
+Your goal is to obtain the highest reasonable selling price while still reaching an agreement whenever possible.
 
-You have private access to the farmer's minimum acceptable
-price. Never reveal that private minimum price in your
-reason or decision.
+You know the farmer's private minimum acceptable price.
+Never reveal that private minimum price.
 
-You may choose exactly one action:
+Possible actions:
 
 1. accept
-   Accept the miller's current offer.
-
 2. counter_offer
-   Propose a new selling price.
-
 3. reject
-   End the negotiation because no reasonable agreement
-   is possible.
 
-Decision rules:
+Rules:
 
-- Never accept below the farmer's minimum price.
-- Never counter below the farmer's minimum price.
-- Never counter above the farmer's expected price.
-- A counter-offer should normally move toward the miller's
-  offer as negotiation rounds progress.
-- Use the FL reference price as market guidance, not as an
-  absolute compulsory price.
-- Consider quantity, matching score, current round, and
-  previous offers.
-- Avoid repeating the same counter-offer without a reason.
-- In the final round, prefer agreement when the miller's
-  offer satisfies the private minimum and is reasonably
-  aligned with the market reference.
-- Reject only when accepting would violate the farmer's
-  private constraint or no practical agreement remains.
-- Do not invent facts.
-- Return only the structured JSON decision.
+- Never accept below the farmer minimum price.
+- Never counter below the farmer minimum price.
+- Never counter above the farmer expected price.
+- Gradually move toward agreement as rounds increase.
+- Use the FL reference price only as market guidance.
+- Consider quantity, matching score, negotiation history and current round.
+- Return ONLY a JSON object.
+- Never increase the asking price after making a lower offer.
+- Avoid repeating the same offer unless no valid concession
+  remains.
 """
 
 
 class FarmerAgent:
-    def __init__(
-        self,
-        ollama_client: OllamaClient,
-    ) -> None:
+    def __init__(self, ollama_client: OllamaClient):
         self.ollama_client = ollama_client
 
     def decide(
         self,
         state: FarmerAgentInput,
+        validation_feedback: str | None = None,
     ) -> NegotiationDecision:
+
         private_state = {
             "negotiation_id": state.negotiation_id,
             "round_number": state.round_number,
@@ -70,87 +53,84 @@ class FarmerAgent:
             "paddy_type": state.paddy_type,
             "quantity_kg": state.quantity_kg,
             "district": state.district,
-            "farmer_expected_price":
-                state.farmer_expected_price,
-            "private_farmer_minimum_price":
-                state.farmer_minimum_price,
-            "miller_current_offer":
-                state.miller_current_offer,
-            "fl_reference_price":
-                state.fl_reference_price,
-            "matching_score":
-                state.matching_score,
+            "farmer_expected_price": state.farmer_expected_price,
+            "private_farmer_minimum_price": state.farmer_minimum_price,
+            "miller_current_offer": state.miller_current_offer,
+            "fl_reference_price": state.fl_reference_price,
+            "matching_score": state.matching_score,
             "history": [
                 item.model_dump(mode="json")
                 for item in state.history
             ],
         }
 
+        feedback_section = ""
+
+        if validation_feedback:
+            feedback_section = f"""
+
+IMPORTANT
+
+Your previous proposal violated a business rule.
+
+Reason:
+
+{validation_feedback}
+
+Generate a NEW corrected decision.
+"""
+
         prompt = f"""
-Review the following negotiation state and independently
-select the farmer's next action.
+Review the negotiation state below and decide the farmer's next action.
 
 Negotiation state:
 
 {json.dumps(private_state, indent=2)}
 
-Requirements:
+Requirements
 
-- The farmer minimum price is private.
-- Never reveal the exact private minimum price in the reason.
-- action must be exactly one of:
-  accept, counter_offer, reject.
-- market_alignment must be exactly one of:
-  below_market, near_market, above_market.
-- confidence must be a number between 0 and 1.
-- Every response must include the price property.
-- For accept, price must equal the miller's current offer.
-- For counter_offer, price must be between the private
-  farmer minimum and farmer expected price.
-- For reject, price must be null.
-- Do not put the proposed price only inside the reason.
-- Do not include Rs., LKR, or currency text inside price.
-- Return one JSON object only.
-- Do not use Markdown code fences.
+- Farmer minimum price is private.
+- Never reveal it.
+- action must be:
+  accept
+  counter_offer
+  reject
 
-Example counter-offer:
+- market_alignment must be:
+  below_market
+  near_market
+  above_market
 
-{{
-  "action": "counter_offer",
-  "price": 135.0,
-  "reason": "The current offer is below a reasonable market-aligned value.",
-  "confidence": 0.85,
-  "market_alignment": "above_market"
-}}
+- confidence must be between 0 and 1.
+- Every response MUST contain price.
+- Accept → price equals current miller offer.
+- Counter offer → price between farmer minimum and expected price.
+- Reject → price = null.
+- Return JSON only.
+- Review the negotiation history before selecting a price.
+- Your new counter-offer must not be greater than your
+  previous counter-offer.
+- Gradually reduce the asking price as rounds progress.
+- If the miller's current offer equals a price you are
+  willing to propose, choose accept instead of counter_offer.
+- In the final round, accept when the miller's offer is
+  at or above the private minimum and agreement is practical.
 
-Example acceptance:
+{feedback_section}
 
-{{
-  "action": "accept",
-  "price": 132.0,
-  "reason": "The current offer is acceptable and aligned with market conditions.",
-  "confidence": 0.9,
-  "market_alignment": "near_market"
-}}
-
-Example rejection:
+Example:
 
 {{
-  "action": "reject",
-  "price": null,
-  "reason": "A feasible agreement is no longer available.",
-  "confidence": 0.9,
-  "market_alignment": "below_market"
+    "action":"counter_offer",
+    "price":135.0,
+    "reason":"Current offer is below market value.",
+    "confidence":0.84,
+    "market_alignment":"above_market"
 }}
 """
 
-        decision = (
-            self.ollama_client
-            .generate_structured_response(
-                system_prompt=FARMER_SYSTEM_PROMPT,
-                user_prompt=prompt,
-                response_schema=NegotiationDecision,
-            )
+        return self.ollama_client.generate_structured_response(
+            system_prompt=FARMER_SYSTEM_PROMPT,
+            user_prompt=prompt,
+            response_schema=NegotiationDecision,
         )
-
-        return decision
