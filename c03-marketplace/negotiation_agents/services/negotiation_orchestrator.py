@@ -1,3 +1,5 @@
+from httpcore import request
+
 from schemas.negotiation import (
     FarmerAgentInput,
     MillerAgentInput,
@@ -33,6 +35,10 @@ class NegotiationOrchestrator:
             agent_validation_attempts
         )
 
+        # Agreement-policy settings.
+        self.convergence_gap = 1.0
+        self.reference_tolerance_percentage = 2.0
+
     def negotiate(
         self,
         request: NegotiationRequest,
@@ -54,6 +60,55 @@ class NegotiationOrchestrator:
             print(
                 "Current Miller Offer: "
                 f"{current_miller_offer:.2f}"
+            )
+
+# Agreement Policy:
+# Check whether the current Miller offer is already
+# acceptable before asking the Farmer LLM for another
+# decision.
+            if self._should_farmer_accept(
+                request=request,
+                current_miller_offer=current_miller_offer,
+                round_number=round_number,
+                history=history,
+            ):
+
+                policy_decision = NegotiationDecision(
+                    action=NegotiationAction.ACCEPT,
+                    price=current_miller_offer,
+                    reason=(
+                        "The current Miller offer satisfies the "
+                        "Farmer's private constraint and the "
+                        "negotiation has sufficiently converged."
+                    ),
+                    confidence=1.0,
+                    market_alignment=self._get_market_alignment(
+                        price=current_miller_offer,
+                        reference_price=request.fl_reference_price,
+                    ),
+                )
+                self._add_to_history(
+                    history=history,
+                    round_number=round_number,
+                    agent="farmer",
+                    decision=policy_decision,
+                )
+
+                print("Agreement Policy: Farmer acceptance triggered")
+                print(f"Agreed Price: {current_miller_offer:.2f}")
+
+                return self._create_result(
+                    request=request,
+                    status=NegotiationStatus.AGREED,
+                    agreed_price=current_miller_offer,
+                    rounds_completed=round_number,
+                    final_reason=(
+                        "The Agreement Policy accepted the Miller's "
+                        "current offer because it satisfied the "
+                        "Farmer's private minimum and the negotiation "
+                        "had sufficiently converged."
+                    ),
+                    history=history,
             )
 
             farmer_state = FarmerAgentInput(
@@ -191,6 +246,55 @@ class NegotiationOrchestrator:
                 "Current Farmer Offer: "
                 f"{farmer_offer:.2f}"
             )
+
+            # Agreement Policy:
+            # Check whether the Farmer's asking price is already
+            # acceptable before asking the Miller LLM to generate
+            # another decision.
+            if self._should_miller_accept(
+                request=request,
+                farmer_offer=farmer_offer,
+                current_miller_offer=current_miller_offer,
+                round_number=round_number,
+            ):
+                policy_decision = NegotiationDecision(
+                    action=NegotiationAction.ACCEPT,
+                    price=farmer_offer,
+                    reason=(
+                        "The Farmer's current offer satisfies the "
+                        "Miller's private constraint and the "
+                        "negotiation has sufficiently converged."
+                    ),
+                    confidence=1.0,
+                    market_alignment=self._get_market_alignment(
+                        price=farmer_offer,
+                        reference_price=request.fl_reference_price,
+                    ),
+                )
+
+                self._add_to_history(
+                    history=history,
+                    round_number=round_number,
+                    agent="miller",
+                    decision=policy_decision,
+                )
+
+                print("Agreement Policy: Miller acceptance triggered")
+                print(f"Agreed Price: {farmer_offer:.2f}")
+
+                return self._create_result(
+                    request=request,
+                    status=NegotiationStatus.AGREED,
+                    agreed_price=farmer_offer,
+                    rounds_completed=round_number,
+                    final_reason=(
+                        "The Agreement Policy accepted the Farmer's "
+                        "current offer because it satisfied the "
+                        "Miller's private maximum and the negotiation "
+                        "had sufficiently converged."
+                    ),
+                    history=history,
+                )
 
             miller_state = MillerAgentInput(
                 negotiation_id=request.negotiation_id,
@@ -413,6 +517,152 @@ class NegotiationOrchestrator:
         raise last_error or DecisionValidationError(
             "Miller decision validation failed."
         )
+    
+    def _should_farmer_accept(
+        self,
+        *,
+        request: NegotiationRequest,
+        current_miller_offer: float,
+        round_number: int,
+        history: list[NegotiationHistoryItem],
+    ) -> bool:
+        """
+        Decide whether the negotiation protocol should
+        accept the Miller's current offer for the Farmer.
+
+        The policy never accepts below the Farmer's private
+        minimum price.
+        """
+
+        # Hard private constraint.
+        if (
+            current_miller_offer
+            < request.farmer_minimum_price
+        ):
+            return False
+
+        # Find the Farmer's previous counter-offer.
+        previous_farmer_offer: float | None = None
+
+        for item in reversed(history):
+            if (
+                item.agent == "farmer"
+                and item.action
+                == NegotiationAction.COUNTER_OFFER
+                and item.price is not None
+            ):
+                previous_farmer_offer = item.price
+                break
+
+        # Calculate the lowest market-aligned price allowed
+        # by the configured reference tolerance.
+        minimum_market_aligned_price = (
+        request.fl_reference_price
+            * (
+                1
+                - self.reference_tolerance_percentage
+                / 100
+            )
+        )
+
+        market_aligned = (
+            current_miller_offer
+            >= minimum_market_aligned_price
+        )
+
+        # If there is a previous Farmer offer, determine
+        # whether the two prices have converged.
+        converged = False
+
+        if previous_farmer_offer is not None:
+            price_gap = abs(
+                previous_farmer_offer
+                - current_miller_offer
+            )
+
+            converged = (
+                price_gap <= self.convergence_gap
+            )
+
+        final_round = (
+            round_number >= request.max_rounds
+        )
+
+        # Accept when:
+        # 1. private minimum is satisfied, and
+        # 2. offer is market aligned, and
+        # 3. negotiation converged or reached final round.
+        return (
+            market_aligned
+            and (
+                converged
+                or final_round
+            )
+        )
+    
+    def _should_miller_accept(
+        self,
+        *,
+        request: NegotiationRequest,
+        farmer_offer: float,
+        current_miller_offer: float,
+        round_number: int,
+    ) -> bool:
+        """
+        Decide whether the negotiation protocol should
+        accept the Farmer's current offer for the Miller.
+
+        The policy never accepts above the Miller's private
+        maximum buying price.
+        """
+
+        # Hard private constraint.
+        if farmer_offer > request.miller_maximum_price:
+            return False
+
+        price_gap = abs(
+            farmer_offer
+            - current_miller_offer
+        )
+
+        converged = (
+            price_gap <= self.convergence_gap
+        )
+
+        final_round = (
+            round_number >= request.max_rounds
+        )
+
+        # Accept if the Farmer offer is within the private
+        # maximum and either the prices have converged or
+        # the final round has been reached.
+        return (
+            converged
+            or final_round
+        )
+
+    @staticmethod
+    def _get_market_alignment(
+        *,
+        price: float,
+        reference_price: float,
+    ) -> str:
+        """
+        Classify a price relative to the FL reference price.
+        """
+
+        difference_percentage = (
+            (price - reference_price)
+            / reference_price
+        ) * 100
+
+        if difference_percentage < -2:
+            return "below_market"
+
+        if difference_percentage > 2:
+            return "above_market"
+
+        return "near_market"
 
     @staticmethod
     def _add_to_history(
