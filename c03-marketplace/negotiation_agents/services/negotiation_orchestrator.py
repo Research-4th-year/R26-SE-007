@@ -1,5 +1,4 @@
-from httpcore import request
-
+from math import isclose
 from schemas.negotiation import (
     FarmerAgentInput,
     MillerAgentInput,
@@ -17,7 +16,7 @@ from services.decision_validator import (
     DecisionValidationError,
     DecisionValidator,
 )
-from math import isclose
+
 
 
 class NegotiationOrchestrator:
@@ -40,10 +39,18 @@ class NegotiationOrchestrator:
         self.convergence_gap = 1.0
         self.reference_tolerance_percentage = 2.0
 
+        self.minimum_gap_improvement = 0.01
+        self.deadlock_round_limit = 2
+
     def negotiate(
         self,
         request: NegotiationRequest,
     ) -> NegotiationResult:
+        """
+        Run one multi-round negotiation between the
+        Farmer Agent and Miller Agent.
+        """
+
         state = NegotiationState(
             round_number=0,
             current_miller_offer=(
@@ -56,7 +63,7 @@ class NegotiationOrchestrator:
             request.max_rounds + 1,
         ):
             state.start_round(round_number)
-            
+
             print(
                 f"\n========== ROUND {round_number} =========="
             )
@@ -66,57 +73,77 @@ class NegotiationOrchestrator:
                 f"{state.current_miller_offer:.2f}"
             )
 
-# Agreement Policy:
-# Check whether the current Miller offer is already
-# acceptable before asking the Farmer LLM for another
-# decision.
+        # -------------------------------------------------
+        # FARMER AGREEMENT POLICY
+        # -------------------------------------------------
+        # Before calling the Farmer LLM, check whether the
+        # current Miller offer can already be accepted.
             if self._should_farmer_accept(
                 request=request,
-                current_miller_offer=state.current_miller_offer,
+                current_miller_offer=(
+                    state.current_miller_offer
+                ),
                 round_number=round_number,
                 history=state.history,
             ):
-
                 policy_decision = NegotiationDecision(
                     action=NegotiationAction.ACCEPT,
                     price=state.current_miller_offer,
                     reason=(
-                        "The current Miller offer satisfies the "
-                        "Farmer's private constraint and the "
-                        "negotiation has sufficiently converged."
+                        "The current Miller offer satisfies "
+                        "the Farmer's private constraint and "
+                        "the negotiation has sufficiently "
+                        "converged."
                     ),
                     confidence=1.0,
-                    market_alignment=self._get_market_alignment(
-                        price=state.current_miller_offer,
-                        reference_price=request.fl_reference_price,
+                    market_alignment=(
+                        self._get_market_alignment(
+                            price=state.current_miller_offer,
+                            reference_price=(
+                                request.fl_reference_price
+                            ),
+                        )
                     ),
                 )
+
                 self._add_to_history(
                     history=state.history,
                     round_number=round_number,
                     agent="farmer",
                     decision=policy_decision,
                 )
-                
+
                 state.status = NegotiationStatus.AGREED
 
-                print("Agreement Policy: Farmer acceptance triggered")
-                print(f"Agreed Price: {state.current_miller_offer:.2f}")
+                print(
+                    "Agreement Policy: "
+                    "Farmer acceptance triggered"
+                )
+                print(
+                    "Agreed Price: "
+                    f"{state.current_miller_offer:.2f}"
+                )
 
                 return self._create_result(
                     request=request,
                     status=state.status,
-                    agreed_price=state.current_miller_offer,
+                    agreed_price=(
+                        state.current_miller_offer
+                    ),
                     rounds_completed=round_number,
                     final_reason=(
-                        "The Agreement Policy accepted the Miller's "
-                        "current offer because it satisfied the "
-                        "Farmer's private minimum and the negotiation "
-                        "had sufficiently converged."
+                        "The Agreement Policy accepted the "
+                        "Miller's current offer because it "
+                        "satisfied the Farmer's private "
+                        "minimum and the negotiation had "
+                        "sufficiently converged."
                     ),
                     history=state.history,
-            )
+                )
 
+        # -------------------------------------------------
+        # CREATE FARMER INPUT
+        # -------------------------------------------------
             farmer_state = FarmerAgentInput(
                 negotiation_id=request.negotiation_id,
                 round_number=round_number,
@@ -140,6 +167,9 @@ class NegotiationOrchestrator:
                 history=state.history.copy(),
             )
 
+        # -------------------------------------------------
+        # GET VALID FARMER DECISION
+        # -------------------------------------------------
             try:
                 farmer_decision = (
                     self._get_valid_farmer_decision(
@@ -147,12 +177,13 @@ class NegotiationOrchestrator:
                     )
                 )
             except DecisionValidationError as error:
+                state.status = (
+                    NegotiationStatus.VALIDATION_FAILED
+                )
+
                 return self._create_result(
                     request=request,
-                    status=(
-                        NegotiationStatus
-                        .VALIDATION_FAILED
-                    ),
+                    status=state.status,
                     agreed_price=None,
                     rounds_completed=round_number - 1,
                     final_reason=(
@@ -178,17 +209,21 @@ class NegotiationOrchestrator:
                 f"{farmer_decision.price}"
             )
 
+        # -------------------------------------------------
+        # FARMER EXPLICIT ACCEPTANCE
+        # -------------------------------------------------
             if (
                 farmer_decision.action
                 == NegotiationAction.ACCEPT
             ):
-                
                 state.status = NegotiationStatus.AGREED
 
                 return self._create_result(
                     request=request,
                     status=state.status,
-                    agreed_price=state.current_miller_offer,
+                    agreed_price=(
+                        state.current_miller_offer
+                    ),
                     rounds_completed=round_number,
                     final_reason=(
                         "The farmer accepted the miller's "
@@ -197,15 +232,17 @@ class NegotiationOrchestrator:
                     history=state.history,
                 )
 
+        # -------------------------------------------------
+        # FARMER REJECTION
+        # -------------------------------------------------
             if (
                 farmer_decision.action
                 == NegotiationAction.REJECT
             ):
-                
                 state.status = (
                     NegotiationStatus.REJECTED_BY_FARMER
                 )
-                
+
                 return self._create_result(
                     request=request,
                     status=state.status,
@@ -215,13 +252,17 @@ class NegotiationOrchestrator:
                     history=state.history,
                 )
 
+        # -------------------------------------------------
+        # FARMER COUNTER-OFFER VALIDATION
+        # -------------------------------------------------
             if farmer_decision.price is None:
+                state.status = (
+                    NegotiationStatus.VALIDATION_FAILED
+                )
+
                 return self._create_result(
                     request=request,
-                    status=(
-                        NegotiationStatus
-                        .VALIDATION_FAILED
-                    ),
+                    status=state.status,
                     agreed_price=None,
                     rounds_completed=round_number,
                     final_reason=(
@@ -235,9 +276,11 @@ class NegotiationOrchestrator:
                 farmer_decision.price
             )
 
-            # Protocol-level agreement detection:
-            # if the farmer's asking price is equal to the miller's
-            # current offer, both agents already agree on the price.
+            assert state.current_farmer_offer is not None
+
+        # -------------------------------------------------
+        # EXACT FARMER/MILLER PRICE MATCH
+        # -------------------------------------------------
             if isclose(
                 state.current_farmer_offer,
                 state.current_miller_offer,
@@ -248,11 +291,13 @@ class NegotiationOrchestrator:
                 return self._create_result(
                     request=request,
                     status=state.status,
-                    agreed_price=state.current_farmer_offer,
+                    agreed_price=(
+                        state.current_farmer_offer
+                    ),
                     rounds_completed=round_number,
                     final_reason=(
-                        "The farmer's counter-offer matched the "
-                        "miller's current offer."
+                        "The farmer's counter-offer matched "
+                        "the miller's current offer."
                     ),
                     history=state.history,
                 )
@@ -262,15 +307,16 @@ class NegotiationOrchestrator:
                 f"{state.current_farmer_offer:.2f}"
             )
 
-            assert state.current_farmer_offer is not None
-
-            # Agreement Policy:
-            # Check whether the Farmer's asking price is already
-            # acceptable before asking the Miller LLM to generate
-            # another decision.
+        # -------------------------------------------------
+        # MILLER AGREEMENT POLICY
+        # -------------------------------------------------
+        # Before calling the Miller LLM, check whether the
+        # Farmer offer can already be accepted.
             if self._should_miller_accept(
                 request=request,
-                farmer_offer=state.current_farmer_offer,
+                farmer_offer=(
+                    state.current_farmer_offer
+                ),
                 current_miller_offer=(
                     state.current_miller_offer
                 ),
@@ -280,14 +326,21 @@ class NegotiationOrchestrator:
                     action=NegotiationAction.ACCEPT,
                     price=state.current_farmer_offer,
                     reason=(
-                        "The Farmer's current offer satisfies the "
-                        "Miller's private constraint and the "
-                        "negotiation has sufficiently converged."
+                        "The Farmer's current offer satisfies "
+                        "the Miller's private constraint and "
+                        "the negotiation has sufficiently "
+                        "converged."
                     ),
                     confidence=1.0,
-                    market_alignment=self._get_market_alignment(
-                        price=state.current_farmer_offer,
-                        reference_price=request.fl_reference_price,
+                    market_alignment=(
+                        self._get_market_alignment(
+                            price=(
+                                state.current_farmer_offer
+                            ),
+                            reference_price=(
+                                request.fl_reference_price
+                            ),
+                        )
                     ),
                 )
 
@@ -300,23 +353,35 @@ class NegotiationOrchestrator:
 
                 state.status = NegotiationStatus.AGREED
 
-                print("Agreement Policy: Miller acceptance triggered")
-                print(f"Agreed Price: {state.current_farmer_offer:.2f}")
+                print(
+                    "Agreement Policy: "
+                    "Miller acceptance triggered"
+                )
+                print(
+                    "Agreed Price: "
+                    f"{state.current_farmer_offer:.2f}"
+                )
 
                 return self._create_result(
                     request=request,
                     status=state.status,
-                    agreed_price=state.current_farmer_offer,
+                    agreed_price=(
+                        state.current_farmer_offer
+                    ),
                     rounds_completed=round_number,
                     final_reason=(
-                        "The Agreement Policy accepted the Farmer's "
-                        "current offer because it satisfied the "
-                        "Miller's private maximum and the negotiation "
-                        "had sufficiently converged."
+                        "The Agreement Policy accepted the "
+                        "Farmer's current offer because it "
+                        "satisfied the Miller's private "
+                        "maximum and the negotiation had "
+                        "sufficiently converged."
                     ),
                     history=state.history,
                 )
 
+        # -------------------------------------------------
+        # CREATE MILLER INPUT
+        # -------------------------------------------------
             miller_state = MillerAgentInput(
                 negotiation_id=request.negotiation_id,
                 round_number=round_number,
@@ -345,6 +410,9 @@ class NegotiationOrchestrator:
                 history=state.history.copy(),
             )
 
+        # -------------------------------------------------
+        # GET VALID MILLER DECISION
+        # -------------------------------------------------
             try:
                 miller_decision = (
                     self._get_valid_miller_decision(
@@ -352,12 +420,13 @@ class NegotiationOrchestrator:
                     )
                 )
             except DecisionValidationError as error:
+                state.status = (
+                    NegotiationStatus.VALIDATION_FAILED
+                )
+
                 return self._create_result(
                     request=request,
-                    status=(
-                        NegotiationStatus
-                        .VALIDATION_FAILED
-                    ),
+                    status=state.status,
                     agreed_price=None,
                     rounds_completed=round_number,
                     final_reason=(
@@ -383,6 +452,9 @@ class NegotiationOrchestrator:
                 f"{miller_decision.price}"
             )
 
+        # -------------------------------------------------
+        # MILLER EXPLICIT ACCEPTANCE
+        # -------------------------------------------------
             if (
                 miller_decision.action
                 == NegotiationAction.ACCEPT
@@ -392,7 +464,9 @@ class NegotiationOrchestrator:
                 return self._create_result(
                     request=request,
                     status=state.status,
-                    agreed_price=state.current_farmer_offer,
+                    agreed_price=(
+                        state.current_farmer_offer
+                    ),
                     rounds_completed=round_number,
                     final_reason=(
                         "The miller accepted the farmer's "
@@ -401,15 +475,17 @@ class NegotiationOrchestrator:
                     history=state.history,
                 )
 
+        # -------------------------------------------------
+        # MILLER REJECTION
+        # -------------------------------------------------
             if (
                 miller_decision.action
                 == NegotiationAction.REJECT
             ):
-                
                 state.status = (
                     NegotiationStatus.REJECTED_BY_MILLER
                 )
-                
+
                 return self._create_result(
                     request=request,
                     status=state.status,
@@ -419,13 +495,17 @@ class NegotiationOrchestrator:
                     history=state.history,
                 )
 
+        # -------------------------------------------------
+        # MILLER COUNTER-OFFER VALIDATION
+        # -------------------------------------------------
             if miller_decision.price is None:
+                state.status = (
+                    NegotiationStatus.VALIDATION_FAILED
+                )
+
                 return self._create_result(
                     request=request,
-                    status=(
-                        NegotiationStatus
-                        .VALIDATION_FAILED
-                    ),
+                    status=state.status,
                     agreed_price=None,
                     rounds_completed=round_number,
                     final_reason=(
@@ -434,59 +514,95 @@ class NegotiationOrchestrator:
                     ),
                     history=state.history,
                 )
-            
-            # If the miller's counter-offer matches the farmer's
-            # asking price, an agreement has been reached even if
-            # the LLM labelled the action as counter_offer.
+
+        # -------------------------------------------------
+        # EXACT MILLER/FARMER PRICE MATCH
+        # -------------------------------------------------
             if isclose(
                 miller_decision.price,
                 state.current_farmer_offer,
                 abs_tol=0.01,
             ):
-                
                 state.status = NegotiationStatus.AGREED
 
                 return self._create_result(
                     request=request,
                     status=state.status,
-                    agreed_price=state.current_farmer_offer,
+                    agreed_price=(
+                        state.current_farmer_offer
+                    ),
                     rounds_completed=round_number,
                     final_reason=(
-                        "The miller's counter-offer matched the "
-                        "farmer's current asking price."
+                        "The miller's counter-offer matched "
+                        "the farmer's current asking price."
                     ),
                     history=state.history,
                 )
 
+        # -------------------------------------------------
+        # UPDATE MILLER OFFER
+        # -------------------------------------------------
             state.update_miller_offer(
                 miller_decision.price
+            )
+            state.evaluate_progress(
+                minimum_improvement=(
+                    self.minimum_gap_improvement
+                ),
+                deadlock_round_limit=(
+                    self.deadlock_round_limit
+                ),
             )
 
             print(
                 "Negotiation State: "
                 f"Round={state.round_number}, "
-                f"Previous Farmer={state.previous_farmer_offer}, "
-                f"Current Farmer={state.current_farmer_offer}, "
-                f"Previous Miller={state.previous_miller_offer}, "
-                f"Current Miller={state.current_miller_offer}, "
-                f"Gap={state.price_gap}"
+                f"Previous Farmer="
+                f"{state.previous_farmer_offer}, "
+                f"Current Farmer="
+                f"{state.current_farmer_offer}, "
+                f"Previous Miller="
+                f"{state.previous_miller_offer}, "
+                f"Current Miller="
+                f"{state.current_miller_offer}, "
+                f"Gap={state.price_gap}, "
+                f"Gap Improvement="
+                f"{state.gap_improvement}, "
+                f"Progressing={state.is_progressing}, "
+                f"Stagnant Rounds="
+                f"{state.stagnant_rounds}, "
+                f"Deadlock="
+                f"{state.deadlock_detected}"
             )
 
-        state.status = (
-            NegotiationStatus.MAX_ROUNDS_REACHED
-        )
+    # -----------------------------------------------------
+    # MAXIMUM ROUNDS REACHED
+    # -----------------------------------------------------
+            if state.deadlock_detected:
+                state.status = (
+                    NegotiationStatus.MAX_ROUNDS_REACHED
+                )
 
-        return self._create_result(
-            request=request,
-            status=state.status,
-            agreed_price=None,
-            rounds_completed=request.max_rounds,
-            final_reason=(
-                "The negotiation reached the maximum "
-                "number of rounds without agreement."
-            ),
-            history=state.history,
-        )
+                print(
+                    "Deadlock Detection: "
+                    "Negotiation stopped because the price gap "
+                    "did not improve."
+                )
+
+                return self._create_result(
+                    request=request,
+                    status=state.status,
+                    agreed_price=None,
+                    rounds_completed=round_number,
+                    final_reason=(
+                        "The negotiation was stopped because "
+                        "there was no meaningful price-gap "
+                        f"improvement for "
+                        f"{state.stagnant_rounds} consecutive "
+                        "rounds."
+                    ),
+                    history=state.history,
+                )
 
     def _get_valid_farmer_decision(
         self,
