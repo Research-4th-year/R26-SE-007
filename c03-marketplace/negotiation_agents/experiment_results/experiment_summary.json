@@ -1,0 +1,18 @@
+{
+  "total_negotiations": 3,
+  "agreements": 1,
+  "deadlocks": 1,
+  "rejections": 0,
+  "validation_failures": 1,
+  "maximum_round_failures": 0,
+  "agreement_rate": 33.33,
+  "deadlock_rate": 33.33,
+  "rejection_rate": 0.0,
+  "validation_failure_rate": 33.33,
+  "average_rounds": 2.67,
+  "average_agreed_price": 134.0,
+  "average_fairness_score": 98.54,
+  "average_price_difference": -1.99,
+  "minimum_fairness_score": 98.54,
+  "maximum_fairness_score": 98.54
+}

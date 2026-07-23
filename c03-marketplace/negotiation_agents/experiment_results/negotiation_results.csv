@@ -1,0 +1,4 @@
+negotiation_id,status,agreement_reached,deadlock_detected,rejected,validation_failed,agreed_price,rounds_completed,fl_reference_price,price_difference_from_reference,fairness_score,farmer_counter_offers,miller_counter_offers,total_counter_offers
+NEG-SIM-0001,agreed,True,False,False,False,134.0,2,135.99,-1.99,98.54,2,2,4
+NEG-SIM-0002,deadlock,False,True,False,False,,3,120.74,,,3,3,6
+NEG-SIM-0003,validation_failed,False,False,False,True,,3,126.95,,,3,2,5
