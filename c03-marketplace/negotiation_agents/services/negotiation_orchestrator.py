@@ -579,9 +579,7 @@ class NegotiationOrchestrator:
     # MAXIMUM ROUNDS REACHED
     # -----------------------------------------------------
             if state.deadlock_detected:
-                state.status = (
-                    NegotiationStatus.MAX_ROUNDS_REACHED
-                )
+                state.status = NegotiationStatus.DEADLOCK
 
                 print(
                     "Deadlock Detection: "

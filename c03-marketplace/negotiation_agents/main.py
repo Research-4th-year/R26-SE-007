@@ -1,5 +1,8 @@
 import json
 import sys
+from unittest import result
+
+from sklearn import metrics
 
 from agents.farmer_agent import FarmerAgent
 from agents.miller_agent import MillerAgent
@@ -14,7 +17,7 @@ from services.ollama_client import (
     OllamaAgentError,
     OllamaClient,
 )
-
+from schemas.negotiation_metrics import NegotiationMetrics
 
 def main() -> None:
     client = OllamaClient()
@@ -71,6 +74,13 @@ def main() -> None:
             indent=2,
         )
     )
+
+    
+
+    metrics = NegotiationMetrics.from_result(result)
+
+    print("\n========== METRICS ==========")
+    print(metrics)
 
 
 if __name__ == "__main__":

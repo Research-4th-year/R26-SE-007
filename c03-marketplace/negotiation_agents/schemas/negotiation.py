@@ -204,6 +204,7 @@ class NegotiationStatus(str, Enum):
     AGREED = "agreed"
     REJECTED_BY_FARMER = "rejected_by_farmer"
     REJECTED_BY_MILLER = "rejected_by_miller"
+    DEADLOCK = "deadlock"
     MAX_ROUNDS_REACHED = "max_rounds_reached"
     VALIDATION_FAILED = "validation_failed"
 
