@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, ScrollView, Platform, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, ScrollView, Platform, TouchableOpacity, Alert } from 'react-native';
 import { Text, Card, Button, TextInput, SegmentedButtons, ActivityIndicator, List, Portal, Modal } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
 
 import { useAppTheme } from '../contexts/ThemeContext';
 import { Icon } from '../components/Icon';
-import { recommendVariety, generateCultivationPlan } from '../services/api';
+import { recommendVariety, generateCultivationPlan, getCurrentWeather } from '../services/api';
 
 const DISTRICTS_BY_ZONE: Record<string, string[]> = {
   "Dry Zone": ["Anuradhapura", "Polonnaruwa", "Kurunegala", "Hambantota", "Monaragala", "Ampara", "Trincomalee"],
@@ -84,9 +84,9 @@ const DISTRICT_WEATHER_PREVIEW: Record<string, Record<string, { temp: number; hu
 };
 
 export const FarmerGuideScreen: React.FC = () => {
+  const { t, i18n } = useTranslation();
   // Bilingual shorthand
   const isSi = i18n.language === 'si';
-  const { t, i18n } = useTranslation();
   const { theme } = useAppTheme();
 
   const [step, setStep] = useState(1);
@@ -116,15 +116,14 @@ export const FarmerGuideScreen: React.FC = () => {
   }, [zone]);
 
   // Weather state
-  const [weather, setWeather] = useState(null);
+  const [weather, setWeather] = useState<any>(null);
   const [weatherStatus, setWeatherStatus] = useState('');
 
   // Fetch weather when district changes
   useEffect(() => {
     const fetchWeather = async () => {
       try {
-        const res = await fetch(`${process.env.EXPO_PUBLIC_API_URL || ''}/current-weather?district=${district}`);
-        const data = await res.json();
+        const data = await getCurrentWeather(district);
         setWeather(data);
         setWeatherStatus(data.weather?.source || '');
       } catch (e) {
@@ -154,7 +153,7 @@ export const FarmerGuideScreen: React.FC = () => {
       }
     } catch (e) {
       console.error(e);
-      alert('Error fetching recommendation. Please ensure the backend server is running.');
+      Alert.alert('Error', 'Error fetching recommendation. Please ensure the backend server is running.');
     } finally {
       setLoading(false);
     }
@@ -176,34 +175,12 @@ export const FarmerGuideScreen: React.FC = () => {
       }
     } catch (e) {
       console.error(e);
-      alert('Failed to generate cultivation plan.');
+      Alert.alert('Error', 'Failed to generate cultivation plan.');
     } finally {
       setLoadingPlan(false);
     }
   };
-
   return (
-        // Weather Intelligence Card
-        <Card style={styles.card} elevation={2}>
-          <Card.Title title={isSi ? 'කාලගුණ බුද්ධි තොරතුරු' : 'Weather Intelligence'} subtitle={district} />
-          <Card.Content>
-            {weather ? (
-              <View>
-                <Text>{isSi ? 'උෂ්ණත්වය' : 'Temperature'}: {weather.weather.temperature}°C</Text>
-                <Text>{isSi ? 'ආතතිය' : 'Humidity'}: {weather.weather.humidity}%</Text>
-                <Text>{isSi ? 'වර්ෂාපාලන' : 'Rainfall'}: {weather.weather.rainfall} mm</Text>
-                <Text>{isSi ? 'සුළං' : 'Wind'}: {weather.weather.windSpeed} km/h</Text>
-                <Text>{isSi ? 'තත්ත්වය' : 'Source'}: {weather.weather.source}</Text>
-                <Text>{isSi ? 'රෝග අවදානම්' : 'Disease Risks'}:</Text>
-                <Text>Rice Blast: {weather.disease_risks.rice_blast_pct}%</Text>
-                <Text>Brown Spot: {weather.disease_risks.brown_spot_pct}%</Text>
-                <Text>Bacterial Blight: {weather.disease_risks.bacterial_blight_pct}%</Text>
-              </View>
-            ) : (
-              <ActivityIndicator animating={true} />
-            )}
-          </Card.Content>
-        </Card>,
     <Portal.Host>
       <ScrollView
         style={[styles.container, { backgroundColor: theme.colors.background }]}
@@ -282,6 +259,28 @@ export const FarmerGuideScreen: React.FC = () => {
                 >
                   {loading ? <ActivityIndicator size="small" color="#ffffff" /> : 'Run AI Recommendation'}
                 </Button>
+              </Card.Content>
+            </Card>
+
+            {/* Weather Intelligence Card */}
+            <Card style={[styles.card, { backgroundColor: theme.colors.surface, marginTop: 12 }]}>
+              <Card.Title title={isSi ? 'කාලගුණ බුද්ධි තොරතුරු' : 'Weather Intelligence'} subtitle={district} />
+              <Card.Content>
+                {weather ? (
+                  <View>
+                    <Text style={{ color: theme.colors.text }}>{isSi ? 'උෂ්ණත්වය' : 'Temperature'}: {weather.weather.temperature}°C</Text>
+                    <Text style={{ color: theme.colors.text }}>{isSi ? 'ආතතිය' : 'Humidity'}: {weather.weather.humidity}%</Text>
+                    <Text style={{ color: theme.colors.text }}>{isSi ? 'වර්ෂාපාලන' : 'Rainfall'}: {weather.weather.rainfall} mm</Text>
+                    <Text style={{ color: theme.colors.text }}>{isSi ? 'සුළං' : 'Wind'}: {weather.weather.windSpeed} km/h</Text>
+                    <Text style={{ color: theme.colors.text }}>{isSi ? 'තත්ත්වය' : 'Source'}: {weather.weather.source}</Text>
+                    <Text style={{ marginTop: 8, fontWeight: 'bold', color: theme.colors.text }}>{isSi ? 'රෝග අවදානම්' : 'Disease Risks'}:</Text>
+                    <Text style={{ color: theme.colors.text }}>Rice Blast: {weather.disease_risks.rice_blast_pct}%</Text>
+                    <Text style={{ color: theme.colors.text }}>Brown Spot: {weather.disease_risks.brown_spot_pct}%</Text>
+                    <Text style={{ color: theme.colors.text }}>Bacterial Blight: {weather.disease_risks.bacterial_blight_pct}%</Text>
+                  </View>
+                ) : (
+                  <ActivityIndicator animating={true} />
+                )}
               </Card.Content>
             </Card>
 

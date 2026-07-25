@@ -20,6 +20,9 @@ export type IconName =
   | 'user'
   | 'globe'
   | 'chevron-right'
+  | 'chevron-down'
+  | 'dollar-sign'
+  | 'check'
   | 'upload-cloud'
   | 'beaker'
   | 'clock'
@@ -179,6 +182,25 @@ export const Icon: React.FC<IconProps> = ({ name, size = 24, color = '#000000', 
       return (
         <Svg {...commonProps}>
           <Polyline points="9 18 15 12 9 6" />
+        </Svg>
+      );
+    case 'chevron-down':
+      return (
+        <Svg {...commonProps}>
+          <Polyline points="6 9 12 15 18 9" />
+        </Svg>
+      );
+    case 'dollar-sign':
+      return (
+        <Svg {...commonProps}>
+          <Line x1="12" y1="1" x2="12" y2="23" />
+          <Path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+        </Svg>
+      );
+    case 'check':
+      return (
+        <Svg {...commonProps}>
+          <Polyline points="20 6 9 17 4 12" />
         </Svg>
       );
     case 'upload-cloud':

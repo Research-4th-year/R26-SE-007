@@ -225,3 +225,14 @@ export const getFertilizerPlan = async (variety: string) => {
   }
 };
 
+export const getCurrentWeather = async (district: string) => {
+  try {
+    const api = await getAxiosInstance();
+    const response = await api.get(`/current-weather?district=${encodeURIComponent(district)}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching current weather mobile:", error);
+    throw error;
+  }
+};
+
