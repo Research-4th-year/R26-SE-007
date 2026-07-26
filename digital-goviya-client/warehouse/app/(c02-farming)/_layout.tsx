@@ -1,5 +1,6 @@
 import { Stack } from "expo-router";
 import { COLORS } from "@/constants/theme";
+import React from "react";
 
 export default function FarmingLayout() {
   return (
