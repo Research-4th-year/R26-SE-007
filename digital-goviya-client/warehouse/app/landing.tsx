@@ -27,7 +27,7 @@ const COMPONENTS = [
     color: "#0369A1",
     bg: "#E0F2FE",
     route: "/(c02-farming)",
-    ready: false,
+    ready: true,
   },
   {
     id: "marketplace",

@@ -1,18 +1,18 @@
 {
   "Anuradhapura": {
-    "temperature": 25.9,
-    "humidity": 79.0,
+    "temperature": 33.1,
+    "humidity": 43.0,
     "rainfall": 0.0,
-    "windSpeed": 17.3,
-    "windDirection": "SSW",
-    "pressure": 1010.0,
-    "cloud": 24,
-    "uvIndex": 0.0,
+    "windSpeed": 27.7,
+    "windDirection": "SW",
+    "pressure": 1007.0,
+    "cloud": 12,
+    "uvIndex": 4.1,
     "visibility": 10.0,
-    "weatherCondition": "Clear",
+    "weatherCondition": "Sunny",
     "location": "Anuradhapura",
     "source": "WEATHER_API",
-    "timestamp": "2026-07-24 22:34"
+    "timestamp": "2026-07-26 15:27"
   },
   "Kurunegala": {
     "temperature": 22.2,
@@ -30,19 +30,19 @@
     "timestamp": "2026-07-10 23:06"
   },
   "Monaragala": {
-    "temperature": 24.5,
-    "humidity": 72.0,
+    "temperature": 24.6,
+    "humidity": 76.0,
     "rainfall": 0.0,
-    "windSpeed": 6.8,
+    "windSpeed": 11.2,
     "windDirection": "SW",
     "pressure": 1010.0,
-    "cloud": 13,
+    "cloud": 16,
     "uvIndex": 0.0,
     "visibility": 10.0,
     "weatherCondition": "Clear",
     "location": "Monaragala",
     "source": "WEATHER_API",
-    "timestamp": "2026-07-10 00:38"
+    "timestamp": "2026-07-25 23:54"
   },
   "Trincomalee": {
     "temperature": 28.0,
@@ -60,19 +60,19 @@
     "timestamp": "2026-07-24 22:34"
   },
   "Kandy": {
-    "temperature": 19.5,
-    "humidity": 88.0,
+    "temperature": 31.4,
+    "humidity": 45.0,
     "rainfall": 0.0,
-    "windSpeed": 4.7,
-    "windDirection": "SSW",
-    "pressure": 1013.0,
-    "cloud": 7,
-    "uvIndex": 0.0,
+    "windSpeed": 16.2,
+    "windDirection": "WSW",
+    "pressure": 1010.0,
+    "cloud": 39,
+    "uvIndex": 12.2,
     "visibility": 10.0,
-    "weatherCondition": "Clear",
+    "weatherCondition": "Partly Cloudy",
     "location": "Kandy",
     "source": "WEATHER_API",
-    "timestamp": "2026-07-24 22:34"
+    "timestamp": "2026-07-26 12:25"
   },
   "Polonnaruwa": {
     "temperature": 25.6,
@@ -88,5 +88,20 @@
     "location": "Polonnaruwa",
     "source": "WEATHER_API",
     "timestamp": "2026-07-24 22:34"
+  },
+  "Ratnapura": {
+    "temperature": 30.3,
+    "humidity": 60.0,
+    "rainfall": 0.11,
+    "windSpeed": 13.7,
+    "windDirection": "W",
+    "pressure": 1011.0,
+    "cloud": 51,
+    "uvIndex": 11.8,
+    "visibility": 10.0,
+    "weatherCondition": "Patchy rain nearby",
+    "location": "Ratnapura",
+    "source": "WEATHER_API",
+    "timestamp": "2026-07-26 12:25"
   }
 }
