@@ -1,18 +1,18 @@
 {
   "Anuradhapura": {
-    "temperature": 33.1,
-    "humidity": 43.0,
+    "temperature": 30.3,
+    "humidity": 53.0,
     "rainfall": 0.0,
-    "windSpeed": 27.7,
+    "windSpeed": 24.5,
     "windDirection": "SW",
-    "pressure": 1007.0,
-    "cloud": 12,
-    "uvIndex": 4.1,
+    "pressure": 1008.0,
+    "cloud": 7,
+    "uvIndex": 0.4,
     "visibility": 10.0,
     "weatherCondition": "Sunny",
     "location": "Anuradhapura",
     "source": "WEATHER_API",
-    "timestamp": "2026-07-26 15:27"
+    "timestamp": "2026-07-26 17:36"
   },
   "Kurunegala": {
     "temperature": 22.2,
@@ -60,34 +60,34 @@
     "timestamp": "2026-07-24 22:34"
   },
   "Kandy": {
-    "temperature": 31.4,
-    "humidity": 45.0,
+    "temperature": 27.4,
+    "humidity": 58.0,
     "rainfall": 0.0,
-    "windSpeed": 16.2,
+    "windSpeed": 13.3,
     "windDirection": "WSW",
-    "pressure": 1010.0,
-    "cloud": 39,
-    "uvIndex": 12.2,
+    "pressure": 1009.0,
+    "cloud": 13,
+    "uvIndex": 0.3,
     "visibility": 10.0,
-    "weatherCondition": "Partly Cloudy",
+    "weatherCondition": "Sunny",
     "location": "Kandy",
     "source": "WEATHER_API",
-    "timestamp": "2026-07-26 12:25"
+    "timestamp": "2026-07-26 17:37"
   },
   "Polonnaruwa": {
-    "temperature": 25.6,
-    "humidity": 70.0,
+    "temperature": 30.8,
+    "humidity": 46.0,
     "rainfall": 0.0,
-    "windSpeed": 18.4,
-    "windDirection": "SW",
-    "pressure": 1010.0,
-    "cloud": 4,
-    "uvIndex": 0.0,
+    "windSpeed": 25.2,
+    "windDirection": "WSW",
+    "pressure": 1007.0,
+    "cloud": 6,
+    "uvIndex": 0.3,
     "visibility": 10.0,
-    "weatherCondition": "Clear",
+    "weatherCondition": "Sunny",
     "location": "Polonnaruwa",
     "source": "WEATHER_API",
-    "timestamp": "2026-07-24 22:34"
+    "timestamp": "2026-07-26 17:37"
   },
   "Ratnapura": {
     "temperature": 30.3,

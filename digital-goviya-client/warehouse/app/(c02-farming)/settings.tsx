@@ -1,29 +1,114 @@
-import { View, Text, ScrollView, StyleSheet, Switch, TouchableOpacity } from "react-native";
+import React, { useState } from "react";
+import { View, Text, ScrollView, StyleSheet, Switch, TouchableOpacity, TextInput, Alert, ActivityIndicator } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS } from "@/constants/theme";
-import { useState } from "react";
+import { saveFarmerProfile } from "@/services/farming/api";
 
 export default function SettingsScreen() {
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [darkModeEnabled, setDarkModeEnabled] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const [profile, setProfile] = useState({
+    name: "Farmer Name",
+    phone: "+94 77 123 4567",
+    location: "Anuradhapura, Sri Lanka",
+    farmSize: "2.5 Acres"
+  });
+
+  const handleSaveProfile = async () => {
+    setSaving(true);
+    try {
+      await saveFarmerProfile(profile);
+      setIsEditing(false);
+      Alert.alert("Success", "Profile updated successfully.");
+    } catch (error) {
+      Alert.alert("Error", "Could not save profile updates.");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <ScrollView style={styles.screen}>
-      {/* Profile Placeholder */}
+      {/* Profile Section */}
       <View style={styles.profileSection}>
         <View style={styles.avatar}>
           <Ionicons name="person" size={40} color={COLORS.primaryLight} />
         </View>
         <View style={styles.profileInfo}>
-          <Text style={styles.profileName}>Farmer Name</Text>
-          <Text style={styles.profilePhone}>+94 77 123 4567</Text>
+          {isEditing ? (
+            <TextInput 
+              style={styles.inputName}
+              value={profile.name}
+              onChangeText={(text) => setProfile({...profile, name: text})}
+            />
+          ) : (
+            <Text style={styles.profileName}>{profile.name}</Text>
+          )}
+
+          {isEditing ? (
+            <TextInput 
+              style={styles.inputPhone}
+              value={profile.phone}
+              onChangeText={(text) => setProfile({...profile, phone: text})}
+              keyboardType="phone-pad"
+            />
+          ) : (
+            <Text style={styles.profilePhone}>{profile.phone}</Text>
+          )}
         </View>
-        <TouchableOpacity style={styles.editButton}>
-          <Ionicons name="pencil" size={20} color={COLORS.primary} />
-        </TouchableOpacity>
+        
+        {isEditing ? (
+          <TouchableOpacity style={styles.saveButton} onPress={handleSaveProfile} disabled={saving}>
+            {saving ? <ActivityIndicator color={COLORS.white} size="small" /> : <Ionicons name="checkmark" size={20} color={COLORS.white} />}
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity style={styles.editButton} onPress={() => setIsEditing(true)}>
+            <Ionicons name="pencil" size={20} color={COLORS.primary} />
+          </TouchableOpacity>
+        )}
       </View>
 
       <View style={styles.content}>
+        {/* Farm Details */}
+        <Text style={styles.sectionTitle}>Farm Details</Text>
+        <View style={styles.settingsGroup}>
+          <View style={styles.settingItem}>
+            <View style={styles.settingLeft}>
+              <Ionicons name="location-outline" size={24} color={COLORS.textSecondary} />
+              <Text style={styles.settingText}>Location</Text>
+            </View>
+            {isEditing ? (
+              <TextInput 
+                style={styles.settingInput}
+                value={profile.location}
+                onChangeText={(text) => setProfile({...profile, location: text})}
+              />
+            ) : (
+              <Text style={styles.settingValue}>{profile.location}</Text>
+            )}
+          </View>
+          <View style={styles.divider} />
+          
+          <View style={styles.settingItem}>
+            <View style={styles.settingLeft}>
+              <Ionicons name="map-outline" size={24} color={COLORS.textSecondary} />
+              <Text style={styles.settingText}>Farm Size</Text>
+            </View>
+            {isEditing ? (
+              <TextInput 
+                style={styles.settingInput}
+                value={profile.farmSize}
+                onChangeText={(text) => setProfile({...profile, farmSize: text})}
+              />
+            ) : (
+              <Text style={styles.settingValue}>{profile.farmSize}</Text>
+            )}
+          </View>
+        </View>
+
         {/* Preferences */}
         <Text style={styles.sectionTitle}>Preferences</Text>
         <View style={styles.settingsGroup}>
@@ -126,14 +211,35 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: COLORS.textPrimary,
   },
+  inputName: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: COLORS.textPrimary,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.primary,
+    paddingVertical: 0,
+    marginBottom: 4,
+  },
   profilePhone: {
     fontSize: 14,
     color: COLORS.textMuted,
     marginTop: 4,
   },
+  inputPhone: {
+    fontSize: 14,
+    color: COLORS.textPrimary,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.primary,
+    paddingVertical: 0,
+  },
   editButton: {
     padding: 8,
     backgroundColor: COLORS.primaryLight + "40",
+    borderRadius: 8,
+  },
+  saveButton: {
+    padding: 8,
+    backgroundColor: COLORS.primary,
     borderRadius: 8,
   },
   content: {
@@ -178,9 +284,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   settingValue: {
-    fontSize: 16,
+    fontSize: 14,
     color: COLORS.textMuted,
     marginRight: 8,
+  },
+  settingInput: {
+    fontSize: 14,
+    color: COLORS.textPrimary,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.primary,
+    minWidth: 100,
+    textAlign: "right",
   },
   divider: {
     height: 1,
