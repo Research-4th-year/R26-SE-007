@@ -10,7 +10,7 @@ const runNegotiation = async (payload) => {
       `${NEGOTIATION_API_URL}/api/negotiations/run`,
       payload,
       {
-        timeout: 120000,
+        timeout: 300000,
         headers: {
           "Content-Type": "application/json",
         },
