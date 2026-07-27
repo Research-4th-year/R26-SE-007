@@ -111,10 +111,10 @@ export default function ScanLeafScreen() {
                   Confidence: {(result.confidence * 100).toFixed(2)}%
                 </Text>
               )}
-              {result.treatment && (
+              {(result.recommendation || result.treatment) && (
                 <View style={styles.treatmentBox}>
-                  <Text style={styles.treatmentTitle}>Recommended Treatment</Text>
-                  <Text style={styles.treatmentText}>{result.treatment}</Text>
+                  <Text style={styles.treatmentTitle}>Recommended Treatment / Info</Text>
+                  <Text style={styles.treatmentText}>{result.recommendation || result.treatment}</Text>
                 </View>
               )}
             </View>

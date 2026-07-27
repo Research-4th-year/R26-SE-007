@@ -162,7 +162,9 @@ const DiseaseDetectionContent = () => {
              borderTop: `6px solid ${getStatusColor(result.category)}`
            }}>
               <h3 style={{ color: getStatusColor(result.category), fontSize: '1.5rem', marginBottom: '0.25rem' }}>{result.disease}</h3>
-              <p style={{ fontSize: '0.85rem', fontStyle: 'italic', opacity: 0.7, marginBottom: '1.5rem' }}>Bipolaris oryzae</p>
+              {result.category !== 'Uncertain' && (
+                <p style={{ fontSize: '0.85rem', fontStyle: 'italic', opacity: 0.7, marginBottom: '1.5rem' }}>{result.category}</p>
+              )}
               
               <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center' }}>
                  <div>
@@ -212,30 +214,32 @@ const DiseaseDetectionContent = () => {
 
            {/* Treatment Protocol */}
            <section>
-              <h3 style={{ marginBottom: '1rem', fontSize: '1.1rem' }}>Recommended Treatment</h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                 <div className="glass-panel" style={{ padding: '1rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <Beaker color="var(--primary-green)" />
-                    <div>
-                       <p style={{ fontSize: '0.7rem', color: 'var(--current-text-sec)' }}>FUNGICIDE</p>
-                       <p style={{ fontSize: '0.9rem', fontWeight: '600' }}>{result.fungicide || 'Propiconazole 25 EC'}</p>
-                    </div>
-                 </div>
-                 <div className="glass-panel" style={{ padding: '1rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <Clock color="#3b82f6" />
-                    <div>
-                       <p style={{ fontSize: '0.7rem', color: 'var(--current-text-sec)' }}>SPRAY TIMING</p>
-                       <p style={{ fontSize: '0.9rem', fontWeight: '600' }}>Early morning or late evening</p>
-                    </div>
-                 </div>
-                 <div className="glass-panel" style={{ padding: '1rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <Repeat color="#f59e0b" />
-                    <div>
-                       <p style={{ fontSize: '0.7rem', color: 'var(--current-text-sec)' }}>REPEAT</p>
-                       <p style={{ fontSize: '0.9rem', fontWeight: '600' }}>Every 10-12 days if needed</p>
-                    </div>
-                 </div>
-              </div>
+              <h3 style={{ marginBottom: '1rem', fontSize: '1.1rem' }}>Recommended Treatment / Info</h3>
+              
+              {result.category === 'Uncertain' || result.disease === 'Other Disease / Not Related' ? (
+                <div className="glass-panel" style={{ padding: '1.5rem' }}>
+                   <p style={{ fontSize: '1rem', color: 'var(--current-text)', fontWeight: '500' }}>
+                     {result.recommendation || result.treatment || "No treatment applicable."}
+                   </p>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                   <div className="glass-panel" style={{ padding: '1rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                      <Beaker color="var(--primary-green)" />
+                      <div>
+                         <p style={{ fontSize: '0.7rem', color: 'var(--current-text-sec)' }}>FUNGICIDE/FERTILIZER</p>
+                         <p style={{ fontSize: '0.9rem', fontWeight: '600' }}>{result.fungicide !== 'N/A' ? result.fungicide : (result.fertilizer !== 'N/A' ? result.fertilizer : 'As prescribed')}</p>
+                      </div>
+                   </div>
+                   <div className="glass-panel" style={{ padding: '1rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                      <Clock color="#3b82f6" />
+                      <div>
+                         <p style={{ fontSize: '0.7rem', color: 'var(--current-text-sec)' }}>RECOMMENDATION</p>
+                         <p style={{ fontSize: '0.9rem', fontWeight: '600' }}>{result.recommendation || result.treatment}</p>
+                      </div>
+                   </div>
+                </div>
+              )}
            </section>
 
            <button className="btn btn-primary" style={{ width: '100%', padding: '1.25rem' }} onClick={reset}>

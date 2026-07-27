@@ -293,11 +293,11 @@ async def predict_disease(
                 predicted_class_idx = np.argmax(predictions[0])
                 confidence = float(np.max(predictions[0]))
                 
-                # Check for low confidence
-                if confidence < 0.5:
-                    cnn_disease = "Uncertain"
+                # Check for low confidence or non-leaf images (High threshold for out-of-distribution)
+                if confidence < 0.90:
+                    cnn_disease = "Other Disease / Not Related"
                     category = "Uncertain"
-                    treatment = "Confidence is too low to determine disease. Please capture a clearer image."
+                    treatment = "The image is not recognized as a known paddy disease with high confidence. It may be another disease, not a paddy leaf, or too blurry."
                 else:
                     cnn_disease = DISEASE_CLASSES[predicted_class_idx]
                     category = DISEASE_MAPPING.get(cnn_disease, {}).get('category', 'Healthy')
