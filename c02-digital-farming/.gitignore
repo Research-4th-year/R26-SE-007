@@ -1,0 +1,18 @@
+# macOS metadata
+.DS_Store
+
+# Large dataset files (use Git LFS or store externally)
+dataset/SriLanka_Weather_Dataset.csv
+dataset/.DS_Store
+
+# Trained model binaries (regenerate from train scripts)
+backend/models/*.pkl
+
+# Python
+backend/venv/
+backend/__pycache__/
+backend/*.pyc
+backend/.env
+
+# Firebase credentials – never commit secrets
+backend/firebase_service_account.json
