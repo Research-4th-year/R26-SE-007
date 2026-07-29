@@ -150,6 +150,19 @@ function App() {
   const [suitabilityResult, setSuitabilityResult] = useState(null)
   const [error, setError] = useState(null)
 
+  // Form State for Yield Prediction
+  const [yieldData, setYieldData] = useState({
+    District: 'Anuradhapura',
+    Total_Land_Size: 1000,
+    Land_Size_Unit: 'Hectares',
+    Paddy_Type: 'Bg 352',
+    Temperature_C: 28.5,
+    Humidity: 75.0,
+    Soil_Moisture: 0.3,
+    isLiveIoT: false
+  })
+  const [yieldResult, setYieldResult] = useState(null)
+
   const handleVarietyChange = (e) => {
     setVarietyData({
       ...varietyData,
@@ -185,6 +198,56 @@ function App() {
         ...suitabilityData,
         [name]: value
       })
+    }
+  }
+
+  const handleYieldChange = (e) => {
+    const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value
+    setYieldData({
+      ...yieldData,
+      [e.target.name]: value
+    })
+  }
+
+  const handleYieldSubmit = async (e) => {
+    e.preventDefault()
+    setLoading(true)
+    setError(null)
+    setYieldResult(null)
+
+    try {
+      let final_land_size_ha = parseFloat(yieldData.Total_Land_Size);
+      if (yieldData.Land_Size_Unit === 'Acres') {
+        final_land_size_ha = final_land_size_ha * 0.404686;
+      } else if (yieldData.Land_Size_Unit === 'Perches') {
+        final_land_size_ha = final_land_size_ha * 0.00252929;
+      }
+
+      const response = await fetch('http://127.0.0.1:8000/predict_yield_production', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          District: yieldData.District,
+          Total_Land_Size: final_land_size_ha,
+          Paddy_Type: yieldData.Paddy_Type,
+          Temperature_C: parseFloat(yieldData.Temperature_C),
+          Humidity: parseFloat(yieldData.Humidity),
+          Soil_Moisture: parseFloat(yieldData.Soil_Moisture)
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to get yield prediction from the server')
+      }
+
+      const data = await response.json()
+      setYieldResult(data)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -257,6 +320,16 @@ function App() {
     }
   }
 
+  const getTotalYieldKg = (val_per_ha) => {
+    let final_land_size_ha = parseFloat(yieldData.Total_Land_Size || 0);
+    if (yieldData.Land_Size_Unit === 'Acres') {
+      final_land_size_ha = final_land_size_ha * 0.404686;
+    } else if (yieldData.Land_Size_Unit === 'Perches') {
+      final_land_size_ha = final_land_size_ha * 0.00252929;
+    }
+    return val_per_ha * final_land_size_ha;
+  }
+
   return (
     <div className="app-container">
       <div className="glass-panel">
@@ -268,15 +341,21 @@ function App() {
         <div className="tabs">
           <button
             className={activeTab === 'variety' ? 'active-tab' : 'tab'}
-            onClick={() => { setActiveTab('variety'); setError(null); setResult(null); setSuitabilityResult(null); }}
+            onClick={() => { setActiveTab('variety'); setError(null); setResult(null); setSuitabilityResult(null); setYieldResult(null); }}
           >
             Variety Prediction
           </button>
           <button
             className={activeTab === 'suitability' ? 'active-tab' : 'tab'}
-            onClick={() => { setActiveTab('suitability'); setError(null); setResult(null); setSuitabilityResult(null); }}
+            onClick={() => { setActiveTab('suitability'); setError(null); setResult(null); setSuitabilityResult(null); setYieldResult(null); }}
           >
             IoT Suitability
+          </button>
+          <button
+            className={activeTab === 'yield' ? 'active-tab' : 'tab'}
+            onClick={() => { setActiveTab('yield'); setError(null); setResult(null); setSuitabilityResult(null); setYieldResult(null); }}
+          >
+            Yield Prediction
           </button>
         </div>
 
@@ -360,7 +439,7 @@ function App() {
                 </div>
               )}
             </>
-          ) : (
+          ) : activeTab === 'suitability' ? (
             <>
               <form onSubmit={handleSuitabilitySubmit} className="prediction-form fade-in">
                 <div className="form-group">
@@ -438,7 +517,115 @@ function App() {
                 </div>
               )}
             </>
-          )}
+          ) : activeTab === 'yield' ? (
+            <>
+              <form onSubmit={handleYieldSubmit} className="prediction-form fade-in">
+                <div className="form-group">
+                  <label htmlFor="yield_district">District</label>
+                  <select name="District" id="yield_district" value={yieldData.District} onChange={handleYieldChange}>
+                    {Object.keys(districtData).map(dist => (
+                      <option key={dist} value={dist}>{dist}</option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div className="form-row">
+                  <div className="form-group">
+                    <label htmlFor="Total_Land_Size">Total Land Size</label>
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                      <input type="number" step="0.1" name="Total_Land_Size" id="Total_Land_Size" value={yieldData.Total_Land_Size} onChange={handleYieldChange} style={{ flex: 2 }} />
+                      <select name="Land_Size_Unit" value={yieldData.Land_Size_Unit} onChange={handleYieldChange} style={{ flex: 1 }}>
+                        <option value="Hectares">Hectares</option>
+                        <option value="Acres">Acres</option>
+                        <option value="Perches">Perches</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="Paddy_Type">Paddy Type</label>
+                    <select name="Paddy_Type" id="Paddy_Type" value={yieldData.Paddy_Type} onChange={handleYieldChange}>
+                      <option value="Bg 352">Bg 352</option>
+                      <option value="At 362">At 362</option>
+                      <option value="Samba">Samba</option>
+                      <option value="Keeri Samba">Keeri Samba</option>
+                      <option value="Nadu">Nadu</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="iot-panel">
+                  <h3>Environmental Factors</h3>
+                  <div className="toggle-group">
+                    <label>
+                      <input 
+                        type="checkbox" 
+                        name="isLiveIoT" 
+                        checked={yieldData.isLiveIoT} 
+                        onChange={handleYieldChange} 
+                      /> Use Live IoT Feed
+                    </label>
+                  </div>
+                  
+                  {!yieldData.isLiveIoT && (
+                    <div className="form-row mt-2">
+                      <div className="form-group">
+                        <label>Temp (°C)</label>
+                        <input type="number" step="0.1" name="Temperature_C" value={yieldData.Temperature_C} onChange={handleYieldChange} />
+                      </div>
+                      <div className="form-group">
+                        <label>Humidity (%)</label>
+                        <input type="number" step="0.1" name="Humidity" value={yieldData.Humidity} onChange={handleYieldChange} />
+                      </div>
+                      <div className="form-group">
+                        <label>Soil Moisture</label>
+                        <input type="number" step="0.01" name="Soil_Moisture" value={yieldData.Soil_Moisture} onChange={handleYieldChange} />
+                      </div>
+                    </div>
+                  )}
+                  {yieldData.isLiveIoT && (
+                    <div className="live-iot-indicator">
+                      <span className="pulsing-dot"></span> Fetching live sensors during prediction...
+                    </div>
+                  )}
+                </div>
+
+                <button type="submit" className="submit-btn" disabled={loading}>
+                  {loading ? 'Predicting Yield...' : 'Predict Yield & Production'}
+                </button>
+              </form>
+
+              {yieldResult && (
+                <div className="result-card fade-in yield-result">
+                  <h2>Predicted Yield</h2>
+                  <div className="yield-stats">
+                    <div className="stat-box">
+                      <span className="stat-val">{(yieldResult.total_estimated_production_mt * 1000).toFixed(2)}</span>
+                      <span className="stat-lbl">Total kg for {yieldData.Total_Land_Size} {yieldData.Land_Size_Unit}</span>
+                    </div>
+                    <div className="stat-box">
+                      <span className="stat-val">{yieldResult.total_estimated_production_mt.toFixed(2)}</span>
+                      <span className="stat-lbl">Total Metric Tons</span>
+                    </div>
+                  </div>
+                  
+                  <div className="confidence-interval">
+                    Expected Total Range: {getTotalYieldKg(yieldResult.confidence_interval.lower).toFixed(0)} - {getTotalYieldKg(yieldResult.confidence_interval.upper).toFixed(0)} kg
+                  </div>
+
+                  {yieldResult.agronomic_recommendations && yieldResult.agronomic_recommendations.length > 0 && (
+                    <div className="agronomic-insights">
+                      <h3>🌱 Agronomic Insights</h3>
+                      <ul>
+                        {yieldResult.agronomic_recommendations.map((rec, i) => (
+                          <li key={i}>{rec}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
+            </>
+          ) : null}
 
           {error && <div className="error-message">{error}</div>}
         </main>
