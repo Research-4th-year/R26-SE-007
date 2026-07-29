@@ -411,3 +411,52 @@ input[type="number"]:focus {
   font-size: 0.9rem;
   line-height: 1.5;
 }
+
+/* Merged Advisory & Suitability Results */
+.merged-results-card {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+@media (min-width: 768px) {
+  .merged-results-card {
+    flex-direction: row;
+    align-items: stretch;
+  }
+}
+
+.merged-variety-section, .merged-suitability-section {
+  flex: 1;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.merged-variety-section:hover, .merged-suitability-section:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.4);
+}
+
+.merged-variety-section h2, .merged-suitability-section h2 {
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 12px;
+  width: 100%;
+  text-align: center;
+}

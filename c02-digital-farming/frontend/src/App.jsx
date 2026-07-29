@@ -112,6 +112,34 @@ const districtData = {
   ]
 }
 
+const districtToZoneMap = {
+  "Anuradhapura": "Dry Zone",
+  "Polonnaruwa": "Dry Zone",
+  "Ampara": "Dry Zone",
+  "Hambantota": "Dry Zone",
+  "Trincomalee": "Dry Zone",
+  "Batticaloa": "Dry Zone",
+  "Puttalam": "Dry Zone",
+  "Mannar": "Dry Zone",
+  "Vavuniya": "Dry Zone",
+  "Kilinochchi": "Dry Zone",
+  "Mullaitivu": "Dry Zone",
+  "Jaffna": "Dry Zone",
+  "Moneragala": "Dry Zone",
+  "Kurunegala": "Intermediate Zone",
+  "Badulla": "Intermediate Zone",
+  "Matale": "Intermediate Zone",
+  "Kandy": "Wet Zone",
+  "Nuwara Eliya": "Wet Zone",
+  "Kegalle": "Wet Zone",
+  "Ratnapura": "Wet Zone",
+  "Colombo": "Wet Zone",
+  "Gampaha": "Wet Zone",
+  "Kalutara": "Wet Zone",
+  "Galle": "Wet Zone",
+  "Matara": "Wet Zone"
+}
+
 const mapContainerStyle = {
   width: '100%',
   height: '250px',
@@ -125,24 +153,19 @@ function App() {
     // googleMapsApiKey: "AIzaSyCfNslBQ-Q_czbhuPrr0oqmbMPbGZmoARc"
   })
 
-  const [activeTab, setActiveTab] = useState('variety') // 'variety' or 'suitability'
+  const [activeTab, setActiveTab] = useState('advisory') // 'advisory' or 'yield'
 
-  // Form State for Variety Prediction
-  const [varietyData, setVarietyData] = useState({
+  // Unified Form State for Variety & Suitability
+  const [advisoryData, setAdvisoryData] = useState({
     District: 'Anuradhapura',
+    City: 'Anuradhapura City',
+    lat: districtData["Anuradhapura"][0].lat,
+    lon: districtData["Anuradhapura"][0].lon,
     Zone: 'Dry Zone',
     Season: 'Annual',
     Salinity_Prone: 'No',
-    Iron_Toxicity_Prone: 'No'
-  })
-
-  // Form State for Suitability Prediction
-  const [suitabilityData, setSuitabilityData] = useState({
-    field_id: 'field_001',
-    district: 'Anuradhapura',
-    city: 'Anuradhapura City',
-    lat: districtData["Anuradhapura"][0].lat,
-    lon: districtData["Anuradhapura"][0].lon
+    Iron_Toxicity_Prone: 'No',
+    field_id: 'field_001'
   })
 
   const [loading, setLoading] = useState(false)
@@ -163,39 +186,32 @@ function App() {
   })
   const [yieldResult, setYieldResult] = useState(null)
 
-  const handleVarietyChange = (e) => {
-    setVarietyData({
-      ...varietyData,
-      [e.target.name]: e.target.value
-    })
-  }
-
-  const handleSuitabilityChange = (e) => {
+  const handleAdvisoryChange = (e) => {
     const { name, value } = e.target
-    if (name === 'district') {
-      // Find the first city in this newly selected district to set as default
+    if (name === 'District') {
       const defaultCity = districtData[value][0]
-      setSuitabilityData({
-        ...suitabilityData,
-        district: value,
-        city: defaultCity.name,
+      const defaultZone = districtToZoneMap[value] || 'Dry Zone'
+      setAdvisoryData({
+        ...advisoryData,
+        District: value,
+        City: defaultCity.name,
+        Zone: defaultZone,
         lat: defaultCity.lat,
         lon: defaultCity.lon
       })
-    } else if (name === 'city') {
-      // Find the selected city in the current district array to get its coordinates
-      const selectedCityObj = districtData[suitabilityData.district].find(c => c.name === value)
+    } else if (name === 'City') {
+      const selectedCityObj = districtData[advisoryData.District].find(c => c.name === value)
       if (selectedCityObj) {
-        setSuitabilityData({
-          ...suitabilityData,
-          city: value,
+        setAdvisoryData({
+          ...advisoryData,
+          City: value,
           lat: selectedCityObj.lat,
           lon: selectedCityObj.lon
         })
       }
     } else {
-      setSuitabilityData({
-        ...suitabilityData,
+      setAdvisoryData({
+        ...advisoryData,
         [name]: value
       })
     }
@@ -252,67 +268,60 @@ function App() {
   }
 
   const onMapClick = (e) => {
-    setSuitabilityData({
-      ...suitabilityData,
+    setAdvisoryData({
+      ...advisoryData,
       lat: e.latLng.lat(),
       lon: e.latLng.lng()
     })
   }
 
-  const handleVarietySubmit = async (e) => {
+  const handleAdvisorySubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
     setError(null)
     setResult(null)
-
-    try {
-      const response = await fetch('http://127.0.0.1:8000/predict', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(varietyData),
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to get prediction from the server')
-      }
-
-      const data = await response.json()
-      setResult(data)
-    } catch (err) {
-      setError(err.message)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleSuitabilitySubmit = async (e) => {
-    e.preventDefault()
-    setLoading(true)
-    setError(null)
     setSuitabilityResult(null)
 
     try {
-      const queryParams = new URLSearchParams({
-        field_id: suitabilityData.field_id,
-        lat: suitabilityData.lat,
-        lon: suitabilityData.lon
-      }).toString()
-
-      const response = await fetch(`http://127.0.0.1:8000/predict_suitability?${queryParams}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to get suitability prediction from the server')
+      // 1. Prepare Variety Prediction Request
+      const varietyPayload = {
+        District: advisoryData.District,
+        Zone: advisoryData.Zone,
+        Season: advisoryData.Season,
+        Salinity_Prone: advisoryData.Salinity_Prone,
+        Iron_Toxicity_Prone: advisoryData.Iron_Toxicity_Prone
       }
 
-      const data = await response.json()
-      setSuitabilityResult(data)
+      const varietyPromise = fetch('http://127.0.0.1:8000/predict', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(varietyPayload)
+      })
+
+      // 2. Prepare IoT Suitability Request
+      const queryParams = new URLSearchParams({
+        field_id: advisoryData.field_id,
+        lat: advisoryData.lat,
+        lon: advisoryData.lon
+      }).toString()
+
+      const suitabilityPromise = fetch(`http://127.0.0.1:8000/predict_suitability?${queryParams}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+      })
+
+      // Execute concurrently
+      const [resVariety, resSuitability] = await Promise.all([varietyPromise, suitabilityPromise])
+
+      if (!resVariety.ok || !resSuitability.ok) {
+        throw new Error('Failed to get predictions from the server')
+      }
+
+      const dataVariety = await resVariety.json()
+      const dataSuitability = await resSuitability.json()
+
+      setResult(dataVariety)
+      setSuitabilityResult(dataSuitability)
     } catch (err) {
       setError(err.message)
     } finally {
@@ -340,16 +349,10 @@ function App() {
 
         <div className="tabs">
           <button
-            className={activeTab === 'variety' ? 'active-tab' : 'tab'}
-            onClick={() => { setActiveTab('variety'); setError(null); setResult(null); setSuitabilityResult(null); setYieldResult(null); }}
+            className={activeTab === 'advisory' ? 'active-tab' : 'tab'}
+            onClick={() => { setActiveTab('advisory'); setError(null); setResult(null); setSuitabilityResult(null); setYieldResult(null); }}
           >
-            Variety Prediction
-          </button>
-          <button
-            className={activeTab === 'suitability' ? 'active-tab' : 'tab'}
-            onClick={() => { setActiveTab('suitability'); setError(null); setResult(null); setSuitabilityResult(null); setYieldResult(null); }}
-          >
-            IoT Suitability
+            Advisory & Suitability
           </button>
           <button
             className={activeTab === 'yield' ? 'active-tab' : 'tab'}
@@ -360,160 +363,158 @@ function App() {
         </div>
 
         <main>
-          {activeTab === 'variety' ? (
+          {activeTab === 'advisory' ? (
             <>
-              <form onSubmit={handleVarietySubmit} className="prediction-form fade-in">
+              <form onSubmit={handleAdvisorySubmit} className="prediction-form fade-in">
+                
+                {/* 1. Map Section */}
                 <div className="form-group">
-                  <label htmlFor="District">District</label>
-                  <select name="District" id="District" value={varietyData.District} onChange={handleVarietyChange}>
-                    {Object.keys(districtData).map(dist => (
-                      <option key={dist} value={dist}>{dist}</option>
-                    ))}
-                  </select>
+                  <label>Select Location via Map or Dropdowns</label>
+                  <div className="form-row">
+                    <div className="form-group" style={{ marginBottom: '10px' }}>
+                      <select name="District" value={advisoryData.District} onChange={handleAdvisoryChange}>
+                        {Object.keys(districtData).map(dist => (
+                          <option key={dist} value={dist}>{dist}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="form-group" style={{ marginBottom: '10px' }}>
+                      <select name="City" value={advisoryData.City} onChange={handleAdvisoryChange}>
+                        {districtData[advisoryData.District].map(c => (
+                          <option key={c.name} value={c.name}>{c.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                  
+                  {isLoaded && (
+                    <div style={{ borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(255, 255, 255, 0.1)', marginBottom: '5px' }}>
+                      <GoogleMap
+                        mapContainerStyle={mapContainerStyle}
+                        center={{ lat: advisoryData.lat, lng: advisoryData.lon }}
+                        zoom={9}
+                        onClick={onMapClick}
+                      >
+                        <Marker position={{ lat: advisoryData.lat, lng: advisoryData.lon }} />
+                      </GoogleMap>
+                    </div>
+                  )}
+                  <div style={{ textAlign: 'center', fontSize: '0.85rem', color: '#94a3b8', marginBottom: '15px' }}>
+                    Selected Coord: {advisoryData.lat.toFixed(4)}, {advisoryData.lon.toFixed(4)}
+                  </div>
                 </div>
 
-                <div className="form-group">
-                  <label htmlFor="Zone">Climatic Zone</label>
-                  <select name="Zone" id="Zone" value={varietyData.Zone} onChange={handleVarietyChange}>
-                    <option value="Dry Zone">Dry Zone</option>
-                    <option value="Wet Zone">Wet Zone</option>
-                    <option value="Intermediate Zone">Intermediate Zone</option>
-                  </select>
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="Season">Cultivation Season</label>
-                  <select name="Season" id="Season" value={varietyData.Season} onChange={handleVarietyChange}>
-                    <option value="Maha">Maha</option>
-                    <option value="Yala">Yala</option>
-                    <option value="Annual">Annual</option>
-                  </select>
+                {/* 2. Advisory Fields */}
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Climatic Zone</label>
+                    <select name="Zone" value={advisoryData.Zone} onChange={handleAdvisoryChange}>
+                      <option value="Dry Zone">Dry Zone</option>
+                      <option value="Wet Zone">Wet Zone</option>
+                      <option value="Intermediate Zone">Intermediate Zone</option>
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label>Season</label>
+                    <select name="Season" value={advisoryData.Season} onChange={handleAdvisoryChange}>
+                      <option value="Maha">Maha</option>
+                      <option value="Yala">Yala</option>
+                      <option value="Annual">Annual</option>
+                    </select>
+                  </div>
                 </div>
 
                 <div className="form-row">
                   <div className="form-group">
-                    <label htmlFor="Salinity_Prone">Salinity Prone</label>
-                    <select name="Salinity_Prone" id="Salinity_Prone" value={varietyData.Salinity_Prone} onChange={handleVarietyChange}>
+                    <label>Salinity Prone</label>
+                    <select name="Salinity_Prone" value={advisoryData.Salinity_Prone} onChange={handleAdvisoryChange}>
                       <option value="No">No</option>
                       <option value="Yes">Yes</option>
                     </select>
                   </div>
-
                   <div className="form-group">
-                    <label htmlFor="Iron_Toxicity_Prone">Iron Toxicity Prone</label>
-                    <select name="Iron_Toxicity_Prone" id="Iron_Toxicity_Prone" value={varietyData.Iron_Toxicity_Prone} onChange={handleVarietyChange}>
+                    <label>Iron Toxicity Prone</label>
+                    <select name="Iron_Toxicity_Prone" value={advisoryData.Iron_Toxicity_Prone} onChange={handleAdvisoryChange}>
                       <option value="No">No</option>
                       <option value="Yes">Yes</option>
                     </select>
                   </div>
                 </div>
 
+                {/* 3. Field ID */}
+                <div className="form-group">
+                  <label htmlFor="field_id">ESP32 Field ID (Firebase node)</label>
+                  <input type="text" name="field_id" id="field_id" value={advisoryData.field_id} onChange={handleAdvisoryChange} />
+                </div>
+
                 <button type="submit" className="submit-btn" disabled={loading}>
-                  {loading ? 'Predicting...' : 'Get Recommendation'}
+                  {loading ? 'Analyzing...' : 'Get Recommendation & Suitability'}
                 </button>
               </form>
 
-              {result && (
-                <div className="result-card fade-in">
-                  <h2>Recommended Variety</h2>
-                  <div className="variety-highlight">
-                    {result.predicted_variety_code}
-                  </div>
+              {/* Merged Results Card */}
+              {(result || suitabilityResult) && (
+                <div className="result-card fade-in merged-results-card">
+                  {result && (
+                    <div className="merged-variety-section">
+                      <h2>Optimal Variety</h2>
+                      <div className="variety-highlight" style={{ fontSize: '2.5rem', marginBottom: '15px', color: '#10b981' }}>
+                        {result.predicted_variety_code}
+                      </div>
+                      {result.details && (
+                        <div className="variety-details" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                          <div className="detail-item">
+                            <span className="label">Grain Type</span>
+                            <span className="value">{result.details.Grain_Type}</span>
+                          </div>
+                          <div className="detail-item">
+                            <span className="label">Age Group</span>
+                            <span className="value">{result.details.Age_Group}</span>
+                          </div>
+                          <div className="detail-item">
+                            <span className="label">Category</span>
+                            <span className="value">{result.details.Category}</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
 
-                  {result.details && (
-                    <div className="variety-details">
-                      <div className="detail-item">
-                        <span className="label">Grain Type</span>
-                        <span className="value">{result.details.Grain_Type}</span>
+                  {suitabilityResult && (
+                    <div className="merged-suitability-section">
+                      <h2>IoT Field Suitability</h2>
+                      <div className="suitability-score" style={{ 
+                        fontSize: '2rem', 
+                        fontWeight: 'bold', 
+                        color: suitabilityResult.suitability_score <= 2 ? '#34d399' : (suitabilityResult.suitability_score <= 3 ? '#fbbf24' : '#ef4444'),
+                        marginBottom: '5px'
+                      }}>
+                        {suitabilityResult.suitability_score} / 5
                       </div>
-                      <div className="detail-item">
-                        <span className="label">Age Group</span>
-                        <span className="value">{result.details.Age_Group}</span>
+                      <p style={{ fontSize: '0.8rem', color: '#94a3b8', marginBottom: '15px' }}>
+                        (1 is Excellent, 5 is Poor)
+                      </p>
+                      
+                      <div className="reasoning-box" style={{ background: 'rgba(0,0,0,0.2)', padding: '10px', borderRadius: '8px', fontSize: '0.9rem', marginBottom: '15px', color: '#e2e8f0' }}>
+                        {suitabilityResult.reasoning}
                       </div>
-                      <div className="detail-item">
-                        <span className="label">Category</span>
-                        <span className="value">{result.details.Category}</span>
+
+                      <div className="variety-details" style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '8px' }}>
+                        <div className="detail-item">
+                          <span className="label">Temp</span>
+                          <span className="value">{suitabilityResult.metrics.temperature}°C</span>
+                        </div>
+                        <div className="detail-item">
+                          <span className="label">Humidity</span>
+                          <span className="value">{suitabilityResult.metrics.humidity}%</span>
+                        </div>
+                        <div className="detail-item">
+                          <span className="label">Soil Moisture</span>
+                          <span className="value">{suitabilityResult.metrics.soil_moisture} m³/m³</span>
+                        </div>
                       </div>
                     </div>
                   )}
-                </div>
-              )}
-            </>
-          ) : activeTab === 'suitability' ? (
-            <>
-              <form onSubmit={handleSuitabilitySubmit} className="prediction-form fade-in">
-                <div className="form-group">
-                  <label htmlFor="field_id">ESP32 Field ID (Firebase node)</label>
-                  <input type="text" name="field_id" id="field_id" value={suitabilityData.field_id} onChange={handleSuitabilityChange} />
-                </div>
-
-                <div className="form-row">
-                  <div className="form-group">
-                    <label htmlFor="district">District</label>
-                    <select name="district" id="district" value={suitabilityData.district} onChange={handleSuitabilityChange}>
-                      {Object.keys(districtData).map(dist => (
-                        <option key={dist} value={dist}>{dist}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="form-group">
-                    <label htmlFor="city">City / Area</label>
-                    <select name="city" id="city" value={suitabilityData.city} onChange={handleSuitabilityChange}>
-                      {districtData[suitabilityData.district].map(c => (
-                        <option key={c.name} value={c.name}>{c.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                {isLoaded && (
-                  <div style={{ borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(255, 255, 255, 0.1)', marginBottom: '15px' }}>
-                    <GoogleMap
-                      mapContainerStyle={mapContainerStyle}
-                      center={{ lat: suitabilityData.lat, lng: suitabilityData.lon }}
-                      zoom={9}
-                      onClick={onMapClick}
-                    >
-                      <Marker position={{ lat: suitabilityData.lat, lng: suitabilityData.lon }} />
-                    </GoogleMap>
-                  </div>
-                )}
-                <div style={{ textAlign: 'center', fontSize: '0.85rem', color: '#94a3b8', marginTop: '-5px', marginBottom: '15px' }}>
-                  Selected Coord: {suitabilityData.lat.toFixed(4)}, {suitabilityData.lon.toFixed(4)}
-                  <br />
-                  <span style={{ fontSize: '0.75rem', opacity: 0.7 }}>(Click on the map to place custom pin)</span>
-                </div>
-
-                <button type="submit" className="submit-btn" disabled={loading}>
-                  {loading ? 'Fetching IoT Data & Predicting...' : 'Check Suitability'}
-                </button>
-              </form>
-
-              {suitabilityResult && (
-                <div className="result-card fade-in">
-                  <h2>Yield Suitability Score: {suitabilityResult.suitability_score} / 5</h2>
-                  <p style={{ fontStyle: 'italic', color: '#555', marginBottom: '15px' }}>(1 is Best, 5 is Worst)</p>
-
-                  <div className="variety-details">
-                    <div className="detail-item" style={{ width: '100%' }}>
-                      <span className="label">Reasoning</span>
-                      <span className="value">{suitabilityResult.reasoning}</span>
-                    </div>
-
-                    <div className="detail-item">
-                      <span className="label">Combined Temp</span>
-                      <span className="value">{suitabilityResult.metrics.temperature}°C</span>
-                    </div>
-                    <div className="detail-item">
-                      <span className="label">Combined Humidity</span>
-                      <span className="value">{suitabilityResult.metrics.humidity}%</span>
-                    </div>
-                    <div className="detail-item">
-                      <span className="label">Soil Moisture</span>
-                      <span className="value">{suitabilityResult.metrics.soil_moisture} m³/m³</span>
-                    </div>
-                  </div>
                 </div>
               )}
             </>
