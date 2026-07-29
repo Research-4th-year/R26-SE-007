@@ -220,6 +220,7 @@ select option {
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -231,6 +232,7 @@ select option {
     opacity: 0;
     transform: scale(0.95);
   }
+
   to {
     opacity: 1;
     transform: scale(1);
@@ -241,9 +243,11 @@ select option {
 ::-webkit-scrollbar {
   width: 8px;
 }
+
 ::-webkit-scrollbar-track {
   background: var(--bg-gradient-start);
 }
+
 ::-webkit-scrollbar-thumb {
   background: var(--primary-dark);
   border-radius: 4px;
@@ -291,7 +295,8 @@ select option {
   box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);
 }
 
-input[type="text"], input[type="number"] {
+input[type="text"],
+input[type="number"] {
   width: 100%;
   padding: 12px 16px;
   background: rgba(15, 23, 42, 0.6);
@@ -303,7 +308,8 @@ input[type="text"], input[type="number"] {
   transition: all 0.3s ease;
 }
 
-input[type="text"]:focus, input[type="number"]:focus {
+input[type="text"]:focus,
+input[type="number"]:focus {
   outline: none;
   border-color: var(--primary-color);
   box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);

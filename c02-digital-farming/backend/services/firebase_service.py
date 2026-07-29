@@ -1,5 +1,8 @@
+# pyrefly: ignore [missing-import]
 import firebase_admin
+# pyrefly: ignore [missing-import]
 from firebase_admin import credentials
+# pyrefly: ignore [missing-import]
 from firebase_admin import db
 import os
 

@@ -135,7 +135,7 @@ function App() {
     Salinity_Prone: 'No',
     Iron_Toxicity_Prone: 'No'
   })
-  
+
   // Form State for Suitability Prediction
   const [suitabilityData, setSuitabilityData] = useState({
     field_id: 'field_001',
@@ -201,7 +201,7 @@ function App() {
     setLoading(true)
     setError(null)
     setResult(null)
-    
+
     try {
       const response = await fetch('http://127.0.0.1:8000/predict', {
         method: 'POST',
@@ -210,11 +210,11 @@ function App() {
         },
         body: JSON.stringify(varietyData),
       })
-      
+
       if (!response.ok) {
         throw new Error('Failed to get prediction from the server')
       }
-      
+
       const data = await response.json()
       setResult(data)
     } catch (err) {
@@ -229,25 +229,25 @@ function App() {
     setLoading(true)
     setError(null)
     setSuitabilityResult(null)
-    
+
     try {
       const queryParams = new URLSearchParams({
         field_id: suitabilityData.field_id,
         lat: suitabilityData.lat,
         lon: suitabilityData.lon
       }).toString()
-      
+
       const response = await fetch(`http://127.0.0.1:8000/predict_suitability?${queryParams}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         }
       })
-      
+
       if (!response.ok) {
         throw new Error('Failed to get suitability prediction from the server')
       }
-      
+
       const data = await response.json()
       setSuitabilityResult(data)
     } catch (err) {
@@ -266,14 +266,14 @@ function App() {
         </header>
 
         <div className="tabs">
-          <button 
-            className={activeTab === 'variety' ? 'active-tab' : 'tab'} 
+          <button
+            className={activeTab === 'variety' ? 'active-tab' : 'tab'}
             onClick={() => { setActiveTab('variety'); setError(null); setResult(null); setSuitabilityResult(null); }}
           >
             Variety Prediction
           </button>
-          <button 
-            className={activeTab === 'suitability' ? 'active-tab' : 'tab'} 
+          <button
+            className={activeTab === 'suitability' ? 'active-tab' : 'tab'}
             onClick={() => { setActiveTab('suitability'); setError(null); setResult(null); setSuitabilityResult(null); }}
           >
             IoT Suitability
@@ -340,7 +340,7 @@ function App() {
                   <div className="variety-highlight">
                     {result.predicted_variety_code}
                   </div>
-                  
+
                   {result.details && (
                     <div className="variety-details">
                       <div className="detail-item">
@@ -387,7 +387,7 @@ function App() {
                     </select>
                   </div>
                 </div>
-                
+
                 {isLoaded && (
                   <div style={{ borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(255, 255, 255, 0.1)', marginBottom: '15px' }}>
                     <GoogleMap
@@ -402,7 +402,7 @@ function App() {
                 )}
                 <div style={{ textAlign: 'center', fontSize: '0.85rem', color: '#94a3b8', marginTop: '-5px', marginBottom: '15px' }}>
                   Selected Coord: {suitabilityData.lat.toFixed(4)}, {suitabilityData.lon.toFixed(4)}
-                  <br/>
+                  <br />
                   <span style={{ fontSize: '0.75rem', opacity: 0.7 }}>(Click on the map to place custom pin)</span>
                 </div>
 
@@ -414,14 +414,14 @@ function App() {
               {suitabilityResult && (
                 <div className="result-card fade-in">
                   <h2>Yield Suitability Score: {suitabilityResult.suitability_score} / 5</h2>
-                  <p style={{fontStyle: 'italic', color: '#555', marginBottom: '15px'}}>(1 is Best, 5 is Worst)</p>
-                  
+                  <p style={{ fontStyle: 'italic', color: '#555', marginBottom: '15px' }}>(1 is Best, 5 is Worst)</p>
+
                   <div className="variety-details">
-                    <div className="detail-item" style={{width: '100%'}}>
+                    <div className="detail-item" style={{ width: '100%' }}>
                       <span className="label">Reasoning</span>
                       <span className="value">{suitabilityResult.reasoning}</span>
                     </div>
-                    
+
                     <div className="detail-item">
                       <span className="label">Combined Temp</span>
                       <span className="value">{suitabilityResult.metrics.temperature}°C</span>

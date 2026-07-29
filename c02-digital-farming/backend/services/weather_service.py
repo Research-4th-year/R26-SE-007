@@ -3,6 +3,7 @@ import json
 import urllib.request
 import urllib.parse
 from datetime import datetime
+# pyrefly: ignore [missing-import]
 from firebase_config import get_firebase_db
 
 # Load environment variables manually
