@@ -1,4 +1,4 @@
-from pydantic import BaseModel # type: ignore
+from pydantic import BaseModel, Field # type: ignore
 
 
 class PredictionRequest(BaseModel):
@@ -29,3 +29,19 @@ class PredictionResponse(BaseModel):
 
     top_features: list[TopFeature]
     reasons: list[str]
+
+class ForecastRequest(BaseModel):
+    district: str
+    date: str
+    weeks: int = Field(default=8, ge=1, le=52)
+
+class ForecastItem(BaseModel):
+    week: int
+    date: str
+    predicted_price: float
+
+class ForecastResponse(BaseModel):
+    district: str
+    start_date: str
+    weeks: int
+    forecast: list[ForecastItem]
