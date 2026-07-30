@@ -1,0 +1,51 @@
+from app.services.feature_service import feature_service
+from app.services.model_loader import model_loader
+from app.core.exceptions import PredictionException
+
+class PredictionService:
+
+    def __init__(self):
+        self.model = model_loader.get_model()
+
+    def predict(
+        self,
+        district: str,
+        input_date: str
+    ):
+
+        prediction, _ = self.predict_with_features(
+            district,
+            input_date
+        )
+
+        return {
+            "district": district,
+            "date": input_date,
+            "predicted_price": round(float(prediction), 2)
+        }
+    
+    def predict_with_features(
+        self,
+        district: str,
+        input_date: str
+    ):
+
+        try:
+
+            X = feature_service.create_features(
+                district,
+                input_date
+            )
+
+            prediction = self.model.predict(X)[0]
+
+            return prediction, X
+
+        except Exception as e:
+
+            raise PredictionException(
+                f"Prediction failed: {str(e)}"
+            ) from e
+
+
+prediction_service = PredictionService()
