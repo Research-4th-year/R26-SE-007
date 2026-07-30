@@ -1,5 +1,5 @@
 # pyrefly: ignore [missing-import]
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, File, UploadFile
 # pyrefly: ignore [missing-import]
 from fastapi.middleware.cors import CORSMiddleware
 # pyrefly: ignore [missing-import]
@@ -172,3 +172,82 @@ def predict_suitability(field_id: str, lat: float, lon: float):
 @app.get("/")
 def read_root():
     return {"message": "Welcome to the Farmer Advisory Guidance System API"}
+
+disease_model = None
+disease_class_names = None
+
+@app.post("/predict_disease")
+async def predict_disease(file: UploadFile = File(...)):
+    global disease_model, disease_class_names
+    
+    try:
+        import tensorflow as tf
+        from PIL import Image
+        import numpy as np
+        import io
+        import json
+    except ImportError:
+        raise HTTPException(status_code=500, detail="TensorFlow or Pillow is not installed.")
+        
+    try:
+        # Load model and classes lazily
+        if disease_model is None:
+            models_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'models')
+            model_path = os.path.join(models_dir, 'disease_prediction_model.keras')
+            classes_path = os.path.join(models_dir, 'disease_classes.json')
+            
+            if not os.path.exists(model_path):
+                raise HTTPException(status_code=500, detail="Disease prediction model not found. Please train it first.")
+                
+            disease_model = tf.keras.models.load_model(model_path)
+            with open(classes_path, 'r') as f:
+                disease_class_names = json.load(f)
+                
+        # Read and preprocess the image
+        contents = await file.read()
+        image = Image.open(io.BytesIO(contents))
+        
+        # Convert to RGB if necessary (e.g. RGBA)
+        if image.mode != 'RGB':
+            image = image.convert('RGB')
+            
+        # Resize to 224x224 for MobileNetV2
+        image = image.resize((224, 224))
+        img_array = tf.keras.preprocessing.image.img_to_array(image)
+        img_array = tf.expand_dims(img_array, 0) # Create batch axis
+        
+        # Predict
+        predictions = disease_model.predict(img_array)
+        score = tf.nn.softmax(predictions[0]) if not isinstance(predictions[0], np.ndarray) else predictions[0]
+        
+        max_confidence = np.max(score)
+        predicted_class_index = np.argmax(score)
+        predicted_class = disease_class_names[predicted_class_index]
+        
+        # Safety net: if confidence is extremely low (<50%), fallback to "Another Type"
+        if max_confidence < 0.50:
+            final_disease = "Another Type"
+            disease_type = "Unknown"
+        else:
+            final_disease = predicted_class
+            # Map types
+            if final_disease.lower() in ["blast", "brownspot", "riceblast", "brown_spot", "leaf_blast"]:
+                disease_type = "Fungal"
+            elif final_disease.lower() in ["bacterialblight", "bacterial_leaf_blight"]:
+                disease_type = "Bacterial"
+            elif final_disease.lower() == "healthy":
+                disease_type = "Healthy"
+            else:
+                disease_type = "Unknown"
+                
+        return {
+            "disease": final_disease,
+            "disease_type": disease_type,
+            "confidence": float(max_confidence * 100),
+            "all_scores": {class_name: float(score[i]*100) for i, class_name in enumerate(disease_class_names)}
+        }
+        
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=400, detail=f"Error processing image: {str(e)}")

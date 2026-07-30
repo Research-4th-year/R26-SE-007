@@ -16,3 +16,8 @@ backend/.env
 
 # Firebase credentials – never commit secrets
 backend/firebase_service_account.json
+
+# Paddy Disease Detection models and datasets
+backend/models/*.h5
+backend/models/*.keras
+dataset/RiceLeafsDisease/

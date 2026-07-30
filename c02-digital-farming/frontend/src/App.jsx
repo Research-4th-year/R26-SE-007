@@ -186,6 +186,53 @@ function App() {
   })
   const [yieldResult, setYieldResult] = useState(null)
 
+  // Form State for Disease Detection
+  const [diseaseFile, setDiseaseFile] = useState(null)
+  const [diseasePreview, setDiseasePreview] = useState(null)
+  const [diseaseResult, setDiseaseResult] = useState(null)
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      setDiseaseFile(file)
+      setDiseasePreview(URL.createObjectURL(file))
+      setDiseaseResult(null)
+    }
+  }
+
+  const handleDiseaseSubmit = async (e) => {
+    e.preventDefault()
+    if (!diseaseFile) {
+      setError("Please select an image first.")
+      return
+    }
+    
+    setLoading(true)
+    setError(null)
+    setDiseaseResult(null)
+
+    const formData = new FormData()
+    formData.append('file', diseaseFile)
+
+    try {
+      const response = await fetch('http://127.0.0.1:8000/predict_disease', {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to predict disease from the server')
+      }
+
+      const data = await response.json()
+      setDiseaseResult(data)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const handleAdvisoryChange = (e) => {
     const { name, value } = e.target
     if (name === 'District') {
@@ -359,6 +406,12 @@ function App() {
             onClick={() => { setActiveTab('yield'); setError(null); setResult(null); setSuitabilityResult(null); setYieldResult(null); }}
           >
             Yield Prediction
+          </button>
+          <button
+            className={activeTab === 'disease' ? 'active-tab' : 'tab'}
+            onClick={() => { setActiveTab('disease'); setError(null); setResult(null); setSuitabilityResult(null); setYieldResult(null); setDiseaseResult(null); }}
+          >
+            Disease Detection
           </button>
         </div>
 
@@ -623,6 +676,64 @@ function App() {
                       </ul>
                     </div>
                   )}
+                </div>
+              )}
+            </>
+          ) : activeTab === 'disease' ? (
+            <>
+              <form onSubmit={handleDiseaseSubmit} className="prediction-form fade-in">
+                <div className="upload-container">
+                  <label htmlFor="disease-image" className="upload-label">
+                    {diseasePreview ? (
+                      <img src={diseasePreview} alt="Preview" className="image-preview" />
+                    ) : (
+                      <div className="upload-placeholder">
+                        <span style={{ fontSize: '3rem', marginBottom: '10px', display: 'block' }}>📸</span>
+                        <p>Click to upload a Paddy Leaf image</p>
+                        <p style={{ fontSize: '0.8rem', opacity: 0.7 }}>(Bacterial Blight, Blast, Brownspot, or Healthy)</p>
+                      </div>
+                    )}
+                  </label>
+                  <input 
+                    type="file" 
+                    id="disease-image" 
+                    accept="image/*" 
+                    onChange={handleImageChange} 
+                    style={{ display: 'none' }}
+                  />
+                </div>
+
+                <button type="submit" className="submit-btn" disabled={loading || !diseaseFile}>
+                  {loading ? 'Analyzing Image...' : 'Detect Disease'}
+                </button>
+              </form>
+
+              {diseaseResult && (
+                <div className="result-card fade-in disease-result-card">
+                  <h2>Analysis Result</h2>
+                  
+                  <div className="disease-highlight" style={{
+                    color: diseaseResult.disease.toLowerCase() === 'healthy' ? '#10b981' : 
+                           diseaseResult.disease.toLowerCase() === 'another type' ? '#94a3b8' : '#ef4444'
+                  }}>
+                    {diseaseResult.disease}
+                  </div>
+                  
+                  <div className="variety-details" style={{ marginTop: '20px' }}>
+                    <div className="detail-item">
+                      <span className="label">Type</span>
+                      <span className="value" style={{ 
+                        color: diseaseResult.disease_type === 'Fungal' ? '#fbbf24' : 
+                               diseaseResult.disease_type === 'Bacterial' ? '#f87171' : 'inherit' 
+                      }}>
+                        {diseaseResult.disease_type}
+                      </span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="label">Confidence</span>
+                      <span className="value">{diseaseResult.confidence.toFixed(2)}%</span>
+                    </div>
+                  </div>
                 </div>
               )}
             </>
