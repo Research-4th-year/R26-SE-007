@@ -4,7 +4,7 @@ import { router } from "expo-router";
 
 export default function IndexScreen() {
   useEffect(() => {
-    router.replace("/landing");
+    router.replace("/welcome");
   }, []);
 
   return (
