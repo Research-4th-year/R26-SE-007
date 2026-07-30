@@ -59,7 +59,7 @@ const COMPONENTS = [
     icon: "trending-up-outline",
     color: "#7C3AED",
     bg: "#EDE9FE",
-    route: "/(c04-analytics)",
+    route: "/(c04-analytics)/home",
     ready: true,
   },
 ];
