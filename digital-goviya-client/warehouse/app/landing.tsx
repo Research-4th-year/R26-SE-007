@@ -39,8 +39,8 @@ const COMPONENTS = [
     icon: "leaf",
     color: "#0369A1",
     bg: "#E0F2FE",
-    route: "/(c02-farming)",
-    ready: false,
+    route: "/(c02-farming)/home",
+    ready: true,
   },
   {
     id: "marketplace",
