@@ -2,22 +2,25 @@ import React, {
   createContext,
   ReactNode,
   useCallback,
-  useContext,
   useEffect,
   useMemo,
   useState,
 } from "react";
 
-import { loginMarketplaceUser } from "@/services/c03-marketplace/auth.service";
+import {
+  getCurrentMarketplaceUser,
+  loginMarketplaceUser,
+} from "@/services/c03-marketplace/auth.service";
 
 import {
   getMarketplaceSession,
   removeMarketplaceSession,
   saveMarketplaceSession,
-} from "@/services/marketplace-session-storage";
+} from "@/services/c03-marketplace/session-storage.service";
 
-import {
+import type {
   LoginCredentials,
+  MarketplaceRoleProfile,
   MarketplaceSession,
   MarketplaceUser,
 } from "@/types/c03-marketplace/auth.types";
@@ -25,18 +28,21 @@ import {
 interface MarketplaceAuthContextValue {
   session: MarketplaceSession | null;
   user: MarketplaceUser | null;
+  profile: MarketplaceRoleProfile | null;
 
   isLoading: boolean;
   isAuthenticated: boolean;
 
   signIn: (
     credentials: LoginCredentials
-  ) => Promise<void>;
+  ) => Promise<MarketplaceSession>;
+
+  refreshCurrentUser: () => Promise<void>;
 
   signOut: () => Promise<void>;
 }
 
-const MarketplaceAuthContext =
+export const MarketplaceAuthContext =
   createContext<
     MarketplaceAuthContextValue | undefined
   >(undefined);
@@ -54,8 +60,14 @@ export function MarketplaceAuthProvider({
   const [isLoading, setIsLoading] =
     useState(true);
 
-  const restoreSession = useCallback(
-    async (): Promise<void> => {
+  const clearSession =
+    useCallback(async (): Promise<void> => {
+      await removeMarketplaceSession();
+      setSession(null);
+    }, []);
+
+  const restoreSession =
+    useCallback(async (): Promise<void> => {
       try {
         const storedSession =
           await getMarketplaceSession();
@@ -65,37 +77,54 @@ export function MarketplaceAuthProvider({
           return;
         }
 
-        const parsedSession =
-          JSON.parse(
-            storedSession
-          ) as MarketplaceSession;
+        const parsedSession = JSON.parse(
+          storedSession
+        ) as MarketplaceSession;
 
-        const isSessionValid =
-          Boolean(parsedSession.token) &&
-          Boolean(parsedSession.user) &&
-          Boolean(parsedSession.user.role);
-
-        if (!isSessionValid) {
-          await removeMarketplaceSession();
-          setSession(null);
+        if (
+          !parsedSession.token ||
+          !parsedSession.user ||
+          !parsedSession.profile
+        ) {
+          await clearSession();
           return;
         }
 
+        /*
+         * Temporarily place the stored session in state so
+         * the API interceptor can access its saved token.
+         */
         setSession(parsedSession);
+
+        /*
+         * Validate the token with the backend and retrieve
+         * the latest user/profile information.
+         */
+        const currentUser =
+          await getCurrentMarketplaceUser();
+
+        const refreshedSession: MarketplaceSession = {
+          token: parsedSession.token,
+          user: currentUser.user,
+          profile: currentUser.profile,
+        };
+
+        await saveMarketplaceSession(
+          JSON.stringify(refreshedSession)
+        );
+
+        setSession(refreshedSession);
       } catch (error) {
         console.error(
           "Failed to restore marketplace session:",
           error
         );
 
-        await removeMarketplaceSession();
-        setSession(null);
+        await clearSession();
       } finally {
         setIsLoading(false);
       }
-    },
-    []
-  );
+    }, [clearSession]);
 
   useEffect(() => {
     void restoreSession();
@@ -104,7 +133,7 @@ export function MarketplaceAuthProvider({
   const signIn = useCallback(
     async (
       credentials: LoginCredentials
-    ): Promise<void> => {
+    ): Promise<MarketplaceSession> => {
       const newSession =
         await loginMarketplaceUser(credentials);
 
@@ -113,15 +142,38 @@ export function MarketplaceAuthProvider({
       );
 
       setSession(newSession);
+
+      return newSession;
     },
     []
   );
 
+  const refreshCurrentUser =
+    useCallback(async (): Promise<void> => {
+      if (!session?.token) {
+        return;
+      }
+
+      const currentUser =
+        await getCurrentMarketplaceUser();
+
+      const refreshedSession: MarketplaceSession = {
+        token: session.token,
+        user: currentUser.user,
+        profile: currentUser.profile,
+      };
+
+      await saveMarketplaceSession(
+        JSON.stringify(refreshedSession)
+      );
+
+      setSession(refreshedSession);
+    }, [session?.token]);
+
   const signOut =
     useCallback(async (): Promise<void> => {
-      await removeMarketplaceSession();
-      setSession(null);
-    }, []);
+      await clearSession();
+    }, [clearSession]);
 
   const value =
     useMemo<MarketplaceAuthContextValue>(
@@ -130,6 +182,8 @@ export function MarketplaceAuthProvider({
 
         user: session?.user ?? null,
 
+        profile: session?.profile ?? null,
+
         isLoading,
 
         isAuthenticated: Boolean(
@@ -137,34 +191,23 @@ export function MarketplaceAuthProvider({
         ),
 
         signIn,
+
+        refreshCurrentUser,
+
         signOut,
       }),
       [
         session,
         isLoading,
         signIn,
+        refreshCurrentUser,
         signOut,
       ]
     );
 
   return (
-    <MarketplaceAuthContext.Provider
-      value={value}
-    >
+    <MarketplaceAuthContext.Provider value={value}>
       {children}
     </MarketplaceAuthContext.Provider>
   );
-}
-
-export function useMarketplaceAuth(): MarketplaceAuthContextValue {
-  const context =
-    useContext(MarketplaceAuthContext);
-
-  if (!context) {
-    throw new Error(
-      "useMarketplaceAuth must be used inside MarketplaceAuthProvider."
-    );
-  }
-
-  return context;
 }

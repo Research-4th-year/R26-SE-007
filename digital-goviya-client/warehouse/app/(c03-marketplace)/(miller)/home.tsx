@@ -9,7 +9,7 @@ import {
   View,
 } from "react-native";
 
-import { useMarketplaceAuth } from "@/contexts/c03-marketplace/MarketplaceAuthContext";
+import { useMarketplaceAuth } from "@/hooks/c03-marketplace/useMarketplaceAuth";
 
 export default function MillerHomeScreen() {
   const { user } = useMarketplaceAuth();

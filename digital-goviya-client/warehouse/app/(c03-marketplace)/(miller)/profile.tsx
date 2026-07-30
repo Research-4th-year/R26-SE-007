@@ -10,27 +10,32 @@ import {
   View,
 } from "react-native";
 
-import { useMarketplaceAuth } from "@/contexts/c03-marketplace/MarketplaceAuthContext";
+import type {
+  MillerProfile,
+} from "@/types/c03-marketplace/auth.types";
+
+import { useMarketplaceAuth } from "@/hooks/c03-marketplace/useMarketplaceAuth";
 
 export default function FarmerProfileScreen() {
-  const { user, signOut } = useMarketplaceAuth();
+  const { user, profile, signOut } = useMarketplaceAuth();
+
+  const millerProfile =
+    user?.role === "miller" ? (profile as MillerProfile) : null;
 
   async function handleLogout(): Promise<void> {
-  try {
-    await signOut();
+    try {
+      await signOut();
 
-    router.replace(
-      "/(c03-marketplace)/(auth)/login"
-    );
-  } catch (error) {
-    console.error("Farmer logout failed:", error);
+      router.replace("/(c03-marketplace)/(auth)/login");
+    } catch (error) {
+      console.error("Miller logout failed:", error);
 
-    Alert.alert(
-      "Logout failed",
-      "The session could not be removed. Please try again."
-    );
+      Alert.alert(
+        "Logout failed",
+        "The session could not be removed. Please try again.",
+      );
+    }
   }
-}
 
   return (
     <SafeAreaView style={styles.screen}>
@@ -71,27 +76,31 @@ export default function FarmerProfileScreen() {
           <ProfileRow
             icon="location-outline"
             label="District"
-            value={user?.district ?? "Not provided"}
+            value={millerProfile?.district ?? "Not provided"}
+          />
+
+          <ProfileRow
+            icon="navigate-outline"
+            label="Location"
+            value={millerProfile?.location ?? "Not provided"}
           />
 
           <ProfileRow
             icon="business-outline"
             label="Rice mill"
-            value={user?.millerProfile?.millName ?? "Not provided"}
+            value={millerProfile?.millName ?? "Not provided"}
           />
 
           <ProfileRow
             icon="document-text-outline"
             label="Registration number"
-            value={
-              user?.millerProfile?.businessRegistrationNumber ?? "Not provided"
-            }
+            value={millerProfile?.businessRegistrationNumber || "Not provided"}
           />
 
           <ProfileRow
             icon="scale-outline"
             label="Purchasing capacity"
-            value={`${user?.millerProfile?.purchasingCapacityKg ?? 0} kg`}
+            value={`${millerProfile?.purchasingCapacityKg ?? 0} kg`}
             isLast
           />
         </View>

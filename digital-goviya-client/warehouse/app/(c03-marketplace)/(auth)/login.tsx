@@ -16,8 +16,8 @@ import {
   View,
 } from "react-native";
 
-import { useMarketplaceAuth } from "@/contexts/c03-marketplace/MarketplaceAuthContext";
-import { MarketplaceUserRole } from "../../../types/marketplace-auth";
+import { useMarketplaceAuth } from "@/hooks/c03-marketplace/useMarketplaceAuth";
+import { MarketplaceUserRole } from "@/types/c03-marketplace/auth.types";
 
 export default function MarketplaceLoginScreen() {
   const { signIn } = useMarketplaceAuth();
@@ -29,7 +29,7 @@ export default function MarketplaceLoginScreen() {
     useState("farmer@digitalgoviya.lk");
 
   const [password, setPassword] =
-    useState("demo123");
+    useState("Demo123");
 
   const [showPassword, setShowPassword] =
     useState(false);
@@ -37,52 +37,60 @@ export default function MarketplaceLoginScreen() {
   const [isSubmitting, setIsSubmitting] =
     useState(false);
 
-  function selectRole(selectedRole: MarketplaceUserRole) {
-    setRole(selectedRole);
+  function selectRole(
+  selectedRole: MarketplaceUserRole
+) {
+  setRole(selectedRole);
 
-    setEmail(
-      selectedRole === "farmer"
-        ? "farmer@digitalgoviya.lk"
-        : "miller@digitalgoviya.lk"
+  setEmail(
+    selectedRole === "farmer"
+      ? "farmer@digitalgoviya.lk"
+      : "miller@digitalgoviya.lk"
+  );
+
+  setPassword("Demo1234");
+}
+
+  async function handleLogin(): Promise<void> {
+  if (!email.trim() || !password.trim()) {
+    Alert.alert(
+      "Missing information",
+      "Enter your email and password."
     );
-
-    setPassword("demo123");
+    return;
   }
 
-  async function handleLogin() {
-    if (!email.trim() || !password.trim()) {
-      Alert.alert(
-        "Missing information",
-        "Enter your email and password."
+  try {
+    setIsSubmitting(true);
+
+    const session = await signIn({
+      email,
+      password,
+      role,
+    });
+
+    if (session.user.role === "farmer") {
+      router.replace(
+        "/(c03-marketplace)/(farmer)/home"
       );
+
       return;
     }
 
-    try {
-      setIsSubmitting(true);
+    router.replace(
+      "/(c03-marketplace)/(miller)/home"
+    );
+  } catch (error) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : "Unable to sign in.";
 
-      await signIn({
-        email,
-        password,
-        role,
-      });
-
-      router.replace(
-        role === "farmer"
-          ? "/(c03-marketplace)/(farmer)/home"
-          : "/(c03-marketplace)/(miller)/home"
-      );
-    } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "Login failed.";
-
-      Alert.alert("Unable to sign in", message);
-    } finally {
-      setIsSubmitting(false);
-    }
+    Alert.alert("Login failed", message);
+  } finally {
+    setIsSubmitting(false);
   }
+}
 
   return (
     <LinearGradient
@@ -225,7 +233,7 @@ export default function MarketplaceLoginScreen() {
 
                 <Text style={styles.demoText}>
                   Demo credentials are already filled.
-                  Password: demo123
+                  Password: Demo123
                 </Text>
               </View>
 

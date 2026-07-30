@@ -1,6 +1,8 @@
 import { Stack } from "expo-router";
 
-import { MarketplaceAuthProvider } from "../../contexts/MarketplaceAuthContext";
+import {
+  MarketplaceAuthProvider,
+} from "@/contexts/c03-marketplace/MarketplaceAuthContext";
 
 export default function MarketplaceLayout() {
   return (
@@ -13,12 +15,7 @@ export default function MarketplaceLayout() {
             backgroundColor: "#F8FAF8",
           },
         }}
-      >
-        <Stack.Screen name="index" />
-        <Stack.Screen name="(auth)" />
-        <Stack.Screen name="(farmer)" />
-        <Stack.Screen name="(miller)" />
-      </Stack>
+      />
     </MarketplaceAuthProvider>
   );
 }

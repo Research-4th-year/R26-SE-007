@@ -10,77 +10,63 @@ import {
   View,
 } from "react-native";
 
-import { useMarketplaceAuth } from "@/contexts/c03-marketplace/MarketplaceAuthContext";
+import type {
+  FarmerProfile,
+} from "@/types/c03-marketplace/auth.types";
+
+import { useMarketplaceAuth } from "@/hooks/c03-marketplace/useMarketplaceAuth";
 
 export default function FarmerProfileScreen() {
-  const { user, signOut } = useMarketplaceAuth();
+  const { user, profile, signOut } = useMarketplaceAuth();
+
+  const farmerProfile =
+  user?.role === "farmer"
+    ? (profile as FarmerProfile)
+    : null;
 
   async function handleLogout(): Promise<void> {
-  try {
-    await signOut();
+    try {
+      await signOut();
 
-    router.replace(
-      "/(c03-marketplace)/(auth)/login"
-    );
-  } catch (error) {
-    console.error("Farmer logout failed:", error);
+      router.replace("/(c03-marketplace)/(auth)/login");
+    } catch (error) {
+      console.error("Farmer logout failed:", error);
 
-    Alert.alert(
-      "Logout failed",
-      "The session could not be removed. Please try again."
-    );
+      Alert.alert(
+        "Logout failed",
+        "The session could not be removed. Please try again.",
+      );
+    }
   }
-}
 
   return (
     <SafeAreaView style={styles.screen}>
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.header}>
-          <Pressable
-            style={styles.headerButton}
-            onPress={() => router.back()}
-          >
-            <Ionicons
-              name="arrow-back"
-              size={21}
-              color="#1F2937"
-            />
+          <Pressable style={styles.headerButton} onPress={() => router.back()}>
+            <Ionicons name="arrow-back" size={21} color="#1F2937" />
           </Pressable>
 
-          <Text style={styles.headerTitle}>
-            Farmer Profile
-          </Text>
+          <Text style={styles.headerTitle}>Farmer Profile</Text>
 
           <View style={styles.headerPlaceholder} />
         </View>
 
         <View style={styles.profileCard}>
           <View style={styles.avatar}>
-            <Ionicons
-              name="leaf"
-              size={34}
-              color="#FFFFFF"
-            />
+            <Ionicons name="leaf" size={34} color="#FFFFFF" />
           </View>
 
-          <Text style={styles.name}>
-            {user?.fullName}
-          </Text>
+          <Text style={styles.name}>{user?.fullName}</Text>
 
           <View style={styles.roleBadge}>
-            <Text style={styles.roleText}>
-              VERIFIED FARMER
-            </Text>
+            <Text style={styles.roleText}>VERIFIED FARMER</Text>
           </View>
 
-          <Text style={styles.email}>
-            {user?.email}
-          </Text>
+          <Text style={styles.email}>{user?.email}</Text>
         </View>
 
-        <Text style={styles.sectionTitle}>
-          Personal information
-        </Text>
+        <Text style={styles.sectionTitle}>Personal information</Text>
 
         <View style={styles.detailsCard}>
           <ProfileRow
@@ -92,50 +78,39 @@ export default function FarmerProfileScreen() {
           <ProfileRow
             icon="location-outline"
             label="District"
-            value={user?.district ?? "Not provided"}
+            value={farmerProfile?.district ?? "Not provided"}
+          />
+
+          <ProfileRow
+            icon="navigate-outline"
+            label="Location"
+            value={farmerProfile?.location ?? "Not provided"}
           />
 
           <ProfileRow
             icon="business-outline"
             label="Farm"
-            value={
-              user?.farmerProfile?.farmName ??
-              "Not provided"
-            }
+            value={farmerProfile?.farmName ?? "Not provided"}
           />
 
           <ProfileRow
             icon="resize-outline"
             label="Farm size"
-            value={`${
-              user?.farmerProfile?.farmSizeAcres ?? 0
-            } acres`}
+            value={`${farmerProfile?.farmSizeAcres ?? 0} acres`}
           />
 
           <ProfileRow
             icon="leaf-outline"
             label="Main variety"
-            value={
-              user?.farmerProfile?.mainPaddyVariety ??
-              "Not provided"
-            }
+            value={farmerProfile?.mainPaddyVariety ?? "Not provided"}
             isLast
           />
         </View>
 
-        <Pressable
-          style={styles.logoutButton}
-          onPress={handleLogout}
-        >
-          <Ionicons
-            name="log-out-outline"
-            size={20}
-            color="#B91C1C"
-          />
+        <Pressable style={styles.logoutButton} onPress={handleLogout}>
+          <Ionicons name="log-out-outline" size={20} color="#B91C1C" />
 
-          <Text style={styles.logoutText}>
-            Sign out
-          </Text>
+          <Text style={styles.logoutText}>Sign out</Text>
         </Pressable>
       </ScrollView>
     </SafeAreaView>
@@ -149,25 +124,11 @@ interface ProfileRowProps {
   isLast?: boolean;
 }
 
-function ProfileRow({
-  icon,
-  label,
-  value,
-  isLast,
-}: ProfileRowProps) {
+function ProfileRow({ icon, label, value, isLast }: ProfileRowProps) {
   return (
-    <View
-      style={[
-        styles.profileRow,
-        isLast && styles.profileRowLast,
-      ]}
-    >
+    <View style={[styles.profileRow, isLast && styles.profileRowLast]}>
       <View style={styles.rowIcon}>
-        <Ionicons
-          name={icon}
-          size={19}
-          color="#15803D"
-        />
+        <Ionicons name={icon} size={19} color="#15803D" />
       </View>
 
       <View style={styles.rowText}>
