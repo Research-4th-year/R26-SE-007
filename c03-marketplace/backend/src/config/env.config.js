@@ -28,5 +28,9 @@ module.exports = {
   },
   rag: {
     scriptPath: envVars.PYTHON_RAG_SCRIPT,
+  },
+  jwt: {
+    secret: process.env.JWT_SECRET,
+    expiresIn: process.env.JWT_EXPIRES_IN || "1d",
   }
 };

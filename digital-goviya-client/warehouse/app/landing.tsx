@@ -50,7 +50,7 @@ const COMPONENTS = [
     color: "#B45309",
     bg: "#FEF3C7",
     route: "/(c03-marketplace)",
-    ready: false,
+    ready: true,
   },
   {
     id: "analytics",
