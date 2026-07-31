@@ -22,109 +22,87 @@ export default function FarmerHomeScreen() {
       >
         <View style={styles.header}>
           <View>
-            <Text style={styles.greeting}>
-              Good evening,
-            </Text>
+            <Text style={styles.greeting}>Good evening,</Text>
 
-            <Text style={styles.userName}>
-              {user?.fullName ?? "Farmer"}
-            </Text>
+            <Text style={styles.userName}>{user?.fullName ?? "Farmer"}</Text>
           </View>
 
           <Pressable
             style={styles.profileButton}
-            onPress={() =>
-              router.push(
-                "/(c03-marketplace)/(farmer)/profile"
-              )
-            }
+            onPress={() => router.push("/(c03-marketplace)/(farmer)/profile")}
           >
-            <Ionicons
-              name="person-outline"
-              size={21}
-              color="#15803D"
-            />
+            <Ionicons name="person-outline" size={21} color="#15803D" />
           </Pressable>
         </View>
 
         <View style={styles.heroCard}>
           <View style={styles.heroIcon}>
-            <Ionicons
-              name="leaf"
-              size={28}
-              color="#FFFFFF"
-            />
+            <Ionicons name="leaf" size={28} color="#FFFFFF" />
           </View>
 
-          <Text style={styles.heroEyebrow}>
-            FARMER MARKETPLACE
-          </Text>
+          <Text style={styles.heroEyebrow}>FARMER MARKETPLACE</Text>
 
           <Text style={styles.heroTitle}>
             Sell paddy at a fair market price
           </Text>
 
           <Text style={styles.heroDescription}>
-            Create listings, find suitable millers and use
-            AI agents to negotiate fairly.
+            Create listings, find suitable millers and use AI agents to
+            negotiate fairly.
           </Text>
 
-          <Pressable style={styles.primaryButton}>
-            <Ionicons
-              name="add-circle-outline"
-              size={20}
-              color="#14532D"
-            />
+          <Pressable
+            style={({ pressed }) => [
+              styles.primaryButton,
+              pressed && styles.buttonPressed,
+            ]}
+            onPress={() => router.push("./add-harvest")}
+          >
+            <Ionicons name="add-circle-outline" size={20} color="#14532D" />
 
-            <Text style={styles.primaryButtonText}>
-              Create Paddy Listing
-            </Text>
+            <Text style={styles.primaryButtonText}>Create Paddy Listing</Text>
           </Pressable>
         </View>
 
-        <Text style={styles.sectionTitle}>
-          Quick actions
-        </Text>
+        <Text style={styles.sectionTitle}>Quick actions</Text>
 
         <View style={styles.actionGrid}>
           <ActionCard
+            icon="add-circle-outline"
+            title="Add Harvest"
+            subtitle="Get AI price guidance"
+            onPress={() => router.push("/(c03-marketplace)/(farmer)/add-harvest")}
+          />
+
+          <ActionCard
             icon="pricetag-outline"
-            title="My Listings"
-            subtitle="Manage paddy"
+            title="My Harvests"
+            subtitle="View submitted harvests"
+            onPress={() => router.push("/(c03-marketplace)/(farmer)/my-harvests")}
           />
 
           <ActionCard
             icon="people-outline"
             title="Matched Millers"
-            subtitle="View buyers"
+            subtitle="View suitable buyers"
+            onPress={() => router.push("/(c03-marketplace)/(miller)/home")}
           />
 
           <ActionCard
-            icon="sparkles-outline"
-            title="AI Negotiations"
-            subtitle="Track offers"
-          />
-
-          <ActionCard
-            icon="time-outline"
-            title="History"
-            subtitle="Past trades"
+            icon="chatbubble-ellipses-outline"
+            title="AI Assistant"
+            subtitle="Ask market questions"
+            onPress={() => router.push("/(c03-marketplace)/(farmer)/home")}
           />
         </View>
 
         <View style={styles.demoBanner}>
           <View style={styles.demoBannerIcon}>
-            <Ionicons
-              name="checkmark-circle"
-              size={24}
-              color="#15803D"
-            />
+            <Ionicons name="checkmark-circle" size={24} color="#15803D" />
           </View>
 
           <View style={styles.demoBannerText}>
-            <Text style={styles.demoBannerTitle}>
-              Farmer session active
-            </Text>
+            <Text style={styles.demoBannerTitle}>Farmer session active</Text>
 
             <Text style={styles.demoBannerDescription}>
               Signed in as {user?.email}
@@ -140,15 +118,25 @@ interface ActionCardProps {
   icon: keyof typeof Ionicons.glyphMap;
   title: string;
   subtitle: string;
+  onPress: () => void;
 }
 
 function ActionCard({
   icon,
   title,
   subtitle,
+  onPress,
 }: ActionCardProps) {
   return (
-    <Pressable style={styles.actionCard}>
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={title}
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.actionCard,
+        pressed && styles.actionCardPressed,
+      ]}
+    >
       <View style={styles.actionIcon}>
         <Ionicons
           name={icon}
@@ -157,13 +145,22 @@ function ActionCard({
         />
       </View>
 
-      <Text style={styles.actionTitle}>
-        {title}
-      </Text>
+      <View style={styles.actionTextArea}>
+        <Text style={styles.actionTitle}>
+          {title}
+        </Text>
 
-      <Text style={styles.actionSubtitle}>
-        {subtitle}
-      </Text>
+        <Text style={styles.actionSubtitle}>
+          {subtitle}
+        </Text>
+      </View>
+
+      <Ionicons
+        name="chevron-forward"
+        size={18}
+        color="#94A3B8"
+        style={styles.actionChevron}
+      />
     </Pressable>
   );
 }
@@ -347,4 +344,23 @@ const styles = StyleSheet.create({
     fontSize: 11,
     marginTop: 3,
   },
+  buttonPressed: {
+  opacity: 0.88,
+  transform: [{ scale: 0.99 }],
+},
+
+actionCardPressed: {
+  opacity: 0.86,
+  transform: [{ scale: 0.98 }],
+},
+
+actionTextArea: {
+  flex: 1,
+},
+
+actionChevron: {
+  position: "absolute",
+  top: 16,
+  right: 14,
+},
 });

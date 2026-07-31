@@ -1,10 +1,34 @@
-const express = require('express');
-const router = express.Router();
+const express = require("express");
+
+const validate = require(
+  "../middlewares/validate.middleware"
+);
 
 const {
-    createDemand
-} = require('../controllers/millerDemand.controller');
+  authenticate,
+  authorizeRoles,
+} = require("../middlewares/auth.middleware");
 
-router.post('/create', createDemand);
+const {
+  createDemand,
+  getMyDemands,
+} = require("../controllers/millerDemand.controller");
+
+const demandValidation = require(
+  "../validations/millerDemand.validation"
+);
+
+const router = express.Router();
+
+router.use(authenticate);
+router.use(authorizeRoles("miller"));
+
+router.post(
+  "/create",
+  validate(demandValidation.createDemand),
+  createDemand
+);
+
+router.get("/my-demands", getMyDemands);
 
 module.exports = router;

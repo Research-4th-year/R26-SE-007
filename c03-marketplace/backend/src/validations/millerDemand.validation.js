@@ -1,6 +1,6 @@
 const Joi = require("joi");
 
-const addHarvest = {
+const createDemand = {
   body: Joi.object().keys({
     paddyType: Joi.string()
       .trim()
@@ -8,22 +8,16 @@ const addHarvest = {
       .max(100)
       .required(),
 
-    season: Joi.string()
-      .trim()
-      .lowercase()
-      .valid("maha", "yala")
-      .required(),
-
-    quantity: Joi.number()
+    quantityNeeded: Joi.number()
       .positive()
       .required(),
 
-    expectedPrice: Joi.number()
+    offeredPrice: Joi.number()
       .positive()
       .required(),
   }),
 };
 
 module.exports = {
-  addHarvest,
+  createDemand,
 };

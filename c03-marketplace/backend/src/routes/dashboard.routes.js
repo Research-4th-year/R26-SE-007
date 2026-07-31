@@ -1,22 +1,29 @@
 const express = require("express");
 
 const {
-    getFarmerDashboard,
-    getMillerDashboard
-} = require(
-    "../controllers/dashboard.controller"
-);
+  authenticate,
+  authorizeRoles,
+} = require("../middlewares/auth.middleware");
+
+const {
+  getFarmerDashboard,
+  getMillerDashboard,
+} = require("../controllers/dashboard.controller");
 
 const router = express.Router();
 
 router.get(
-    "/farmer/:farmerId",
-    getFarmerDashboard
+  "/farmer",
+  authenticate,
+  authorizeRoles("farmer"),
+  getFarmerDashboard
 );
 
 router.get(
-    "/miller/:millerId",
-    getMillerDashboard
+  "/miller",
+  authenticate,
+  authorizeRoles("miller"),
+  getMillerDashboard
 );
 
 module.exports = router;

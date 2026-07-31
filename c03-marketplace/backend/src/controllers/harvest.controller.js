@@ -3,45 +3,52 @@ const Farmer = require("../models/farmer.model");
 const MillerDemand = require("../models/millerDemand.model");
 
 const flService = require("../services/fl.service");
+
 const {
-  analyzeHarvest
+  analyzeHarvest,
 } = require("../services/aiRecommendation.service");
 
-/**
- * Escape special regex characters before using user/database text
- * inside a MongoDB regular expression.
- */
 const escapeRegex = (value = "") => {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 };
 
-// Add Harvest with FL prediction and AI market analysis
+// Add harvest with FL prediction and AI market analysis
 const addHarvest = async (req, res) => {
   try {
     const {
-      farmerId,
       paddyType,
       season,
       quantity,
-      expectedPrice
+      expectedPrice,
     } = req.body;
 
-    // 1. Verify farmer
-    const farmer = await Farmer.findById(farmerId);
+    // Find the farmer profile linked to the logged-in user
+    const farmer = await Farmer.findOne({
+      user: req.user._id,
+    });
 
     if (!farmer) {
       return res.status(404).json({
         success: false,
-        message: "Farmer not found"
+        message: "Farmer profile not found",
       });
     }
 
-    // 2. Request a price prediction from the FL service
+    // Request price prediction from the FL service
     const prediction = await flService.predictPrice({
-      district: farmer.district.trim().toLowerCase(),
-      paddyType: paddyType.trim().toLowerCase(),
-      season: season.trim().toLowerCase(),
-      quantity
+      district: farmer.district
+        .trim()
+        .toLowerCase(),
+
+      paddyType: paddyType
+        .trim()
+        .toLowerCase(),
+
+      season: season
+        .trim()
+        .toLowerCase(),
+
+      quantity,
     });
 
     if (
@@ -49,58 +56,84 @@ const addHarvest = async (req, res) => {
       prediction.predictedPrice === undefined
     ) {
       throw new Error(
-        prediction.error || "FL model did not return a predicted price."
+        prediction.error ||
+          "FL model did not return a predicted price."
       );
     }
 
-    const aiPredictedPrice = Number(prediction.predictedPrice);
+    const aiPredictedPrice = Number(
+      prediction.predictedPrice
+    );
 
-    // 3. Find open demand for this paddy variety
-    const safePaddyType = escapeRegex(paddyType.trim());
+    // Find open demands for the selected paddy type
+    const safePaddyType = escapeRegex(
+      paddyType.trim()
+    );
 
-    const matchingDemands = await MillerDemand.find({
-      status: "open",
-      paddyType: {
-        $regex: new RegExp(`^${safePaddyType}$`, "i")
-      }
-    }).populate("millerId");
+    const matchingDemands =
+      await MillerDemand.find({
+        status: "open",
 
-    // Ignore demands whose miller no longer exists
+        paddyType: {
+          $regex: new RegExp(
+            `^${safePaddyType}$`,
+            "i"
+          ),
+        },
+      }).populate("millerId");
+
+    // Ignore demands with missing miller profiles
     const validDemands = matchingDemands.filter(
       (demand) => demand.millerId
     );
 
-    // 4. Calculate real-time demand indicators
-    const matchingDemandCount = validDemands.length;
+    const matchingDemandCount =
+      validDemands.length;
 
-    const quantityCompatibleDemandCount = validDemands.filter(
-      (demand) => Number(demand.quantityNeeded) >= Number(quantity)
-    ).length;
+    const quantityCompatibleDemandCount =
+      validDemands.filter(
+        (demand) =>
+          Number(demand.quantityNeeded) >=
+          Number(quantity)
+      ).length;
 
-    const farmerDistrict = farmer.district.trim().toLowerCase();
+    const farmerDistrict = farmer.district
+      .trim()
+      .toLowerCase();
 
-    const sameDistrictDemandCount = validDemands.filter((demand) => {
-      const millerDistrict = demand.millerId.district
-        ?.trim()
-        .toLowerCase();
+    const sameDistrictDemandCount =
+      validDemands.filter((demand) => {
+        const millerDistrict =
+          demand.millerId.district
+            ?.trim()
+            .toLowerCase();
 
-      return millerDistrict === farmerDistrict;
-    }).length;
+        return (
+          millerDistrict === farmerDistrict
+        );
+      }).length;
 
-    // 5. Generate the AI harvest analysis
+    // Generate AI harvest analysis
     const analysis = analyzeHarvest({
       expectedPrice,
       predictedPrice: aiPredictedPrice,
       matchingDemandCount,
       quantityCompatibleDemandCount,
-      sameDistrictDemandCount
+      sameDistrictDemandCount,
     });
 
-    // 6. Store harvest and AI analysis
+    // Save harvest
     const harvest = await Harvest.create({
-      farmerId,
-      paddyType: paddyType.trim().toLowerCase(),
-      season: season.trim().toLowerCase(),
+      farmerId: farmer._id,
+
+      paddyType: paddyType
+        .trim()
+        .toLowerCase(),
+
+      season: season
+        .trim()
+        .toLowerCase(),
+
       quantity,
       expectedPrice,
       aiPredictedPrice,
@@ -125,48 +158,99 @@ const addHarvest = async (req, res) => {
           analysis.marketRecommendation.english,
 
         sinhala:
-          analysis.marketRecommendation.sinhala
-      }
+          analysis.marketRecommendation.sinhala,
+      },
     });
 
-    // 7. Return full explainable result
     return res.status(201).json({
       success: true,
 
       data: {
         harvest,
 
-        aiSuggestedPrice: aiPredictedPrice,
+        aiSuggestedPrice:
+          aiPredictedPrice,
 
-        priceDecision: analysis.priceDecision,
+        priceDecision:
+          analysis.priceDecision,
 
         harvestIntelligence: {
-          score: analysis.harvestScore,
+          score:
+            analysis.harvestScore,
+
           scoreOutOf: 100,
-          breakdown: analysis.scoreBreakdown,
-          marketStatus: analysis.marketStatus
+
+          breakdown:
+            analysis.scoreBreakdown,
+
+          marketStatus:
+            analysis.marketStatus,
         },
 
         demandSummary: {
-          matchingPaddyDemands: matchingDemandCount,
+          matchingPaddyDemands:
+            matchingDemandCount,
+
           quantityCompatibleDemands:
             quantityCompatibleDemandCount,
+
           sameDistrictDemands:
-            sameDistrictDemandCount
+            sameDistrictDemandCount,
         },
 
         marketRecommendation:
-          analysis.marketRecommendation
-      }
+          analysis.marketRecommendation,
+      },
+    });
+  } catch (error) {
+  console.error("ADD HARVEST ERROR:", error);
+
+  return res.status(500).json({
+    success: false,
+    message:
+      error?.response?.data?.message ||
+      error?.response?.data?.error ||
+      error?.message ||
+      String(error) ||
+      "Failed to add harvest",
+  });
+}
+};
+
+// Get harvests belonging to the logged-in farmer
+const getMyHarvests = async (req, res) => {
+  try {
+    const farmer = await Farmer.findOne({
+      user: req.user._id,
+    });
+
+    if (!farmer) {
+      return res.status(404).json({
+        success: false,
+        message: "Farmer profile not found",
+      });
+    }
+
+    const harvests = await Harvest.find({
+      farmerId: farmer._id,
+    }).sort({
+      createdAt: -1,
+    });
+
+    return res.status(200).json({
+      success: true,
+      count: harvests.length,
+      data: harvests,
     });
   } catch (error) {
     return res.status(500).json({
       success: false,
-      message: error.message
+      message: error.message,
     });
   }
 };
 
 module.exports = {
-  addHarvest
+  addHarvest,
+  getMyHarvests,
 };

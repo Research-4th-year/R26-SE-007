@@ -76,7 +76,12 @@ farmer_docs = [
 ]
 
 miller_docs = [
-    f"Miller Name: {m.get('name','')} | Mill: {m.get('mill_name','')} | Location: {m.get('location','')} | District: {m.get('district','')}"
+    (
+        f"Miller Name: {m.get('name', '')} | "
+        f"Mill: {m.get('millName', m.get('mill_name', ''))} | "
+        f"Location: {m.get('location', '')} | "
+        f"District: {m.get('district', '')}"
+    )
     for m in millers_data
 ]
 
