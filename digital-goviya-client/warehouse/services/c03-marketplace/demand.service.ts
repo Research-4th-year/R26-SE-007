@@ -12,6 +12,11 @@ export const demandService = {
   async createDemand(
     payload: CreateDemandRequest
   ): Promise<CreateDemandResponse> {
+    console.log(
+      "POST /miller-demand/create:",
+      payload
+    );
+
     const response =
       await marketplaceApiClient.post<CreateDemandResponse>(
         "/miller-demand/create",

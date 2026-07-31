@@ -45,7 +45,7 @@ export default function MarketplaceLoginScreen() {
   setEmail(
     selectedRole === "farmer"
       ? "farmer@digitalgoviya.lk"
-      : "miller@digitalgoviya.lk"
+      : "demomiller@gmail.com"
   );
 
   setPassword("Demo1234");

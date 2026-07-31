@@ -22,109 +22,89 @@ export default function MillerHomeScreen() {
       >
         <View style={styles.header}>
           <View>
-            <Text style={styles.greeting}>
-              Good evening,
-            </Text>
+            <Text style={styles.greeting}>Good evening,</Text>
 
-            <Text style={styles.userName}>
-              {user?.fullName ?? "Miller"}
-            </Text>
+            <Text style={styles.userName}>{user?.fullName ?? "Miller"}</Text>
           </View>
 
           <Pressable
             style={styles.profileButton}
-            onPress={() =>
-              router.push(
-                "/(c03-marketplace)/(miller)/profile"
-              )
-            }
+            onPress={() => router.push("/(c03-marketplace)/(miller)/profile")}
           >
-            <Ionicons
-              name="person-outline"
-              size={21}
-              color="#B45309"
-            />
+            <Ionicons name="person-outline" size={21} color="#B45309" />
           </Pressable>
         </View>
 
         <View style={styles.heroCard}>
           <View style={styles.heroIcon}>
-            <Ionicons
-              name="business"
-              size={28}
-              color="#FFFFFF"
-            />
+            <Ionicons name="business" size={28} color="#FFFFFF" />
           </View>
 
-          <Text style={styles.heroEyebrow}>
-            MILLER MARKETPLACE
-          </Text>
+          <Text style={styles.heroEyebrow}>MILLER MARKETPLACE</Text>
 
           <Text style={styles.heroTitle}>
             Find quality paddy from trusted farmers
           </Text>
 
           <Text style={styles.heroDescription}>
-            Browse matched listings and use your AI miller
-            agent to negotiate within your purchasing budget.
+            Browse matched listings and use your AI miller agent to negotiate
+            within your purchasing budget.
           </Text>
 
-          <Pressable style={styles.primaryButton}>
-            <Ionicons
-              name="search-outline"
-              size={20}
-              color="#78350F"
-            />
+          <Pressable
+            onPress={() => router.push("./create-demand")}
+            style={({ pressed }) => [
+              styles.primaryButton,
+              pressed && styles.buttonPressed,
+            ]}
+          >
+            <Ionicons name="add-circle-outline" size={20} color="#78350F" />
 
-            <Text style={styles.primaryButtonText}>
-              Browse Paddy Listings
-            </Text>
+            <Text style={styles.primaryButtonText}>Create Paddy Demand</Text>
           </Pressable>
         </View>
 
-        <Text style={styles.sectionTitle}>
-          Quick actions
-        </Text>
+        <Text style={styles.sectionTitle}>Quick actions</Text>
 
         <View style={styles.actionGrid}>
           <ActionCard
-            icon="storefront-outline"
-            title="Marketplace"
-            subtitle="Browse listings"
+            icon="add-circle-outline"
+            title="Create Demand"
+            subtitle="Publish requirement"
+            onPress={() => router.push("./create-demand")}
           />
 
           <ActionCard
-            icon="git-compare-outline"
-            title="AI Matches"
-            subtitle="Best farmers"
+            icon="document-text-outline"
+            title="My Demands"
+            subtitle="View active requests"
+            onPress={() => router.push("./my-demands")}
           />
 
           <ActionCard
-            icon="sparkles-outline"
-            title="Negotiations"
-            subtitle="Track offers"
+            icon="leaf-outline"
+            title="Matched Harvests"
+            subtitle="Explore sellers"
+            onPress={() => {
+              // Connect after matching UI is created.
+            }}
           />
 
           <ActionCard
-            icon="receipt-outline"
-            title="Purchases"
-            subtitle="Trade history"
+            icon="chatbubble-ellipses-outline"
+            title="AI Assistant"
+            subtitle="Ask market questions"
+            onPress={() => router.push("/(c03-marketplace)/(miller)/home")}
           />
         </View>
 
         <View style={styles.demoBanner}>
           <View style={styles.demoBannerIcon}>
-            <Ionicons
-              name="checkmark-circle"
-              size={24}
-              color="#B45309"
-            />
+            <Ionicons name="checkmark-circle" size={24} color="#B45309" />
           </View>
 
           <View style={styles.demoBannerText}>
-            <Text style={styles.demoBannerTitle}>
-              Miller session active
-            </Text>
+            <Text style={styles.demoBannerTitle}>Miller session active</Text>
 
             <Text style={styles.demoBannerDescription}>
               Signed in as {user?.email}
@@ -140,15 +120,26 @@ interface ActionCardProps {
   icon: keyof typeof Ionicons.glyphMap;
   title: string;
   subtitle: string;
+  onPress: () => void;
 }
 
 function ActionCard({
   icon,
   title,
   subtitle,
+  onPress,
 }: ActionCardProps) {
   return (
-    <Pressable style={styles.actionCard}>
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={title}
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.actionCard,
+        pressed &&
+          styles.actionCardPressed,
+      ]}
+    >
       <View style={styles.actionIcon}>
         <Ionicons
           name={icon}
@@ -157,13 +148,22 @@ function ActionCard({
         />
       </View>
 
-      <Text style={styles.actionTitle}>
-        {title}
-      </Text>
+      <View style={styles.actionTextArea}>
+        <Text style={styles.actionTitle}>
+          {title}
+        </Text>
 
-      <Text style={styles.actionSubtitle}>
-        {subtitle}
-      </Text>
+        <Text style={styles.actionSubtitle}>
+          {subtitle}
+        </Text>
+      </View>
+
+      <Ionicons
+        name="chevron-forward"
+        size={17}
+        color="#D6B98A"
+        style={styles.actionChevron}
+      />
     </Pressable>
   );
 }
@@ -347,4 +347,23 @@ const styles = StyleSheet.create({
     fontSize: 11,
     marginTop: 3,
   },
+  buttonPressed: {
+  opacity: 0.88,
+  transform: [{ scale: 0.99 }],
+},
+
+actionCardPressed: {
+  opacity: 0.86,
+  transform: [{ scale: 0.98 }],
+},
+
+actionTextArea: {
+  flex: 1,
+},
+
+actionChevron: {
+  position: "absolute",
+  top: 16,
+  right: 14,
+},
 });
