@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { router, useFocusEffect } from "expo-router";
 import {
   ActivityIndicator,
+  Animated,
   Pressable,
   RefreshControl,
   SafeAreaView,
@@ -10,7 +11,15 @@ import {
   Text,
   View,
 } from "react-native";
-import { useCallback, useMemo, useState } from "react";
+import { LinearGradient } from "expo-linear-gradient";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useFonts,
+  Poppins_800ExtraBold,
+  Poppins_700Bold,
+  Poppins_600SemiBold,
+  Poppins_500Medium,
+} from "@expo-google-fonts/poppins";
 
 import { harvestService } from "@/services/c03-marketplace/harvest.service";
 
@@ -63,6 +72,27 @@ export default function MyHarvestsScreen() {
     });
   }, [harvests]);
 
+  const [fontsLoaded] = useFonts({
+    Poppins_800ExtraBold,
+    Poppins_700Bold,
+    Poppins_600SemiBold,
+    Poppins_500Medium,
+  });
+
+  // Entrance animation — matches the fade/rise used across the app
+  const fade = useRef(new Animated.Value(0)).current;
+  const rise = useRef(new Animated.Value(14)).current;
+
+  useEffect(() => {
+    if (!fontsLoaded) return;
+    Animated.parallel([
+      Animated.timing(fade, { toValue: 1, duration: 400, useNativeDriver: true }),
+      Animated.timing(rise, { toValue: 0, duration: 400, useNativeDriver: true }),
+    ]).start();
+  }, [fontsLoaded]);
+
+  if (!fontsLoaded) return null;
+
   if (loading) {
     return <LoadingState />;
   }
@@ -95,66 +125,85 @@ export default function MyHarvestsScreen() {
           accessibilityLabel="Add harvest"
           onPress={() => router.push("./add-harvest")}
           style={({ pressed }) => [
-            styles.addHeaderButton,
+            styles.addHeaderButtonShadow,
             pressed && styles.pressed,
           ]}
         >
-          <Ionicons name="add" size={24} color="#FFFFFF" />
+          <LinearGradient
+            colors={["#22C55E", "#15803D"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.addHeaderButton}
+          >
+            <Ionicons name="add" size={24} color="#FFFFFF" />
+          </LinearGradient>
         </Pressable>
       </View>
 
-      <ScrollView
-        contentContainerStyle={[
-          styles.content,
-          sortedHarvests.length === 0 && styles.emptyContent,
+      <Animated.View
+        style={[
+          styles.animatedFlex,
+          { opacity: fade, transform: [{ translateY: rise }] },
         ]}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={() => void loadHarvests(true)}
-            tintColor="#15803D"
-            colors={["#15803D"]}
-          />
-        }
       >
-        {errorMessage ? (
-          <ErrorState
-            message={errorMessage}
-            onRetry={() => void loadHarvests()}
-          />
-        ) : sortedHarvests.length === 0 ? (
-          <EmptyState />
-        ) : (
-          <>
-            <View style={styles.summaryCard}>
-              <View style={styles.summaryIcon}>
-                <Ionicons name="leaf" size={24} color="#15803D" />
+        <ScrollView
+          contentContainerStyle={[
+            styles.content,
+            sortedHarvests.length === 0 && styles.emptyContent,
+          ]}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={() => void loadHarvests(true)}
+              tintColor="#15803D"
+              colors={["#15803D"]}
+            />
+          }
+        >
+          {errorMessage ? (
+            <ErrorState
+              message={errorMessage}
+              onRetry={() => void loadHarvests()}
+            />
+          ) : sortedHarvests.length === 0 ? (
+            <EmptyState />
+          ) : (
+            <>
+              <View style={styles.summaryCard}>
+                <View style={styles.summaryIconRing}>
+                  <View style={styles.summaryIcon}>
+                    <Ionicons name="leaf" size={22} color="#15803D" />
+                  </View>
+                </View>
+
+                <View style={styles.summaryTextArea}>
+                  <Text style={styles.summaryTitle}>Harvest portfolio</Text>
+
+                  <Text style={styles.summaryDescription}>
+                    Review your AI price estimates and market recommendations.
+                  </Text>
+                </View>
               </View>
 
-              <View style={styles.summaryTextArea}>
-                <Text style={styles.summaryTitle}>Harvest portfolio</Text>
+              <View style={styles.listHeader}>
+                <Text style={styles.sectionTitle}>Recent harvests</Text>
 
-                <Text style={styles.summaryDescription}>
-                  Review your AI price estimates and market recommendations.
-                </Text>
+                <View style={styles.pullHintRow}>
+                  <Ionicons name="arrow-down-circle-outline" size={12} color="#9CA3AF" />
+                  <Text style={styles.pullHint}>Pull to refresh</Text>
+                </View>
               </View>
-            </View>
 
-            <View style={styles.listHeader}>
-              <Text style={styles.sectionTitle}>Recent harvests</Text>
-
-              <Text style={styles.pullHint}>Pull to refresh</Text>
-            </View>
-
-            <View style={styles.harvestList}>
-              {sortedHarvests.map((harvest) => (
-                <HarvestCard key={harvest._id} harvest={harvest} />
-              ))}
-            </View>
-          </>
-        )}
-      </ScrollView>
+              <View style={styles.harvestList}>
+                {sortedHarvests.map((harvest) => (
+                  <HarvestCard key={harvest._id} harvest={harvest} />
+                ))}
+              </View>
+            </>
+          )}
+        </ScrollView>
+      </Animated.View>
     </SafeAreaView>
   );
 }
@@ -296,7 +345,10 @@ function HarvestCard({ harvest }: HarvestCardProps) {
           </View>
 
           <View style={styles.progressTrack}>
-            <View
+            <LinearGradient
+              colors={["#4ADE80", "#15803D"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
               style={[
                 styles.progressFill,
                 {
@@ -372,6 +424,12 @@ function StatusBadge({ status }: StatusBadgeProps) {
         isPositive ? styles.statusPositive : styles.statusNeutral,
       ]}
     >
+      <View
+        style={[
+          styles.statusDot,
+          { backgroundColor: isPositive ? "#16A34A" : "#D97706" },
+        ]}
+      />
       <Text
         style={[
           styles.statusText,
@@ -420,11 +478,13 @@ function ErrorState({ message, onRetry }: ErrorStateProps) {
 
       <Pressable
         onPress={onRetry}
-        style={({ pressed }) => [styles.retryButton, pressed && styles.pressed]}
+        style={({ pressed }) => [styles.retryButtonShadow, pressed && styles.pressed]}
       >
-        <Ionicons name="refresh" size={18} color="#FFFFFF" />
+        <View style={styles.retryButton}>
+          <Ionicons name="refresh" size={18} color="#FFFFFF" />
 
-        <Text style={styles.retryButtonText}>Try again</Text>
+          <Text style={styles.retryButtonText}>Try again</Text>
+        </View>
       </Pressable>
     </View>
   );
@@ -448,11 +508,13 @@ function EmptyState() {
 
       <Pressable
         onPress={() => router.push("./add-harvest")}
-        style={({ pressed }) => [styles.emptyButton, pressed && styles.pressed]}
+        style={({ pressed }) => [styles.emptyButtonShadow, pressed && styles.pressed]}
       >
-        <Ionicons name="add-circle-outline" size={20} color="#FFFFFF" />
+        <View style={styles.emptyButton}>
+          <Ionicons name="add-circle-outline" size={20} color="#FFFFFF" />
 
-        <Text style={styles.emptyButtonText}>Add First Harvest</Text>
+          <Text style={styles.emptyButtonText}>Add First Harvest</Text>
+        </View>
       </Pressable>
     </View>
   );
@@ -517,14 +579,22 @@ const styles = StyleSheet.create({
     backgroundColor: "#F8FAF8",
   },
 
+  animatedFlex: {
+    flex: 1,
+  },
+
   navigationHeader: {
     minHeight: 72,
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 18,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
     backgroundColor: "#FFFFFF",
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
+    zIndex: 10,
   },
 
   backButton: {
@@ -544,13 +614,23 @@ const styles = StyleSheet.create({
   navigationTitle: {
     color: "#1F2937",
     fontSize: 19,
-    fontWeight: "800",
+    fontFamily: "Poppins_800ExtraBold",
   },
 
   navigationSubtitle: {
     color: "#6B7280",
     fontSize: 11,
+    fontFamily: "Poppins_500Medium",
     marginTop: 2,
+  },
+
+  addHeaderButtonShadow: {
+    borderRadius: 14,
+    shadowColor: "#15803D",
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 4,
   },
 
   addHeaderButton: {
@@ -559,7 +639,6 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#15803D",
   },
 
   content: {
@@ -577,11 +656,21 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 13,
     padding: 16,
-    borderRadius: 19,
+    borderRadius: 20,
     backgroundColor: "#ECFDF5",
     borderWidth: 1,
     borderColor: "#BBF7D0",
     marginBottom: 22,
+  },
+
+  summaryIconRing: {
+    width: 56,
+    height: 56,
+    borderRadius: 18,
+    padding: 4,
+    backgroundColor: "rgba(255,255,255,0.6)",
+    alignItems: "center",
+    justifyContent: "center",
   },
 
   summaryIcon: {
@@ -591,6 +680,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "#FFFFFF",
+    shadowColor: "#000",
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
   },
 
   summaryTextArea: {
@@ -600,12 +694,13 @@ const styles = StyleSheet.create({
   summaryTitle: {
     color: "#14532D",
     fontSize: 14,
-    fontWeight: "800",
+    fontFamily: "Poppins_800ExtraBold",
   },
 
   summaryDescription: {
     color: "#4B5563",
     fontSize: 11,
+    fontFamily: "Poppins_500Medium",
     lineHeight: 16,
     marginTop: 3,
   },
@@ -620,12 +715,19 @@ const styles = StyleSheet.create({
   sectionTitle: {
     color: "#1F2937",
     fontSize: 16,
-    fontWeight: "800",
+    fontFamily: "Poppins_800ExtraBold",
+  },
+
+  pullHintRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
   },
 
   pullHint: {
     color: "#9CA3AF",
     fontSize: 10,
+    fontFamily: "Poppins_500Medium",
   },
 
   harvestList: {
@@ -633,11 +735,16 @@ const styles = StyleSheet.create({
   },
 
   harvestCard: {
-    borderRadius: 21,
+    borderRadius: 22,
     padding: 17,
     backgroundColor: "#FFFFFF",
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: "#EEF0ED",
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 2,
   },
 
   cardPressed: {
@@ -667,20 +774,30 @@ const styles = StyleSheet.create({
   paddyName: {
     color: "#1F2937",
     fontSize: 16,
-    fontWeight: "800",
+    fontFamily: "Poppins_800ExtraBold",
   },
 
   harvestDate: {
     color: "#9CA3AF",
     fontSize: 10,
+    fontFamily: "Poppins_500Medium",
     marginTop: 4,
   },
 
   statusBadge: {
-    maxWidth: 110,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    maxWidth: 120,
     borderRadius: 999,
     paddingHorizontal: 10,
     paddingVertical: 6,
+  },
+
+  statusDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
   },
 
   statusPositive: {
@@ -693,7 +810,7 @@ const styles = StyleSheet.create({
 
   statusText: {
     fontSize: 9,
-    fontWeight: "800",
+    fontFamily: "Poppins_800ExtraBold",
     textAlign: "center",
   },
 
@@ -729,13 +846,13 @@ const styles = StyleSheet.create({
   metricLabel: {
     color: "#64748B",
     fontSize: 10,
-    fontWeight: "600",
+    fontFamily: "Poppins_600SemiBold",
   },
 
   metricValue: {
     color: "#1F2937",
     fontSize: 13,
-    fontWeight: "800",
+    fontFamily: "Poppins_800ExtraBold",
     marginTop: 5,
   },
 
@@ -758,7 +875,7 @@ const styles = StyleSheet.create({
     flex: 1,
     color: "#166534",
     fontSize: 10,
-    fontWeight: "700",
+    fontFamily: "Poppins_700Bold",
     lineHeight: 15,
   },
 
@@ -779,13 +896,13 @@ const styles = StyleSheet.create({
   scoreLabel: {
     color: "#64748B",
     fontSize: 10,
-    fontWeight: "600",
+    fontFamily: "Poppins_600SemiBold",
   },
 
   scoreValue: {
     color: "#15803D",
     fontSize: 11,
-    fontWeight: "800",
+    fontFamily: "Poppins_800ExtraBold",
   },
 
   progressTrack: {
@@ -798,7 +915,6 @@ const styles = StyleSheet.create({
   progressFill: {
     height: "100%",
     borderRadius: 999,
-    backgroundColor: "#22C55E",
   },
 
   cardFooter: {
@@ -815,7 +931,7 @@ const styles = StyleSheet.create({
   viewDetailsText: {
     color: "#15803D",
     fontSize: 11,
-    fontWeight: "800",
+    fontFamily: "Poppins_800ExtraBold",
   },
 
   centerState: {
@@ -862,22 +978,38 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "#FFFFFF",
+    shadowColor: "#000",
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
   },
 
   stateTitle: {
     color: "#1F2937",
     fontSize: 20,
-    fontWeight: "800",
+    fontFamily: "Poppins_800ExtraBold",
     textAlign: "center",
   },
 
   stateDescription: {
     color: "#6B7280",
     fontSize: 13,
+    fontFamily: "Poppins_500Medium",
     lineHeight: 20,
     textAlign: "center",
     marginTop: 8,
     maxWidth: 290,
+  },
+
+  retryButtonShadow: {
+    borderRadius: 15,
+    marginTop: 20,
+    shadowColor: "#B91C1C",
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 4,
   },
 
   retryButton: {
@@ -889,13 +1021,22 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     paddingHorizontal: 22,
     backgroundColor: "#B91C1C",
-    marginTop: 20,
   },
 
   retryButtonText: {
     color: "#FFFFFF",
     fontSize: 13,
-    fontWeight: "800",
+    fontFamily: "Poppins_800ExtraBold",
+  },
+
+  emptyButtonShadow: {
+    borderRadius: 15,
+    marginTop: 22,
+    shadowColor: "#15803D",
+    shadowOpacity: 0.28,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 4,
   },
 
   emptyButton: {
@@ -907,13 +1048,12 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     paddingHorizontal: 22,
     backgroundColor: "#15803D",
-    marginTop: 22,
   },
 
   emptyButtonText: {
     color: "#FFFFFF",
     fontSize: 13,
-    fontWeight: "800",
+    fontFamily: "Poppins_800ExtraBold",
   },
 
   pressed: {

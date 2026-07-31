@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import {
   Pressable,
@@ -8,11 +9,27 @@ import {
   Text,
   View,
 } from "react-native";
+import {
+  useFonts,
+  Poppins_800ExtraBold,
+  Poppins_700Bold,
+  Poppins_600SemiBold,
+  Poppins_500Medium,
+} from "@expo-google-fonts/poppins";
 
 import { useMarketplaceAuth } from "@/hooks/c03-marketplace/useMarketplaceAuth";
 
 export default function FarmerHomeScreen() {
   const { user } = useMarketplaceAuth();
+
+  const [fontsLoaded] = useFonts({
+    Poppins_800ExtraBold,
+    Poppins_700Bold,
+    Poppins_600SemiBold,
+    Poppins_500Medium,
+  });
+
+  if (!fontsLoaded) return null;
 
   return (
     <SafeAreaView style={styles.screen}>
@@ -28,19 +45,32 @@ export default function FarmerHomeScreen() {
           </View>
 
           <Pressable
-            style={styles.profileButton}
+            style={({ pressed }) => [
+              styles.profileButton,
+              pressed && styles.profileButtonPressed,
+            ]}
             onPress={() => router.push("/(c03-marketplace)/(farmer)/profile")}
           >
-            <Ionicons name="person-outline" size={21} color="#15803D" />
+            <Ionicons name="person-outline" size={20} color="#15803D" />
           </Pressable>
         </View>
 
-        <View style={styles.heroCard}>
-          <View style={styles.heroIcon}>
-            <Ionicons name="leaf" size={28} color="#FFFFFF" />
+        <LinearGradient
+          colors={["#0A331D", "#12522E", "#0B3B22"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.heroCard}
+        >
+          <View style={styles.heroIconRing}>
+            <View style={styles.heroIcon}>
+              <Ionicons name="leaf" size={24} color="#15803D" />
+            </View>
           </View>
 
-          <Text style={styles.heroEyebrow}>FARMER MARKETPLACE</Text>
+          <View style={styles.heroEyebrowPill}>
+            <Ionicons name="sparkles" size={11} color="#F5C542" />
+            <Text style={styles.heroEyebrow}>FARMER MARKETPLACE</Text>
+          </View>
 
           <Text style={styles.heroTitle}>
             Sell paddy at a fair market price
@@ -53,16 +83,24 @@ export default function FarmerHomeScreen() {
 
           <Pressable
             style={({ pressed }) => [
-              styles.primaryButton,
+              styles.primaryShadow,
               pressed && styles.buttonPressed,
             ]}
             onPress={() => router.push("./add-harvest")}
           >
-            <Ionicons name="add-circle-outline" size={20} color="#14532D" />
-
-            <Text style={styles.primaryButtonText}>Create Paddy Listing</Text>
+            <LinearGradient
+              colors={["#F5C542", "#D97706"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.primaryButton}
+            >
+              <Ionicons name="add-circle-outline" size={19} color="#0B3B22" />
+              <Text style={styles.primaryButtonText}>
+                Create Paddy Listing
+              </Text>
+            </LinearGradient>
           </Pressable>
-        </View>
+        </LinearGradient>
 
         <Text style={styles.sectionTitle}>Quick actions</Text>
 
@@ -98,7 +136,7 @@ export default function FarmerHomeScreen() {
 
         <View style={styles.demoBanner}>
           <View style={styles.demoBannerIcon}>
-            <Ionicons name="checkmark-circle" size={24} color="#15803D" />
+            <Ionicons name="checkmark-circle" size={22} color="#15803D" />
           </View>
 
           <View style={styles.demoBannerText}>
@@ -140,7 +178,7 @@ function ActionCard({
       <View style={styles.actionIcon}>
         <Ionicons
           name={icon}
-          size={22}
+          size={21}
           color="#15803D"
         />
       </View>
@@ -157,7 +195,7 @@ function ActionCard({
 
       <Ionicons
         name="chevron-forward"
-        size={18}
+        size={17}
         color="#94A3B8"
         style={styles.actionChevron}
       />
@@ -180,18 +218,19 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 20,
+    marginBottom: 22,
   },
 
   greeting: {
     color: "#6B7280",
-    fontSize: 13,
+    fontSize: 12.5,
+    fontFamily: "Poppins_500Medium",
   },
 
   userName: {
     color: "#1F2937",
-    fontSize: 22,
-    fontWeight: "800",
+    fontSize: 21,
+    fontFamily: "Poppins_800ExtraBold",
     marginTop: 2,
   },
 
@@ -204,46 +243,91 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     borderWidth: 1,
     borderColor: "#E5E7EB",
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+  },
+
+  profileButtonPressed: {
+    opacity: 0.85,
   },
 
   heroCard: {
-    borderRadius: 25,
-    backgroundColor: "#14532D",
-    padding: 21,
-    marginBottom: 25,
+    borderRadius: 26,
+    padding: 22,
+    marginBottom: 26,
+    overflow: "hidden",
+  },
+
+  heroIconRing: {
+    width: 60,
+    height: 60,
+    borderRadius: 18,
+    padding: 3,
+    backgroundColor: "rgba(245,197,66,0.16)",
+    borderWidth: 1,
+    borderColor: "rgba(245,197,66,0.4)",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 16,
   },
 
   heroIcon: {
     width: 50,
     height: 50,
-    borderRadius: 16,
+    borderRadius: 15,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(255,255,255,0.14)",
-    marginBottom: 15,
+    backgroundColor: "#FFFFFF",
+  },
+
+  heroEyebrowPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "flex-start",
+    gap: 6,
+    backgroundColor: "rgba(255,255,255,0.08)",
+    borderRadius: 999,
+    paddingHorizontal: 11,
+    paddingVertical: 5,
+    borderWidth: 1,
+    borderColor: "rgba(245,197,66,0.25)",
   },
 
   heroEyebrow: {
-    color: "#FDE68A",
-    fontSize: 10,
-    fontWeight: "800",
+    color: "rgba(253,230,138,0.85)",
+    fontSize: 9.5,
+    fontFamily: "Poppins_600SemiBold",
     letterSpacing: 1.2,
   },
 
   heroTitle: {
     color: "#FFFFFF",
-    fontSize: 22,
-    lineHeight: 29,
-    fontWeight: "800",
-    marginTop: 8,
+    fontSize: 21,
+    lineHeight: 28,
+    fontFamily: "Poppins_800ExtraBold",
+    marginTop: 12,
     maxWidth: 280,
   },
 
   heroDescription: {
-    color: "rgba(255,255,255,0.68)",
+    color: "rgba(255,255,255,0.65)",
     fontSize: 12,
     lineHeight: 18,
+    fontFamily: "Poppins_500Medium",
     marginTop: 8,
+  },
+
+  primaryShadow: {
+    borderRadius: 15,
+    marginTop: 18,
+    shadowColor: "#D97706",
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 5 },
+    elevation: 5,
   },
 
   primaryButton: {
@@ -253,20 +337,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-    backgroundColor: "#FDE68A",
-    marginTop: 18,
   },
 
   primaryButtonText: {
-    color: "#14532D",
+    color: "#0B3B22",
     fontSize: 13,
-    fontWeight: "800",
+    fontFamily: "Poppins_700Bold",
   },
 
   sectionTitle: {
     color: "#1F2937",
-    fontSize: 16,
-    fontWeight: "800",
+    fontSize: 15.5,
+    fontFamily: "Poppins_700Bold",
     marginBottom: 13,
   },
 
@@ -284,6 +366,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#EEF0ED",
     padding: 15,
+    shadowColor: "#000",
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 1,
   },
 
   actionIcon: {
@@ -298,13 +385,14 @@ const styles = StyleSheet.create({
 
   actionTitle: {
     color: "#1F2937",
-    fontSize: 13,
-    fontWeight: "800",
+    fontSize: 12.5,
+    fontFamily: "Poppins_700Bold",
   },
 
   actionSubtitle: {
     color: "#6B7280",
-    fontSize: 11,
+    fontSize: 10.5,
+    fontFamily: "Poppins_500Medium",
     marginTop: 4,
   },
 
@@ -335,32 +423,34 @@ const styles = StyleSheet.create({
 
   demoBannerTitle: {
     color: "#14532D",
-    fontSize: 13,
-    fontWeight: "800",
+    fontSize: 12.5,
+    fontFamily: "Poppins_700Bold",
   },
 
   demoBannerDescription: {
     color: "#4B5563",
-    fontSize: 11,
+    fontSize: 10.5,
+    fontFamily: "Poppins_500Medium",
     marginTop: 3,
   },
+
   buttonPressed: {
-  opacity: 0.88,
-  transform: [{ scale: 0.99 }],
-},
+    opacity: 0.88,
+    transform: [{ scale: 0.99 }],
+  },
 
-actionCardPressed: {
-  opacity: 0.86,
-  transform: [{ scale: 0.98 }],
-},
+  actionCardPressed: {
+    opacity: 0.86,
+    transform: [{ scale: 0.98 }],
+  },
 
-actionTextArea: {
-  flex: 1,
-},
+  actionTextArea: {
+    flex: 1,
+  },
 
-actionChevron: {
-  position: "absolute",
-  top: 16,
-  right: 14,
-},
+  actionChevron: {
+    position: "absolute",
+    top: 16,
+    right: 14,
+  },
 });

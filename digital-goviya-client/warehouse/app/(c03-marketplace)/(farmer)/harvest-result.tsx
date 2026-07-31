@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import {
+  Animated,
   Pressable,
   SafeAreaView,
   ScrollView,
@@ -8,6 +9,16 @@ import {
   Text,
   View,
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { useEffect, useRef } from "react";
+import {
+  useFonts,
+  Poppins_900Black,
+  Poppins_800ExtraBold,
+  Poppins_700Bold,
+  Poppins_600SemiBold,
+  Poppins_500Medium,
+} from "@expo-google-fonts/poppins";
 
 interface HarvestResultParams {
   harvestId?: string;
@@ -60,6 +71,28 @@ export default function HarvestResultScreen() {
 
   const sinhalaRecommendation = params.recommendationSinhala?.trim() || "";
 
+  const [fontsLoaded] = useFonts({
+    Poppins_900Black,
+    Poppins_800ExtraBold,
+    Poppins_700Bold,
+    Poppins_600SemiBold,
+    Poppins_500Medium,
+  });
+
+  // Entrance animation — matches the fade/rise used across the app
+  const fade = useRef(new Animated.Value(0)).current;
+  const rise = useRef(new Animated.Value(14)).current;
+
+  useEffect(() => {
+    if (!fontsLoaded) return;
+    Animated.parallel([
+      Animated.timing(fade, { toValue: 1, duration: 400, useNativeDriver: true }),
+      Animated.timing(rise, { toValue: 0, duration: 400, useNativeDriver: true }),
+    ]).start();
+  }, [fontsLoaded]);
+
+  if (!fontsLoaded) return null;
+
   return (
     <SafeAreaView style={styles.screen}>
       <View style={styles.navigationHeader}>
@@ -82,57 +115,72 @@ export default function HarvestResultScreen() {
         </View>
       </View>
 
-      <ScrollView
+      <Animated.ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
+        style={{ opacity: fade, transform: [{ translateY: rise }] }}
       >
-        <View style={styles.heroCard}>
-          <View style={styles.heroTopRow}>
-            <View style={styles.heroIcon}>
-              <Ionicons name="sparkles" size={28} color="#FFFFFF" />
+        <View style={styles.heroCardShadow}>
+          <LinearGradient
+            colors={["#0A331D", "#14532D", "#166534"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.heroCard}
+          >
+            <View style={styles.heroTopRow}>
+              <View style={styles.heroIconRing}>
+                <View style={styles.heroIcon}>
+                  <Ionicons name="sparkles" size={24} color="#FFFFFF" />
+                </View>
+              </View>
+
+              <View style={styles.aiBadge}>
+                <Text style={styles.aiBadgeText}>AI GENERATED</Text>
+              </View>
             </View>
 
-            <View style={styles.aiBadge}>
-              <Text style={styles.aiBadgeText}>AI GENERATED</Text>
-            </View>
-          </View>
+            <Text style={styles.heroLabel}>Recommended market price</Text>
 
-          <Text style={styles.heroLabel}>Recommended market price</Text>
+            <Text style={styles.heroPrice}>
+              {aiPredictedPrice !== null
+                ? formatCurrency(aiPredictedPrice)
+                : "Prediction pending"}
+            </Text>
 
-          <Text style={styles.heroPrice}>
-            {aiPredictedPrice !== null
-              ? formatCurrency(aiPredictedPrice)
-              : "Prediction pending"}
-          </Text>
+            <Text style={styles.heroUnit}>per kilogram</Text>
 
-          <Text style={styles.heroUnit}>per kilogram</Text>
+            {priceDifference !== null ? (
+              <View style={styles.differenceBadge}>
+                <Ionicons
+                  name={
+                    priceDifference >= 0
+                      ? "trending-up-outline"
+                      : "trending-down-outline"
+                  }
+                  size={18}
+                  color="#14532D"
+                />
 
-          {priceDifference !== null ? (
-            <View style={styles.differenceBadge}>
-              <Ionicons
-                name={
-                  priceDifference >= 0
-                    ? "trending-up-outline"
-                    : "trending-down-outline"
-                }
-                size={18}
-                color="#14532D"
-              />
-
-              <Text style={styles.differenceText}>
-                {priceDifference >= 0
-                  ? `Your expected price is ${formatCurrency(
-                      priceDifference,
-                    )} above the AI estimate`
-                  : `Your expected price is ${formatCurrency(
-                      Math.abs(priceDifference),
-                    )} below the AI estimate`}
-              </Text>
-            </View>
-          ) : null}
+                <Text style={styles.differenceText}>
+                  {priceDifference >= 0
+                    ? `Your expected price is ${formatCurrency(
+                        priceDifference,
+                      )} above the AI estimate`
+                    : `Your expected price is ${formatCurrency(
+                        Math.abs(priceDifference),
+                      )} below the AI estimate`}
+                </Text>
+              </View>
+            ) : null}
+          </LinearGradient>
         </View>
 
-        <Text style={styles.sectionTitle}>Harvest summary</Text>
+        <View style={styles.sectionHeaderRow}>
+          <View style={styles.sectionIconBoxGreen}>
+            <Ionicons name="document-text-outline" size={16} color="#15803D" />
+          </View>
+          <Text style={styles.sectionTitle}>Harvest summary</Text>
+        </View>
 
         <View style={styles.summaryCard}>
           <SummaryRow
@@ -184,11 +232,16 @@ export default function HarvestResultScreen() {
 
         {harvestScore !== null ? (
           <>
-            <Text style={styles.sectionTitle}>Harvest score</Text>
+            <View style={styles.sectionHeaderRow}>
+              <View style={styles.sectionIconBoxGreen}>
+                <Ionicons name="speedometer-outline" size={16} color="#15803D" />
+              </View>
+              <Text style={styles.sectionTitle}>Harvest score</Text>
+            </View>
 
             <View style={styles.scoreCard}>
               <View style={styles.scoreHeader}>
-                <View>
+                <View style={styles.scoreTextArea}>
                   <Text style={styles.scoreTitle}>Market readiness</Text>
 
                   <Text style={styles.scoreDescription}>
@@ -206,7 +259,10 @@ export default function HarvestResultScreen() {
               </View>
 
               <View style={styles.progressTrack}>
-                <View
+                <LinearGradient
+                  colors={["#4ADE80", "#15803D"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
                   style={[
                     styles.progressFill,
                     {
@@ -223,7 +279,12 @@ export default function HarvestResultScreen() {
           </>
         ) : null}
 
-        <Text style={styles.sectionTitle}>AI recommendation</Text>
+        <View style={styles.sectionHeaderRow}>
+          <View style={styles.sectionIconBoxAmber}>
+            <Ionicons name="bulb-outline" size={16} color="#B45309" />
+          </View>
+          <Text style={styles.sectionTitle}>AI recommendation</Text>
+        </View>
 
         <View style={styles.recommendationCard}>
           <View style={styles.recommendationIcon}>
@@ -257,20 +318,28 @@ export default function HarvestResultScreen() {
               </Text>
             </View>
 
-            <Ionicons name="analytics-outline" size={27} color="#15803D" />
+            <View style={styles.statusIconRing}>
+              <Ionicons name="analytics-outline" size={22} color="#15803D" />
+            </View>
           </View>
         ) : null}
 
         <Pressable
           onPress={() => router.push("./my-harvests")}
           style={({ pressed }) => [
-            styles.primaryButton,
+            styles.primaryButtonShadow,
             pressed && styles.pressed,
           ]}
         >
-          <Ionicons name="list-outline" size={20} color="#FFFFFF" />
-
-          <Text style={styles.primaryButtonText}>View All Harvests</Text>
+          <LinearGradient
+            colors={["#22C55E", "#15803D"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.primaryButton}
+          >
+            <Ionicons name="list-outline" size={20} color="#FFFFFF" />
+            <Text style={styles.primaryButtonText}>View All Harvests</Text>
+          </LinearGradient>
         </Pressable>
 
         <Pressable
@@ -284,7 +353,7 @@ export default function HarvestResultScreen() {
 
           <Text style={styles.secondaryButtonText}>Add Another Harvest</Text>
         </Pressable>
-      </ScrollView>
+      </Animated.ScrollView>
     </SafeAreaView>
   );
 }
@@ -435,8 +504,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 18,
     backgroundColor: "#FFFFFF",
-    borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
+    zIndex: 10,
   },
 
   backButton: {
@@ -456,12 +529,13 @@ const styles = StyleSheet.create({
   headerTitle: {
     color: "#1F2937",
     fontSize: 19,
-    fontWeight: "800",
+    fontFamily: "Poppins_800ExtraBold",
   },
 
   headerSubtitle: {
     color: "#6B7280",
     fontSize: 11,
+    fontFamily: "Poppins_500Medium",
     marginTop: 2,
   },
 
@@ -470,11 +544,19 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
 
-  heroCard: {
-    borderRadius: 25,
-    padding: 21,
-    backgroundColor: "#14532D",
+  heroCardShadow: {
+    borderRadius: 26,
     marginBottom: 25,
+    shadowColor: "#14532D",
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 6,
+  },
+
+  heroCard: {
+    borderRadius: 26,
+    padding: 21,
   },
 
   heroTopRow: {
@@ -484,10 +566,22 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
 
+  heroIconRing: {
+    width: 60,
+    height: 60,
+    borderRadius: 19,
+    padding: 4,
+    backgroundColor: "rgba(255,255,255,0.1)",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.2)",
+  },
+
   heroIcon: {
     width: 52,
     height: 52,
-    borderRadius: 17,
+    borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "rgba(255,255,255,0.14)",
@@ -503,25 +597,27 @@ const styles = StyleSheet.create({
   aiBadgeText: {
     color: "#14532D",
     fontSize: 9,
-    fontWeight: "900",
+    fontFamily: "Poppins_800ExtraBold",
     letterSpacing: 0.8,
   },
 
   heroLabel: {
     color: "rgba(255,255,255,0.68)",
     fontSize: 12,
+    fontFamily: "Poppins_500Medium",
   },
 
   heroPrice: {
     color: "#FFFFFF",
     fontSize: 33,
-    fontWeight: "900",
+    fontFamily: "Poppins_900Black",
     marginTop: 6,
   },
 
   heroUnit: {
     color: "rgba(255,255,255,0.62)",
     fontSize: 11,
+    fontFamily: "Poppins_500Medium",
     marginTop: 3,
   },
 
@@ -540,24 +636,54 @@ const styles = StyleSheet.create({
   differenceText: {
     color: "#14532D",
     fontSize: 10,
-    fontWeight: "800",
+    fontFamily: "Poppins_700Bold",
+    maxWidth: 240,
+  },
+
+  sectionHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 12,
+    marginTop: 3,
+  },
+
+  sectionIconBoxGreen: {
+    width: 28,
+    height: 28,
+    borderRadius: 9,
+    backgroundColor: "#DCFCE7",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  sectionIconBoxAmber: {
+    width: 28,
+    height: 28,
+    borderRadius: 9,
+    backgroundColor: "#FEF3C7",
+    alignItems: "center",
+    justifyContent: "center",
   },
 
   sectionTitle: {
     color: "#1F2937",
     fontSize: 16,
-    fontWeight: "800",
-    marginBottom: 12,
-    marginTop: 3,
+    fontFamily: "Poppins_800ExtraBold",
   },
 
   summaryCard: {
     borderRadius: 21,
     backgroundColor: "#FFFFFF",
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: "#EEF0ED",
     padding: 16,
     marginBottom: 24,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 2,
   },
 
   summaryRow: {
@@ -582,12 +708,13 @@ const styles = StyleSheet.create({
   summaryLabel: {
     color: "#64748B",
     fontSize: 10,
+    fontFamily: "Poppins_500Medium",
   },
 
   summaryValue: {
     color: "#1F2937",
     fontSize: 13,
-    fontWeight: "800",
+    fontFamily: "Poppins_800ExtraBold",
     marginTop: 3,
   },
 
@@ -601,9 +728,14 @@ const styles = StyleSheet.create({
     borderRadius: 21,
     backgroundColor: "#FFFFFF",
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: "#EEF0ED",
     padding: 17,
     marginBottom: 24,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 2,
   },
 
   scoreHeader: {
@@ -612,18 +744,23 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
 
+  scoreTextArea: {
+    flex: 1,
+    marginRight: 12,
+  },
+
   scoreTitle: {
     color: "#1F2937",
     fontSize: 14,
-    fontWeight: "800",
+    fontFamily: "Poppins_800ExtraBold",
   },
 
   scoreDescription: {
     color: "#64748B",
     fontSize: 10,
+    fontFamily: "Poppins_500Medium",
     lineHeight: 15,
     marginTop: 4,
-    maxWidth: 230,
   },
 
   scoreCircle: {
@@ -633,17 +770,20 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "#ECFDF5",
+    borderWidth: 1,
+    borderColor: "#BBF7D0",
   },
 
   scoreNumber: {
     color: "#15803D",
     fontSize: 21,
-    fontWeight: "900",
+    fontFamily: "Poppins_900Black",
   },
 
   scoreTotal: {
     color: "#64748B",
     fontSize: 9,
+    fontFamily: "Poppins_500Medium",
   },
 
   progressTrack: {
@@ -657,13 +797,12 @@ const styles = StyleSheet.create({
   progressFill: {
     height: "100%",
     borderRadius: 999,
-    backgroundColor: "#22C55E",
   },
 
   scoreStatus: {
     color: "#15803D",
     fontSize: 11,
-    fontWeight: "800",
+    fontFamily: "Poppins_800ExtraBold",
     marginTop: 9,
   },
 
@@ -685,6 +824,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "#FFFFFF",
+    shadowColor: "#000",
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
   },
 
   recommendationContent: {
@@ -694,12 +838,13 @@ const styles = StyleSheet.create({
   recommendationTitle: {
     color: "#92400E",
     fontSize: 13,
-    fontWeight: "800",
+    fontFamily: "Poppins_800ExtraBold",
   },
 
   recommendationText: {
     color: "#78350F",
     fontSize: 11,
+    fontFamily: "Poppins_500Medium",
     lineHeight: 18,
     marginTop: 5,
   },
@@ -719,13 +864,32 @@ const styles = StyleSheet.create({
   statusLabel: {
     color: "#64748B",
     fontSize: 10,
+    fontFamily: "Poppins_500Medium",
   },
 
   statusValue: {
     color: "#14532D",
     fontSize: 14,
-    fontWeight: "800",
+    fontFamily: "Poppins_800ExtraBold",
     marginTop: 3,
+  },
+
+  statusIconRing: {
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FFFFFF",
+  },
+
+  primaryButtonShadow: {
+    borderRadius: 16,
+    shadowColor: "#15803D",
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 5 },
+    elevation: 5,
   },
 
   primaryButton: {
@@ -735,13 +899,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-    backgroundColor: "#15803D",
   },
 
   primaryButtonText: {
     color: "#FFFFFF",
     fontSize: 13,
-    fontWeight: "800",
+    fontFamily: "Poppins_800ExtraBold",
   },
 
   secondaryButton: {
@@ -760,7 +923,7 @@ const styles = StyleSheet.create({
   secondaryButtonText: {
     color: "#15803D",
     fontSize: 13,
-    fontWeight: "800",
+    fontFamily: "Poppins_800ExtraBold",
   },
 
   pressed: {
@@ -777,6 +940,7 @@ const styles = StyleSheet.create({
   sinhalaRecommendation: {
     color: "#78350F",
     fontSize: 12,
+    fontFamily: "Poppins_500Medium",
     lineHeight: 21,
   },
 });
