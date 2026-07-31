@@ -15,6 +15,13 @@ import {
   TextInput,
   View,
 } from "react-native";
+import {
+  useFonts,
+  Poppins_800ExtraBold,
+  Poppins_700Bold,
+  Poppins_600SemiBold,
+  Poppins_500Medium,
+} from "@expo-google-fonts/poppins";
 
 import { useMarketplaceAuth } from "@/hooks/c03-marketplace/useMarketplaceAuth";
 import { MarketplaceUserRole } from "@/types/c03-marketplace/auth.types";
@@ -36,6 +43,13 @@ export default function MarketplaceLoginScreen() {
 
   const [isSubmitting, setIsSubmitting] =
     useState(false);
+
+  const [fontsLoaded] = useFonts({
+    Poppins_800ExtraBold,
+    Poppins_700Bold,
+    Poppins_600SemiBold,
+    Poppins_500Medium,
+  });
 
   function selectRole(
   selectedRole: MarketplaceUserRole
@@ -92,9 +106,13 @@ export default function MarketplaceLoginScreen() {
   }
 }
 
+  if (!fontsLoaded) return null;
+
   return (
     <LinearGradient
       colors={["#0A331D", "#12522E", "#0B3B22"]}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 0, y: 1 }}
       style={styles.screen}
     >
       <SafeAreaView style={styles.safeArea}>
@@ -117,23 +135,28 @@ export default function MarketplaceLoginScreen() {
             >
               <Ionicons
                 name="arrow-back"
-                size={21}
+                size={20}
                 color="#FFFFFF"
               />
             </Pressable>
 
             <View style={styles.hero}>
-              <View style={styles.logoCircle}>
-                <Ionicons
-                  name="storefront"
-                  size={32}
-                  color="#15803D"
-                />
+              <View style={styles.logoRing}>
+                <View style={styles.logoCircle}>
+                  <Ionicons
+                    name="storefront"
+                    size={30}
+                    color="#15803D"
+                  />
+                </View>
               </View>
 
-              <Text style={styles.eyebrow}>
-                DIGITAL GOVIYA MARKETPLACE
-              </Text>
+              <View style={styles.eyebrowPill}>
+                <Ionicons name="sparkles" size={11} color="#F5C542" />
+                <Text style={styles.eyebrow}>
+                  DIGITAL GOVIYA MARKETPLACE
+                </Text>
+              </View>
 
               <Text style={styles.heading}>
                 Welcome back
@@ -146,7 +169,9 @@ export default function MarketplaceLoginScreen() {
               </Text>
             </View>
 
-            <View style={styles.card}>
+            <View style={styles.sheet}>
+              <View style={styles.sheetHandle} />
+
               <Text style={styles.sectionTitle}>
                 Select your account
               </Text>
@@ -172,11 +197,13 @@ export default function MarketplaceLoginScreen() {
               <Text style={styles.label}>Email address</Text>
 
               <View style={styles.inputContainer}>
-                <Ionicons
-                  name="mail-outline"
-                  size={19}
-                  color="#6B7280"
-                />
+                <View style={styles.inputIconBox}>
+                  <Ionicons
+                    name="mail-outline"
+                    size={17}
+                    color="#15803D"
+                  />
+                </View>
 
                 <TextInput
                   style={styles.input}
@@ -192,11 +219,13 @@ export default function MarketplaceLoginScreen() {
               <Text style={styles.label}>Password</Text>
 
               <View style={styles.inputContainer}>
-                <Ionicons
-                  name="lock-closed-outline"
-                  size={19}
-                  color="#6B7280"
-                />
+                <View style={styles.inputIconBox}>
+                  <Ionicons
+                    name="lock-closed-outline"
+                    size={17}
+                    color="#15803D"
+                  />
+                </View>
 
                 <TextInput
                   style={styles.input}
@@ -208,6 +237,7 @@ export default function MarketplaceLoginScreen() {
                 />
 
                 <Pressable
+                  hitSlop={8}
                   onPress={() =>
                     setShowPassword((current) => !current)
                   }
@@ -218,8 +248,8 @@ export default function MarketplaceLoginScreen() {
                         ? "eye-off-outline"
                         : "eye-outline"
                     }
-                    size={20}
-                    color="#6B7280"
+                    size={19}
+                    color="#9CA3AF"
                   />
                 </Pressable>
               </View>
@@ -227,7 +257,7 @@ export default function MarketplaceLoginScreen() {
               <View style={styles.demoBox}>
                 <Ionicons
                   name="information-circle-outline"
-                  size={18}
+                  size={17}
                   color="#B45309"
                 />
 
@@ -238,35 +268,45 @@ export default function MarketplaceLoginScreen() {
               </View>
 
               <Pressable
-                style={({ pressed }) => [
-                  styles.loginButton,
-                  pressed && styles.loginButtonPressed,
-                  isSubmitting &&
-                    styles.loginButtonDisabled,
-                ]}
                 onPress={handleLogin}
                 disabled={isSubmitting}
+                style={({ pressed }) => [
+                  styles.loginShadow,
+                  pressed && styles.loginPressed,
+                  isSubmitting && styles.loginDisabled,
+                ]}
               >
-                {isSubmitting ? (
-                  <ActivityIndicator color="#FFFFFF" />
-                ) : (
-                  <>
-                    <Text style={styles.loginButtonText}>
-                      Continue as{" "}
-                      {role === "farmer"
-                        ? "Farmer"
-                        : "Miller"}
-                    </Text>
+                <LinearGradient
+                  colors={["#F5C542", "#D97706"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.loginButton}
+                >
+                  {isSubmitting ? (
+                    <ActivityIndicator color="#0B3B22" />
+                  ) : (
+                    <>
+                      <Text style={styles.loginButtonText}>
+                        Continue as{" "}
+                        {role === "farmer"
+                          ? "Farmer"
+                          : "Miller"}
+                      </Text>
 
-                    <Ionicons
-                      name="arrow-forward"
-                      size={19}
-                      color="#FFFFFF"
-                    />
-                  </>
-                )}
+                      <Ionicons
+                        name="arrow-forward"
+                        size={18}
+                        color="#0B3B22"
+                      />
+                    </>
+                  )}
+                </LinearGradient>
               </Pressable>
             </View>
+
+            <Text style={styles.footer}>
+              Digital Goviya v1.0 · SLIIT Research 2026
+            </Text>
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
@@ -305,7 +345,7 @@ function RoleCard({
       >
         <Ionicons
           name={icon}
-          size={23}
+          size={22}
           color={selected ? "#FFFFFF" : "#15803D"}
         />
       </View>
@@ -351,79 +391,121 @@ const styles = StyleSheet.create({
 
   scrollContent: {
     flexGrow: 1,
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 28,
+    paddingBottom: 24,
   },
 
   backButton: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
+    marginTop: 6,
+    marginLeft: 20,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(255,255,255,0.11)",
+    backgroundColor: "rgba(255,255,255,0.1)",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.14)",
+    borderColor: "rgba(255,255,255,0.16)",
   },
 
   hero: {
     alignItems: "center",
-    marginTop: 15,
-    marginBottom: 22,
+    paddingTop: 14,
+    paddingBottom: 26,
+    paddingHorizontal: 28,
+    gap: 10,
+  },
+
+  logoRing: {
+    width: 84,
+    height: 84,
+    borderRadius: 42,
+    padding: 4,
+    backgroundColor: "rgba(245,197,66,0.16)",
+    borderWidth: 1,
+    borderColor: "rgba(245,197,66,0.4)",
+    alignItems: "center",
+    justifyContent: "center",
   },
 
   logoCircle: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: "#FFFFFF",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#FFFFFF",
-    marginBottom: 13,
+    shadowColor: "#000",
+    shadowOpacity: 0.18,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 6,
+  },
+
+  eyebrowPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: "rgba(255,255,255,0.08)",
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderWidth: 1,
+    borderColor: "rgba(245,197,66,0.25)",
+    marginTop: 4,
   },
 
   eyebrow: {
-    color: "#FDE68A",
-    fontSize: 10,
-    fontWeight: "700",
-    letterSpacing: 1.4,
+    color: "rgba(253,230,138,0.85)",
+    fontSize: 9.5,
+    fontFamily: "Poppins_600SemiBold",
+    letterSpacing: 1.2,
   },
 
   heading: {
     color: "#FFFFFF",
-    fontSize: 29,
-    fontWeight: "800",
-    marginTop: 8,
+    fontSize: 27,
+    fontFamily: "Poppins_800ExtraBold",
+    marginTop: 6,
+    textAlign: "center",
   },
 
   description: {
-    color: "rgba(255,255,255,0.68)",
-    fontSize: 13,
-    lineHeight: 19,
+    color: "rgba(255,255,255,0.65)",
+    fontSize: 12.5,
+    fontFamily: "Poppins_500Medium",
+    lineHeight: 18,
     textAlign: "center",
-    maxWidth: 330,
-    marginTop: 7,
+    maxWidth: 300,
+    marginTop: 2,
   },
 
-  card: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 28,
-    padding: 20,
-    shadowColor: "#000000",
-    shadowOpacity: 0.16,
+  sheet: {
+    backgroundColor: "#FAFAF9",
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    paddingHorizontal: 22,
+    paddingTop: 12,
+    paddingBottom: 24,
+    shadowColor: "#000",
+    shadowOpacity: 0.15,
     shadowRadius: 16,
-    shadowOffset: {
-      width: 0,
-      height: 7,
-    },
-    elevation: 8,
+    shadowOffset: { width: 0, height: -6 },
+    elevation: 10,
+  },
+
+  sheetHandle: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: "#E5E7EB",
+    alignSelf: "center",
+    marginBottom: 18,
   },
 
   sectionTitle: {
     color: "#1F2937",
-    fontSize: 15,
-    fontWeight: "700",
+    fontSize: 14.5,
+    fontFamily: "Poppins_700Bold",
     marginBottom: 13,
   },
 
@@ -435,11 +517,11 @@ const styles = StyleSheet.create({
 
   roleCard: {
     flex: 1,
-    minHeight: 122,
-    borderRadius: 18,
-    borderWidth: 1.5,
+    minHeight: 116,
+    borderRadius: 16,
+    borderWidth: 1.4,
     borderColor: "#E5E7EB",
-    backgroundColor: "#FAFAF9",
+    backgroundColor: "#FFFFFF",
     padding: 13,
   },
 
@@ -449,9 +531,9 @@ const styles = StyleSheet.create({
   },
 
   roleIcon: {
-    width: 42,
-    height: 42,
-    borderRadius: 13,
+    width: 40,
+    height: 40,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "#DCFCE7",
@@ -464,8 +546,8 @@ const styles = StyleSheet.create({
 
   roleTitle: {
     color: "#374151",
-    fontSize: 14,
-    fontWeight: "700",
+    fontSize: 13.5,
+    fontFamily: "Poppins_700Bold",
   },
 
   roleTitleSelected: {
@@ -473,18 +555,19 @@ const styles = StyleSheet.create({
   },
 
   roleSubtitle: {
-    color: "#6B7280",
-    fontSize: 11,
+    color: "#9CA3AF",
+    fontSize: 10.5,
+    fontFamily: "Poppins_500Medium",
     marginTop: 2,
   },
 
   selectedCheck: {
     position: "absolute",
-    top: 9,
-    right: 9,
-    width: 20,
-    height: 20,
-    borderRadius: 10,
+    top: 10,
+    right: 10,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "#15803D",
@@ -492,8 +575,8 @@ const styles = StyleSheet.create({
 
   label: {
     color: "#374151",
-    fontSize: 12,
-    fontWeight: "700",
+    fontSize: 11.5,
+    fontFamily: "Poppins_600SemiBold",
     marginBottom: 7,
   },
 
@@ -502,18 +585,28 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    borderWidth: 1,
+    borderWidth: 1.4,
     borderColor: "#E5E7EB",
-    borderRadius: 15,
-    paddingHorizontal: 14,
-    backgroundColor: "#F9FAFB",
-    marginBottom: 15,
+    borderRadius: 14,
+    paddingHorizontal: 10,
+    backgroundColor: "#FFFFFF",
+    marginBottom: 14,
+  },
+
+  inputIconBox: {
+    width: 30,
+    height: 30,
+    borderRadius: 9,
+    backgroundColor: "#DCFCE7",
+    alignItems: "center",
+    justifyContent: "center",
   },
 
   input: {
     flex: 1,
     color: "#111827",
-    fontSize: 14,
+    fontSize: 13.5,
+    fontFamily: "Poppins_500Medium",
   },
 
   demoBox: {
@@ -523,37 +616,55 @@ const styles = StyleSheet.create({
     padding: 11,
     borderRadius: 13,
     backgroundColor: "#FFFBEB",
-    marginBottom: 17,
+    marginBottom: 18,
   },
 
   demoText: {
     flex: 1,
     color: "#92400E",
-    fontSize: 11,
-    lineHeight: 16,
+    fontSize: 10.5,
+    fontFamily: "Poppins_500Medium",
+    lineHeight: 15,
+  },
+
+  loginShadow: {
+    borderRadius: 15,
+    shadowColor: "#D97706",
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 5 },
+    elevation: 5,
+  },
+
+  loginPressed: {
+    opacity: 0.9,
+  },
+
+  loginDisabled: {
+    opacity: 0.65,
   },
 
   loginButton: {
     height: 54,
-    borderRadius: 16,
+    borderRadius: 15,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-    backgroundColor: "#15803D",
-  },
-
-  loginButtonPressed: {
-    opacity: 0.86,
-  },
-
-  loginButtonDisabled: {
-    opacity: 0.65,
   },
 
   loginButtonText: {
-    color: "#FFFFFF",
-    fontSize: 14,
-    fontWeight: "800",
+    color: "#0B3B22",
+    fontSize: 14.5,
+    fontFamily: "Poppins_700Bold",
+    letterSpacing: 0.2,
+  },
+
+  footer: {
+    textAlign: "center",
+    color: "rgba(255,255,255,0.4)",
+    fontSize: 10.5,
+    fontFamily: "Poppins_500Medium",
+    paddingTop: 14,
   },
 });
