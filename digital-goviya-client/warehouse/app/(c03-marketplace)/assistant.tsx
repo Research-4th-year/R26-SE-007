@@ -1,7 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import {
   useCallback,
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -9,6 +11,7 @@ import {
 
 import {
   ActivityIndicator,
+  Animated,
   FlatList,
   KeyboardAvoidingView,
   Platform,
@@ -51,6 +54,42 @@ const SUGGESTED_QUESTIONS = [
   "How should I evaluate a miller's offered price?",
 ];
 
+// ---------------------------------------------------------------------------
+// Role themes
+//
+// Farmer  -> paddy-field green: fresh, growing, open-field
+// Miller  -> milled-grain amber: warm, toasted, processed
+// ---------------------------------------------------------------------------
+type RoleTheme = {
+  accent: string;
+  accentDark: string;
+  accentSoft: string;
+  gradient: [string, string];
+  headerGradient: [string, string];
+  icon: keyof typeof Ionicons.glyphMap;
+  eyebrow: string;
+};
+
+const FARMER_THEME: RoleTheme = {
+  accent: "#2F9E44",
+  accentDark: "#1B5E20",
+  accentSoft: "#E6F7EA",
+  gradient: ["#3FB663", "#1B7A3D"],
+  headerGradient: ["#EAFBEF", "#F8FAF8"],
+  icon: "leaf",
+  eyebrow: "GROWER KNOWLEDGE ASSISTANT",
+};
+
+const MILLER_THEME: RoleTheme = {
+  accent: "#C2760C",
+  accentDark: "#7A4708",
+  accentSoft: "#FBEBD2",
+  gradient: ["#DE9A2E", "#A85E0A"],
+  headerGradient: ["#FDF3E2", "#F8FAF8"],
+  icon: "cube",
+  eyebrow: "MILLER KNOWLEDGE ASSISTANT",
+};
+
 export default function MarketplaceAssistantScreen() {
   const { user } = useMarketplaceAuth();
 
@@ -76,15 +115,14 @@ export default function MarketplaceAssistantScreen() {
     Poppins_500Medium,
   });
 
-  const accent =
+  const theme: RoleTheme =
     user?.role === "miller"
-      ? "#92400E"
-      : "#15803D";
+      ? MILLER_THEME
+      : FARMER_THEME;
 
-  const accentSoft =
-    user?.role === "miller"
-      ? "#FEF3C7"
-      : "#DCFCE7";
+  // Kept for backwards-compatible naming used deeper in the tree.
+  const accent = theme.accent;
+  const accentSoft = theme.accentSoft;
 
   const assistantWelcome = useMemo(
     (): RagChatMessage => ({
@@ -212,7 +250,10 @@ export default function MarketplaceAssistantScreen() {
           Platform.OS === "ios" ? 8 : 0
         }
       >
-        <View style={styles.header}>
+        <LinearGradient
+          colors={theme.headerGradient}
+          style={styles.header}
+        >
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Go back"
@@ -229,13 +270,18 @@ export default function MarketplaceAssistantScreen() {
             />
           </Pressable>
 
-          <View style={styles.headerIcon}>
+          <LinearGradient
+            colors={theme.gradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.headerIcon}
+          >
             <Ionicons
-              name="sparkles"
-              size={20}
-              color={accent}
+              name={theme.icon}
+              size={19}
+              color="#FFFFFF"
             />
-          </View>
+          </LinearGradient>
 
           <View style={styles.headerText}>
             <Text style={styles.headerTitle}>
@@ -277,7 +323,7 @@ export default function MarketplaceAssistantScreen() {
               color="#64748B"
             />
           </Pressable>
-        </View>
+        </LinearGradient>
 
         <FlatList
           ref={listRef}
@@ -286,8 +332,7 @@ export default function MarketplaceAssistantScreen() {
           renderItem={({ item }) => (
             <ChatMessage
               message={item}
-              accent={accent}
-              accentSoft={accentSoft}
+              theme={theme}
             />
           )}
           ListHeaderComponent={
@@ -300,25 +345,27 @@ export default function MarketplaceAssistantScreen() {
                   },
                 ]}
               >
-                <View
-                  style={[
-                    styles.heroIcon,
-                    {
-                      backgroundColor:
-                        accentSoft,
-                    },
-                  ]}
+                <LinearGradient
+                  colors={theme.gradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.heroIcon}
                 >
                   <Ionicons
                     name="chatbubble-ellipses-outline"
-                    size={25}
-                    color={accent}
+                    size={24}
+                    color="#FFFFFF"
                   />
-                </View>
+                </LinearGradient>
 
                 <View style={styles.heroText}>
-                  <Text style={styles.heroEyebrow}>
-                    AI KNOWLEDGE ASSISTANT
+                  <Text
+                    style={[
+                      styles.heroEyebrow,
+                      { color: theme.accentDark },
+                    ]}
+                  >
+                    {theme.eyebrow}
                   </Text>
 
                   <Text style={styles.heroTitle}>
@@ -346,42 +393,15 @@ export default function MarketplaceAssistantScreen() {
               >
                 {SUGGESTED_QUESTIONS.map(
                   (item) => (
-                    <Pressable
+                    <SuggestionChip
                       key={item}
+                      text={item}
+                      theme={theme}
                       disabled={submitting}
                       onPress={() =>
-                        void submitQuestion(
-                          item
-                        )
+                        void submitQuestion(item)
                       }
-                      style={({
-                        pressed,
-                      }) => [
-                        styles.suggestionChip,
-                        {
-                          borderColor:
-                            accentSoft,
-                        },
-                        pressed &&
-                          styles.pressed,
-                        submitting &&
-                          styles.disabled,
-                      ]}
-                    >
-                      <Ionicons
-                        name="sparkles-outline"
-                        size={14}
-                        color={accent}
-                      />
-
-                      <Text
-                        style={
-                          styles.suggestionText
-                        }
-                      >
-                        {item}
-                      </Text>
-                    </Pressable>
+                    />
                   )
                 )}
               </View>
@@ -393,10 +413,7 @@ export default function MarketplaceAssistantScreen() {
           }
           ListFooterComponent={
             submitting ? (
-              <TypingIndicator
-                accent={accent}
-                accentSoft={accentSoft}
-              />
+              <TypingIndicator theme={theme} />
             ) : (
               <View style={styles.listBottomSpace} />
             )
@@ -448,42 +465,17 @@ export default function MarketplaceAssistantScreen() {
               }}
             />
 
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Send question"
+            <SendButton
+              theme={theme}
               disabled={
                 submitting ||
                 question.trim().length < 2
               }
+              submitting={submitting}
               onPress={() =>
                 void submitQuestion()
               }
-              style={({ pressed }) => [
-                styles.sendButton,
-                {
-                  backgroundColor: accent,
-                },
-                pressed && styles.pressed,
-                (
-                  submitting ||
-                  question.trim().length < 2
-                ) &&
-                  styles.disabled,
-              ]}
-            >
-              {submitting ? (
-                <ActivityIndicator
-                  size="small"
-                  color="#FFFFFF"
-                />
-              ) : (
-                <Ionicons
-                  name="send"
-                  size={18}
-                  color="#FFFFFF"
-                />
-              )}
-            </Pressable>
+            />
           </View>
 
           <Text style={styles.disclaimer}>
@@ -496,19 +488,176 @@ export default function MarketplaceAssistantScreen() {
   );
 }
 
+// ---------------------------------------------------------------------------
+// Suggestion chip — press-scale micro-interaction
+// ---------------------------------------------------------------------------
+interface SuggestionChipProps {
+  text: string;
+  theme: RoleTheme;
+  disabled: boolean;
+  onPress: () => void;
+}
+
+function SuggestionChip({
+  text,
+  theme,
+  disabled,
+  onPress,
+}: SuggestionChipProps) {
+  const scale = useRef(new Animated.Value(1)).current;
+
+  const animateTo = (value: number) => {
+    Animated.spring(scale, {
+      toValue: value,
+      speed: 24,
+      bounciness: 6,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  return (
+    <Animated.View
+      style={{ transform: [{ scale }] }}
+    >
+      <Pressable
+        disabled={disabled}
+        onPressIn={() => animateTo(0.97)}
+        onPressOut={() => animateTo(1)}
+        onPress={onPress}
+        style={[
+          styles.suggestionChip,
+          { borderColor: theme.accentSoft },
+          disabled && styles.disabled,
+        ]}
+      >
+        <View
+          style={[
+            styles.suggestionIconDot,
+            { backgroundColor: theme.accentSoft },
+          ]}
+        >
+          <Ionicons
+            name="sparkles-outline"
+            size={12}
+            color={theme.accent}
+          />
+        </View>
+
+        <Text style={styles.suggestionText}>
+          {text}
+        </Text>
+
+        <Ionicons
+          name="arrow-forward"
+          size={13}
+          color={theme.accent}
+        />
+      </Pressable>
+    </Animated.View>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Send button — gradient fill, scale feedback
+// ---------------------------------------------------------------------------
+interface SendButtonProps {
+  theme: RoleTheme;
+  disabled: boolean;
+  submitting: boolean;
+  onPress: () => void;
+}
+
+function SendButton({
+  theme,
+  disabled,
+  submitting,
+  onPress,
+}: SendButtonProps) {
+  const scale = useRef(new Animated.Value(1)).current;
+
+  const animateTo = (value: number) => {
+    Animated.spring(scale, {
+      toValue: value,
+      speed: 24,
+      bounciness: 6,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  return (
+    <Animated.View
+      style={{ transform: [{ scale }] }}
+    >
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Send question"
+        disabled={disabled}
+        onPressIn={() => animateTo(0.94)}
+        onPressOut={() => animateTo(1)}
+        onPress={onPress}
+      >
+        <LinearGradient
+          colors={theme.gradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[
+            styles.sendButton,
+            disabled && styles.disabled,
+          ]}
+        >
+          {submitting ? (
+            <ActivityIndicator
+              size="small"
+              color="#FFFFFF"
+            />
+          ) : (
+            <Ionicons
+              name="send"
+              size={18}
+              color="#FFFFFF"
+            />
+          )}
+        </LinearGradient>
+      </Pressable>
+    </Animated.View>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Chat message bubble — fades and rises in on arrival
+// ---------------------------------------------------------------------------
 interface ChatMessageProps {
   message: RagChatMessage;
-  accent: string;
-  accentSoft: string;
+  theme: RoleTheme;
 }
 
 function ChatMessage({
   message,
-  accent,
-  accentSoft,
+  theme,
 }: ChatMessageProps) {
   const [showSources, setShowSources] =
     useState(false);
+
+  const opacity = useRef(new Animated.Value(0)).current;
+  const translateY = useRef(new Animated.Value(8)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(opacity, {
+        toValue: 1,
+        duration: 220,
+        useNativeDriver: true,
+      }),
+      Animated.spring(translateY, {
+        toValue: 0,
+        speed: 16,
+        bounciness: 4,
+        useNativeDriver: true,
+      }),
+    ]).start();
+    // Runs once when the bubble mounts.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const isUser =
     message.sender === "user";
@@ -518,12 +667,16 @@ function ChatMessage({
     Boolean(message.results?.length);
 
   return (
-    <View
+    <Animated.View
       style={[
         styles.messageRow,
         isUser
           ? styles.userMessageRow
           : styles.assistantMessageRow,
+        {
+          opacity,
+          transform: [{ translateY }],
+        },
       ]}
     >
       {!isUser ? (
@@ -531,7 +684,9 @@ function ChatMessage({
           style={[
             styles.avatar,
             {
-              backgroundColor: accentSoft,
+              backgroundColor: message.failed
+                ? "#FEE2E2"
+                : theme.accentSoft,
             },
           ]}
         >
@@ -539,13 +694,13 @@ function ChatMessage({
             name={
               message.failed
                 ? "warning-outline"
-                : "sparkles"
+                : theme.icon
             }
-            size={17}
+            size={16}
             color={
               message.failed
                 ? "#B91C1C"
-                : accent
+                : theme.accent
             }
           />
         </View>
@@ -555,196 +710,296 @@ function ChatMessage({
         style={[
           styles.messageBubble,
           isUser
-            ? [
-                styles.userBubble,
-                {
-                  backgroundColor: accent,
-                },
-              ]
-            : message.failed
-              ? styles.failedBubble
-              : styles.assistantBubble,
+            ? styles.userBubbleShadow
+            : styles.assistantBubbleShadow,
         ]}
       >
-        <Text
-          style={[
-            styles.messageText,
-            isUser
-              ? styles.userMessageText
-              : message.failed
-                ? styles.failedMessageText
-                : styles.assistantMessageText,
-          ]}
-        >
-          {message.text}
-        </Text>
-
-        {!isUser && hasSources ? (
-          <>
-            <Pressable
-              onPress={() =>
-                setShowSources(
-                  (current) => !current
-                )
-              }
-              style={styles.sourceButton}
+        {isUser ? (
+          <LinearGradient
+            colors={theme.gradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={[
+              styles.bubbleFill,
+              styles.userBubble,
+            ]}
+          >
+            <Text
+              style={[
+                styles.messageText,
+                styles.userMessageText,
+              ]}
             >
-              <Ionicons
-                name="document-text-outline"
-                size={15}
-                color={accent}
-              />
+              {message.text}
+            </Text>
 
-              <Text
-                style={[
-                  styles.sourceButtonText,
-                  {
-                    color: accent,
-                  },
-                ]}
-              >
-                {showSources
-                  ? "Hide retrieved information"
-                  : "View retrieved information"}
-              </Text>
+            <Text
+              style={[
+                styles.messageTime,
+                styles.userMessageTime,
+              ]}
+            >
+              {formatTime(message.createdAt)}
+            </Text>
+          </LinearGradient>
+        ) : (
+          <View
+            style={[
+              styles.bubbleFill,
+              message.failed
+                ? styles.failedBubble
+                : styles.assistantBubble,
+            ]}
+          >
+            <Text
+              style={[
+                styles.messageText,
+                message.failed
+                  ? styles.failedMessageText
+                  : styles.assistantMessageText,
+              ]}
+            >
+              {message.text}
+            </Text>
 
-              <Ionicons
-                name={
-                  showSources
-                    ? "chevron-up"
-                    : "chevron-down"
-                }
-                size={15}
-                color={accent}
-              />
-            </Pressable>
+            {hasSources ? (
+              <>
+                <Pressable
+                  onPress={() =>
+                    setShowSources(
+                      (current) => !current
+                    )
+                  }
+                  style={styles.sourceButton}
+                >
+                  <Ionicons
+                    name="document-text-outline"
+                    size={15}
+                    color={theme.accent}
+                  />
 
-            {showSources ? (
-              <View
-                style={styles.sourceContainer}
-              >
-                {message.context?.trim() ? (
-                  <>
-                    <Text
-                      style={styles.sourceTitle}
-                    >
-                      Retrieved context
-                    </Text>
+                  <Text
+                    style={[
+                      styles.sourceButtonText,
+                      { color: theme.accent },
+                    ]}
+                  >
+                    {showSources
+                      ? "Hide retrieved information"
+                      : "View retrieved information"}
+                  </Text>
 
-                    <Text
-                      style={styles.sourceText}
-                    >
-                      {message.context}
-                    </Text>
-                  </>
-                ) : null}
+                  <Ionicons
+                    name={
+                      showSources
+                        ? "chevron-up"
+                        : "chevron-down"
+                    }
+                    size={15}
+                    color={theme.accent}
+                  />
+                </Pressable>
 
-                {message.results?.length ? (
-                  <>
-                    <Text
-                      style={[
-                        styles.sourceTitle,
-                        styles.resultsTitle,
-                      ]}
-                    >
-                      Retrieved results
-                    </Text>
-
-                    {message.results.map(
-                      (result, index) => (
-                        <View
-                          key={`${message.id}-${index}`}
-                          style={
-                            styles.resultItem
-                          }
+                {showSources ? (
+                  <View
+                    style={[
+                      styles.sourceContainer,
+                      { backgroundColor: theme.accentSoft },
+                    ]}
+                  >
+                    {message.context?.trim() ? (
+                      <>
+                        <Text
+                          style={[
+                            styles.sourceTitle,
+                            { color: theme.accentDark },
+                          ]}
                         >
-                          <View
-                            style={[
-                              styles.resultNumber,
-                              {
-                                backgroundColor:
-                                  accentSoft,
-                              },
-                            ]}
-                          >
-                            <Text
-                              style={[
-                                styles.resultNumberText,
-                                {
-                                  color: accent,
-                                },
-                              ]}
+                          Retrieved context
+                        </Text>
+
+                        <Text
+                          style={styles.sourceText}
+                        >
+                          {message.context}
+                        </Text>
+                      </>
+                    ) : null}
+
+                    {message.results?.length ? (
+                      <>
+                        <Text
+                          style={[
+                            styles.sourceTitle,
+                            styles.resultsTitle,
+                            { color: theme.accentDark },
+                          ]}
+                        >
+                          Retrieved results
+                        </Text>
+
+                        {message.results.map(
+                          (result, index) => (
+                            <View
+                              key={`${message.id}-${index}`}
+                              style={
+                                styles.resultItem
+                              }
                             >
-                              {index + 1}
-                            </Text>
-                          </View>
+                              <View
+                                style={[
+                                  styles.resultNumber,
+                                  {
+                                    backgroundColor:
+                                      "#FFFFFF",
+                                  },
+                                ]}
+                              >
+                                <Text
+                                  style={[
+                                    styles.resultNumberText,
+                                    { color: theme.accent },
+                                  ]}
+                                >
+                                  {index + 1}
+                                </Text>
+                              </View>
 
-                          <Text
-                            style={
-                              styles.resultText
-                            }
-                          >
-                            {formatRagResult(
-                              result
-                            )}
-                          </Text>
-                        </View>
-                      )
-                    )}
-                  </>
+                              <Text
+                                style={
+                                  styles.resultText
+                                }
+                              >
+                                {formatRagResult(
+                                  result
+                                )}
+                              </Text>
+                            </View>
+                          )
+                        )}
+                      </>
+                    ) : null}
+                  </View>
                 ) : null}
-              </View>
+              </>
             ) : null}
-          </>
-        ) : null}
 
-        <Text
-          style={[
-            styles.messageTime,
-            isUser &&
-              styles.userMessageTime,
-          ]}
-        >
-          {formatTime(message.createdAt)}
-        </Text>
+            <Text style={styles.messageTime}>
+              {formatTime(message.createdAt)}
+            </Text>
+          </View>
+        )}
       </View>
-    </View>
+    </Animated.View>
   );
 }
 
+// ---------------------------------------------------------------------------
+// Typing indicator — three grain-shaped dots bouncing in sequence
+// ---------------------------------------------------------------------------
 interface TypingIndicatorProps {
-  accent: string;
-  accentSoft: string;
+  theme: RoleTheme;
 }
 
-function TypingIndicator({
-  accent,
-  accentSoft,
-}: TypingIndicatorProps) {
+function TypingIndicator({ theme }: TypingIndicatorProps) {
+  const dot1 = useRef(new Animated.Value(0)).current;
+  const dot2 = useRef(new Animated.Value(0)).current;
+  const dot3 = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const makeLoop = (
+      value: Animated.Value,
+      delay: number
+    ) =>
+      Animated.loop(
+        Animated.sequence([
+          Animated.delay(delay),
+          Animated.timing(value, {
+            toValue: 1,
+            duration: 320,
+            useNativeDriver: true,
+          }),
+          Animated.timing(value, {
+            toValue: 0,
+            duration: 320,
+            useNativeDriver: true,
+          }),
+          Animated.delay(320),
+        ])
+      );
+
+    const loops = [
+      makeLoop(dot1, 0),
+      makeLoop(dot2, 120),
+      makeLoop(dot3, 240),
+    ];
+
+    loops.forEach((loop) => loop.start());
+
+    return () => loops.forEach((loop) => loop.stop());
+  }, [dot1, dot2, dot3]);
+
+  const dotStyle = (value: Animated.Value) => ({
+    opacity: value.interpolate({
+      inputRange: [0, 1],
+      outputRange: [0.35, 1],
+    }),
+    transform: [
+      {
+        translateY: value.interpolate({
+          inputRange: [0, 1],
+          outputRange: [0, -4],
+        }),
+      },
+    ],
+  });
+
   return (
     <View style={[styles.messageRow, styles.assistantMessageRow]}>
       <View
         style={[
           styles.avatar,
-          {
-            backgroundColor: accentSoft,
-          },
+          { backgroundColor: theme.accentSoft },
         ]}
       >
-        <Ionicons name="sparkles" size={17} color={accent} />
+        <Ionicons name={theme.icon} size={16} color={theme.accent} />
       </View>
 
       <View
         style={[
           styles.messageBubble,
+          styles.assistantBubbleShadow,
+          styles.bubbleFill,
           styles.assistantBubble,
           styles.typingBubble,
         ]}
       >
-        <ActivityIndicator size="small" color={accent} />
+        <View style={styles.typingDots}>
+          <Animated.View
+            style={[
+              styles.typingDot,
+              { backgroundColor: theme.accent },
+              dotStyle(dot1),
+            ]}
+          />
+          <Animated.View
+            style={[
+              styles.typingDot,
+              { backgroundColor: theme.accent },
+              dotStyle(dot2),
+            ]}
+          />
+          <Animated.View
+            style={[
+              styles.typingDot,
+              { backgroundColor: theme.accent },
+              dotStyle(dot3),
+            ]}
+          />
+        </View>
 
         <Text style={styles.typingText}>
-          Retrieving agricultural information and generating an answer...
+          Retrieving agricultural information...
         </Text>
       </View>
     </View>
@@ -811,7 +1066,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 16,
     gap: 10,
-    backgroundColor: "#FFFFFF",
     borderBottomWidth: 1,
     borderBottomColor: "#E5E7EB",
   },
@@ -822,7 +1076,7 @@ const styles = StyleSheet.create({
     borderRadius: 13,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#F3F4F6",
+    backgroundColor: "rgba(255,255,255,0.6)",
   },
 
   headerIcon: {
@@ -831,7 +1085,11 @@ const styles = StyleSheet.create({
     borderRadius: 13,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#F8FAFC",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.14,
+    shadowRadius: 6,
+    elevation: 3,
   },
 
   headerText: {
@@ -880,6 +1138,11 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     borderWidth: 1,
     marginBottom: 20,
+    shadowColor: "#0F172A",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 1,
   },
 
   heroIcon: {
@@ -888,6 +1151,11 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     alignItems: "center",
     justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.16,
+    shadowRadius: 6,
+    elevation: 3,
   },
 
   heroText: {
@@ -895,7 +1163,6 @@ const styles = StyleSheet.create({
   },
 
   heroEyebrow: {
-    color: "#B45309",
     fontSize: 8,
     fontFamily: "Poppins_700Bold",
     letterSpacing: 0.8,
@@ -904,7 +1171,7 @@ const styles = StyleSheet.create({
   heroTitle: {
     color: "#1F2937",
     fontSize: 14,
-    fontFamily: "Poppins_700Bold",
+    fontFamily: "Poppins_800ExtraBold",
     marginTop: 3,
   },
 
@@ -931,13 +1198,26 @@ const styles = StyleSheet.create({
   suggestionChip: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: 9,
     minHeight: 45,
     borderRadius: 15,
-    paddingHorizontal: 13,
+    paddingHorizontal: 11,
     paddingVertical: 10,
     backgroundColor: "#FFFFFF",
     borderWidth: 1,
+    shadowColor: "#0F172A",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 1,
+  },
+
+  suggestionIconDot: {
+    width: 24,
+    height: 24,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
   },
 
   suggestionText: {
@@ -980,9 +1260,28 @@ const styles = StyleSheet.create({
 
   messageBubble: {
     maxWidth: "84%",
+  },
+
+  bubbleFill: {
     borderRadius: 18,
     paddingHorizontal: 14,
     paddingVertical: 11,
+  },
+
+  userBubbleShadow: {
+    shadowColor: "#0F172A",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+
+  assistantBubbleShadow: {
+    shadowColor: "#0F172A",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 1,
   },
 
   userBubble: {
@@ -1053,11 +1352,9 @@ const styles = StyleSheet.create({
     marginTop: 11,
     borderRadius: 13,
     padding: 11,
-    backgroundColor: "#F8FAFC",
   },
 
   sourceTitle: {
-    color: "#475569",
     fontSize: 9,
     fontFamily: "Poppins_700Bold",
   },
@@ -1105,7 +1402,18 @@ const styles = StyleSheet.create({
   typingBubble: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 9,
+    gap: 10,
+  },
+
+  typingDots: {
+    flexDirection: "row",
+    gap: 4,
+  },
+
+  typingDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
   },
 
   typingText: {
@@ -1166,6 +1474,11 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.18,
+    shadowRadius: 6,
+    elevation: 3,
   },
 
   inputError: {

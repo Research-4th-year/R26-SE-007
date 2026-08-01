@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import {
   Animated,
+  Easing,
   Pressable,
   SafeAreaView,
   ScrollView,
@@ -59,6 +60,24 @@ export default function HarvestResultScreen() {
   const aiPredictedPrice = toNumber(params.aiPredictedPrice);
   const harvestScore = toNumber(params.harvestScore);
 
+  const matchingPaddyDemands =
+  toNumber(params.matchingPaddyDemands) ?? 0;
+
+const quantityCompatibleDemands =
+  toNumber(params.quantityCompatibleDemands) ?? 0;
+
+const sameDistrictDemands =
+  toNumber(params.sameDistrictDemands) ?? 0;
+
+const normalizedMarketStatus =
+  params.marketStatus
+    ?.trim()
+    .toUpperCase();
+
+const canFindMatchingMillers =
+  Boolean(params.harvestId) &&
+  normalizedMarketStatus !== "LOW_DEMAND";
+
   const priceDifference =
     toNumber(params.priceDifference) ??
     (aiPredictedPrice !== null && expectedPrice !== null
@@ -82,14 +101,72 @@ export default function HarvestResultScreen() {
   // Entrance animation — matches the fade/rise used across the app
   const fade = useRef(new Animated.Value(0)).current;
   const rise = useRef(new Animated.Value(14)).current;
+  const matchPulse = useRef(new Animated.Value(1)).current;
+  const matchGlow = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (!fontsLoaded) return;
+
     Animated.parallel([
-      Animated.timing(fade, { toValue: 1, duration: 400, useNativeDriver: true }),
-      Animated.timing(rise, { toValue: 0, duration: 400, useNativeDriver: true }),
+      Animated.timing(fade, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+      Animated.timing(rise, {
+        toValue: 0,
+        duration: 400,
+        useNativeDriver: true,
+      }),
     ]).start();
-  }, [fontsLoaded]);
+  }, [fontsLoaded, fade, rise]);
+
+  useEffect(() => {
+    if (!canFindMatchingMillers) {
+      matchPulse.setValue(1);
+      matchGlow.setValue(0);
+      return;
+    }
+
+    const pulseAnimation = Animated.loop(
+      Animated.sequence([
+        Animated.parallel([
+          Animated.timing(matchPulse, {
+            toValue: 1.015,
+            duration: 900,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+          Animated.timing(matchGlow, {
+            toValue: 1,
+            duration: 900,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: false,
+          }),
+        ]),
+        Animated.parallel([
+          Animated.timing(matchPulse, {
+            toValue: 1,
+            duration: 900,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+          Animated.timing(matchGlow, {
+            toValue: 0,
+            duration: 900,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: false,
+          }),
+        ]),
+      ]),
+    );
+
+    pulseAnimation.start();
+
+    return () => {
+      pulseAnimation.stop();
+    };
+  }, [canFindMatchingMillers, matchGlow, matchPulse]);
 
   if (!fontsLoaded) return null;
 
@@ -234,7 +311,11 @@ export default function HarvestResultScreen() {
           <>
             <View style={styles.sectionHeaderRow}>
               <View style={styles.sectionIconBoxGreen}>
-                <Ionicons name="speedometer-outline" size={16} color="#15803D" />
+                <Ionicons
+                  name="speedometer-outline"
+                  size={16}
+                  color="#15803D"
+                />
               </View>
               <Text style={styles.sectionTitle}>Harvest score</Text>
             </View>
@@ -287,25 +368,114 @@ export default function HarvestResultScreen() {
         </View>
 
         <View style={styles.recommendationCard}>
-          <View style={styles.recommendationIcon}>
-            <Ionicons name="bulb-outline" size={26} color="#B45309" />
+          <View style={styles.recommendationHeader}>
+            <View style={styles.recommendationIcon}>
+              <Ionicons name="bulb-outline" size={25} color="#B45309" />
+            </View>
+
+            <View style={styles.recommendationHeadingText}>
+              <Text style={styles.recommendationTitle}>Suggested action</Text>
+              <Text style={styles.recommendationEyebrow}>AI MARKET GUIDANCE</Text>
+            </View>
           </View>
 
-          <View style={styles.recommendationContent}>
-            <Text style={styles.recommendationTitle}>Suggested action</Text>
+          <Text style={styles.recommendationText}>{recommendation}</Text>
 
-            <Text style={styles.recommendationText}>{recommendation}</Text>
+          {sinhalaRecommendation ? (
+            <>
+              <View style={styles.recommendationDivider} />
 
-            {sinhalaRecommendation ? (
-              <>
-                <View style={styles.recommendationDivider} />
+              <Text style={styles.sinhalaRecommendation}>
+                {sinhalaRecommendation}
+              </Text>
+            </>
+          ) : null}
 
-                <Text style={styles.sinhalaRecommendation}>
-                  {sinhalaRecommendation}
-                </Text>
-              </>
-            ) : null}
-          </View>
+          {canFindMatchingMillers ? (
+            <Animated.View
+              style={[
+                styles.matchOpportunityPanel,
+                {
+                  transform: [{ scale: matchPulse }],
+                  borderColor: matchGlow.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: ["#FDE68A", "#F59E0B"],
+                  }),
+                },
+              ]}
+            >
+              <View style={styles.matchOpportunityHeader}>
+                <View style={styles.matchOpportunityIcon}>
+                  <Ionicons name="sparkles" size={19} color="#B45309" />
+                </View>
+
+                <View style={styles.matchOpportunityText}>
+                  <View style={styles.matchOpportunityTitleRow}>
+                    <Text style={styles.matchOpportunityTitle}>
+                      Matching opportunities found
+                    </Text>
+
+                    {matchingPaddyDemands > 0 ? (
+                      <View style={styles.matchOpportunityCount}>
+                        <Text style={styles.matchOpportunityCountText}>
+                          {matchingPaddyDemands}
+                        </Text>
+                      </View>
+                    ) : null}
+                  </View>
+
+                  <Text style={styles.matchOpportunityDescription}>
+                    {matchingPaddyDemands > 0
+                      ? `${matchingPaddyDemands} open Miller demand${
+                          matchingPaddyDemands === 1 ? "" : "s"
+                        } currently match this harvest`
+                      : "Search current Miller demands that match this harvest"}
+                    {sameDistrictDemands > 0
+                      ? ` · ${sameDistrictDemands} in your district`
+                      : ""}
+                  </Text>
+                </View>
+              </View>
+
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Find matching millers"
+                onPress={() =>
+                  router.push({
+                    pathname: "/(c03-marketplace)/(farmer)/matched-millers",
+                    params: {
+                      harvestId: params.harvestId,
+                    },
+                  })
+                }
+                style={({ pressed }) => [
+                  styles.matchMillersButtonShadow,
+                  pressed && styles.matchButtonPressed,
+                ]}
+              >
+                <LinearGradient
+                  colors={["#F59E0B", "#B45309"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.matchMillersButton}
+                >
+                  <View style={styles.matchButtonIcon}>
+                    <Ionicons
+                      name="git-compare-outline"
+                      size={18}
+                      color="#92400E"
+                    />
+                  </View>
+
+                  <Text style={styles.matchMillersButtonText}>
+                    Find Matching Millers
+                  </Text>
+
+                  <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
+                </LinearGradient>
+              </Pressable>
+            </Animated.View>
+          ) : null}
         </View>
 
         {params.marketStatus ? (
@@ -807,31 +977,35 @@ const styles = StyleSheet.create({
   },
 
   recommendationCard: {
-    flexDirection: "row",
-    gap: 13,
     borderRadius: 21,
-    padding: 17,
+    padding: 18,
     backgroundColor: "#FFFBEB",
     borderWidth: 1,
     borderColor: "#FDE68A",
     marginBottom: 16,
   },
 
+  recommendationHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 11,
+  },
+
   recommendationIcon: {
-    width: 48,
-    height: 48,
+    width: 46,
+    height: 46,
     borderRadius: 15,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "#FFFFFF",
-    shadowColor: "#000",
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
+    shadowColor: "#92400E",
+    shadowOpacity: 0.08,
+    shadowRadius: 7,
+    shadowOffset: { width: 0, height: 3 },
     elevation: 2,
   },
 
-  recommendationContent: {
+  recommendationHeadingText: {
     flex: 1,
   },
 
@@ -841,12 +1015,20 @@ const styles = StyleSheet.create({
     fontFamily: "Poppins_800ExtraBold",
   },
 
+  recommendationEyebrow: {
+    color: "#B45309",
+    fontSize: 8,
+    fontFamily: "Poppins_700Bold",
+    letterSpacing: 0.8,
+    marginTop: 2,
+  },
+
   recommendationText: {
     color: "#78350F",
     fontSize: 11,
     fontFamily: "Poppins_500Medium",
     lineHeight: 18,
-    marginTop: 5,
+    marginTop: 14,
   },
 
   statusCard: {
@@ -942,5 +1124,117 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontFamily: "Poppins_500Medium",
     lineHeight: 21,
+  },
+
+  matchOpportunityPanel: {
+    borderRadius: 17,
+    padding: 13,
+    backgroundColor: "#FFF7DD",
+    borderWidth: 1,
+    marginTop: 16,
+    shadowColor: "#B45309",
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 2,
+  },
+
+  matchOpportunityHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+
+  matchOpportunityIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 13,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#FDE68A",
+  },
+
+  matchOpportunityText: {
+    flex: 1,
+  },
+
+  matchOpportunityTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 7,
+  },
+
+  matchOpportunityTitle: {
+    flex: 1,
+    color: "#92400E",
+    fontSize: 10.5,
+    fontFamily: "Poppins_800ExtraBold",
+  },
+
+  matchOpportunityCount: {
+    minWidth: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 6,
+    backgroundColor: "#FDE68A",
+  },
+
+  matchOpportunityCountText: {
+    color: "#92400E",
+    fontSize: 8.5,
+    fontFamily: "Poppins_800ExtraBold",
+  },
+
+  matchOpportunityDescription: {
+    color: "#92400E",
+    fontSize: 8.5,
+    lineHeight: 14,
+    fontFamily: "Poppins_500Medium",
+    marginTop: 3,
+  },
+
+  matchMillersButtonShadow: {
+    borderRadius: 14,
+    marginTop: 12,
+    shadowColor: "#92400E",
+    shadowOpacity: 0.22,
+    shadowRadius: 9,
+    shadowOffset: { width: 0, height: 5 },
+    elevation: 4,
+  },
+
+  matchMillersButton: {
+    minHeight: 49,
+    borderRadius: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 9,
+    paddingHorizontal: 12,
+  },
+
+  matchButtonIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FEF3C7",
+  },
+
+  matchMillersButtonText: {
+    flex: 1,
+    color: "#FFFFFF",
+    fontSize: 11,
+    fontFamily: "Poppins_800ExtraBold",
+    textAlign: "center",
+  },
+
+  matchButtonPressed: {
+    opacity: 0.9,
+    transform: [{ scale: 0.975 }],
   },
 });

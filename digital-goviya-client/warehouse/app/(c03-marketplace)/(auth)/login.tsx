@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -26,6 +26,43 @@ import {
 import { useMarketplaceAuth } from "@/hooks/c03-marketplace/useMarketplaceAuth";
 import { MarketplaceUserRole } from "@/types/c03-marketplace/auth.types";
 
+// ---------------------------------------------------------------------------
+// Role themes
+//
+// Farmer stays exactly as before: dark paddy-field green with a gold accent.
+// Miller gets its own coherent theme: dark toasted-grain amber/brown, so the
+// whole page (not just the role card) reads as "miller" once selected.
+// ---------------------------------------------------------------------------
+type LoginTheme = {
+  backgroundGradient: [string, string, string];
+  accent: string;
+  accentSoft: string;
+  buttonGradient: [string, string];
+  buttonShadow: string;
+  ringBackground: string;
+  ringBorder: string;
+};
+
+const FARMER_THEME: LoginTheme = {
+  backgroundGradient: ["#0A331D", "#12522E", "#0B3B22"],
+  accent: "#15803D",
+  accentSoft: "#DCFCE7",
+  buttonGradient: ["#F5C542", "#D97706"],
+  buttonShadow: "#D97706",
+  ringBackground: "rgba(245,197,66,0.16)",
+  ringBorder: "rgba(245,197,66,0.4)",
+};
+
+const MILLER_THEME: LoginTheme = {
+  backgroundGradient: ["#3B2408", "#7A4708", "#4A2A08"],
+  accent: "#C2760C",
+  accentSoft: "#FBEBD2",
+  buttonGradient: ["#FCD34D", "#92400E"],
+  buttonShadow: "#92400E",
+  ringBackground: "rgba(252,211,77,0.18)",
+  ringBorder: "rgba(252,211,77,0.42)",
+};
+
 export default function MarketplaceLoginScreen() {
   const { signIn } = useMarketplaceAuth();
 
@@ -36,7 +73,7 @@ export default function MarketplaceLoginScreen() {
     useState("farmer@digitalgoviya.lk");
 
   const [password, setPassword] =
-    useState("Demo123");
+    useState("Demo1234");
 
   const [showPassword, setShowPassword] =
     useState(false);
@@ -50,6 +87,11 @@ export default function MarketplaceLoginScreen() {
     Poppins_600SemiBold,
     Poppins_500Medium,
   });
+
+  const theme: LoginTheme = useMemo(
+    () => (role === "miller" ? MILLER_THEME : FARMER_THEME),
+    [role]
+  );
 
   function selectRole(
   selectedRole: MarketplaceUserRole
@@ -110,7 +152,7 @@ export default function MarketplaceLoginScreen() {
 
   return (
     <LinearGradient
-      colors={["#0A331D", "#12522E", "#0B3B22"]}
+      colors={theme.backgroundGradient}
       start={{ x: 0, y: 0 }}
       end={{ x: 0, y: 1 }}
       style={styles.screen}
@@ -141,12 +183,20 @@ export default function MarketplaceLoginScreen() {
             </Pressable>
 
             <View style={styles.hero}>
-              <View style={styles.logoRing}>
+              <View
+                style={[
+                  styles.logoRing,
+                  {
+                    backgroundColor: theme.ringBackground,
+                    borderColor: theme.ringBorder,
+                  },
+                ]}
+              >
                 <View style={styles.logoCircle}>
                   <Ionicons
                     name="storefront"
                     size={30}
-                    color="#15803D"
+                    color={theme.accent}
                   />
                 </View>
               </View>
@@ -182,6 +232,8 @@ export default function MarketplaceLoginScreen() {
                   subtitle="Sell paddy"
                   icon="leaf"
                   selected={role === "farmer"}
+                  accent={FARMER_THEME.accent}
+                  accentSoft={FARMER_THEME.accentSoft}
                   onPress={() => selectRole("farmer")}
                 />
 
@@ -190,6 +242,8 @@ export default function MarketplaceLoginScreen() {
                   subtitle="Purchase paddy"
                   icon="business"
                   selected={role === "miller"}
+                  accent={MILLER_THEME.accent}
+                  accentSoft={MILLER_THEME.accentSoft}
                   onPress={() => selectRole("miller")}
                 />
               </View>
@@ -197,11 +251,16 @@ export default function MarketplaceLoginScreen() {
               <Text style={styles.label}>Email address</Text>
 
               <View style={styles.inputContainer}>
-                <View style={styles.inputIconBox}>
+                <View
+                  style={[
+                    styles.inputIconBox,
+                    { backgroundColor: theme.accentSoft },
+                  ]}
+                >
                   <Ionicons
                     name="mail-outline"
                     size={17}
-                    color="#15803D"
+                    color={theme.accent}
                   />
                 </View>
 
@@ -219,11 +278,16 @@ export default function MarketplaceLoginScreen() {
               <Text style={styles.label}>Password</Text>
 
               <View style={styles.inputContainer}>
-                <View style={styles.inputIconBox}>
+                <View
+                  style={[
+                    styles.inputIconBox,
+                    { backgroundColor: theme.accentSoft },
+                  ]}
+                >
                   <Ionicons
                     name="lock-closed-outline"
                     size={17}
-                    color="#15803D"
+                    color={theme.accent}
                   />
                 </View>
 
@@ -263,7 +327,7 @@ export default function MarketplaceLoginScreen() {
 
                 <Text style={styles.demoText}>
                   Demo credentials are already filled.
-                  Password: Demo123
+                  Password: Demo1234
                 </Text>
               </View>
 
@@ -272,12 +336,13 @@ export default function MarketplaceLoginScreen() {
                 disabled={isSubmitting}
                 style={({ pressed }) => [
                   styles.loginShadow,
+                  { shadowColor: theme.buttonShadow },
                   pressed && styles.loginPressed,
                   isSubmitting && styles.loginDisabled,
                 ]}
               >
                 <LinearGradient
-                  colors={["#F5C542", "#D97706"]}
+                  colors={theme.buttonGradient}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                   style={styles.loginButton}
@@ -319,6 +384,8 @@ interface RoleCardProps {
   subtitle: string;
   icon: keyof typeof Ionicons.glyphMap;
   selected: boolean;
+  accent: string;
+  accentSoft: string;
   onPress: () => void;
 }
 
@@ -327,33 +394,39 @@ function RoleCard({
   subtitle,
   icon,
   selected,
+  accent,
+  accentSoft,
   onPress,
 }: RoleCardProps) {
   return (
     <Pressable
       style={[
         styles.roleCard,
-        selected && styles.roleCardSelected,
+        selected && [
+          styles.roleCardSelected,
+          { borderColor: accent, backgroundColor: accentSoft },
+        ],
       ]}
       onPress={onPress}
     >
       <View
         style={[
           styles.roleIcon,
-          selected && styles.roleIconSelected,
+          { backgroundColor: accentSoft },
+          selected && { backgroundColor: accent },
         ]}
       >
         <Ionicons
           name={icon}
           size={22}
-          color={selected ? "#FFFFFF" : "#15803D"}
+          color={selected ? "#FFFFFF" : accent}
         />
       </View>
 
       <Text
         style={[
           styles.roleTitle,
-          selected && styles.roleTitleSelected,
+          selected && { color: accent },
         ]}
       >
         {title}
@@ -364,7 +437,12 @@ function RoleCard({
       </Text>
 
       {selected && (
-        <View style={styles.selectedCheck}>
+        <View
+          style={[
+            styles.selectedCheck,
+            { backgroundColor: accent },
+          ]}
+        >
           <Ionicons
             name="checkmark"
             size={12}
@@ -420,9 +498,7 @@ const styles = StyleSheet.create({
     height: 84,
     borderRadius: 42,
     padding: 4,
-    backgroundColor: "rgba(245,197,66,0.16)",
     borderWidth: 1,
-    borderColor: "rgba(245,197,66,0.4)",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -526,8 +602,7 @@ const styles = StyleSheet.create({
   },
 
   roleCardSelected: {
-    borderColor: "#15803D",
-    backgroundColor: "#F0FDF4",
+    borderWidth: 1.4,
   },
 
   roleIcon: {
@@ -536,22 +611,13 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#DCFCE7",
     marginBottom: 10,
-  },
-
-  roleIconSelected: {
-    backgroundColor: "#15803D",
   },
 
   roleTitle: {
     color: "#374151",
     fontSize: 13.5,
     fontFamily: "Poppins_700Bold",
-  },
-
-  roleTitleSelected: {
-    color: "#14532D",
   },
 
   roleSubtitle: {
@@ -570,7 +636,6 @@ const styles = StyleSheet.create({
     borderRadius: 9,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#15803D",
   },
 
   label: {
@@ -597,7 +662,6 @@ const styles = StyleSheet.create({
     width: 30,
     height: 30,
     borderRadius: 9,
-    backgroundColor: "#DCFCE7",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -629,7 +693,6 @@ const styles = StyleSheet.create({
 
   loginShadow: {
     borderRadius: 15,
-    shadowColor: "#D97706",
     shadowOpacity: 0.3,
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 5 },

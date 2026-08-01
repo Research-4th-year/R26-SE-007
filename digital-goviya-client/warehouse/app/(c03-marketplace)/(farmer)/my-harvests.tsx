@@ -365,6 +365,38 @@ function HarvestCard({ harvest }: HarvestCardProps) {
 
         <Ionicons name="chevron-forward" size={18} color="#15803D" />
       </View>
+
+      <Pressable
+  disabled={
+    harvest.status !== "available"
+  }
+  onPress={() =>
+    router.push({
+      pathname:
+        "/(c03-marketplace)/(farmer)/matched-millers",
+
+      params: {
+        harvestId: harvest._id,
+      },
+    })
+  }
+  style={({ pressed }) => [
+    styles.matchButton,
+    harvest.status !== "available" &&
+      styles.matchButtonDisabled,
+    pressed && styles.pressed,
+  ]}
+>
+  <Ionicons
+    name="people-outline"
+    size={18}
+    color="#FFFFFF"
+  />
+
+  <Text style={styles.matchButtonText}>
+    Find Matching Millers
+  </Text>
+</Pressable>
     </Pressable>
   );
 }
@@ -1060,4 +1092,25 @@ const styles = StyleSheet.create({
     opacity: 0.82,
     transform: [{ scale: 0.97 }],
   },
+
+  matchButton: {
+  minHeight: 46,
+  borderRadius: 14,
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: 8,
+  backgroundColor: "#15803D",
+  marginTop: 14,
+},
+
+matchButtonDisabled: {
+  opacity: 0.45,
+},
+
+matchButtonText: {
+  color: "#FFFFFF",
+  fontSize: 11,
+  fontWeight: "800",
+},
 });

@@ -327,14 +327,9 @@ export default function FarmerHomeScreen() {
 
           <ActionCard
             icon="people-outline"
-            title="Matched Millers"
-            subtitle="View suitable buyers"
-            onPress={() => {
-              Alert.alert(
-                "Matching",
-                "The matching results screen will be connected next.",
-              );
-            }}
+            title="Match Requests"
+            subtitle="Track Miller responses"
+            onPress={() => router.push("./my-match-requests")}
           />
 
           <ActionCard

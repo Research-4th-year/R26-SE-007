@@ -1,38 +1,47 @@
 const express = require("express");
 
 const {
-    createSelections,
-    respondToSelection,
-    getMillerSelections,
-    getFarmerSelections
+  authenticate,
+  authorizeRoles,
+} = require("../middlewares/auth.middleware");
+
+const {
+  createSelections,
+  respondToSelection,
+  getMillerSelections,
+  getFarmerSelections,
 } = require(
-    "../controllers/matchSelection.controller"
+  "../controllers/matchSelection.controller"
 );
 
 const router = express.Router();
 
-// Farmer selects one or multiple miller demands
 router.post(
-    "/create",
-    createSelections
+  "/create",
+  authenticate,
+  authorizeRoles("farmer"),
+  createSelections
 );
 
-// Miller accepts or rejects
 router.patch(
-    "/:selectionId/respond",
-    respondToSelection
+  "/:selectionId/respond",
+  authenticate,
+  authorizeRoles("miller"),
+  respondToSelection
 );
 
-// Get selections received by miller
 router.get(
-    "/miller/:millerId",
-    getMillerSelections
+  "/miller",
+  authenticate,
+  authorizeRoles("miller"),
+  getMillerSelections
 );
 
-// Get selections sent by farmer
 router.get(
-    "/farmer/:farmerId",
-    getFarmerSelections
+  "/farmer",
+  authenticate,
+  authorizeRoles("farmer"),
+  getFarmerSelections
 );
 
 module.exports = router;

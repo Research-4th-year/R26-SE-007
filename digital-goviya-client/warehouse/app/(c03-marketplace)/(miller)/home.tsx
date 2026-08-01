@@ -323,14 +323,9 @@ export default function MillerHomeScreen() {
 
           <ActionCard
             icon="leaf-outline"
-            title="Matched Harvests"
-            subtitle="Explore suitable sellers"
-            onPress={() => {
-              Alert.alert(
-                "Matching",
-                "The matched harvest screen will be connected next.",
-              );
-            }}
+            title="Match Requests"
+            subtitle="Review Farmer requests"
+            onPress={() => router.push("./received-match-requests")}
           />
 
           <ActionCard
