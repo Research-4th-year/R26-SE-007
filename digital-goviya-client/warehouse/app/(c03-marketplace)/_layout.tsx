@@ -1,21 +1,35 @@
 import { Stack } from "expo-router";
+import {
+  StyleSheet,
+  View,
+} from "react-native";
 
 import {
   MarketplaceAuthProvider,
 } from "@/contexts/c03-marketplace/MarketplaceAuthContext";
 
+import {
+  FloatingRagBot,
+} from "@/components/c03-marketplace/FloatingRagBot";
+
 export default function MarketplaceLayout() {
   return (
     <MarketplaceAuthProvider>
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          animation: "slide_from_right",
-          contentStyle: {
-            backgroundColor: "#F8FAF8",
-          },
-        }}
-      />
+      <View style={styles.container}>
+        <Stack
+          screenOptions={{
+            headerShown: false,
+          }}
+        />
+
+        <FloatingRagBot />
+      </View>
     </MarketplaceAuthProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+});
