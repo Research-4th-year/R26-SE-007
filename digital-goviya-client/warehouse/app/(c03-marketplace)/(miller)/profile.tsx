@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import {
   Alert,
+  Animated,
   Pressable,
   SafeAreaView,
   ScrollView,
@@ -9,6 +10,15 @@ import {
   Text,
   View,
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { useEffect, useRef } from "react";
+import {
+  useFonts,
+  Poppins_800ExtraBold,
+  Poppins_700Bold,
+  Poppins_600SemiBold,
+  Poppins_500Medium,
+} from "@expo-google-fonts/poppins";
 
 import type {
   MillerProfile,
@@ -16,7 +26,7 @@ import type {
 
 import { useMarketplaceAuth } from "@/hooks/c03-marketplace/useMarketplaceAuth";
 
-export default function FarmerProfileScreen() {
+export default function MillerProfileScreen() {
   const { user, profile, signOut } = useMarketplaceAuth();
 
   const millerProfile =
@@ -37,12 +47,43 @@ export default function FarmerProfileScreen() {
     }
   }
 
+  const [fontsLoaded] = useFonts({
+    Poppins_800ExtraBold,
+    Poppins_700Bold,
+    Poppins_600SemiBold,
+    Poppins_500Medium,
+  });
+
+  // Entrance animation — matches the fade/rise used across the app
+  const fade = useRef(new Animated.Value(0)).current;
+  const rise = useRef(new Animated.Value(14)).current;
+
+  useEffect(() => {
+    if (!fontsLoaded) return;
+    Animated.parallel([
+      Animated.timing(fade, { toValue: 1, duration: 400, useNativeDriver: true }),
+      Animated.timing(rise, { toValue: 0, duration: 400, useNativeDriver: true }),
+    ]).start();
+  }, [fontsLoaded]);
+
+  if (!fontsLoaded) return null;
+
   return (
     <SafeAreaView style={styles.screen}>
-      <ScrollView contentContainerStyle={styles.content}>
+      <Animated.ScrollView
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+        style={{ opacity: fade, transform: [{ translateY: rise }] }}
+      >
         <View style={styles.header}>
-          <Pressable style={styles.headerButton} onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={21} color="#1F2937" />
+          <Pressable
+            style={({ pressed }) => [
+              styles.headerButton,
+              pressed && styles.pressed,
+            ]}
+            onPress={() => router.back()}
+          >
+            <Ionicons name="arrow-back" size={21} color="#16241C" />
           </Pressable>
 
           <Text style={styles.headerTitle}>Miller Profile</Text>
@@ -50,21 +91,36 @@ export default function FarmerProfileScreen() {
           <View style={styles.headerPlaceholder} />
         </View>
 
-        <View style={styles.profileCard}>
-          <View style={styles.avatar}>
-            <Ionicons name="business" size={34} color="#FFFFFF" />
-          </View>
+        <View style={styles.profileCardShadow}>
+          <LinearGradient
+            colors={["#5C3009", "#78350F", "#92400E"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.profileCard}
+          >
+            <View style={styles.avatarRing}>
+              <View style={styles.avatar}>
+                <Ionicons name="business" size={30} color="#FFFFFF" />
+              </View>
+            </View>
 
-          <Text style={styles.name}>{user?.fullName}</Text>
+            <Text style={styles.name}>{user?.fullName}</Text>
 
-          <View style={styles.roleBadge}>
-            <Text style={styles.roleText}>VERIFIED MILLER</Text>
-          </View>
+            <View style={styles.roleBadge}>
+              <Ionicons name="shield-checkmark" size={11} color="#78350F" />
+              <Text style={styles.roleText}>VERIFIED MILLER</Text>
+            </View>
 
-          <Text style={styles.email}>{user?.email}</Text>
+            <Text style={styles.email}>{user?.email}</Text>
+          </LinearGradient>
         </View>
 
-        <Text style={styles.sectionTitle}>Personal information</Text>
+        <View style={styles.sectionHeaderRow}>
+          <View style={styles.sectionIconBox}>
+            <Ionicons name="person-outline" size={16} color="#92400E" />
+          </View>
+          <Text style={styles.sectionTitle}>Personal information</Text>
+        </View>
 
         <View style={styles.detailsCard}>
           <ProfileRow
@@ -105,12 +161,18 @@ export default function FarmerProfileScreen() {
           />
         </View>
 
-        <Pressable style={styles.logoutButton} onPress={handleLogout}>
+        <Pressable
+          style={({ pressed }) => [
+            styles.logoutButton,
+            pressed && styles.pressed,
+          ]}
+          onPress={handleLogout}
+        >
           <Ionicons name="log-out-outline" size={20} color="#B91C1C" />
 
           <Text style={styles.logoutText}>Sign out</Text>
         </Pressable>
-      </ScrollView>
+      </Animated.ScrollView>
     </SafeAreaView>
   );
 }
@@ -126,7 +188,7 @@ function ProfileRow({ icon, label, value, isLast }: ProfileRowProps) {
   return (
     <View style={[styles.profileRow, isLast && styles.profileRowLast]}>
       <View style={styles.rowIcon}>
-        <Ionicons name={icon} size={19} color="#15803D" />
+        <Ionicons name={icon} size={19} color="#92400E" />
       </View>
 
       <View style={styles.rowText}>
@@ -137,10 +199,15 @@ function ProfileRow({ icon, label, value, isLast }: ProfileRowProps) {
   );
 }
 
+const CREAM = "#FBF8F1";
+const CARD_BORDER = "#ECE6D6";
+const INK = "#16241C";
+const INK_MUTED = "#7A7364";
+
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: "#F8FAF8",
+    backgroundColor: CREAM,
   },
 
   content: {
@@ -162,24 +229,51 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: CARD_BORDER,
+    shadowColor: "#5C4A24",
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
   },
 
   headerTitle: {
-    color: "#1F2937",
+    color: INK,
     fontSize: 17,
-    fontWeight: "800",
+    fontFamily: "Poppins_800ExtraBold",
   },
 
   headerPlaceholder: {
     width: 42,
   },
 
+  profileCardShadow: {
+    borderRadius: 26,
+    marginBottom: 25,
+    shadowColor: "#78350F",
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 6,
+  },
+
   profileCard: {
     alignItems: "center",
-    borderRadius: 24,
-    padding: 24,
-    backgroundColor: "#14532D",
-    marginBottom: 25,
+    borderRadius: 26,
+    padding: 26,
+  },
+
+  avatarRing: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    padding: 5,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255,255,255,0.1)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.22)",
   },
 
   avatar: {
@@ -194,36 +288,55 @@ const styles = StyleSheet.create({
   name: {
     color: "#FFFFFF",
     fontSize: 21,
-    fontWeight: "800",
-    marginTop: 13,
+    fontFamily: "Poppins_800ExtraBold",
+    marginTop: 14,
   },
 
   roleBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
     borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingHorizontal: 11,
+    paddingVertical: 5,
     backgroundColor: "#FDE68A",
-    marginTop: 7,
+    marginTop: 9,
   },
 
   roleText: {
-    color: "#854D0E",
+    color: "#78350F",
     fontSize: 9,
-    fontWeight: "800",
+    fontFamily: "Poppins_800ExtraBold",
     letterSpacing: 0.8,
   },
 
   email: {
-    color: "rgba(255,255,255,0.65)",
+    color: "rgba(255,255,255,0.68)",
     fontSize: 12,
-    marginTop: 9,
+    fontFamily: "Poppins_500Medium",
+    marginTop: 10,
+  },
+
+  sectionHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 12,
+  },
+
+  sectionIconBox: {
+    width: 28,
+    height: 28,
+    borderRadius: 9,
+    backgroundColor: "#FEF3C7",
+    alignItems: "center",
+    justifyContent: "center",
   },
 
   sectionTitle: {
-    color: "#1F2937",
+    color: INK,
     fontSize: 15,
-    fontWeight: "800",
-    marginBottom: 12,
+    fontFamily: "Poppins_800ExtraBold",
   },
 
   detailsCard: {
@@ -231,7 +344,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     backgroundColor: "#FFFFFF",
     borderWidth: 1,
-    borderColor: "#EEF0ED",
+    borderColor: CARD_BORDER,
+    shadowColor: "#5C4A24",
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 2,
   },
 
   profileRow: {
@@ -240,7 +358,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "#F1F5F1",
+    borderBottomColor: "#F5F2E8",
   },
 
   profileRowLast: {
@@ -253,7 +371,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#DCFCE7",
+    backgroundColor: "#FEF3C7",
   },
 
   rowText: {
@@ -261,14 +379,15 @@ const styles = StyleSheet.create({
   },
 
   rowLabel: {
-    color: "#6B7280",
+    color: INK_MUTED,
     fontSize: 10,
+    fontFamily: "Poppins_500Medium",
   },
 
   rowValue: {
-    color: "#1F2937",
+    color: INK,
     fontSize: 13,
-    fontWeight: "700",
+    fontFamily: "Poppins_700Bold",
     marginTop: 3,
   },
 
@@ -288,6 +407,11 @@ const styles = StyleSheet.create({
   logoutText: {
     color: "#B91C1C",
     fontSize: 13,
-    fontWeight: "800",
+    fontFamily: "Poppins_800ExtraBold",
+  },
+
+  pressed: {
+    opacity: 0.84,
+    transform: [{ scale: 0.97 }],
   },
 });
