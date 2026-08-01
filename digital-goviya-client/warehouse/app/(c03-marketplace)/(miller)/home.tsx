@@ -1,10 +1,7 @@
 import { useCallback, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import {
-  router,
-  useFocusEffect,
-} from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import {
   ActivityIndicator,
   Alert,
@@ -24,32 +21,22 @@ import {
   Poppins_500Medium,
 } from "@expo-google-fonts/poppins";
 
-import {
-  useMarketplaceAuth,
-} from "@/hooks/c03-marketplace/useMarketplaceAuth";
+import { useMarketplaceAuth } from "@/hooks/c03-marketplace/useMarketplaceAuth";
 
-import {
-  dashboardService,
-} from "@/services/c03-marketplace/dashboard.service";
+import { dashboardService } from "@/services/c03-marketplace/dashboard.service";
 
-import type {
-  MillerDashboardData,
-} from "@/types/c03-marketplace/dashboard.types";
+import type { MillerDashboardData } from "@/types/c03-marketplace/dashboard.types";
 
 export default function MillerHomeScreen() {
   const { user } = useMarketplaceAuth();
 
-  const [dashboard, setDashboard] =
-    useState<MillerDashboardData | null>(null);
+  const [dashboard, setDashboard] = useState<MillerDashboardData | null>(null);
 
-  const [loading, setLoading] =
-    useState(true);
+  const [loading, setLoading] = useState(true);
 
-  const [refreshing, setRefreshing] =
-    useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const [errorMessage, setErrorMessage] =
-    useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const [fontsLoaded] = useFonts({
     Poppins_800ExtraBold,
@@ -59,9 +46,7 @@ export default function MillerHomeScreen() {
   });
 
   const loadDashboard = useCallback(
-    async (
-      showRefreshIndicator = false
-    ): Promise<void> => {
+    async (showRefreshIndicator = false): Promise<void> => {
       try {
         setErrorMessage(null);
 
@@ -71,34 +56,29 @@ export default function MillerHomeScreen() {
           setLoading(true);
         }
 
-        const response =
-          await dashboardService
-            .getMillerDashboard();
+        const response = await dashboardService.getMillerDashboard();
 
         setDashboard(response.data);
       } catch (error) {
-        console.error(
-          "Miller dashboard loading failed:",
-          error
-        );
+        console.error("Miller dashboard loading failed:", error);
 
         setErrorMessage(
           error instanceof Error
             ? error.message
-            : "Unable to load marketplace analytics."
+            : "Unable to load marketplace analytics.",
         );
       } finally {
         setLoading(false);
         setRefreshing(false);
       }
     },
-    []
+    [],
   );
 
   useFocusEffect(
     useCallback(() => {
       void loadDashboard();
-    }, [loadDashboard])
+    }, [loadDashboard]),
   );
 
   if (!fontsLoaded) {
@@ -107,8 +87,7 @@ export default function MillerHomeScreen() {
 
   const summary = dashboard?.summary;
 
-  const analytics =
-    dashboard?.marketAnalytics;
+  const analytics = dashboard?.marketAnalytics;
 
   return (
     <SafeAreaView style={styles.screen}>
@@ -118,9 +97,7 @@ export default function MillerHomeScreen() {
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
-            onRefresh={() =>
-              void loadDashboard(true)
-            }
+            onRefresh={() => void loadDashboard(true)}
             tintColor="#92400E"
             colors={["#92400E"]}
           />
@@ -129,28 +106,17 @@ export default function MillerHomeScreen() {
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerText}>
-            <Text style={styles.greeting}>
-              Good evening,
-            </Text>
+            <Text style={styles.greeting}>Good evening,</Text>
 
-            <Text
-              style={styles.userName}
-              numberOfLines={1}
-            >
+            <Text style={styles.userName} numberOfLines={1}>
               {user?.fullName ?? "Miller"}
             </Text>
 
             <View style={styles.locationRow}>
-              <Ionicons
-                name="location-outline"
-                size={13}
-                color="#7A7364"
-              />
+              <Ionicons name="location-outline" size={13} color="#7A7364" />
 
               <Text style={styles.locationText}>
-                {dashboard?.miller.district ??
-                  user?.district ??
-                  "Sri Lanka"}
+                {dashboard?.miller.district ?? user?.district ?? "Sri Lanka"}
               </Text>
             </View>
           </View>
@@ -160,28 +126,17 @@ export default function MillerHomeScreen() {
             accessibilityLabel="Open profile"
             style={({ pressed }) => [
               styles.profileButton,
-              pressed &&
-                styles.profileButtonPressed,
+              pressed && styles.profileButtonPressed,
             ]}
-            onPress={() =>
-              router.push("./profile")
-            }
+            onPress={() => router.push("./profile")}
           >
-            <Ionicons
-              name="person-outline"
-              size={21}
-              color="#92400E"
-            />
+            <Ionicons name="person-outline" size={21} color="#92400E" />
           </Pressable>
         </View>
 
         {/* Hero */}
         <LinearGradient
-          colors={[
-            "#92400E",
-            "#78350F",
-            "#5B250B",
-          ]}
+          colors={["#92400E", "#78350F", "#5B250B"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.heroCard}
@@ -189,33 +144,21 @@ export default function MillerHomeScreen() {
           <View style={styles.heroTopRow}>
             <View style={styles.heroIconRing}>
               <View style={styles.heroIcon}>
-                <Ionicons
-                  name="business"
-                  size={24}
-                  color="#92400E"
-                />
+                <Ionicons name="business" size={24} color="#92400E" />
               </View>
             </View>
 
             <View style={styles.heroStatusBadge}>
               <View style={styles.heroStatusDot} />
 
-              <Text style={styles.heroStatusText}>
-                ACTIVE BUYER
-              </Text>
+              <Text style={styles.heroStatusText}>ACTIVE BUYER</Text>
             </View>
           </View>
 
           <View style={styles.heroEyebrowPill}>
-            <Ionicons
-              name="sparkles"
-              size={11}
-              color="#FDE68A"
-            />
+            <Ionicons name="sparkles" size={11} color="#FDE68A" />
 
-            <Text style={styles.heroEyebrow}>
-              MILLER MARKETPLACE
-            </Text>
+            <Text style={styles.heroEyebrow}>MILLER MARKETPLACE</Text>
           </View>
 
           <Text style={styles.heroTitle}>
@@ -223,41 +166,27 @@ export default function MillerHomeScreen() {
           </Text>
 
           <Text style={styles.heroDescription}>
-            Publish purchasing requirements,
-            discover compatible harvests and use AI
-            agents for fair negotiation.
+            Publish purchasing requirements, discover compatible harvests and
+            use AI agents for fair negotiation.
           </Text>
 
           <Pressable
             accessibilityRole="button"
-            onPress={() =>
-              router.push("./create-demand")
-            }
+            onPress={() => router.push("./create-demand")}
             style={({ pressed }) => [
               styles.primaryShadow,
               pressed && styles.buttonPressed,
             ]}
           >
             <LinearGradient
-              colors={[
-                "#FDE68A",
-                "#F5C542",
-              ]}
+              colors={["#FDE68A", "#F5C542"]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={styles.primaryButton}
             >
-              <Ionicons
-                name="add-circle-outline"
-                size={19}
-                color="#78350F"
-              />
+              <Ionicons name="add-circle-outline" size={19} color="#78350F" />
 
-              <Text
-                style={styles.primaryButtonText}
-              >
-                Create Paddy Demand
-              </Text>
+              <Text style={styles.primaryButtonText}>Create Paddy Demand</Text>
             </LinearGradient>
           </Pressable>
         </LinearGradient>
@@ -265,29 +194,20 @@ export default function MillerHomeScreen() {
         {/* Analytics title */}
         <View style={styles.sectionHeader}>
           <View>
-            <Text style={styles.sectionTitle}>
-              Marketplace analytics
-            </Text>
+            <Text style={styles.sectionTitle}>Marketplace analytics</Text>
 
-            <Text
-              style={styles.sectionSubtitle}
-            >
+            <Text style={styles.sectionSubtitle}>
               Live overview of purchasing demand
             </Text>
           </View>
 
           {loading ? (
-            <ActivityIndicator
-              size="small"
-              color="#92400E"
-            />
+            <ActivityIndicator size="small" color="#92400E" />
           ) : (
             <View style={styles.liveBadge}>
               <View style={styles.liveDot} />
 
-              <Text style={styles.liveText}>
-                LIVE
-              </Text>
+              <Text style={styles.liveText}>LIVE</Text>
             </View>
           )}
         </View>
@@ -296,20 +216,12 @@ export default function MillerHomeScreen() {
         {errorMessage ? (
           <Pressable
             style={styles.errorCard}
-            onPress={() =>
-              void loadDashboard()
-            }
+            onPress={() => void loadDashboard()}
           >
-            <Ionicons
-              name="warning-outline"
-              size={21}
-              color="#B91C1C"
-            />
+            <Ionicons name="warning-outline" size={21} color="#B91C1C" />
 
             <View style={styles.errorTextArea}>
-              <Text style={styles.errorTitle}>
-                Analytics unavailable
-              </Text>
+              <Text style={styles.errorTitle}>Analytics unavailable</Text>
 
               <Text style={styles.errorMessage}>
                 {errorMessage} Tap to retry.
@@ -324,14 +236,7 @@ export default function MillerHomeScreen() {
             <AnalyticsMetric
               icon="document-text-outline"
               label="Total demands"
-              value={
-                loading
-                  ? "—"
-                  : String(
-                      summary?.totalDemands ??
-                        0
-                    )
-              }
+              value={loading ? "—" : String(summary?.totalDemands ?? 0)}
             />
 
             <AnalyticsMetric
@@ -340,11 +245,7 @@ export default function MillerHomeScreen() {
               value={
                 loading
                   ? "—"
-                  : formatQuantity(
-                      analytics
-                        ?.totalQuantityNeeded ??
-                        0
-                    )
+                  : formatQuantity(analytics?.totalQuantityNeeded ?? 0)
               }
             />
 
@@ -352,13 +253,7 @@ export default function MillerHomeScreen() {
               icon="cash-outline"
               label="Average offer"
               value={
-                loading
-                  ? "—"
-                  : formatPrice(
-                      analytics
-                        ?.averageOfferedPrice ??
-                        0
-                    )
+                loading ? "—" : formatPrice(analytics?.averageOfferedPrice ?? 0)
               }
             />
           </View>
@@ -369,28 +264,19 @@ export default function MillerHomeScreen() {
             <CompactMetric
               icon="radio-button-on-outline"
               label="Open"
-              value={String(
-                summary?.openDemands ?? 0
-              )}
+              value={String(summary?.openDemands ?? 0)}
             />
 
             <CompactMetric
               icon="git-compare-outline"
               label="Ready"
-              value={String(
-                summary
-                  ?.negotiationReadySelections ??
-                  0
-              )}
+              value={String(summary?.negotiationReadySelections ?? 0)}
             />
 
             <CompactMetric
               icon="chatbubbles-outline"
               label="Pending"
-              value={String(
-                summary?.pendingSelections ??
-                  0
-              )}
+              value={String(summary?.pendingSelections ?? 0)}
             />
           </View>
         </View>
@@ -398,63 +284,41 @@ export default function MillerHomeScreen() {
         {/* Demand insight */}
         <View style={styles.insightCard}>
           <View style={styles.insightIcon}>
-            <Ionicons
-              name="analytics-outline"
-              size={23}
-              color="#92400E"
-            />
+            <Ionicons name="analytics-outline" size={23} color="#92400E" />
           </View>
 
           <View style={styles.insightText}>
-            <Text style={styles.insightEyebrow}>
-              PURCHASING OVERVIEW
-            </Text>
+            <Text style={styles.insightEyebrow}>PURCHASING OVERVIEW</Text>
 
             <Text style={styles.insightTitle}>
-              {summary?.openDemands ?? 0} open
-              demand
-              {(summary?.openDemands ?? 0) === 1
-                ? ""
-                : "s"}
+              {summary?.openDemands ?? 0} open demand
+              {(summary?.openDemands ?? 0) === 1 ? "" : "s"}
             </Text>
 
-            <Text
-              style={styles.insightDescription}
-            >
-              Open demands are available for
-              AI-based harvest matching.
+            <Text style={styles.insightDescription}>
+              Open demands are available for AI-based harvest matching.
             </Text>
           </View>
 
-          <Ionicons
-            name="trending-up-outline"
-            size={22}
-            color="#B45309"
-          />
+          <Ionicons name="trending-up-outline" size={22} color="#B45309" />
         </View>
 
         {/* Quick actions */}
-        <Text style={styles.quickTitle}>
-          Quick actions
-        </Text>
+        <Text style={styles.quickTitle}>Quick actions</Text>
 
         <View style={styles.actionGrid}>
           <ActionCard
             icon="add-circle-outline"
             title="Create Demand"
             subtitle="Publish paddy requirement"
-            onPress={() =>
-              router.push("./create-demand")
-            }
+            onPress={() => router.push("./create-demand")}
           />
 
           <ActionCard
             icon="document-text-outline"
             title="My Demands"
             subtitle="View active requirements"
-            onPress={() =>
-              router.push("./my-demands")
-            }
+            onPress={() => router.push("./my-demands")}
           />
 
           <ActionCard
@@ -464,7 +328,7 @@ export default function MillerHomeScreen() {
             onPress={() => {
               Alert.alert(
                 "Matching",
-                "The matched harvest screen will be connected next."
+                "The matched harvest screen will be connected next.",
               );
             }}
           />
@@ -473,12 +337,7 @@ export default function MillerHomeScreen() {
             icon="chatbubble-ellipses-outline"
             title="AI Assistant"
             subtitle="Ask market questions"
-            onPress={() => {
-              Alert.alert(
-                "AI Assistant",
-                "The RAG marketplace assistant will be connected next."
-              );
-            }}
+            onPress={() => router.push("/(c03-marketplace)/assistant")}
           />
         </View>
 
@@ -493,29 +352,16 @@ export default function MillerHomeScreen() {
           </View>
 
           <View style={styles.sessionText}>
-            <Text style={styles.sessionTitle}>
-              Miller session active
-            </Text>
+            <Text style={styles.sessionTitle}>Miller session active</Text>
 
-            <Text
-              style={styles.sessionDescription}
-              numberOfLines={1}
-            >
+            <Text style={styles.sessionDescription} numberOfLines={1}>
               Signed in as {user?.email}
             </Text>
           </View>
 
           {summary?.unreadNotifications ? (
-            <View
-              style={
-                styles.notificationBadge
-              }
-            >
-              <Text
-                style={
-                  styles.notificationText
-                }
-              >
+            <View style={styles.notificationBadge}>
+              <Text style={styles.notificationText}>
                 {summary.unreadNotifications}
               </Text>
             </View>
@@ -532,56 +378,31 @@ interface AnalyticsMetricProps {
   value: string;
 }
 
-function AnalyticsMetric({
-  icon,
-  label,
-  value,
-}: AnalyticsMetricProps) {
+function AnalyticsMetric({ icon, label, value }: AnalyticsMetricProps) {
   return (
     <View style={styles.analyticsMetric}>
       <View style={styles.analyticsIcon}>
-        <Ionicons
-          name={icon}
-          size={18}
-          color="#92400E"
-        />
+        <Ionicons name={icon} size={18} color="#92400E" />
       </View>
 
-      <Text
-        style={styles.analyticsValue}
-        numberOfLines={1}
-      >
+      <Text style={styles.analyticsValue} numberOfLines={1}>
         {value}
       </Text>
 
-      <Text style={styles.analyticsLabel}>
-        {label}
-      </Text>
+      <Text style={styles.analyticsLabel}>{label}</Text>
     </View>
   );
 }
 
-function CompactMetric({
-  icon,
-  label,
-  value,
-}: AnalyticsMetricProps) {
+function CompactMetric({ icon, label, value }: AnalyticsMetricProps) {
   return (
     <View style={styles.compactMetric}>
-      <Ionicons
-        name={icon}
-        size={17}
-        color="#92400E"
-      />
+      <Ionicons name={icon} size={17} color="#92400E" />
 
       <View>
-        <Text style={styles.compactValue}>
-          {value}
-        </Text>
+        <Text style={styles.compactValue}>{value}</Text>
 
-        <Text style={styles.compactLabel}>
-          {label}
-        </Text>
+        <Text style={styles.compactLabel}>{label}</Text>
       </View>
     </View>
   );
@@ -594,12 +415,7 @@ interface ActionCardProps {
   onPress: () => void;
 }
 
-function ActionCard({
-  icon,
-  title,
-  subtitle,
-  onPress,
-}: ActionCardProps) {
+function ActionCard({ icon, title, subtitle, onPress }: ActionCardProps) {
   return (
     <Pressable
       accessibilityRole="button"
@@ -607,26 +423,17 @@ function ActionCard({
       onPress={onPress}
       style={({ pressed }) => [
         styles.actionCard,
-        pressed &&
-          styles.actionCardPressed,
+        pressed && styles.actionCardPressed,
       ]}
     >
       <View style={styles.actionIcon}>
-        <Ionicons
-          name={icon}
-          size={21}
-          color="#92400E"
-        />
+        <Ionicons name={icon} size={21} color="#92400E" />
       </View>
 
       <View style={styles.actionTextArea}>
-        <Text style={styles.actionTitle}>
-          {title}
-        </Text>
+        <Text style={styles.actionTitle}>{title}</Text>
 
-        <Text style={styles.actionSubtitle}>
-          {subtitle}
-        </Text>
+        <Text style={styles.actionSubtitle}>{subtitle}</Text>
       </View>
 
       <Ionicons
@@ -639,30 +446,20 @@ function ActionCard({
   );
 }
 
-function formatQuantity(
-  value: number
-): string {
+function formatQuantity(value: number): string {
   if (value >= 1_000_000) {
-    return `${(
-      value / 1_000_000
-    ).toFixed(1)}M kg`;
+    return `${(value / 1_000_000).toFixed(1)}M kg`;
   }
 
   if (value >= 1_000) {
-    return `${(
-      value / 1_000
-    ).toFixed(1)}K kg`;
+    return `${(value / 1_000).toFixed(1)}K kg`;
   }
 
   return `${value} kg`;
 }
 
-function formatPrice(
-  value: number
-): string {
-  return value > 0
-    ? `Rs.${value.toFixed(2)}`
-    : "Rs.0";
+function formatPrice(value: number): string {
+  return value > 0 ? `Rs.${value.toFixed(2)}` : "Rs.0";
 }
 
 const CREAM = "#FBF8F1";
@@ -752,8 +549,7 @@ const styles = StyleSheet.create({
     height: 54,
     borderRadius: 18,
     padding: 4,
-    backgroundColor:
-      "rgba(255,255,255,0.12)",
+    backgroundColor: "rgba(255,255,255,0.12)",
   },
 
   heroIcon: {
@@ -771,8 +567,7 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     paddingHorizontal: 10,
     paddingVertical: 6,
-    backgroundColor:
-      "rgba(255,255,255,0.1)",
+    backgroundColor: "rgba(255,255,255,0.1)",
   },
 
   heroStatusDot: {

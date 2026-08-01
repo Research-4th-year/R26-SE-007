@@ -1,10 +1,7 @@
 import { useCallback, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import {
-  router,
-  useFocusEffect,
-} from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import {
   ActivityIndicator,
   Alert,
@@ -24,32 +21,22 @@ import {
   Poppins_500Medium,
 } from "@expo-google-fonts/poppins";
 
-import {
-  useMarketplaceAuth,
-} from "@/hooks/c03-marketplace/useMarketplaceAuth";
+import { useMarketplaceAuth } from "@/hooks/c03-marketplace/useMarketplaceAuth";
 
-import {
-  dashboardService,
-} from "@/services/c03-marketplace/dashboard.service";
+import { dashboardService } from "@/services/c03-marketplace/dashboard.service";
 
-import type {
-  FarmerDashboardData,
-} from "@/types/c03-marketplace/dashboard.types";
+import type { FarmerDashboardData } from "@/types/c03-marketplace/dashboard.types";
 
 export default function FarmerHomeScreen() {
   const { user } = useMarketplaceAuth();
 
-  const [dashboard, setDashboard] =
-    useState<FarmerDashboardData | null>(null);
+  const [dashboard, setDashboard] = useState<FarmerDashboardData | null>(null);
 
-  const [loading, setLoading] =
-    useState(true);
+  const [loading, setLoading] = useState(true);
 
-  const [refreshing, setRefreshing] =
-    useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const [errorMessage, setErrorMessage] =
-    useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const [fontsLoaded] = useFonts({
     Poppins_800ExtraBold,
@@ -59,9 +46,7 @@ export default function FarmerHomeScreen() {
   });
 
   const loadDashboard = useCallback(
-    async (
-      showRefreshIndicator = false
-    ): Promise<void> => {
+    async (showRefreshIndicator = false): Promise<void> => {
       try {
         setErrorMessage(null);
 
@@ -71,34 +56,29 @@ export default function FarmerHomeScreen() {
           setLoading(true);
         }
 
-        const response =
-          await dashboardService
-            .getFarmerDashboard();
+        const response = await dashboardService.getFarmerDashboard();
 
         setDashboard(response.data);
       } catch (error) {
-        console.error(
-          "Farmer dashboard loading failed:",
-          error
-        );
+        console.error("Farmer dashboard loading failed:", error);
 
         setErrorMessage(
           error instanceof Error
             ? error.message
-            : "Unable to load marketplace analytics."
+            : "Unable to load marketplace analytics.",
         );
       } finally {
         setLoading(false);
         setRefreshing(false);
       }
     },
-    []
+    [],
   );
 
   useFocusEffect(
     useCallback(() => {
       void loadDashboard();
-    }, [loadDashboard])
+    }, [loadDashboard]),
   );
 
   if (!fontsLoaded) {
@@ -107,8 +87,7 @@ export default function FarmerHomeScreen() {
 
   const summary = dashboard?.summary;
 
-  const analytics =
-    dashboard?.marketAnalytics;
+  const analytics = dashboard?.marketAnalytics;
 
   return (
     <SafeAreaView style={styles.screen}>
@@ -118,9 +97,7 @@ export default function FarmerHomeScreen() {
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
-            onRefresh={() =>
-              void loadDashboard(true)
-            }
+            onRefresh={() => void loadDashboard(true)}
             tintColor="#15803D"
             colors={["#15803D"]}
           />
@@ -129,28 +106,17 @@ export default function FarmerHomeScreen() {
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerText}>
-            <Text style={styles.greeting}>
-              Good evening,
-            </Text>
+            <Text style={styles.greeting}>Good evening,</Text>
 
-            <Text
-              style={styles.userName}
-              numberOfLines={1}
-            >
+            <Text style={styles.userName} numberOfLines={1}>
               {user?.fullName ?? "Farmer"}
             </Text>
 
             <View style={styles.locationRow}>
-              <Ionicons
-                name="location-outline"
-                size={13}
-                color="#6B7280"
-              />
+              <Ionicons name="location-outline" size={13} color="#6B7280" />
 
               <Text style={styles.locationText}>
-                {dashboard?.farmer.district ??
-                  user?.district ??
-                  "Sri Lanka"}
+                {dashboard?.farmer.district ?? user?.district ?? "Sri Lanka"}
               </Text>
             </View>
           </View>
@@ -160,28 +126,17 @@ export default function FarmerHomeScreen() {
             accessibilityLabel="Open profile"
             style={({ pressed }) => [
               styles.profileButton,
-              pressed &&
-                styles.profileButtonPressed,
+              pressed && styles.profileButtonPressed,
             ]}
-            onPress={() =>
-              router.push("./profile")
-            }
+            onPress={() => router.push("./profile")}
           >
-            <Ionicons
-              name="person-outline"
-              size={20}
-              color="#15803D"
-            />
+            <Ionicons name="person-outline" size={20} color="#15803D" />
           </Pressable>
         </View>
 
         {/* Hero */}
         <LinearGradient
-          colors={[
-            "#0A331D",
-            "#12522E",
-            "#0B3B22",
-          ]}
+          colors={["#0A331D", "#12522E", "#0B3B22"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.heroCard}
@@ -189,33 +144,21 @@ export default function FarmerHomeScreen() {
           <View style={styles.heroTopRow}>
             <View style={styles.heroIconRing}>
               <View style={styles.heroIcon}>
-                <Ionicons
-                  name="leaf"
-                  size={24}
-                  color="#15803D"
-                />
+                <Ionicons name="leaf" size={24} color="#15803D" />
               </View>
             </View>
 
             <View style={styles.heroStatusBadge}>
               <View style={styles.heroStatusDot} />
 
-              <Text style={styles.heroStatusText}>
-                AI MARKETPLACE
-              </Text>
+              <Text style={styles.heroStatusText}>AI MARKETPLACE</Text>
             </View>
           </View>
 
           <View style={styles.heroEyebrowPill}>
-            <Ionicons
-              name="sparkles"
-              size={11}
-              color="#F5C542"
-            />
+            <Ionicons name="sparkles" size={11} color="#F5C542" />
 
-            <Text style={styles.heroEyebrow}>
-              FARMER MARKETPLACE
-            </Text>
+            <Text style={styles.heroEyebrow}>FARMER MARKETPLACE</Text>
           </View>
 
           <Text style={styles.heroTitle}>
@@ -223,41 +166,27 @@ export default function FarmerHomeScreen() {
           </Text>
 
           <Text style={styles.heroDescription}>
-            Receive AI price guidance, publish
-            harvests and connect with suitable
-            millers.
+            Receive AI price guidance, publish harvests and connect with
+            suitable millers.
           </Text>
 
           <Pressable
             accessibilityRole="button"
-            onPress={() =>
-              router.push("./add-harvest")
-            }
+            onPress={() => router.push("./add-harvest")}
             style={({ pressed }) => [
               styles.primaryShadow,
               pressed && styles.buttonPressed,
             ]}
           >
             <LinearGradient
-              colors={[
-                "#F5C542",
-                "#D97706",
-              ]}
+              colors={["#F5C542", "#D97706"]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={styles.primaryButton}
             >
-              <Ionicons
-                name="add-circle-outline"
-                size={19}
-                color="#0B3B22"
-              />
+              <Ionicons name="add-circle-outline" size={19} color="#0B3B22" />
 
-              <Text
-                style={styles.primaryButtonText}
-              >
-                Add New Harvest
-              </Text>
+              <Text style={styles.primaryButtonText}>Add New Harvest</Text>
             </LinearGradient>
           </Pressable>
         </LinearGradient>
@@ -265,29 +194,20 @@ export default function FarmerHomeScreen() {
         {/* Analytics header */}
         <View style={styles.sectionHeader}>
           <View>
-            <Text style={styles.sectionTitle}>
-              Marketplace analytics
-            </Text>
+            <Text style={styles.sectionTitle}>Marketplace analytics</Text>
 
-            <Text
-              style={styles.sectionSubtitle}
-            >
+            <Text style={styles.sectionSubtitle}>
               Live overview of your harvests
             </Text>
           </View>
 
           {loading ? (
-            <ActivityIndicator
-              size="small"
-              color="#15803D"
-            />
+            <ActivityIndicator size="small" color="#15803D" />
           ) : (
             <View style={styles.liveBadge}>
               <View style={styles.liveDot} />
 
-              <Text style={styles.liveText}>
-                LIVE
-              </Text>
+              <Text style={styles.liveText}>LIVE</Text>
             </View>
           )}
         </View>
@@ -296,20 +216,12 @@ export default function FarmerHomeScreen() {
         {errorMessage ? (
           <Pressable
             style={styles.errorCard}
-            onPress={() =>
-              void loadDashboard()
-            }
+            onPress={() => void loadDashboard()}
           >
-            <Ionicons
-              name="warning-outline"
-              size={21}
-              color="#B91C1C"
-            />
+            <Ionicons name="warning-outline" size={21} color="#B91C1C" />
 
             <View style={styles.errorTextArea}>
-              <Text style={styles.errorTitle}>
-                Analytics unavailable
-              </Text>
+              <Text style={styles.errorTitle}>Analytics unavailable</Text>
 
               <Text style={styles.errorMessage}>
                 {errorMessage} Tap to retry.
@@ -324,26 +236,14 @@ export default function FarmerHomeScreen() {
             <AnalyticsMetric
               icon="leaf-outline"
               label="Total harvests"
-              value={
-                loading
-                  ? "—"
-                  : String(
-                      summary?.totalHarvests ??
-                        0
-                    )
-              }
+              value={loading ? "—" : String(summary?.totalHarvests ?? 0)}
             />
 
             <AnalyticsMetric
               icon="cube-outline"
               label="Total quantity"
               value={
-                loading
-                  ? "—"
-                  : formatQuantity(
-                      analytics
-                        ?.totalQuantity ?? 0
-                    )
+                loading ? "—" : formatQuantity(analytics?.totalQuantity ?? 0)
               }
             />
 
@@ -353,11 +253,7 @@ export default function FarmerHomeScreen() {
               value={
                 loading
                   ? "—"
-                  : formatPrice(
-                      analytics
-                        ?.averageAiPredictedPrice ??
-                        0
-                    )
+                  : formatPrice(analytics?.averageAiPredictedPrice ?? 0)
               }
             />
           </View>
@@ -368,116 +264,65 @@ export default function FarmerHomeScreen() {
             <CompactMetric
               icon="checkmark-circle-outline"
               label="Available"
-              value={String(
-                summary?.availableHarvests ??
-                  0
-              )}
+              value={String(summary?.availableHarvests ?? 0)}
             />
 
             <CompactMetric
               icon="git-compare-outline"
               label="Matched"
-              value={String(
-                summary?.matchedHarvests ?? 0
-              )}
+              value={String(summary?.matchedHarvests ?? 0)}
             />
 
             <CompactMetric
               icon="stats-chart-outline"
               label="Average score"
-              value={`${Math.round(
-                analytics
-                  ?.averageHarvestScore ?? 0
-              )}/100`}
+              value={`${Math.round(analytics?.averageHarvestScore ?? 0)}/100`}
             />
           </View>
         </View>
 
         {/* Latest recommendation */}
         {dashboard?.latestAiRecommendation ? (
-          <View
-            style={styles.recommendationCard}
-          >
-            <View
-              style={
-                styles.recommendationIcon
-              }
-            >
-              <Ionicons
-                name="bulb-outline"
-                size={23}
-                color="#B45309"
-              />
+          <View style={styles.recommendationCard}>
+            <View style={styles.recommendationIcon}>
+              <Ionicons name="bulb-outline" size={23} color="#B45309" />
             </View>
 
-            <View
-              style={
-                styles.recommendationTextArea
-              }
-            >
-              <Text
-                style={
-                  styles.recommendationEyebrow
-                }
-              >
+            <View style={styles.recommendationTextArea}>
+              <Text style={styles.recommendationEyebrow}>
                 LATEST AI INSIGHT
               </Text>
 
-              <Text
-                style={
-                  styles.recommendationTitle
-                }
-              >
-                {formatLabel(
-                  dashboard
-                    .latestAiRecommendation
-                    .paddyType
-                )}
+              <Text style={styles.recommendationTitle}>
+                {formatLabel(dashboard.latestAiRecommendation.paddyType)}
               </Text>
 
-              <Text
-                style={
-                  styles.recommendationMessage
-                }
-                numberOfLines={3}
-              >
-                {dashboard
-                  .latestAiRecommendation
-                  .recommendation?.english ||
+              <Text style={styles.recommendationMessage} numberOfLines={3}>
+                {dashboard.latestAiRecommendation.recommendation?.english ||
                   "Review the latest AI price and market analysis."}
               </Text>
             </View>
 
-            <Ionicons
-              name="sparkles"
-              size={20}
-              color="#D97706"
-            />
+            <Ionicons name="sparkles" size={20} color="#D97706" />
           </View>
         ) : null}
 
         {/* Quick actions */}
-        <Text style={styles.quickTitle}>
-          Quick actions
-        </Text>
+        <Text style={styles.quickTitle}>Quick actions</Text>
 
         <View style={styles.actionGrid}>
           <ActionCard
             icon="add-circle-outline"
             title="Add Harvest"
             subtitle="Get AI price guidance"
-            onPress={() =>
-              router.push("./add-harvest")
-            }
+            onPress={() => router.push("./add-harvest")}
           />
 
           <ActionCard
             icon="pricetag-outline"
             title="My Harvests"
             subtitle="View submitted harvests"
-            onPress={() =>
-              router.push("./my-harvests")
-            }
+            onPress={() => router.push("./my-harvests")}
           />
 
           <ActionCard
@@ -487,7 +332,7 @@ export default function FarmerHomeScreen() {
             onPress={() => {
               Alert.alert(
                 "Matching",
-                "The matching results screen will be connected next."
+                "The matching results screen will be connected next.",
               );
             }}
           />
@@ -496,12 +341,7 @@ export default function FarmerHomeScreen() {
             icon="chatbubble-ellipses-outline"
             title="AI Assistant"
             subtitle="Ask market questions"
-            onPress={() => {
-              Alert.alert(
-                "AI Assistant",
-                "The RAG marketplace assistant will be connected next."
-              );
-            }}
+            onPress={() => router.push("/(c03-marketplace)/assistant")}
           />
         </View>
 
@@ -516,29 +356,16 @@ export default function FarmerHomeScreen() {
           </View>
 
           <View style={styles.sessionText}>
-            <Text style={styles.sessionTitle}>
-              Farmer session active
-            </Text>
+            <Text style={styles.sessionTitle}>Farmer session active</Text>
 
-            <Text
-              style={styles.sessionDescription}
-              numberOfLines={1}
-            >
+            <Text style={styles.sessionDescription} numberOfLines={1}>
               Signed in as {user?.email}
             </Text>
           </View>
 
           {summary?.unreadNotifications ? (
-            <View
-              style={
-                styles.notificationBadge
-              }
-            >
-              <Text
-                style={
-                  styles.notificationText
-                }
-              >
+            <View style={styles.notificationBadge}>
+              <Text style={styles.notificationText}>
                 {summary.unreadNotifications}
               </Text>
             </View>
@@ -555,56 +382,31 @@ interface AnalyticsMetricProps {
   value: string;
 }
 
-function AnalyticsMetric({
-  icon,
-  label,
-  value,
-}: AnalyticsMetricProps) {
+function AnalyticsMetric({ icon, label, value }: AnalyticsMetricProps) {
   return (
     <View style={styles.analyticsMetric}>
       <View style={styles.analyticsIcon}>
-        <Ionicons
-          name={icon}
-          size={18}
-          color="#15803D"
-        />
+        <Ionicons name={icon} size={18} color="#15803D" />
       </View>
 
-      <Text
-        style={styles.analyticsValue}
-        numberOfLines={1}
-      >
+      <Text style={styles.analyticsValue} numberOfLines={1}>
         {value}
       </Text>
 
-      <Text style={styles.analyticsLabel}>
-        {label}
-      </Text>
+      <Text style={styles.analyticsLabel}>{label}</Text>
     </View>
   );
 }
 
-function CompactMetric({
-  icon,
-  label,
-  value,
-}: AnalyticsMetricProps) {
+function CompactMetric({ icon, label, value }: AnalyticsMetricProps) {
   return (
     <View style={styles.compactMetric}>
-      <Ionicons
-        name={icon}
-        size={17}
-        color="#15803D"
-      />
+      <Ionicons name={icon} size={17} color="#15803D" />
 
       <View>
-        <Text style={styles.compactValue}>
-          {value}
-        </Text>
+        <Text style={styles.compactValue}>{value}</Text>
 
-        <Text style={styles.compactLabel}>
-          {label}
-        </Text>
+        <Text style={styles.compactLabel}>{label}</Text>
       </View>
     </View>
   );
@@ -617,12 +419,7 @@ interface ActionCardProps {
   onPress: () => void;
 }
 
-function ActionCard({
-  icon,
-  title,
-  subtitle,
-  onPress,
-}: ActionCardProps) {
+function ActionCard({ icon, title, subtitle, onPress }: ActionCardProps) {
   return (
     <Pressable
       accessibilityRole="button"
@@ -630,26 +427,17 @@ function ActionCard({
       onPress={onPress}
       style={({ pressed }) => [
         styles.actionCard,
-        pressed &&
-          styles.actionCardPressed,
+        pressed && styles.actionCardPressed,
       ]}
     >
       <View style={styles.actionIcon}>
-        <Ionicons
-          name={icon}
-          size={21}
-          color="#15803D"
-        />
+        <Ionicons name={icon} size={21} color="#15803D" />
       </View>
 
       <View style={styles.actionTextArea}>
-        <Text style={styles.actionTitle}>
-          {title}
-        </Text>
+        <Text style={styles.actionTitle}>{title}</Text>
 
-        <Text style={styles.actionSubtitle}>
-          {subtitle}
-        </Text>
+        <Text style={styles.actionSubtitle}>{subtitle}</Text>
       </View>
 
       <Ionicons
@@ -662,42 +450,26 @@ function ActionCard({
   );
 }
 
-function formatQuantity(
-  value: number
-): string {
+function formatQuantity(value: number): string {
   if (value >= 1_000_000) {
-    return `${(
-      value / 1_000_000
-    ).toFixed(1)}M kg`;
+    return `${(value / 1_000_000).toFixed(1)}M kg`;
   }
 
   if (value >= 1_000) {
-    return `${(
-      value / 1_000
-    ).toFixed(1)}K kg`;
+    return `${(value / 1_000).toFixed(1)}K kg`;
   }
 
   return `${value} kg`;
 }
 
-function formatPrice(
-  value: number
-): string {
-  return value > 0
-    ? `Rs.${value.toFixed(2)}`
-    : "Rs.0";
+function formatPrice(value: number): string {
+  return value > 0 ? `Rs.${value.toFixed(2)}` : "Rs.0";
 }
 
-function formatLabel(
-  value: string
-): string {
+function formatLabel(value: string): string {
   return value
     .split(/[\s_-]+/)
-    .map(
-      (part) =>
-        part.charAt(0).toUpperCase() +
-        part.slice(1).toLowerCase()
-    )
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
     .join(" ");
 }
 
@@ -783,8 +555,7 @@ const styles = StyleSheet.create({
     height: 54,
     borderRadius: 18,
     padding: 4,
-    backgroundColor:
-      "rgba(255,255,255,0.12)",
+    backgroundColor: "rgba(255,255,255,0.12)",
   },
 
   heroIcon: {
@@ -802,8 +573,7 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     paddingHorizontal: 10,
     paddingVertical: 6,
-    backgroundColor:
-      "rgba(255,255,255,0.1)",
+    backgroundColor: "rgba(255,255,255,0.1)",
   },
 
   heroStatusDot: {

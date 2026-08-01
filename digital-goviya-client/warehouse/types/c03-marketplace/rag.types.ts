@@ -14,10 +14,12 @@ export interface AskRagResponse {
   data: RagResponseData;
 }
 
-export interface AssistantMessage {
+export interface RagChatMessage {
   id: string;
   sender: "user" | "assistant";
   text: string;
   context?: string;
-  createdAt: Date;
+  results?: unknown[];
+  createdAt: number;
+  failed?: boolean;
 }
