@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import {
   Alert,
+  Animated,
   Pressable,
   SafeAreaView,
   ScrollView,
@@ -9,6 +10,15 @@ import {
   Text,
   View,
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { useEffect, useRef } from "react";
+import {
+  useFonts,
+  Poppins_800ExtraBold,
+  Poppins_700Bold,
+  Poppins_600SemiBold,
+  Poppins_500Medium,
+} from "@expo-google-fonts/poppins";
 
 import type {
   FarmerProfile,
@@ -39,11 +49,42 @@ export default function FarmerProfileScreen() {
     }
   }
 
+  const [fontsLoaded] = useFonts({
+    Poppins_800ExtraBold,
+    Poppins_700Bold,
+    Poppins_600SemiBold,
+    Poppins_500Medium,
+  });
+
+  // Entrance animation — matches the fade/rise used across the app
+  const fade = useRef(new Animated.Value(0)).current;
+  const rise = useRef(new Animated.Value(14)).current;
+
+  useEffect(() => {
+    if (!fontsLoaded) return;
+    Animated.parallel([
+      Animated.timing(fade, { toValue: 1, duration: 400, useNativeDriver: true }),
+      Animated.timing(rise, { toValue: 0, duration: 400, useNativeDriver: true }),
+    ]).start();
+  }, [fontsLoaded]);
+
+  if (!fontsLoaded) return null;
+
   return (
     <SafeAreaView style={styles.screen}>
-      <ScrollView contentContainerStyle={styles.content}>
+      <Animated.ScrollView
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+        style={{ opacity: fade, transform: [{ translateY: rise }] }}
+      >
         <View style={styles.header}>
-          <Pressable style={styles.headerButton} onPress={() => router.back()}>
+          <Pressable
+            style={({ pressed }) => [
+              styles.headerButton,
+              pressed && styles.pressed,
+            ]}
+            onPress={() => router.back()}
+          >
             <Ionicons name="arrow-back" size={21} color="#1F2937" />
           </Pressable>
 
@@ -52,21 +93,36 @@ export default function FarmerProfileScreen() {
           <View style={styles.headerPlaceholder} />
         </View>
 
-        <View style={styles.profileCard}>
-          <View style={styles.avatar}>
-            <Ionicons name="leaf" size={34} color="#FFFFFF" />
-          </View>
+        <View style={styles.profileCardShadow}>
+          <LinearGradient
+            colors={["#0A331D", "#14532D", "#166534"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.profileCard}
+          >
+            <View style={styles.avatarRing}>
+              <View style={styles.avatar}>
+                <Ionicons name="leaf" size={30} color="#FFFFFF" />
+              </View>
+            </View>
 
-          <Text style={styles.name}>{user?.fullName}</Text>
+            <Text style={styles.name}>{user?.fullName}</Text>
 
-          <View style={styles.roleBadge}>
-            <Text style={styles.roleText}>VERIFIED FARMER</Text>
-          </View>
+            <View style={styles.roleBadge}>
+              <Ionicons name="shield-checkmark" size={11} color="#854D0E" />
+              <Text style={styles.roleText}>VERIFIED FARMER</Text>
+            </View>
 
-          <Text style={styles.email}>{user?.email}</Text>
+            <Text style={styles.email}>{user?.email}</Text>
+          </LinearGradient>
         </View>
 
-        <Text style={styles.sectionTitle}>Personal information</Text>
+        <View style={styles.sectionHeaderRow}>
+          <View style={styles.sectionIconBox}>
+            <Ionicons name="person-outline" size={16} color="#15803D" />
+          </View>
+          <Text style={styles.sectionTitle}>Personal information</Text>
+        </View>
 
         <View style={styles.detailsCard}>
           <ProfileRow
@@ -107,12 +163,18 @@ export default function FarmerProfileScreen() {
           />
         </View>
 
-        <Pressable style={styles.logoutButton} onPress={handleLogout}>
+        <Pressable
+          style={({ pressed }) => [
+            styles.logoutButton,
+            pressed && styles.pressed,
+          ]}
+          onPress={handleLogout}
+        >
           <Ionicons name="log-out-outline" size={20} color="#B91C1C" />
 
           <Text style={styles.logoutText}>Sign out</Text>
         </Pressable>
-      </ScrollView>
+      </Animated.ScrollView>
     </SafeAreaView>
   );
 }
@@ -164,24 +226,49 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "#FFFFFF",
+    shadowColor: "#000",
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
   },
 
   headerTitle: {
     color: "#1F2937",
     fontSize: 17,
-    fontWeight: "800",
+    fontFamily: "Poppins_800ExtraBold",
   },
 
   headerPlaceholder: {
     width: 42,
   },
 
+  profileCardShadow: {
+    borderRadius: 26,
+    marginBottom: 25,
+    shadowColor: "#14532D",
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 6,
+  },
+
   profileCard: {
     alignItems: "center",
-    borderRadius: 24,
-    padding: 24,
-    backgroundColor: "#14532D",
-    marginBottom: 25,
+    borderRadius: 26,
+    padding: 26,
+  },
+
+  avatarRing: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    padding: 5,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255,255,255,0.1)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.22)",
   },
 
   avatar: {
@@ -196,36 +283,55 @@ const styles = StyleSheet.create({
   name: {
     color: "#FFFFFF",
     fontSize: 21,
-    fontWeight: "800",
-    marginTop: 13,
+    fontFamily: "Poppins_800ExtraBold",
+    marginTop: 14,
   },
 
   roleBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
     borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingHorizontal: 11,
+    paddingVertical: 5,
     backgroundColor: "#FDE68A",
-    marginTop: 7,
+    marginTop: 9,
   },
 
   roleText: {
     color: "#854D0E",
     fontSize: 9,
-    fontWeight: "800",
+    fontFamily: "Poppins_800ExtraBold",
     letterSpacing: 0.8,
   },
 
   email: {
     color: "rgba(255,255,255,0.65)",
     fontSize: 12,
-    marginTop: 9,
+    fontFamily: "Poppins_500Medium",
+    marginTop: 10,
+  },
+
+  sectionHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 12,
+  },
+
+  sectionIconBox: {
+    width: 28,
+    height: 28,
+    borderRadius: 9,
+    backgroundColor: "#DCFCE7",
+    alignItems: "center",
+    justifyContent: "center",
   },
 
   sectionTitle: {
     color: "#1F2937",
     fontSize: 15,
-    fontWeight: "800",
-    marginBottom: 12,
+    fontFamily: "Poppins_800ExtraBold",
   },
 
   detailsCard: {
@@ -234,6 +340,11 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     borderWidth: 1,
     borderColor: "#EEF0ED",
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 2,
   },
 
   profileRow: {
@@ -265,12 +376,13 @@ const styles = StyleSheet.create({
   rowLabel: {
     color: "#6B7280",
     fontSize: 10,
+    fontFamily: "Poppins_500Medium",
   },
 
   rowValue: {
     color: "#1F2937",
     fontSize: 13,
-    fontWeight: "700",
+    fontFamily: "Poppins_700Bold",
     marginTop: 3,
   },
 
@@ -290,6 +402,11 @@ const styles = StyleSheet.create({
   logoutText: {
     color: "#B91C1C",
     fontSize: 13,
-    fontWeight: "800",
+    fontFamily: "Poppins_800ExtraBold",
+  },
+
+  pressed: {
+    opacity: 0.84,
+    transform: [{ scale: 0.97 }],
   },
 });
