@@ -22,6 +22,13 @@ from app.schemas.llm_explanation import (
     SHAPFeatureEvidence
 )
 
+from app.schemas.prediction_explanation import (
+    PredictionExplanationResponse,
+    PredictionInfo,
+    MarketInfo,
+    ExplanationInfo
+)
+
 class ExplanationService:
 
     def __init__(self):
@@ -217,7 +224,7 @@ class ExplanationService:
         self,
         district: str,
         input_date: str
-    ):
+    ) -> PredictionExplanationResponse:
         from app.services.llm_explanation_service import (
             llm_explanation_service
         )
@@ -231,19 +238,52 @@ class ExplanationService:
             evidence
         )
 
-        return {
-            "district": evidence.district,
-            "date": evidence.date,
-            "predicted_price": evidence.predicted_price,
-            "previous_price": evidence.previous_price,
-            "trend": evidence.trend,
-            "confidence": evidence.confidence,
-            "risk_level": evidence.risk_level,
-            "market_outlook": evidence.market_outlook,
-            "recommendation": evidence.recommendation,
-            "top_features": evidence.top_features,
-            "shap_reasons": evidence.shap_reasons,
-            "llm_explanation": llm_explanation
-        }
+        return PredictionExplanationResponse(
+
+            prediction=PredictionInfo(
+
+                district=evidence.district,
+
+                date=evidence.date,
+
+                predicted_price=evidence.predicted_price,
+
+                previous_price=evidence.previous_price,
+
+                currency="LKR/kg"
+            ),
+
+            market=MarketInfo(
+
+                trend=evidence.trend,
+
+                confidence=evidence.confidence,
+
+                risk_level=evidence.risk_level,
+
+                outlook=evidence.market_outlook,
+
+                recommendation=evidence.recommendation
+            ),
+
+            explanation=ExplanationInfo(
+
+                headline=llm_explanation.headline,
+
+                explanation=llm_explanation.explanation,
+
+                key_factors=llm_explanation.key_factors,
+
+                generated_by=llm_explanation.generated_by
+            ),
+
+            technical={
+
+                "top_features": evidence.top_features,
+
+                "shap_reasons": evidence.shap_reasons
+
+            }
+        )
 
 explanation_service = ExplanationService()

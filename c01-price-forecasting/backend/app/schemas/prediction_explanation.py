@@ -4,7 +4,7 @@ from app.schemas.llm_explanation import SHAPFeatureEvidence
 from app.schemas.llm_response import LLMExplanationResponse
 
 
-class PredictionExplanationResponse(BaseModel):
+class PredictionInfo(BaseModel):
 
     district: str
 
@@ -14,18 +14,39 @@ class PredictionExplanationResponse(BaseModel):
 
     previous_price: float
 
+    currency: str = "LKR/kg"
+
+
+class MarketInfo(BaseModel):
+
     trend: str
 
     confidence: str
 
     risk_level: str
 
-    market_outlook: str
+    outlook: str
 
     recommendation: str
 
-    top_features: list[SHAPFeatureEvidence]
 
-    shap_reasons: list[str]
+class ExplanationInfo(BaseModel):
 
-    llm_explanation: LLMExplanationResponse
+    headline: str
+
+    explanation: str
+
+    key_factors: list[str]
+
+    generated_by: str
+
+
+class PredictionExplanationResponse(BaseModel):
+
+    prediction: PredictionInfo
+
+    market: MarketInfo
+
+    explanation: ExplanationInfo
+
+    technical: dict
