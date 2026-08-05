@@ -28,6 +28,13 @@ const millerDemandSchema = new mongoose.Schema(
       min: 0,
     },
 
+    maximumBuyingPrice: {
+      type: Number,
+      required: true,
+      min: 0,
+      select: false,
+    },
+
     status: {
       type: String,
       enum: [
@@ -46,10 +53,7 @@ const millerDemandSchema = new mongoose.Schema(
   {
     timestamps: true,
     versionKey: false,
-  }
+  },
 );
 
-module.exports = mongoose.model(
-  "MillerDemand",
-  millerDemandSchema
-);
+module.exports = mongoose.model("MillerDemand", millerDemandSchema);
