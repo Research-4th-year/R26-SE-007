@@ -72,6 +72,62 @@ const NEGOTIATION_STAGES = [
   },
 ];
 
+/* ------------------------------------------------------------------ */
+/*  Small animation helpers — purely presentational, no logic changes  */
+/* ------------------------------------------------------------------ */
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
+function usePressScale(target = 0.96) {
+  const scale = useRef(new Animated.Value(1)).current;
+
+  const onPressIn = () => {
+    Animated.spring(scale, {
+      toValue: target,
+      useNativeDriver: true,
+      speed: 40,
+      bounciness: 6,
+    }).start();
+  };
+
+  const onPressOut = () => {
+    Animated.spring(scale, {
+      toValue: 1,
+      useNativeDriver: true,
+      speed: 40,
+      bounciness: 6,
+    }).start();
+  };
+
+  return { scale, onPressIn, onPressOut };
+}
+
+function useEntrance(delay = 0) {
+  const progress = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(progress, {
+      toValue: 1,
+      duration: 420,
+      delay,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+  }, [progress, delay]);
+
+  return {
+    opacity: progress,
+    transform: [
+      {
+        translateY: progress.interpolate({
+          inputRange: [0, 1],
+          outputRange: [16, 0],
+        }),
+      },
+    ],
+  };
+}
+
 export default function NegotiationStartScreen() {
   const { user } = useMarketplaceAuth();
 
@@ -205,6 +261,8 @@ export default function NegotiationStartScreen() {
     }
   };
 
+  const headerPress = usePressScale(0.9);
+
   return (
     <SafeAreaView
       style={[
@@ -216,16 +274,21 @@ export default function NegotiationStartScreen() {
       ]}
     >
       <View style={styles.header}>
-        <Pressable
+        <AnimatedPressable
           onPress={() => router.back()}
-          style={styles.headerButton}
+          onPressIn={headerPress.onPressIn}
+          onPressOut={headerPress.onPressOut}
+          style={[
+            styles.headerButton,
+            { transform: [{ scale: headerPress.scale }] },
+          ]}
         >
           <Ionicons
             name="arrow-back"
             size={21}
             color="#1F2937"
           />
-        </Pressable>
+        </AnimatedPressable>
 
         <View style={styles.headerText}>
           <Text style={styles.headerTitle}>
@@ -275,66 +338,7 @@ export default function NegotiationStartScreen() {
           false
         }
       >
-        <View
-          style={[
-            styles.heroCard,
-            {
-              backgroundColor:
-                theme.dark,
-            },
-          ]}
-        >
-          <View
-            style={styles.agentRow}
-          >
-            <AgentAvatar
-              icon="leaf"
-              label="Farmer Agent"
-              background="#DCFCE7"
-              color="#15803D"
-            />
-
-            <View
-              style={styles.connectionArea}
-            >
-              <Ionicons
-                name="sync"
-                size={24}
-                color="#FDE68A"
-              />
-
-              <Text
-                style={
-                  styles.connectionText
-                }
-              >
-                AI TO AI
-              </Text>
-            </View>
-
-            <AgentAvatar
-              icon="business"
-              label="Miller Agent"
-              background="#FEF3C7"
-              color="#92400E"
-            />
-          </View>
-
-          <Text style={styles.heroTitle}>
-            Ready to negotiate fairly
-          </Text>
-
-          <Text
-            style={
-              styles.heroDescription
-            }
-          >
-            Both autonomous agents will
-            exchange offers while protecting
-            each participant’s private price
-            limit.
-          </Text>
-        </View>
+        <IdleHero theme={theme} />
 
         <Text style={styles.sectionTitle}>
           Negotiation summary
@@ -342,6 +346,7 @@ export default function NegotiationStartScreen() {
 
         <View style={styles.summaryCard}>
           <SummaryRow
+            index={0}
             icon="leaf-outline"
             label="Paddy variety"
             value={formatLabel(
@@ -352,6 +357,7 @@ export default function NegotiationStartScreen() {
           />
 
           <SummaryRow
+            index={1}
             icon="cube-outline"
             label="Negotiation quantity"
             value={`${formatNumber(
@@ -362,6 +368,7 @@ export default function NegotiationStartScreen() {
           />
 
           <SummaryRow
+            index={2}
             icon="person-outline"
             label="Farmer asking price"
             value={formatPrice(
@@ -372,6 +379,7 @@ export default function NegotiationStartScreen() {
           />
 
           <SummaryRow
+            index={3}
             icon="business-outline"
             label="Miller opening offer"
             value={formatPrice(
@@ -382,6 +390,7 @@ export default function NegotiationStartScreen() {
           />
 
           <SummaryRow
+            index={4}
             icon="analytics-outline"
             label="FL market reference"
             value={formatPrice(
@@ -392,6 +401,7 @@ export default function NegotiationStartScreen() {
           />
 
           <SummaryRow
+            index={5}
             icon="git-compare-outline"
             label="Matching score"
             value={`${matchingScore.toFixed(
@@ -403,59 +413,7 @@ export default function NegotiationStartScreen() {
           />
         </View>
 
-        <View
-          style={[
-            styles.privacyCard,
-            {
-              backgroundColor:
-                theme.soft,
-
-              borderColor:
-                theme.border,
-            },
-          ]}
-        >
-          <View
-            style={[
-              styles.privacyIcon,
-              {
-                backgroundColor:
-                  "#FFFFFF",
-              },
-            ]}
-          >
-            <Ionicons
-              name="shield-checkmark-outline"
-              size={23}
-              color={theme.primary}
-            />
-          </View>
-
-          <View style={styles.privacyText}>
-            <Text
-              style={[
-                styles.privacyTitle,
-                {
-                  color:
-                    theme.dark,
-                },
-              ]}
-            >
-              Private constraints protected
-            </Text>
-
-            <Text
-              style={
-                styles.privacyDescription
-              }
-            >
-              Minimum and maximum reservation
-              prices are securely used by the
-              agents but are never displayed or
-              disclosed to the other participant.
-            </Text>
-          </View>
-        </View>
+        <PrivacyCard theme={theme} />
 
         <View style={styles.processCard}>
           <Text style={styles.processTitle}>
@@ -463,6 +421,7 @@ export default function NegotiationStartScreen() {
           </Text>
 
           <ProcessStep
+            index={0}
             number="1"
             title="Agents review the market"
             description="The FL reference price and match score guide the negotiation."
@@ -471,6 +430,7 @@ export default function NegotiationStartScreen() {
           />
 
           <ProcessStep
+            index={1}
             number="2"
             title="Agents exchange offers"
             description="Each agent accepts, counters or rejects according to its private constraints."
@@ -479,6 +439,7 @@ export default function NegotiationStartScreen() {
           />
 
           <ProcessStep
+            index={2}
             number="3"
             title="Fairness is evaluated"
             description="The result is compared with the FL market reference."
@@ -488,64 +449,12 @@ export default function NegotiationStartScreen() {
           />
         </View>
 
-        <Pressable
-          disabled={
-            starting || !selectionId
-          }
-          onPress={() =>
-            void handleStart()
-          }
-          style={({ pressed }) => [
-            styles.startButton,
-            {
-              backgroundColor:
-                theme.primary,
-            },
-            pressed && styles.pressed,
-            (starting ||
-              !selectionId) &&
-              styles.disabled,
-          ]}
-        >
-          {starting ? (
-            <>
-              <ActivityIndicator
-                size="small"
-                color="#FFFFFF"
-              />
-
-              <Text
-                style={
-                  styles.startButtonText
-                }
-              >
-                AI agents are negotiating...
-              </Text>
-            </>
-          ) : (
-            <>
-              <Ionicons
-                name="sparkles"
-                size={19}
-                color="#FFFFFF"
-              />
-
-              <Text
-                style={
-                  styles.startButtonText
-                }
-              >
-                Start AI Negotiation
-              </Text>
-
-              <Ionicons
-                name="arrow-forward"
-                size={18}
-                color="#FFFFFF"
-              />
-            </>
-          )}
-        </Pressable>
+        <StartButton
+          disabled={starting || !selectionId}
+          starting={starting}
+          theme={theme}
+          onPress={() => void handleStart()}
+        />
 
         <Text style={styles.waitingNote}>
           Negotiation may take a few moments
@@ -555,6 +464,248 @@ export default function NegotiationStartScreen() {
       </ScrollView>
       )}
     </SafeAreaView>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Idle (pre-start) view pieces                                       */
+/* ------------------------------------------------------------------ */
+
+function IdleHero({ theme }: { theme: LiveTheme }) {
+  const entrance = useEntrance(0);
+
+  const breathe = useRef(new Animated.Value(1)).current;
+  const spin = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const breatheLoop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(breathe, {
+          toValue: 1.07,
+          duration: 1100,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(breathe, {
+          toValue: 1,
+          duration: 1100,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ])
+    );
+
+    const spinLoop = Animated.loop(
+      Animated.timing(spin, {
+        toValue: 1,
+        duration: 3400,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      })
+    );
+
+    breatheLoop.start();
+    spinLoop.start();
+
+    return () => {
+      breatheLoop.stop();
+      spinLoop.stop();
+    };
+  }, [breathe, spin]);
+
+  const spinDeg = spin.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["0deg", "360deg"],
+  });
+
+  return (
+    <Animated.View
+      style={[
+        styles.heroCard,
+        { backgroundColor: theme.dark },
+        entrance,
+      ]}
+    >
+      <View style={styles.agentRow}>
+        <Animated.View
+          style={{ transform: [{ scale: breathe }] }}
+        >
+          <AgentAvatar
+            icon="leaf"
+            label="Farmer Agent"
+            background="#DCFCE7"
+            color="#15803D"
+          />
+        </Animated.View>
+
+        <View style={styles.connectionArea}>
+          <Animated.View
+            style={{ transform: [{ rotate: spinDeg }] }}
+          >
+            <Ionicons
+              name="sync"
+              size={24}
+              color="#FDE68A"
+            />
+          </Animated.View>
+
+          <Text style={styles.connectionText}>
+            AI TO AI
+          </Text>
+        </View>
+
+        <Animated.View
+          style={{ transform: [{ scale: breathe }] }}
+        >
+          <AgentAvatar
+            icon="business"
+            label="Miller Agent"
+            background="#FEF3C7"
+            color="#92400E"
+          />
+        </Animated.View>
+      </View>
+
+      <Text style={styles.heroTitle}>
+        Ready to negotiate fairly
+      </Text>
+
+      <Text style={styles.heroDescription}>
+        Both autonomous agents will exchange offers
+        while protecting each participant’s private
+        price limit.
+      </Text>
+    </Animated.View>
+  );
+}
+
+function PrivacyCard({ theme }: { theme: LiveTheme }) {
+  const entrance = useEntrance(260);
+
+  return (
+    <Animated.View
+      style={[
+        styles.privacyCard,
+        {
+          backgroundColor: theme.soft,
+          borderColor: theme.border,
+        },
+        entrance,
+      ]}
+    >
+      <View
+        style={[
+          styles.privacyIcon,
+          { backgroundColor: "#FFFFFF" },
+        ]}
+      >
+        <Ionicons
+          name="shield-checkmark-outline"
+          size={23}
+          color={theme.primary}
+        />
+      </View>
+
+      <View style={styles.privacyText}>
+        <Text
+          style={[
+            styles.privacyTitle,
+            { color: theme.dark },
+          ]}
+        >
+          Private constraints protected
+        </Text>
+
+        <Text style={styles.privacyDescription}>
+          Minimum and maximum reservation prices are
+          securely used by the agents but are never
+          displayed or disclosed to the other participant.
+        </Text>
+      </View>
+    </Animated.View>
+  );
+}
+
+function StartButton({
+  disabled,
+  starting,
+  theme,
+  onPress,
+}: {
+  disabled: boolean;
+  starting: boolean;
+  theme: LiveTheme;
+  onPress: () => void;
+}) {
+  const press = usePressScale(0.97);
+  const entrance = useEntrance(420);
+
+  const glow = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    if (disabled) {
+      return;
+    }
+
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(glow, {
+          toValue: 1.015,
+          duration: 1000,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(glow, {
+          toValue: 1,
+          duration: 1000,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ])
+    );
+
+    loop.start();
+
+    return () => loop.stop();
+  }, [disabled, glow]);
+
+  return (
+    <Animated.View style={entrance}>
+      <AnimatedPressable
+        disabled={disabled}
+        onPress={onPress}
+        onPressIn={press.onPressIn}
+        onPressOut={press.onPressOut}
+        style={[
+          styles.startButton,
+          { backgroundColor: theme.primary },
+          {
+            transform: [
+              { scale: press.scale },
+              { scale: disabled ? 1 : glow },
+            ],
+          },
+          disabled && styles.disabled,
+        ]}
+      >
+        {starting ? (
+          <>
+            <ActivityIndicator size="small" color="#FFFFFF" />
+            <Text style={styles.startButtonText}>
+              AI agents are negotiating...
+            </Text>
+          </>
+        ) : (
+          <>
+            <Ionicons name="sparkles" size={19} color="#FFFFFF" />
+            <Text style={styles.startButtonText}>
+              Start AI Negotiation
+            </Text>
+            <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
+          </>
+        )}
+      </AnimatedPressable>
+    </Animated.View>
   );
 }
 
@@ -595,6 +746,23 @@ function NegotiationLiveView({
     new Animated.Value(1)
   ).current;
 
+  const thoughtScale = useRef(
+    new Animated.Value(0.97)
+  ).current;
+
+  const dotAnims = useRef([
+    new Animated.Value(0.3),
+    new Animated.Value(0.3),
+    new Animated.Value(0.3),
+  ]).current;
+
+  const progressAnim = useRef(
+    new Animated.Value(0)
+  ).current;
+
+  const [progressDisplay, setProgressDisplay] =
+    useState(0);
+
   useEffect(() => {
     const pulseAnimation = Animated.loop(
       Animated.sequence([
@@ -622,24 +790,58 @@ function NegotiationLiveView({
       })
     );
 
+    const dotLoop = Animated.loop(
+      Animated.stagger(
+        180,
+        dotAnims.map((dot) =>
+          Animated.sequence([
+            Animated.timing(dot, {
+              toValue: 1,
+              duration: 380,
+              easing: Easing.inOut(Easing.ease),
+              useNativeDriver: true,
+            }),
+            Animated.timing(dot, {
+              toValue: 0.3,
+              duration: 380,
+              easing: Easing.inOut(Easing.ease),
+              useNativeDriver: true,
+            }),
+          ])
+        )
+      )
+    );
+
     pulseAnimation.start();
     rotateAnimation.start();
+    dotLoop.start();
 
     return () => {
       pulseAnimation.stop();
       rotateAnimation.stop();
+      dotLoop.stop();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pulse, rotate]);
 
   useEffect(() => {
     thoughtFade.setValue(0);
+    thoughtScale.setValue(0.97);
 
-    Animated.timing(thoughtFade, {
-      toValue: 1,
-      duration: 350,
-      useNativeDriver: true,
-    }).start();
-  }, [activeStage, thoughtFade]);
+    Animated.parallel([
+      Animated.timing(thoughtFade, {
+        toValue: 1,
+        duration: 350,
+        useNativeDriver: true,
+      }),
+      Animated.spring(thoughtScale, {
+        toValue: 1,
+        useNativeDriver: true,
+        speed: 18,
+        bounciness: 6,
+      }),
+    ]).start();
+  }, [activeStage, thoughtFade, thoughtScale]);
 
   const progress = completed
     ? 100
@@ -652,12 +854,36 @@ function NegotiationLiveView({
         )
       );
 
+  useEffect(() => {
+    const listenerId = progressAnim.addListener(
+      ({ value }) => {
+        setProgressDisplay(Math.round(value));
+      }
+    );
+
+    Animated.timing(progressAnim, {
+      toValue: progress,
+      duration: 550,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: false,
+    }).start();
+
+    return () => progressAnim.removeListener(listenerId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [progress]);
+
   const stage =
     NEGOTIATION_STAGES[activeStage];
 
   const spin = rotate.interpolate({
     inputRange: [0, 1],
     outputRange: ["0deg", "360deg"],
+  });
+
+  const progressWidth = progressAnim.interpolate({
+    inputRange: [0, 100],
+    outputRange: ["0%", "100%"],
+    extrapolate: "clamp",
   });
 
   return (
@@ -698,9 +924,15 @@ function NegotiationLiveView({
             </Animated.View>
 
             <View style={styles.signalDots}>
-              <View style={styles.signalDot} />
-              <View style={styles.signalDot} />
-              <View style={styles.signalDot} />
+              {dotAnims.map((dot, dotIndex) => (
+                <Animated.View
+                  key={dotIndex}
+                  style={[
+                    styles.signalDot,
+                    { opacity: dot },
+                  ]}
+                />
+              ))}
             </View>
           </View>
 
@@ -755,16 +987,16 @@ function NegotiationLiveView({
               { color: theme.primary },
             ]}
           >
-            {progress}%
+            {progressDisplay}%
           </Text>
         </View>
 
         <View style={styles.liveProgressTrack}>
-          <View
+          <Animated.View
             style={[
               styles.liveProgressFill,
               {
-                width: `${progress}%`,
+                width: progressWidth,
                 backgroundColor: theme.primary,
               },
             ]}
@@ -778,6 +1010,7 @@ function NegotiationLiveView({
               opacity: thoughtFade,
               borderColor: theme.border,
               backgroundColor: theme.soft,
+              transform: [{ scale: thoughtScale }],
             },
           ]}
         >
@@ -850,6 +1083,7 @@ function NegotiationLiveView({
 
         <View style={styles.snapshotGrid}>
           <LiveMetric
+            index={0}
             icon="leaf-outline"
             label="Paddy"
             value={formatLabel(paddyType || "-")}
@@ -857,6 +1091,7 @@ function NegotiationLiveView({
             soft={theme.soft}
           />
           <LiveMetric
+            index={1}
             icon="cube-outline"
             label="Quantity"
             value={`${formatNumber(quantity)} kg`}
@@ -864,6 +1099,7 @@ function NegotiationLiveView({
             soft={theme.soft}
           />
           <LiveMetric
+            index={2}
             icon="analytics-outline"
             label="FL reference"
             value={formatPrice(flReferencePrice)}
@@ -871,6 +1107,7 @@ function NegotiationLiveView({
             soft={theme.soft}
           />
           <LiveMetric
+            index={3}
             icon="git-compare-outline"
             label="Match score"
             value={`${matchingScore.toFixed(0)}%`}
@@ -885,114 +1122,219 @@ function NegotiationLiveView({
           AI analysis timeline
         </Text>
 
-        {NEGOTIATION_STAGES.map((item, index) => {
-          const finished =
-            completed || index < activeStage;
-          const active =
-            !completed && index === activeStage;
-
-          return (
-            <View
-              key={item.title}
-              style={styles.liveTimelineRow}
-            >
-              <View style={styles.liveTimelineRail}>
-                <View
-                  style={[
-                    styles.liveTimelineNode,
-                    (finished || active) && {
-                      backgroundColor: theme.primary,
-                      borderColor: theme.primary,
-                    },
-                  ]}
-                >
-                  {finished ? (
-                    <Ionicons
-                      name="checkmark"
-                      size={12}
-                      color="#FFFFFF"
-                    />
-                  ) : active ? (
-                    <View style={styles.activeNodeDot} />
-                  ) : null}
-                </View>
-
-                {index <
-                NEGOTIATION_STAGES.length - 1 ? (
-                  <View
-                    style={[
-                      styles.liveTimelineLine,
-                      finished && {
-                        backgroundColor: theme.primary,
-                      },
-                    ]}
-                  />
-                ) : null}
-              </View>
-
-              <View style={styles.liveTimelineText}>
-                <Text
-                  style={[
-                    styles.liveTimelineItemTitle,
-                    active && { color: theme.primary },
-                    !finished && !active &&
-                      styles.pendingTimelineText,
-                  ]}
-                >
-                  {item.title}
-                </Text>
-                <Text style={styles.liveTimelineItemDetail}>
-                  {finished
-                    ? "Completed securely"
-                    : active
-                      ? item.detail
-                      : "Waiting for the previous analysis"}
-                </Text>
-              </View>
-            </View>
-          );
-        })}
+        {NEGOTIATION_STAGES.map((item, index) => (
+          <TimelineRow
+            key={item.title}
+            item={item}
+            index={index}
+            isLast={index === NEGOTIATION_STAGES.length - 1}
+            finished={completed || index < activeStage}
+            active={!completed && index === activeStage}
+            theme={theme}
+          />
+        ))}
       </View>
 
-      <View
-        style={[
-          styles.liveNotice,
-          {
-            borderColor: theme.border,
-            backgroundColor: theme.soft,
-          },
-        ]}
-      >
-        <Ionicons
-          name="shield-checkmark-outline"
-          size={21}
-          color={theme.primary}
-        />
-        <Text style={styles.liveNoticeText}>
-          Stay on this screen while the local AI agents finish.
-          Your private reservation prices are never shown to the
-          other participant.
-        </Text>
-      </View>
+      <LiveNotice theme={theme} />
     </ScrollView>
   );
 }
 
+function TimelineRow({
+  item,
+  index,
+  isLast,
+  finished,
+  active,
+  theme,
+}: {
+  item: (typeof NEGOTIATION_STAGES)[number];
+  index: number;
+  isLast: boolean;
+  finished: boolean;
+  active: boolean;
+  theme: LiveTheme;
+}) {
+  const entrance = useEntrance(index * 60);
+
+  const nodeScale = useRef(new Animated.Value(1)).current;
+  const ring = useRef(new Animated.Value(0)).current;
+  const wasFinished = useRef(finished);
+
+  useEffect(() => {
+    if (finished && !wasFinished.current) {
+      Animated.sequence([
+        Animated.spring(nodeScale, {
+          toValue: 1.35,
+          useNativeDriver: true,
+          speed: 30,
+          bounciness: 12,
+        }),
+        Animated.spring(nodeScale, {
+          toValue: 1,
+          useNativeDriver: true,
+          speed: 30,
+          bounciness: 6,
+        }),
+      ]).start();
+    }
+
+    wasFinished.current = finished;
+  }, [finished, nodeScale]);
+
+  useEffect(() => {
+    if (!active) {
+      ring.setValue(0);
+      return;
+    }
+
+    const loop = Animated.loop(
+      Animated.timing(ring, {
+        toValue: 1,
+        duration: 1300,
+        easing: Easing.out(Easing.ease),
+        useNativeDriver: true,
+      })
+    );
+
+    loop.start();
+
+    return () => loop.stop();
+  }, [active, ring]);
+
+  const ringScale = ring.interpolate({
+    inputRange: [0, 1],
+    outputRange: [1, 1.9],
+  });
+
+  const ringOpacity = ring.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.35, 0],
+  });
+
+  return (
+    <Animated.View
+      style={[styles.liveTimelineRow, entrance]}
+    >
+      <View style={styles.liveTimelineRail}>
+        <View style={styles.liveTimelineNodeWrap}>
+          {active ? (
+            <Animated.View
+              style={[
+                styles.liveTimelineRing,
+                {
+                  borderColor: theme.primary,
+                  opacity: ringOpacity,
+                  transform: [{ scale: ringScale }],
+                },
+              ]}
+            />
+          ) : null}
+
+          <Animated.View
+            style={[
+              styles.liveTimelineNode,
+              (finished || active) && {
+                backgroundColor: theme.primary,
+                borderColor: theme.primary,
+              },
+              { transform: [{ scale: nodeScale }] },
+            ]}
+          >
+            {finished ? (
+              <Ionicons
+                name="checkmark"
+                size={12}
+                color="#FFFFFF"
+              />
+            ) : active ? (
+              <View style={styles.activeNodeDot} />
+            ) : null}
+          </Animated.View>
+        </View>
+
+        {!isLast ? (
+          <View
+            style={[
+              styles.liveTimelineLine,
+              finished && {
+                backgroundColor: theme.primary,
+              },
+            ]}
+          />
+        ) : null}
+      </View>
+
+      <View style={styles.liveTimelineText}>
+        <Text
+          style={[
+            styles.liveTimelineItemTitle,
+            active && { color: theme.primary },
+            !finished && !active &&
+              styles.pendingTimelineText,
+          ]}
+        >
+          {item.title}
+        </Text>
+        <Text style={styles.liveTimelineItemDetail}>
+          {finished
+            ? "Completed securely"
+            : active
+              ? item.detail
+              : "Waiting for the previous analysis"}
+        </Text>
+      </View>
+    </Animated.View>
+  );
+}
+
+function LiveNotice({ theme }: { theme: LiveTheme }) {
+  const entrance = useEntrance(120);
+
+  return (
+    <Animated.View
+      style={[
+        styles.liveNotice,
+        {
+          borderColor: theme.border,
+          backgroundColor: theme.soft,
+        },
+        entrance,
+      ]}
+    >
+      <Ionicons
+        name="shield-checkmark-outline"
+        size={21}
+        color={theme.primary}
+      />
+      <Text style={styles.liveNoticeText}>
+        Stay on this screen while the local AI agents finish.
+        Your private reservation prices are never shown to the
+        other participant.
+      </Text>
+    </Animated.View>
+  );
+}
+
 function LiveMetric({
+  index,
   icon,
   label,
   value,
   accent,
   soft,
 }: {
+  index: number;
   icon: keyof typeof Ionicons.glyphMap;
   label: string;
   value: string;
   accent: string;
   soft: string;
 }) {
+  const entrance = useEntrance(index * 70);
+
   return (
-    <View style={styles.liveMetric}>
+    <Animated.View style={[styles.liveMetric, entrance]}>
       <View
         style={[
           styles.liveMetricIcon,
@@ -1012,7 +1354,7 @@ function LiveMetric({
       >
         {value}
       </Text>
-    </View>
+    </Animated.View>
   );
 }
 
@@ -1053,6 +1395,7 @@ function AgentAvatar({
 }
 
 function SummaryRow({
+  index,
   icon,
   label,
   value,
@@ -1060,6 +1403,7 @@ function SummaryRow({
   soft,
   last = false,
 }: {
+  index: number;
   icon: keyof typeof Ionicons.glyphMap;
   label: string;
   value: string;
@@ -1067,11 +1411,14 @@ function SummaryRow({
   soft: string;
   last?: boolean;
 }) {
+  const entrance = useEntrance(index * 60);
+
   return (
-    <View
+    <Animated.View
       style={[
         styles.summaryRow,
         last && styles.summaryRowLast,
+        entrance,
       ]}
     >
       <View
@@ -1098,11 +1445,12 @@ function SummaryRow({
           {value}
         </Text>
       </View>
-    </View>
+    </Animated.View>
   );
 }
 
 function ProcessStep({
+  index,
   number,
   title,
   description,
@@ -1110,6 +1458,7 @@ function ProcessStep({
   soft,
   last = false,
 }: {
+  index: number;
   number: string;
   title: string;
   description: string;
@@ -1117,8 +1466,10 @@ function ProcessStep({
   soft: string;
   last?: boolean;
 }) {
+  const entrance = useEntrance(300 + index * 90);
+
   return (
-    <View style={styles.processRow}>
+    <Animated.View style={[styles.processRow, entrance]}>
       <View style={styles.processLineArea}>
         <View
           style={[
@@ -1160,7 +1511,7 @@ function ProcessStep({
           {description}
         </Text>
       </View>
-    </View>
+    </Animated.View>
   );
 }
 
@@ -1561,7 +1912,7 @@ const styles = StyleSheet.create({
     width: 5,
     height: 5,
     borderRadius: 3,
-    backgroundColor: "rgba(253,230,138,0.8)",
+    backgroundColor: "#FDE68A",
   },
 
   liveEyebrow: {
@@ -1763,6 +2114,19 @@ const styles = StyleSheet.create({
   liveTimelineRail: {
     width: 28,
     alignItems: "center",
+  },
+
+  liveTimelineNodeWrap: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  liveTimelineRing: {
+    position: "absolute",
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 1.5,
   },
 
   liveTimelineNode: {

@@ -12,6 +12,7 @@ import {
 import {
   ActivityIndicator,
   Animated,
+  Easing,
   Pressable,
   SafeAreaView,
   ScrollView,
@@ -36,6 +37,62 @@ import type {
   Negotiation,
   NegotiationHistoryItem,
 } from "@/types/c03-marketplace/negotiation.types";
+
+/* ------------------------------------------------------------------ */
+/*  Small animation helpers — purely presentational, no logic changes  */
+/* ------------------------------------------------------------------ */
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
+function usePressScale(target = 0.96) {
+  const scale = useRef(new Animated.Value(1)).current;
+
+  const onPressIn = () => {
+    Animated.spring(scale, {
+      toValue: target,
+      useNativeDriver: true,
+      speed: 40,
+      bounciness: 6,
+    }).start();
+  };
+
+  const onPressOut = () => {
+    Animated.spring(scale, {
+      toValue: 1,
+      useNativeDriver: true,
+      speed: 40,
+      bounciness: 6,
+    }).start();
+  };
+
+  return { scale, onPressIn, onPressOut };
+}
+
+function useEntrance(delay = 0) {
+  const progress = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(progress, {
+      toValue: 1,
+      duration: 420,
+      delay,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+  }, [progress, delay]);
+
+  return {
+    opacity: progress,
+    transform: [
+      {
+        translateY: progress.interpolate({
+          inputRange: [0, 1],
+          outputRange: [16, 0],
+        }),
+      },
+    ],
+  };
+}
 
 export default function NegotiationResultScreen() {
   const { user } = useMarketplaceAuth();
@@ -139,28 +196,7 @@ export default function NegotiationResultScreen() {
   ]);
 
   if (loading) {
-    return (
-      <SafeAreaView
-        style={[
-          styles.screen,
-          {
-            backgroundColor:
-              theme.background,
-          },
-        ]}
-      >
-        <View style={styles.centerState}>
-          <ActivityIndicator
-            size="large"
-            color={theme.primary}
-          />
-
-          <Text style={styles.stateTitle}>
-            Loading negotiation result
-          </Text>
-        </View>
-      </SafeAreaView>
-    );
+    return <LoadingState theme={theme} />;
   }
 
   if (
@@ -168,52 +204,10 @@ export default function NegotiationResultScreen() {
     !negotiation
   ) {
     return (
-      <SafeAreaView
-        style={[
-          styles.screen,
-          {
-            backgroundColor:
-              theme.background,
-          },
-        ]}
-      >
-        <View style={styles.centerState}>
-          <Ionicons
-            name="warning-outline"
-            size={45}
-            color="#B91C1C"
-          />
-
-          <Text style={styles.stateTitle}>
-            Result unavailable
-          </Text>
-
-          <Text style={styles.stateText}>
-            {errorMessage}
-          </Text>
-
-          <Pressable
-            onPress={() =>
-              router.back()
-            }
-            style={[
-              styles.simpleButton,
-              {
-                backgroundColor:
-                  theme.primary,
-              },
-            ]}
-          >
-            <Text
-              style={
-                styles.simpleButtonText
-              }
-            >
-              Go Back
-            </Text>
-          </Pressable>
-        </View>
-      </SafeAreaView>
+      <ErrorState
+        theme={theme}
+        message={errorMessage}
+      />
     );
   }
 
@@ -230,52 +224,7 @@ export default function NegotiationResultScreen() {
         },
       ]}
     >
-      <View style={styles.header}>
-        <Pressable
-          onPress={() =>
-            router.replace(
-              user?.role === "miller"
-                ? "/(c03-marketplace)/(miller)/home"
-                : "/(c03-marketplace)/(farmer)/home"
-            )
-          }
-          style={styles.headerButton}
-        >
-          <Ionicons
-            name="close"
-            size={21}
-            color="#1F2937"
-          />
-        </Pressable>
-
-        <View style={styles.headerText}>
-          <Text style={styles.headerTitle}>
-            Negotiation Result
-          </Text>
-
-          <Text
-            style={styles.headerSubtitle}
-          >
-            {negotiation.negotiationId}
-          </Text>
-        </View>
-
-        <View
-          style={[
-            styles.headerIcon,
-            {
-              backgroundColor:
-                theme.soft,
-            },
-          ]}
-        >
-          <Ionicons
-            name="sparkles"
-            size={20}
-            color={theme.primary}
-          />
-        </View>
-      </View>
+      <Header theme={theme} negotiation={negotiation} />
 
       <ScrollView
         contentContainerStyle={
@@ -295,72 +244,15 @@ export default function NegotiationResultScreen() {
             ],
           }}
         >
-          <View
-            style={[
-              styles.resultHero,
-              {
-                backgroundColor:
-                  agreed
-                    ? theme.dark
-                    : "#7F1D1D",
-              },
-            ]}
-          >
-            <View
-              style={
-                styles.resultIcon
-              }
-            >
-              <Ionicons
-                name={
-                  agreed
-                    ? "checkmark-circle"
-                    : "close-circle"
-                }
-                size={47}
-                color={
-                  agreed
-                    ? "#4ADE80"
-                    : "#FCA5A5"
-                }
-              />
-            </View>
-
-            <Text
-              style={
-                styles.resultEyebrow
-              }
-            >
-              {agreed
-                ? "AGREEMENT REACHED"
-                : "NO AGREEMENT"}
-            </Text>
-
-            <Text
-              style={
-                styles.resultPrice
-              }
-            >
-              {agreed &&
-              negotiation.agreedPrice !==
-                null
-                ? `Rs.${negotiation.agreedPrice.toFixed(
-                    2
-                  )}/kg`
-                : "Negotiation closed"}
-            </Text>
-
-            <Text
-              style={
-                styles.resultDescription
-              }
-            >
-              {negotiation.finalReason}
-            </Text>
-          </View>
+          <ResultHero
+            agreed={agreed}
+            negotiation={negotiation}
+            theme={theme}
+          />
 
           <View style={styles.metricsGrid}>
             <MetricCard
+              index={0}
               icon="repeat-outline"
               label="Rounds"
               value={String(
@@ -371,6 +263,7 @@ export default function NegotiationResultScreen() {
             />
 
             <MetricCard
+              index={1}
               icon="analytics-outline"
               label="FL reference"
               value={`Rs.${negotiation.flReferencePrice.toFixed(
@@ -381,6 +274,7 @@ export default function NegotiationResultScreen() {
             />
 
             <MetricCard
+              index={2}
               icon="shield-checkmark-outline"
               label="Fairness"
               value={
@@ -399,57 +293,13 @@ export default function NegotiationResultScreen() {
           {agreed &&
           negotiation.priceDifferenceFromReference !==
             null ? (
-            <View
-              style={[
-                styles.fairnessCard,
-                {
-                  backgroundColor:
-                    theme.soft,
-
-                  borderColor:
-                    theme.border,
-                },
-              ]}
-            >
-              <Ionicons
-                name="scale-outline"
-                size={24}
-                color={theme.primary}
-              />
-
-              <View
-                style={
-                  styles.fairnessText
-                }
-              >
-                <Text
-                  style={[
-                    styles.fairnessTitle,
-                    {
-                      color:
-                        theme.dark,
-                    },
-                  ]}
-                >
-                  Market alignment
-                </Text>
-
-                <Text
-                  style={
-                    styles.fairnessDescription
-                  }
-                >
-                  The final price differs from
-                  the FL market reference by
-                  Rs.
-                  {Math.abs(
-                    negotiation
-                      .priceDifferenceFromReference
-                  ).toFixed(2)}
-                  .
-                </Text>
-              </View>
-            </View>
+            <FairnessCard
+              theme={theme}
+              value={Math.abs(
+                negotiation
+                  .priceDifferenceFromReference
+              )}
+            />
           ) : null}
 
           <Text
@@ -464,6 +314,7 @@ export default function NegotiationResultScreen() {
                 <HistoryCard
                   key={`${item.round_number}-${item.agent}-${index}`}
                   item={item}
+                  index={index}
                   accent={
                     item.agent === "farmer"
                       ? "#15803D"
@@ -479,101 +330,439 @@ export default function NegotiationResultScreen() {
             )}
           </View>
 
-          <Pressable
-            onPress={() =>
-              router.replace(
-                user?.role ===
-                  "miller"
-                  ? "/(c03-marketplace)/(miller)/home"
-                  : "/(c03-marketplace)/(farmer)/home"
-              )
-            }
-            style={[
-              styles.doneButton,
-              {
-                backgroundColor:
-                  theme.primary,
-              },
-            ]}
-          >
-            <Ionicons
-              name="home-outline"
-              size={19}
-              color="#FFFFFF"
-            />
-
-            <Text
-              style={
-                styles.doneButtonText
-              }
-            >
-              Return to Dashboard
-            </Text>
-          </Pressable>
+          <DoneButton theme={theme} role={user?.role} />
         </Animated.View>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
+/* ------------------------------------------------------------------ */
+/*  Header / states                                                    */
+/* ------------------------------------------------------------------ */
+
+interface ResultTheme {
+  primary: string;
+  dark: string;
+  soft: string;
+  border: string;
+  background: string;
+}
+
+function Header({
+  theme,
+  negotiation,
+}: {
+  theme: ResultTheme;
+  negotiation: Negotiation;
+}) {
+  const { user } = useMarketplaceAuth();
+  const press = usePressScale(0.9);
+
+  return (
+    <View style={styles.header}>
+      <AnimatedPressable
+        onPress={() =>
+          router.replace(
+            user?.role === "miller"
+              ? "/(c03-marketplace)/(miller)/home"
+              : "/(c03-marketplace)/(farmer)/home"
+          )
+        }
+        onPressIn={press.onPressIn}
+        onPressOut={press.onPressOut}
+        style={[
+          styles.headerButton,
+          { transform: [{ scale: press.scale }] },
+        ]}
+      >
+        <Ionicons
+          name="close"
+          size={21}
+          color="#1F2937"
+        />
+      </AnimatedPressable>
+
+      <View style={styles.headerText}>
+        <Text style={styles.headerTitle}>
+          Negotiation Result
+        </Text>
+
+        <Text style={styles.headerSubtitle}>
+          {negotiation.negotiationId}
+        </Text>
+      </View>
+
+      <View
+        style={[
+          styles.headerIcon,
+          { backgroundColor: theme.soft },
+        ]}
+      >
+        <Ionicons
+          name="sparkles"
+          size={20}
+          color={theme.primary}
+        />
+      </View>
+    </View>
+  );
+}
+
+function LoadingState({ theme }: { theme: ResultTheme }) {
+  const pulse = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulse, {
+          toValue: 1.12,
+          duration: 800,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulse, {
+          toValue: 1,
+          duration: 800,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ])
+    );
+
+    loop.start();
+
+    return () => loop.stop();
+  }, [pulse]);
+
+  return (
+    <SafeAreaView
+      style={[
+        styles.screen,
+        { backgroundColor: theme.background },
+      ]}
+    >
+      <View style={styles.centerState}>
+        <Animated.View
+          style={[
+            styles.loadingRing,
+            {
+              backgroundColor: theme.soft,
+              transform: [{ scale: pulse }],
+            },
+          ]}
+        >
+          <ActivityIndicator
+            size="large"
+            color={theme.primary}
+          />
+        </Animated.View>
+
+        <Text style={styles.stateTitle}>
+          Loading negotiation result
+        </Text>
+      </View>
+    </SafeAreaView>
+  );
+}
+
+function ErrorState({
+  theme,
+  message,
+}: {
+  theme: ResultTheme;
+  message: string | null;
+}) {
+  const entrance = useEntrance(0);
+  const press = usePressScale(0.96);
+
+  return (
+    <SafeAreaView
+      style={[
+        styles.screen,
+        { backgroundColor: theme.background },
+      ]}
+    >
+      <Animated.View
+        style={[styles.centerState, entrance]}
+      >
+        <Ionicons
+          name="warning-outline"
+          size={45}
+          color="#B91C1C"
+        />
+
+        <Text style={styles.stateTitle}>
+          Result unavailable
+        </Text>
+
+        <Text style={styles.stateText}>
+          {message}
+        </Text>
+
+        <AnimatedPressable
+          onPress={() => router.back()}
+          onPressIn={press.onPressIn}
+          onPressOut={press.onPressOut}
+          style={[
+            styles.simpleButton,
+            { backgroundColor: theme.primary },
+            { transform: [{ scale: press.scale }] },
+          ]}
+        >
+          <Text style={styles.simpleButtonText}>
+            Go Back
+          </Text>
+        </AnimatedPressable>
+      </Animated.View>
+    </SafeAreaView>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Result pieces                                                      */
+/* ------------------------------------------------------------------ */
+
+function ResultHero({
+  agreed,
+  negotiation,
+  theme,
+}: {
+  agreed: boolean;
+  negotiation: Negotiation;
+  theme: ResultTheme;
+}) {
+  const iconScale = useRef(new Animated.Value(0)).current;
+  const ring = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.spring(iconScale, {
+      toValue: 1,
+      useNativeDriver: true,
+      speed: 14,
+      bounciness: agreed ? 16 : 8,
+    }).start();
+
+    if (agreed) {
+      Animated.loop(
+        Animated.timing(ring, {
+          toValue: 1,
+          duration: 1400,
+          easing: Easing.out(Easing.ease),
+          useNativeDriver: true,
+        }),
+        { iterations: 3 }
+      ).start();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const ringScale = ring.interpolate({
+    inputRange: [0, 1],
+    outputRange: [1, 1.6],
+  });
+
+  const ringOpacity = ring.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.5, 0],
+  });
+
+  return (
+    <View
+      style={[
+        styles.resultHero,
+        { backgroundColor: agreed ? theme.dark : "#7F1D1D" },
+      ]}
+    >
+      <View style={styles.resultIcon}>
+        {agreed ? (
+          <Animated.View
+            style={[
+              styles.resultRing,
+              {
+                opacity: ringOpacity,
+                transform: [{ scale: ringScale }],
+              },
+            ]}
+          />
+        ) : null}
+
+        <Animated.View
+          style={{ transform: [{ scale: iconScale }] }}
+        >
+          <Ionicons
+            name={agreed ? "checkmark-circle" : "close-circle"}
+            size={47}
+            color={agreed ? "#4ADE80" : "#FCA5A5"}
+          />
+        </Animated.View>
+      </View>
+
+      <Text style={styles.resultEyebrow}>
+        {agreed ? "AGREEMENT REACHED" : "NO AGREEMENT"}
+      </Text>
+
+      <Text style={styles.resultPrice}>
+        {agreed && negotiation.agreedPrice !== null
+          ? `Rs.${negotiation.agreedPrice.toFixed(2)}/kg`
+          : "Negotiation closed"}
+      </Text>
+
+      <Text style={styles.resultDescription}>
+        {negotiation.finalReason}
+      </Text>
+    </View>
+  );
+}
+
 function MetricCard({
+  index,
   icon,
   label,
   value,
   accent,
   soft,
 }: {
+  index: number;
   icon: keyof typeof Ionicons.glyphMap;
   label: string;
   value: string;
   accent: string;
   soft: string;
 }) {
+  const scale = useRef(new Animated.Value(0.85)).current;
+  const opacity = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.spring(scale, {
+        toValue: 1,
+        useNativeDriver: true,
+        delay: 120 + index * 90,
+        speed: 16,
+        bounciness: 9,
+      }),
+      Animated.timing(opacity, {
+        toValue: 1,
+        duration: 300,
+        delay: 120 + index * 90,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [index, scale, opacity]);
+
   return (
-    <View style={styles.metricCard}>
+    <Animated.View
+      style={[
+        styles.metricCard,
+        { opacity, transform: [{ scale }] },
+      ]}
+    >
       <View
         style={[
           styles.metricIcon,
-          {
-            backgroundColor: soft,
-          },
+          { backgroundColor: soft },
         ]}
       >
-        <Ionicons
-          name={icon}
-          size={18}
-          color={accent}
-        />
+        <Ionicons name={icon} size={18} color={accent} />
       </View>
 
-      <Text style={styles.metricValue}>
-        {value}
-      </Text>
+      <Text style={styles.metricValue}>{value}</Text>
 
-      <Text style={styles.metricLabel}>
-        {label}
-      </Text>
-    </View>
+      <Text style={styles.metricLabel}>{label}</Text>
+    </Animated.View>
+  );
+}
+
+function FairnessCard({
+  theme,
+  value,
+}: {
+  theme: ResultTheme;
+  value: number;
+}) {
+  const entrance = useEntrance(360);
+
+  return (
+    <Animated.View
+      style={[
+        styles.fairnessCard,
+        {
+          backgroundColor: theme.soft,
+          borderColor: theme.border,
+        },
+        entrance,
+      ]}
+    >
+      <Ionicons
+        name="scale-outline"
+        size={24}
+        color={theme.primary}
+      />
+
+      <View style={styles.fairnessText}>
+        <Text
+          style={[
+            styles.fairnessTitle,
+            { color: theme.dark },
+          ]}
+        >
+          Market alignment
+        </Text>
+
+        <Text style={styles.fairnessDescription}>
+          The final price differs from the FL market
+          reference by Rs.{value.toFixed(2)}.
+        </Text>
+      </View>
+    </Animated.View>
   );
 }
 
 function HistoryCard({
   item,
+  index,
   accent,
   soft,
 }: {
   item: NegotiationHistoryItem;
+  index: number;
   accent: string;
   soft: string;
 }) {
+  const fromLeft = item.agent === "farmer";
+
+  const progress = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(progress, {
+      toValue: 1,
+      duration: 420,
+      delay: 420 + index * 90,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+  }, [progress, index]);
+
+  const translateX = progress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [fromLeft ? -22 : 22, 0],
+  });
+
   return (
-    <View style={styles.historyCard}>
+    <Animated.View
+      style={[
+        styles.historyCard,
+        {
+          opacity: progress,
+          transform: [{ translateX }],
+        },
+      ]}
+    >
       <View
         style={[
           styles.historyIcon,
-          {
-            backgroundColor: soft,
-          },
+          { backgroundColor: soft },
         ]}
       >
         <Ionicons
@@ -588,17 +777,11 @@ function HistoryCard({
       </View>
 
       <View style={styles.historyBody}>
-        <View
-          style={
-            styles.historyTopRow
-          }
-        >
+        <View style={styles.historyTopRow}>
           <Text
             style={[
               styles.historyAgent,
-              {
-                color: accent,
-              },
+              { color: accent },
             ]}
           >
             {item.agent === "farmer"
@@ -606,62 +789,75 @@ function HistoryCard({
               : "Miller Agent"}
           </Text>
 
-          <Text
-            style={
-              styles.historyRound
-            }
-          >
+          <Text style={styles.historyRound}>
             Round {item.round_number}
           </Text>
         </View>
 
-        <View
-          style={
-            styles.historyDecision
-          }
-        >
+        <View style={styles.historyDecision}>
           <View
             style={[
               styles.actionBadge,
-              {
-                backgroundColor: soft,
-              },
+              { backgroundColor: soft },
             ]}
           >
             <Text
               style={[
                 styles.actionText,
-                {
-                  color: accent,
-                },
+                { color: accent },
               ]}
             >
-              {formatLabel(
-                item.action
-              )}
+              {formatLabel(item.action)}
             </Text>
           </View>
 
           {item.price !== null ? (
-            <Text
-              style={
-                styles.historyPrice
-              }
-            >
+            <Text style={styles.historyPrice}>
               Rs.{item.price.toFixed(2)}
             </Text>
           ) : null}
         </View>
 
-        <Text
-          style={
-            styles.historyReason
-          }
-        >
+        <Text style={styles.historyReason}>
           {item.reason}
         </Text>
       </View>
-    </View>
+    </Animated.View>
+  );
+}
+
+function DoneButton({
+  theme,
+  role,
+}: {
+  theme: ResultTheme;
+  role: string | undefined;
+}) {
+  const press = usePressScale(0.97);
+
+  return (
+    <AnimatedPressable
+      onPress={() =>
+        router.replace(
+          role === "miller"
+            ? "/(c03-marketplace)/(miller)/home"
+            : "/(c03-marketplace)/(farmer)/home"
+        )
+      }
+      onPressIn={press.onPressIn}
+      onPressOut={press.onPressOut}
+      style={[
+        styles.doneButton,
+        { backgroundColor: theme.primary },
+        { transform: [{ scale: press.scale }] },
+      ]}
+    >
+      <Ionicons name="home-outline" size={19} color="#FFFFFF" />
+
+      <Text style={styles.doneButtonText}>
+        Return to Dashboard
+      </Text>
+    </AnimatedPressable>
   );
 }
 
@@ -754,6 +950,15 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor:
       "rgba(255,255,255,0.12)",
+  },
+
+  resultRing: {
+    position: "absolute",
+    width: 70,
+    height: 70,
+    borderRadius: 24,
+    borderWidth: 2,
+    borderColor: "#4ADE80",
   },
 
   resultEyebrow: {
@@ -945,6 +1150,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 30,
+  },
+
+  loadingRing: {
+    width: 96,
+    height: 96,
+    borderRadius: 32,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 4,
   },
 
   stateTitle: {
