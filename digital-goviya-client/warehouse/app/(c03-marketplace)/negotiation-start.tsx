@@ -4,12 +4,16 @@ import {
   useLocalSearchParams,
 } from "expo-router";
 import {
+  useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Animated,
+  Easing,
   Pressable,
   SafeAreaView,
   ScrollView,
@@ -29,6 +33,44 @@ import {
 import {
   getApiErrorMessage,
 } from "@/utils/c03-marketplace/getApiErrorMessage";
+
+const NEGOTIATION_STAGES = [
+  {
+    title: "Initializing secure AI agents",
+    detail: "Creating protected Farmer and Miller agent sessions.",
+    icon: "shield-checkmark-outline" as const,
+  },
+  {
+    title: "Loading market intelligence",
+    detail: "Reading the FL reference price and matching confidence.",
+    icon: "analytics-outline" as const,
+  },
+  {
+    title: "Farmer AI is planning",
+    detail: "Evaluating the asking price and a safe concession strategy.",
+    icon: "leaf-outline" as const,
+  },
+  {
+    title: "Miller AI is evaluating",
+    detail: "Comparing offers while protecting the private buying limit.",
+    icon: "business-outline" as const,
+  },
+  {
+    title: "Agents are exchanging offers",
+    detail: "Checking counter-offers against negotiation guardrails.",
+    icon: "swap-horizontal-outline" as const,
+  },
+  {
+    title: "Measuring fairness",
+    detail: "Comparing the emerging price with the FL market reference.",
+    icon: "scale-outline" as const,
+  },
+  {
+    title: "Finalizing the outcome",
+    detail: "Validating the agreement and preparing the result.",
+    icon: "sparkles-outline" as const,
+  },
+];
 
 export default function NegotiationStartScreen() {
   const { user } = useMarketplaceAuth();
@@ -64,6 +106,12 @@ export default function NegotiationStartScreen() {
   const [starting, setStarting] =
     useState(false);
 
+  const [activeStage, setActiveStage] =
+    useState(0);
+
+  const [completed, setCompleted] =
+    useState(false);
+
   const isMiller =
     user?.role === "miller";
 
@@ -87,6 +135,23 @@ export default function NegotiationStartScreen() {
     [isMiller]
   );
 
+  useEffect(() => {
+    if (!starting || completed) {
+      return;
+    }
+
+    const timer = setInterval(() => {
+      setActiveStage((current) =>
+        Math.min(
+          current + 1,
+          NEGOTIATION_STAGES.length - 1
+        )
+      );
+    }, 1700);
+
+    return () => clearInterval(timer);
+  }, [starting, completed]);
+
   const handleStart = async () => {
     if (!selectionId || starting) {
       return;
@@ -94,6 +159,8 @@ export default function NegotiationStartScreen() {
 
     try {
       setStarting(true);
+      setCompleted(false);
+      setActiveStage(0);
 
       await negotiationService
         .checkHealth();
@@ -103,6 +170,15 @@ export default function NegotiationStartScreen() {
           .startNegotiation({
             selectionId,
           });
+
+      setActiveStage(
+        NEGOTIATION_STAGES.length - 1
+      );
+      setCompleted(true);
+
+      await new Promise((resolve) =>
+        setTimeout(resolve, 1200)
+      );
 
       router.replace({
         pathname:
@@ -119,12 +195,13 @@ export default function NegotiationStartScreen() {
         error
       );
 
+      setStarting(false);
+      setCompleted(false);
+
       Alert.alert(
         "Unable to start negotiation",
         getApiErrorMessage(error)
       );
-    } finally {
-      setStarting(false);
     }
   };
 
@@ -179,6 +256,17 @@ export default function NegotiationStartScreen() {
         </View>
       </View>
 
+      {starting ? (
+        <NegotiationLiveView
+          activeStage={activeStage}
+          completed={completed}
+          theme={theme}
+          paddyType={paddyType}
+          quantity={quantity}
+          flReferencePrice={flReferencePrice}
+          matchingScore={matchingScore}
+        />
+      ) : (
       <ScrollView
         contentContainerStyle={
           styles.content
@@ -465,7 +553,466 @@ export default function NegotiationStartScreen() {
           and validate their decisions.
         </Text>
       </ScrollView>
+      )}
     </SafeAreaView>
+  );
+}
+
+interface LiveTheme {
+  primary: string;
+  dark: string;
+  soft: string;
+  border: string;
+  background: string;
+}
+
+function NegotiationLiveView({
+  activeStage,
+  completed,
+  theme,
+  paddyType,
+  quantity,
+  flReferencePrice,
+  matchingScore,
+}: {
+  activeStage: number;
+  completed: boolean;
+  theme: LiveTheme;
+  paddyType: string;
+  quantity: number;
+  flReferencePrice: number;
+  matchingScore: number;
+}) {
+  const pulse = useRef(
+    new Animated.Value(1)
+  ).current;
+
+  const rotate = useRef(
+    new Animated.Value(0)
+  ).current;
+
+  const thoughtFade = useRef(
+    new Animated.Value(1)
+  ).current;
+
+  useEffect(() => {
+    const pulseAnimation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulse, {
+          toValue: 1.06,
+          duration: 850,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulse, {
+          toValue: 1,
+          duration: 850,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ])
+    );
+
+    const rotateAnimation = Animated.loop(
+      Animated.timing(rotate, {
+        toValue: 1,
+        duration: 2600,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      })
+    );
+
+    pulseAnimation.start();
+    rotateAnimation.start();
+
+    return () => {
+      pulseAnimation.stop();
+      rotateAnimation.stop();
+    };
+  }, [pulse, rotate]);
+
+  useEffect(() => {
+    thoughtFade.setValue(0);
+
+    Animated.timing(thoughtFade, {
+      toValue: 1,
+      duration: 350,
+      useNativeDriver: true,
+    }).start();
+  }, [activeStage, thoughtFade]);
+
+  const progress = completed
+    ? 100
+    : Math.max(
+        12,
+        Math.round(
+          ((activeStage + 1) /
+            (NEGOTIATION_STAGES.length + 1)) *
+            100
+        )
+      );
+
+  const stage =
+    NEGOTIATION_STAGES[activeStage];
+
+  const spin = rotate.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["0deg", "360deg"],
+  });
+
+  return (
+    <ScrollView
+      contentContainerStyle={styles.liveContent}
+      showsVerticalScrollIndicator={false}
+    >
+      <View
+        style={[
+          styles.liveHero,
+          { backgroundColor: theme.dark },
+        ]}
+      >
+        <View style={styles.liveAgentsRow}>
+          <Animated.View
+            style={[
+              styles.liveAgentOrb,
+              styles.farmerAgentOrb,
+              { transform: [{ scale: pulse }] },
+            ]}
+          >
+            <Ionicons
+              name="leaf"
+              size={27}
+              color="#15803D"
+            />
+          </Animated.View>
+
+          <View style={styles.liveConnection}>
+            <Animated.View
+              style={{ transform: [{ rotate: spin }] }}
+            >
+              <Ionicons
+                name="sync"
+                size={28}
+                color="#FDE68A"
+              />
+            </Animated.View>
+
+            <View style={styles.signalDots}>
+              <View style={styles.signalDot} />
+              <View style={styles.signalDot} />
+              <View style={styles.signalDot} />
+            </View>
+          </View>
+
+          <Animated.View
+            style={[
+              styles.liveAgentOrb,
+              styles.millerAgentOrb,
+              { transform: [{ scale: pulse }] },
+            ]}
+          >
+            <Ionicons
+              name="business"
+              size={27}
+              color="#92400E"
+            />
+          </Animated.View>
+        </View>
+
+        <Text style={styles.liveEyebrow}>
+          {completed
+            ? "NEGOTIATION COMPLETE"
+            : "LIVE AI NEGOTIATION"}
+        </Text>
+
+        <Text style={styles.liveHeroTitle}>
+          {completed
+            ? "Outcome prepared"
+            : "Two agents are working for a fair deal"}
+        </Text>
+
+        <Text style={styles.liveHeroDescription}>
+          {completed
+            ? "The result has been validated and is ready to review."
+            : "Private limits remain protected while both agents evaluate offers and market fairness."}
+        </Text>
+      </View>
+
+      <View style={styles.liveProgressCard}>
+        <View style={styles.progressHeader}>
+          <View>
+            <Text style={styles.progressLabel}>
+              Negotiation progress
+            </Text>
+            <Text style={styles.progressSubLabel}>
+              Secure multi-agent processing
+            </Text>
+          </View>
+
+          <Text
+            style={[
+              styles.progressPercent,
+              { color: theme.primary },
+            ]}
+          >
+            {progress}%
+          </Text>
+        </View>
+
+        <View style={styles.liveProgressTrack}>
+          <View
+            style={[
+              styles.liveProgressFill,
+              {
+                width: `${progress}%`,
+                backgroundColor: theme.primary,
+              },
+            ]}
+          />
+        </View>
+
+        <Animated.View
+          style={[
+            styles.currentThoughtCard,
+            {
+              opacity: thoughtFade,
+              borderColor: theme.border,
+              backgroundColor: theme.soft,
+            },
+          ]}
+        >
+          <View style={styles.currentThoughtIcon}>
+            <Ionicons
+              name={
+                completed
+                  ? "checkmark-circle"
+                  : stage.icon
+              }
+              size={23}
+              color={theme.primary}
+            />
+          </View>
+
+          <View style={styles.currentThoughtText}>
+            <Text
+              style={[
+                styles.currentThoughtTitle,
+                { color: theme.dark },
+              ]}
+            >
+              {completed
+                ? "Agreement analysis completed"
+                : stage.title}
+            </Text>
+
+            <Text style={styles.currentThoughtDescription}>
+              {completed
+                ? "Opening the detailed agent conversation and fairness report."
+                : stage.detail}
+            </Text>
+          </View>
+
+          {!completed ? (
+            <ActivityIndicator
+              size="small"
+              color={theme.primary}
+            />
+          ) : null}
+        </Animated.View>
+      </View>
+
+      <View style={styles.liveSnapshotCard}>
+        <View style={styles.snapshotHeader}>
+          <Text style={styles.snapshotTitle}>
+            Market context loaded
+          </Text>
+          <View
+            style={[
+              styles.secureBadge,
+              { backgroundColor: theme.soft },
+            ]}
+          >
+            <Ionicons
+              name="lock-closed"
+              size={12}
+              color={theme.primary}
+            />
+            <Text
+              style={[
+                styles.secureBadgeText,
+                { color: theme.primary },
+              ]}
+            >
+              PRIVATE
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.snapshotGrid}>
+          <LiveMetric
+            icon="leaf-outline"
+            label="Paddy"
+            value={formatLabel(paddyType || "-")}
+            accent={theme.primary}
+            soft={theme.soft}
+          />
+          <LiveMetric
+            icon="cube-outline"
+            label="Quantity"
+            value={`${formatNumber(quantity)} kg`}
+            accent={theme.primary}
+            soft={theme.soft}
+          />
+          <LiveMetric
+            icon="analytics-outline"
+            label="FL reference"
+            value={formatPrice(flReferencePrice)}
+            accent={theme.primary}
+            soft={theme.soft}
+          />
+          <LiveMetric
+            icon="git-compare-outline"
+            label="Match score"
+            value={`${matchingScore.toFixed(0)}%`}
+            accent={theme.primary}
+            soft={theme.soft}
+          />
+        </View>
+      </View>
+
+      <View style={styles.liveTimelineCard}>
+        <Text style={styles.liveTimelineTitle}>
+          AI analysis timeline
+        </Text>
+
+        {NEGOTIATION_STAGES.map((item, index) => {
+          const finished =
+            completed || index < activeStage;
+          const active =
+            !completed && index === activeStage;
+
+          return (
+            <View
+              key={item.title}
+              style={styles.liveTimelineRow}
+            >
+              <View style={styles.liveTimelineRail}>
+                <View
+                  style={[
+                    styles.liveTimelineNode,
+                    (finished || active) && {
+                      backgroundColor: theme.primary,
+                      borderColor: theme.primary,
+                    },
+                  ]}
+                >
+                  {finished ? (
+                    <Ionicons
+                      name="checkmark"
+                      size={12}
+                      color="#FFFFFF"
+                    />
+                  ) : active ? (
+                    <View style={styles.activeNodeDot} />
+                  ) : null}
+                </View>
+
+                {index <
+                NEGOTIATION_STAGES.length - 1 ? (
+                  <View
+                    style={[
+                      styles.liveTimelineLine,
+                      finished && {
+                        backgroundColor: theme.primary,
+                      },
+                    ]}
+                  />
+                ) : null}
+              </View>
+
+              <View style={styles.liveTimelineText}>
+                <Text
+                  style={[
+                    styles.liveTimelineItemTitle,
+                    active && { color: theme.primary },
+                    !finished && !active &&
+                      styles.pendingTimelineText,
+                  ]}
+                >
+                  {item.title}
+                </Text>
+                <Text style={styles.liveTimelineItemDetail}>
+                  {finished
+                    ? "Completed securely"
+                    : active
+                      ? item.detail
+                      : "Waiting for the previous analysis"}
+                </Text>
+              </View>
+            </View>
+          );
+        })}
+      </View>
+
+      <View
+        style={[
+          styles.liveNotice,
+          {
+            borderColor: theme.border,
+            backgroundColor: theme.soft,
+          },
+        ]}
+      >
+        <Ionicons
+          name="shield-checkmark-outline"
+          size={21}
+          color={theme.primary}
+        />
+        <Text style={styles.liveNoticeText}>
+          Stay on this screen while the local AI agents finish.
+          Your private reservation prices are never shown to the
+          other participant.
+        </Text>
+      </View>
+    </ScrollView>
+  );
+}
+
+function LiveMetric({
+  icon,
+  label,
+  value,
+  accent,
+  soft,
+}: {
+  icon: keyof typeof Ionicons.glyphMap;
+  label: string;
+  value: string;
+  accent: string;
+  soft: string;
+}) {
+  return (
+    <View style={styles.liveMetric}>
+      <View
+        style={[
+          styles.liveMetricIcon,
+          { backgroundColor: soft },
+        ]}
+      >
+        <Ionicons
+          name={icon}
+          size={17}
+          color={accent}
+        />
+      </View>
+      <Text style={styles.liveMetricLabel}>{label}</Text>
+      <Text
+        style={styles.liveMetricValue}
+        numberOfLines={1}
+      >
+        {value}
+      </Text>
+    </View>
   );
 }
 
@@ -958,6 +1505,328 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginTop: 10,
     paddingHorizontal: 18,
+  },
+
+  liveContent: {
+    padding: 17,
+    paddingBottom: 40,
+    gap: 16,
+  },
+
+  liveHero: {
+    borderRadius: 26,
+    padding: 22,
+    alignItems: "center",
+    overflow: "hidden",
+  },
+
+  liveAgentsRow: {
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  liveAgentOrb: {
+    width: 68,
+    height: 68,
+    borderRadius: 23,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 2,
+    borderColor: "rgba(255,255,255,0.55)",
+  },
+
+  farmerAgentOrb: {
+    backgroundColor: "#DCFCE7",
+  },
+
+  millerAgentOrb: {
+    backgroundColor: "#FEF3C7",
+  },
+
+  liveConnection: {
+    width: 88,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  signalDots: {
+    flexDirection: "row",
+    gap: 5,
+    marginTop: 8,
+  },
+
+  signalDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: "rgba(253,230,138,0.8)",
+  },
+
+  liveEyebrow: {
+    color: "#FDE68A",
+    fontSize: 9,
+    fontWeight: "900",
+    letterSpacing: 1.2,
+    marginTop: 18,
+  },
+
+  liveHeroTitle: {
+    color: "#FFFFFF",
+    fontSize: 19,
+    lineHeight: 25,
+    fontWeight: "900",
+    textAlign: "center",
+    marginTop: 7,
+  },
+
+  liveHeroDescription: {
+    color: "rgba(255,255,255,0.72)",
+    fontSize: 10,
+    lineHeight: 16,
+    textAlign: "center",
+    marginTop: 7,
+    paddingHorizontal: 6,
+  },
+
+  liveProgressCard: {
+    borderRadius: 21,
+    padding: 16,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+
+  progressHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+
+  progressLabel: {
+    color: "#1F2937",
+    fontSize: 13,
+    fontWeight: "900",
+  },
+
+  progressSubLabel: {
+    color: "#94A3B8",
+    fontSize: 8.5,
+    marginTop: 2,
+  },
+
+  progressPercent: {
+    fontSize: 19,
+    fontWeight: "900",
+  },
+
+  liveProgressTrack: {
+    height: 9,
+    borderRadius: 999,
+    overflow: "hidden",
+    backgroundColor: "#E5E7EB",
+    marginTop: 14,
+  },
+
+  liveProgressFill: {
+    height: "100%",
+    borderRadius: 999,
+  },
+
+  currentThoughtCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    borderRadius: 16,
+    padding: 13,
+    borderWidth: 1,
+    marginTop: 15,
+  },
+
+  currentThoughtIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FFFFFF",
+  },
+
+  currentThoughtText: {
+    flex: 1,
+  },
+
+  currentThoughtTitle: {
+    fontSize: 10.5,
+    fontWeight: "900",
+  },
+
+  currentThoughtDescription: {
+    color: "#64748B",
+    fontSize: 8.5,
+    lineHeight: 14,
+    marginTop: 3,
+  },
+
+  liveSnapshotCard: {
+    borderRadius: 21,
+    padding: 16,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+
+  snapshotHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 14,
+  },
+
+  snapshotTitle: {
+    color: "#1F2937",
+    fontSize: 13,
+    fontWeight: "900",
+  },
+
+  secureBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+  },
+
+  secureBadgeText: {
+    fontSize: 7,
+    fontWeight: "900",
+    letterSpacing: 0.6,
+  },
+
+  snapshotGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+  },
+
+  liveMetric: {
+    width: "48%",
+    minHeight: 94,
+    borderRadius: 16,
+    padding: 12,
+    backgroundColor: "#F8FAFC",
+  },
+
+  liveMetricIcon: {
+    width: 34,
+    height: 34,
+    borderRadius: 11,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  liveMetricLabel: {
+    color: "#94A3B8",
+    fontSize: 8,
+    marginTop: 8,
+  },
+
+  liveMetricValue: {
+    color: "#1F2937",
+    fontSize: 10.5,
+    fontWeight: "900",
+    marginTop: 3,
+  },
+
+  liveTimelineCard: {
+    borderRadius: 21,
+    padding: 16,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+
+  liveTimelineTitle: {
+    color: "#1F2937",
+    fontSize: 13,
+    fontWeight: "900",
+    marginBottom: 15,
+  },
+
+  liveTimelineRow: {
+    flexDirection: "row",
+    minHeight: 64,
+  },
+
+  liveTimelineRail: {
+    width: 28,
+    alignItems: "center",
+  },
+
+  liveTimelineNode: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FFFFFF",
+    borderWidth: 2,
+    borderColor: "#CBD5E1",
+  },
+
+  activeNodeDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: "#FFFFFF",
+  },
+
+  liveTimelineLine: {
+    flex: 1,
+    width: 2,
+    backgroundColor: "#E2E8F0",
+    marginVertical: 4,
+  },
+
+  liveTimelineText: {
+    flex: 1,
+    paddingLeft: 9,
+    paddingBottom: 14,
+  },
+
+  liveTimelineItemTitle: {
+    color: "#334155",
+    fontSize: 10.5,
+    fontWeight: "800",
+  },
+
+  pendingTimelineText: {
+    color: "#94A3B8",
+  },
+
+  liveTimelineItemDetail: {
+    color: "#64748B",
+    fontSize: 8.5,
+    lineHeight: 14,
+    marginTop: 3,
+  },
+
+  liveNotice: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 10,
+    borderRadius: 17,
+    padding: 13,
+    borderWidth: 1,
+  },
+
+  liveNoticeText: {
+    flex: 1,
+    color: "#64748B",
+    fontSize: 8.5,
+    lineHeight: 14,
   },
 
   pressed: {
