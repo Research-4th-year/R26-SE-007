@@ -102,3 +102,11 @@ export interface GetHarvestsResponse {
   count: number;
   data: Harvest[];
 }
+
+export interface CreateHarvestRequest {
+  paddyType: PaddyType;
+  season: PaddySeason;
+  quantity: number;
+  expectedPrice: number;
+  minimumAcceptablePrice: number;
+}

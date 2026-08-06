@@ -21,18 +21,18 @@ Possible actions:
 2. counter_offer
 3. reject
 
-Rules:
+Mandatory rules:
 
 - Never accept below the farmer minimum price.
 - Never counter below the farmer minimum price.
 - Never counter above the farmer expected price.
+- Never increase the asking price after making a lower offer.
+- Avoid repeating the same offer unless no valid concession remains.
 - Gradually move toward agreement as rounds increase.
 - Use the FL reference price only as market guidance.
 - Consider quantity, matching score, negotiation history and current round.
+- Compare prices numerically before writing the reason.
 - Return ONLY a JSON object.
-- Never increase the asking price after making a lower offer.
-- Avoid repeating the same offer unless no valid concession
-  remains.
 """
 
 
@@ -45,6 +45,30 @@ class FarmerAgent:
         state: FarmerAgentInput,
         validation_feedback: str | None = None,
     ) -> NegotiationDecision:
+        previous_farmer_offer: float | None = None
+
+        for item in reversed(state.history):
+            if (
+                item.agent == "farmer"
+                and item.action.value == "counter_offer"
+                and item.price is not None
+            ):
+                previous_farmer_offer = float(item.price)
+                break
+
+        maximum_counter_price = float(
+            state.farmer_expected_price
+        )
+
+        if previous_farmer_offer is not None:
+            maximum_counter_price = min(
+                maximum_counter_price,
+                previous_farmer_offer,
+            )
+
+        minimum_counter_price = float(
+            state.farmer_minimum_price
+        )
 
         private_state = {
             "negotiation_id": state.negotiation_id,
@@ -58,6 +82,11 @@ class FarmerAgent:
             "miller_current_offer": state.miller_current_offer,
             "fl_reference_price": state.fl_reference_price,
             "matching_score": state.matching_score,
+            "previous_farmer_counter_offer": previous_farmer_offer,
+            "allowed_counter_offer_range": {
+                "minimum": minimum_counter_price,
+                "maximum": maximum_counter_price,
+            },
             "history": [
                 item.model_dump(mode="json")
                 for item in state.history
@@ -69,63 +98,55 @@ class FarmerAgent:
         if validation_feedback:
             feedback_section = f"""
 
-IMPORTANT
+IMPORTANT CORRECTION
 
-Your previous proposal violated a business rule.
-
-Reason:
+Your previous proposal violated this business rule:
 
 {validation_feedback}
 
 Generate a NEW corrected decision.
+The corrected counter-offer must remain between
+{minimum_counter_price:.2f} and {maximum_counter_price:.2f}.
 """
 
         prompt = f"""
-Review the negotiation state below and decide the farmer's next action.
+Review the negotiation state below and decide the Farmer's next action.
 
 Negotiation state:
 
 {json.dumps(private_state, indent=2)}
 
-Requirements
+Mandatory requirements:
 
-- Farmer minimum price is private.
-- Never reveal it.
-- action must be:
-  accept
-  counter_offer
-  reject
-
-- market_alignment must be:
-  below_market
-  near_market
-  above_market
-
+- Farmer minimum price is private. Never reveal it.
+- action must be: accept, counter_offer, or reject.
+- market_alignment must be: below_market, near_market, or above_market.
 - confidence must be between 0 and 1.
-- Every response MUST contain price.
-- Accept → price equals current miller offer.
-- Counter offer → price between farmer minimum and expected price.
-- Reject → price = null.
-- Return JSON only.
-- Review the negotiation history before selecting a price.
-- Your new counter-offer must not be greater than your
-  previous counter-offer.
+- Accept: price must equal the current Miller offer.
+- Counter offer: price must be between
+  {minimum_counter_price:.2f} and {maximum_counter_price:.2f}.
+- Reject: price must be null.
+- Never increase the Farmer asking price after a lower offer.
 - Gradually reduce the asking price as rounds progress.
-- If the miller's current offer equals a price you are
-  willing to propose, choose accept instead of counter_offer.
-- In the final round, accept when the miller's offer is
-  at or above the private minimum and agreement is practical.
+- If the Miller offer is at or above the private minimum and
+  agreement is practical, prefer accept rather than an unnecessary counter-offer.
+- If the Miller offer equals a price you are willing to propose,
+  choose accept instead of counter_offer.
+- Compare all prices numerically before writing the reason.
+- If the Miller offer is below the private minimum, state only that
+  it is below the Farmer's acceptable range; do not reveal the limit.
+- Return JSON only.
 
 {feedback_section}
 
 Example:
 
 {{
-    "action":"counter_offer",
-    "price":135.0,
-    "reason":"Current offer is below market value.",
-    "confidence":0.84,
-    "market_alignment":"above_market"
+    "action": "counter_offer",
+    "price": 124.0,
+    "reason": "The current offer is below the Farmer's acceptable range, so a lower counter-offer is proposed to move toward agreement.",
+    "confidence": 0.84,
+    "market_alignment": "near_market"
 }}
 """
 

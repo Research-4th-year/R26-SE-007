@@ -20,6 +20,7 @@ const createDemand = async (req, res) => {
       paddyType,
       quantityNeeded,
       offeredPrice,
+      maximumBuyingPrice,
     } = req.body;
 
     const demand = await MillerDemand.create({
@@ -27,6 +28,7 @@ const createDemand = async (req, res) => {
       paddyType: paddyType.trim().toLowerCase(),
       quantityNeeded,
       offeredPrice,
+      maximumBuyingPrice,
       status: "open",
     });
 

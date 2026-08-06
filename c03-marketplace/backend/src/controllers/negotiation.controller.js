@@ -1,72 +1,265 @@
 const crypto = require("crypto");
+const mongoose = require("mongoose");
 
 const Negotiation = require(
   "../models/negotiation.model"
 );
 
+const MatchSelection = require(
+  "../models/matchSelection.model"
+);
+
+const Farmer = require(
+  "../models/farmer.model"
+);
+
+const Miller = require(
+  "../models/miller.model"
+);
+
+const Harvest = require(
+  "../models/harvest.model"
+);
+
+const MillerDemand = require(
+  "../models/millerDemand.model"
+);
+
 const {
   runNegotiation,
   checkNegotiationHealth,
-} = require("../services/negotiation.service");
+} = require(
+  "../services/negotiation.service"
+);
 
-const startNegotiation = async (req, res) => {
+const buildParticipantFilter = async (
+  user
+) => {
+  if (user.role === "farmer") {
+    const farmer = await Farmer.findOne({
+      user: user._id,
+    });
+
+    return farmer
+      ? {
+          farmerId: farmer._id,
+        }
+      : null;
+  }
+
+  const miller = await Miller.findOne({
+    user: user._id,
+  });
+
+  return miller
+    ? {
+        millerId: miller._id,
+      }
+    : null;
+};
+
+const startNegotiation = async (
+  req,
+  res
+) => {
   try {
+    const { selectionId } = req.body;
+
+    if (
+      !selectionId ||
+      !mongoose.Types.ObjectId.isValid(
+        selectionId
+      )
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "A valid match selection ID is required.",
+      });
+    }
+
+    const participantFilter =
+      await buildParticipantFilter(
+        req.user
+      );
+
+    if (!participantFilter) {
+      return res.status(404).json({
+        success: false,
+        message:
+          `${req.user.role} profile not found.`,
+      });
+    }
+
+    const selection =
+      await MatchSelection.findOne({
+        _id: selectionId,
+        ...participantFilter,
+      });
+
+    if (!selection) {
+      return res.status(404).json({
+        success: false,
+        message:
+          "The match selection was not found or does not belong to this user.",
+      });
+    }
+
+    if (
+      selection.status !==
+      "negotiation_ready"
+    ) {
+      return res.status(409).json({
+        success: false,
+        message:
+          "This match is not ready for negotiation.",
+      });
+    }
+
+    const existingNegotiation =
+      await Negotiation.findOne({
+        listingId: selection._id,
+      });
+
+    if (existingNegotiation) {
+      return res.status(200).json({
+        success: true,
+        message:
+          "A negotiation already exists for this match.",
+        data: existingNegotiation,
+      });
+    }
+
+    const [
+      harvest,
+      demand,
+      farmer,
+      miller,
+    ] = await Promise.all([
+      Harvest.findById(
+        selection.harvestId
+      ).select(
+        "+minimumAcceptablePrice"
+      ),
+
+      MillerDemand.findById(
+        selection.demandId
+      ).select(
+        "+maximumBuyingPrice"
+      ),
+
+      Farmer.findById(
+        selection.farmerId
+      ),
+
+      Miller.findById(
+        selection.millerId
+      ),
+    ]);
+
+    if (
+      !harvest ||
+      !demand ||
+      !farmer ||
+      !miller
+    ) {
+      return res.status(409).json({
+        success: false,
+        message:
+          "The linked harvest, demand, Farmer or Miller record is unavailable.",
+      });
+    }
+
+    if (
+      harvest.minimumAcceptablePrice ==
+        null ||
+      demand.maximumBuyingPrice == null
+    ) {
+      return res.status(409).json({
+        success: false,
+        message:
+          "Private negotiation limits are missing for this match.",
+      });
+    }
+
     const negotiationId =
-      req.body.negotiation_id ||
       `NEG-${crypto.randomUUID()}`;
 
     const payload = {
-      negotiation_id: negotiationId,
-      paddy_type: req.body.paddy_type,
-      quantity_kg: Number(req.body.quantity_kg),
-      district: req.body.district,
+      negotiation_id:
+        negotiationId,
 
-      farmer_expected_price: Number(
-        req.body.farmer_expected_price
-      ),
-      farmer_minimum_price: Number(
-        req.body.farmer_minimum_price
-      ),
+      paddy_type:
+        harvest.paddyType,
 
-      miller_opening_price: Number(
-        req.body.miller_opening_price
-      ),
-      miller_maximum_price: Number(
-        req.body.miller_maximum_price
+      quantity_kg: Math.min(
+        Number(harvest.quantity),
+        Number(demand.quantityNeeded)
       ),
 
-      fl_reference_price: Number(
-        req.body.fl_reference_price
-      ),
+      district:
+        farmer.district,
 
-      matching_score: Number(
-        req.body.matching_score
-      ),
+      farmer_expected_price:
+        Number(
+          harvest.expectedPrice
+        ),
 
-      max_rounds: Number(
-        req.body.max_rounds || 6
-      ),
+      farmer_minimum_price:
+        Number(
+          harvest.minimumAcceptablePrice
+        ),
+
+      miller_opening_price:
+        Number(
+          demand.offeredPrice
+        ),
+
+      miller_maximum_price:
+        Number(
+          demand.maximumBuyingPrice
+        ),
+
+      fl_reference_price:
+        Number(
+          harvest.aiPredictedPrice ||
+            harvest.expectedPrice
+        ),
+
+      matching_score:
+        Number(
+          selection.matchingScore
+        ),
+
+      max_rounds: 6,
     };
 
-    const result = await runNegotiation(payload);
+    console.log("NEGOTIATION PAYLOAD:", JSON.stringify(payload, null, 2));
+
+    const result =
+      await runNegotiation(payload);
 
     const savedNegotiation =
       await Negotiation.create({
         negotiationId:
           result.negotiation_id,
 
+        // Reuse listingId as the MatchSelection link
+        // unless you later rename it to selectionId.
         listingId:
-          req.body.listing_id || null,
+          selection._id,
 
         farmerId:
-          req.body.farmer_id || null,
+          farmer._id,
 
         millerId:
-          req.body.miller_id || null,
+          miller._id,
 
-        requestData: payload,
+        requestData:
+          payload,
 
-        status: result.status,
+        status:
+          result.status,
 
         agreedPrice:
           result.agreed_price,
@@ -87,15 +280,60 @@ const startNegotiation = async (req, res) => {
           result
             .price_difference_from_reference,
 
-        history: result.history,
+        history:
+          result.history,
       });
+
+    if (result.status === "agreed") {
+      await Promise.all([
+        Harvest.findByIdAndUpdate(
+          harvest._id,
+          {
+            status: "sold",
+          },
+          {
+            runValidators: true,
+          }
+        ),
+
+        MillerDemand.findByIdAndUpdate(
+          demand._id,
+          {
+            status:
+              "agreement_reached",
+          },
+          {
+            runValidators: true,
+          }
+        ),
+      ]);
+    } else {
+      await MillerDemand.findByIdAndUpdate(
+        demand._id,
+        {
+          status:
+            "negotiation_failed",
+        },
+        {
+          runValidators: true,
+        }
+      );
+    }
 
     return res.status(201).json({
       success: true,
-      message: "Negotiation completed.",
+      message:
+        result.status === "agreed"
+          ? "The AI agents reached an agreement."
+          : "The AI negotiation completed without an agreement.",
       data: savedNegotiation,
     });
   } catch (error) {
+    console.error(
+      "START NEGOTIATION ERROR:",
+      error
+    );
+
     return res.status(500).json({
       success: false,
       message:
@@ -105,12 +343,30 @@ const startNegotiation = async (req, res) => {
   }
 };
 
-const getNegotiation = async (req, res) => {
+const getNegotiation = async (
+  req,
+  res
+) => {
   try {
+    const participantFilter =
+      await buildParticipantFilter(
+        req.user
+      );
+
+    if (!participantFilter) {
+      return res.status(404).json({
+        success: false,
+        message:
+          `${req.user.role} profile not found.`,
+      });
+    }
+
     const negotiation =
       await Negotiation.findOne({
         negotiationId:
           req.params.negotiationId,
+
+        ...participantFilter,
       });
 
     if (!negotiation) {
@@ -128,27 +384,51 @@ const getNegotiation = async (req, res) => {
   } catch (error) {
     return res.status(500).json({
       success: false,
-      message: error.message,
+      message:
+        error.message,
     });
   }
 };
 
-const listNegotiations = async (req, res) => {
+const listMyNegotiations = async (
+  req,
+  res
+) => {
   try {
+    const participantFilter =
+      await buildParticipantFilter(
+        req.user
+      );
+
+    if (!participantFilter) {
+      return res.status(404).json({
+        success: false,
+        message:
+          `${req.user.role} profile not found.`,
+      });
+    }
+
     const negotiations =
-      await Negotiation.find()
-        .sort({ createdAt: -1 })
+      await Negotiation.find(
+        participantFilter
+      )
+        .sort({
+          createdAt: -1,
+        })
         .limit(100);
 
     return res.status(200).json({
       success: true,
-      count: negotiations.length,
-      data: negotiations,
+      count:
+        negotiations.length,
+      data:
+        negotiations,
     });
   } catch (error) {
     return res.status(500).json({
       success: false,
-      message: error.message,
+      message:
+        error.message,
     });
   }
 };
@@ -177,6 +457,6 @@ const negotiationHealth = async (
 module.exports = {
   startNegotiation,
   getNegotiation,
-  listNegotiations,
+  listMyNegotiations,
   negotiationHealth,
 };

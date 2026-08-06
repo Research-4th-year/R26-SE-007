@@ -51,12 +51,14 @@ const PADDY_META: Record<
 interface FormErrors {
   quantityNeeded?: string;
   offeredPrice?: string;
+  maximumBuyingPrice?: string;
 }
 
 export default function CreateDemandScreen() {
   const [paddyType, setPaddyType] = useState<PaddyType>("nadu");
   const [quantityNeeded, setQuantityNeeded] = useState("");
   const [offeredPrice, setOfferedPrice] = useState("");
+  const [maximumBuyingPrice, setMaximumBuyingPrice] = useState("");
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitting, setSubmitting] = useState(false);
 
@@ -92,6 +94,7 @@ export default function CreateDemandScreen() {
 
     const parsedQuantity = Number(quantityNeeded);
     const parsedPrice = Number(offeredPrice);
+    const parsedMaximumBuyingPrice = Number(maximumBuyingPrice);
 
     if (!quantityNeeded.trim()) {
       nextErrors.quantityNeeded = "Please enter the required quantity.";
@@ -103,6 +106,23 @@ export default function CreateDemandScreen() {
       nextErrors.offeredPrice = "Please enter your offered price.";
     } else if (!Number.isFinite(parsedPrice) || parsedPrice <= 0) {
       nextErrors.offeredPrice = "Offered price must be greater than zero.";
+    }
+
+    if (!maximumBuyingPrice.trim()) {
+      nextErrors.maximumBuyingPrice =
+        "Please enter your maximum buying price.";
+    } else if (
+      !Number.isFinite(parsedMaximumBuyingPrice) ||
+      parsedMaximumBuyingPrice <= 0
+    ) {
+      nextErrors.maximumBuyingPrice =
+        "Maximum buying price must be greater than zero.";
+    } else if (
+      Number.isFinite(parsedPrice) &&
+      parsedMaximumBuyingPrice < parsedPrice
+    ) {
+      nextErrors.maximumBuyingPrice =
+        "Maximum buying price cannot be below your opening offer.";
     }
 
     setErrors(nextErrors);
@@ -119,6 +139,7 @@ export default function CreateDemandScreen() {
       paddyType,
       quantityNeeded: Number(quantityNeeded),
       offeredPrice: Number(offeredPrice),
+      maximumBuyingPrice: Number(maximumBuyingPrice),
     };
 
     console.log("Submitting Miller demand:", payload);
@@ -335,6 +356,23 @@ export default function CreateDemandScreen() {
               icon="pricetag-outline"
               error={errors.offeredPrice}
               helper="Enter the buying price in Sri Lankan Rupees."
+            />
+
+            <NumericField
+              label="Maximum buying price per kilogram"
+              value={maximumBuyingPrice}
+              onChangeText={(value) => {
+                setMaximumBuyingPrice(value);
+                setErrors((current) => ({
+                  ...current,
+                  maximumBuyingPrice: undefined,
+                }));
+              }}
+              placeholder="  136"
+              unit="LKR/kg"
+              icon="shield-checkmark-outline"
+              error={errors.maximumBuyingPrice}
+              helper="Private: used only by your Miller AI agent during negotiation."
             />
 
             {estimatedValue !== null ? (

@@ -340,17 +340,12 @@ function MillerRequestCard({
     <View style={styles.requestCard}>
       <View style={styles.requestTopRow}>
         <View style={styles.farmerIcon}>
-          <Ionicons
-            name="person-outline"
-            size={22}
-            color="#92400E"
-          />
+          <Ionicons name="person-outline" size={22} color="#92400E" />
         </View>
 
         <View style={styles.requestTitleArea}>
           <Text style={styles.farmerName}>
-            {farmer?.farmerName ??
-              "Farmer"}
+            {farmer?.farmerName ?? "Farmer"}
           </Text>
 
           <Text style={styles.locationText}>
@@ -364,8 +359,7 @@ function MillerRequestCard({
           style={[
             styles.statusBadge,
             {
-              backgroundColor:
-                status.background,
+              backgroundColor: status.background,
             },
           ]}
         >
@@ -384,50 +378,29 @@ function MillerRequestCard({
 
       <View style={styles.matchScoreCard}>
         <View>
-          <Text style={styles.matchScoreLabel}>
-            AI match score
-          </Text>
+          <Text style={styles.matchScoreLabel}>AI match score</Text>
 
-          <Text
-            style={
-              styles.matchScoreDescription
-            }
-          >
+          <Text style={styles.matchScoreDescription}>
             Harvest-demand compatibility
           </Text>
         </View>
 
         <Text style={styles.matchScoreValue}>
-          {selection.matchingScore.toFixed(
-            0
-          )}
-          %
+          {selection.matchingScore.toFixed(0)}%
         </Text>
       </View>
 
       <View style={styles.harvestPanel}>
         <View style={styles.harvestHeader}>
           <View style={styles.harvestIcon}>
-            <Ionicons
-              name="leaf"
-              size={19}
-              color="#15803D"
-            />
+            <Ionicons name="leaf" size={19} color="#15803D" />
           </View>
 
           <View>
-            <Text
-              style={
-                styles.harvestEyebrow
-              }
-            >
-              FARMER HARVEST
-            </Text>
+            <Text style={styles.harvestEyebrow}>FARMER HARVEST</Text>
 
             <Text style={styles.harvestTitle}>
-              {formatLabel(
-                harvest?.paddyType ?? "-"
-              )}
+              {formatLabel(harvest?.paddyType ?? "-")}
             </Text>
           </View>
         </View>
@@ -435,62 +408,33 @@ function MillerRequestCard({
         <View style={styles.detailsGrid}>
           <DetailItem
             label="Quantity"
-            value={
-              harvest
-                ? `${formatNumber(
-                    harvest.quantity
-                  )} kg`
-                : "-"
-            }
+            value={harvest ? `${formatNumber(harvest.quantity)} kg` : "-"}
           />
 
           <DetailItem
             label="Expected"
-            value={
-              harvest
-                ? `Rs.${harvest.expectedPrice.toFixed(
-                    2
-                  )}`
-                : "-"
-            }
+            value={harvest ? `Rs.${harvest.expectedPrice.toFixed(2)}` : "-"}
           />
 
           <DetailItem
             label="AI price"
-            value={
-              harvest
-                ? `Rs.${harvest.aiPredictedPrice.toFixed(
-                    2
-                  )}`
-                : "-"
-            }
+            value={harvest ? `Rs.${harvest.aiPredictedPrice.toFixed(2)}` : "-"}
             emphasized
           />
 
           <DetailItem
             label="Your offer"
-            value={
-              demand
-                ? `Rs.${demand.offeredPrice.toFixed(
-                    2
-                  )}`
-                : "-"
-            }
+            value={demand ? `Rs.${demand.offeredPrice.toFixed(2)}` : "-"}
             emphasized
           />
         </View>
       </View>
 
       <View style={styles.dateRow}>
-        <Ionicons
-          name="time-outline"
-          size={15}
-          color="#64748B"
-        />
+        <Ionicons name="time-outline" size={15} color="#64748B" />
 
         <Text style={styles.dateText}>
-          Received{" "}
-          {formatDate(selection.createdAt)}
+          Received {formatDate(selection.createdAt)}
         </Text>
       </View>
 
@@ -502,19 +446,12 @@ function MillerRequestCard({
             style={({ pressed }) => [
               styles.rejectButton,
               pressed && styles.pressed,
-              processing &&
-                styles.disabled,
+              processing && styles.disabled,
             ]}
           >
-            <Ionicons
-              name="close-circle-outline"
-              size={18}
-              color="#B91C1C"
-            />
+            <Ionicons name="close-circle-outline" size={18} color="#B91C1C" />
 
-            <Text style={styles.rejectText}>
-              Reject
-            </Text>
+            <Text style={styles.rejectText}>Reject</Text>
           </Pressable>
 
           <Pressable
@@ -523,15 +460,11 @@ function MillerRequestCard({
             style={({ pressed }) => [
               styles.acceptButton,
               pressed && styles.pressed,
-              processing &&
-                styles.disabled,
+              processing && styles.disabled,
             ]}
           >
             {processing ? (
-              <ActivityIndicator
-                size="small"
-                color="#FFFFFF"
-              />
+              <ActivityIndicator size="small" color="#FFFFFF" />
             ) : (
               <>
                 <Ionicons
@@ -540,44 +473,50 @@ function MillerRequestCard({
                   color="#FFFFFF"
                 />
 
-                <Text
-                  style={styles.acceptText}
-                >
-                  Accept
-                </Text>
+                <Text style={styles.acceptText}>Accept</Text>
               </>
             )}
           </Pressable>
         </View>
       ) : null}
 
-      {selection.status ===
-      "negotiation_ready" ? (
+      {selection.status === "negotiation_ready" ? (
         <Pressable
           onPress={() => {
-            /*
-             * Connect to the negotiation
-             * screen in the next phase.
-             */
+            if (!harvest || !demand) {
+              return;
+            }
+
+            router.push({
+              pathname: "/(c03-marketplace)/negotiation-start",
+
+              params: {
+                selectionId: selection._id,
+
+                paddyType: harvest.paddyType,
+
+                quantity: String(
+                  Math.min(harvest.quantity, demand.quantityNeeded),
+                ),
+
+                farmerExpectedPrice: String(harvest.expectedPrice),
+
+                millerOffer: String(demand.offeredPrice),
+
+                flReferencePrice: String(harvest.aiPredictedPrice),
+
+                matchingScore: String(selection.matchingScore),
+              },
+            });
           }}
           style={({ pressed }) => [
             styles.negotiationButton,
             pressed && styles.pressed,
           ]}
         >
-          <Ionicons
-            name="sparkles"
-            size={18}
-            color="#FFFFFF"
-          />
+          <Ionicons name="sparkles" size={18} color="#FFFFFF" />
 
-          <Text
-            style={
-              styles.negotiationButtonText
-            }
-          >
-            Start AI Negotiation
-          </Text>
+          <Text style={styles.negotiationButtonText}>Start AI Negotiation</Text>
         </Pressable>
       ) : null}
     </View>

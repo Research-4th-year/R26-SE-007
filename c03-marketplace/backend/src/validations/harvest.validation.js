@@ -21,6 +21,15 @@ const addHarvest = {
     expectedPrice: Joi.number()
       .positive()
       .required(),
+
+    minimumAcceptablePrice: Joi.number()
+      .positive()
+      .max(Joi.ref("expectedPrice"))
+      .required()
+      .messages({
+        "number.max":
+          "Minimum acceptable price cannot exceed the expected price.",
+      }),
   }),
 };
 

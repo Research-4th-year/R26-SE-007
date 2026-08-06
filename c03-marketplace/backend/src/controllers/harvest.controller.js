@@ -20,6 +20,7 @@ const addHarvest = async (req, res) => {
       season,
       quantity,
       expectedPrice,
+      minimumAcceptablePrice,
     } = req.body;
 
     // Find the farmer profile linked to the logged-in user
@@ -136,6 +137,7 @@ const addHarvest = async (req, res) => {
 
       quantity,
       expectedPrice,
+      minimumAcceptablePrice,
       aiPredictedPrice,
 
       priceDifference:

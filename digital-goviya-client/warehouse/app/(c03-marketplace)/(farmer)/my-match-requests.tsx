@@ -267,31 +267,20 @@ function FarmerRequestCard({
     <View style={styles.requestCard}>
       <View style={styles.requestTopRow}>
         <View style={styles.millerIcon}>
-          <Ionicons
-            name="business-outline"
-            size={22}
-            color="#15803D"
-          />
+          <Ionicons name="business-outline" size={22} color="#15803D" />
         </View>
 
         <View style={styles.requestTitleArea}>
-          <Text style={styles.millerName}>
-            {miller?.name ??
-              "Miller"}
-          </Text>
+          <Text style={styles.millerName}>{miller?.name ?? "Miller"}</Text>
 
-          <Text style={styles.millName}>
-            {miller?.millName ??
-              "Rice Mill"}
-          </Text>
+          <Text style={styles.millName}>{miller?.millName ?? "Rice Mill"}</Text>
         </View>
 
         <View
           style={[
             styles.statusBadge,
             {
-              backgroundColor:
-                status.background,
+              backgroundColor: status.background,
             },
           ]}
         >
@@ -310,9 +299,7 @@ function FarmerRequestCard({
 
       <View style={styles.scoreCard}>
         <View>
-          <Text style={styles.scoreLabel}>
-            Matching score
-          </Text>
+          <Text style={styles.scoreLabel}>Matching score</Text>
 
           <Text style={styles.scoreDescription}>
             AI-calculated compatibility
@@ -321,14 +308,10 @@ function FarmerRequestCard({
 
         <View style={styles.scoreCircle}>
           <Text style={styles.scoreValue}>
-            {selection.matchingScore.toFixed(
-              0
-            )}
+            {selection.matchingScore.toFixed(0)}
           </Text>
 
-          <Text style={styles.scoreTotal}>
-            %
-          </Text>
+          <Text style={styles.scoreTotal}>%</Text>
         </View>
       </View>
 
@@ -336,84 +319,73 @@ function FarmerRequestCard({
         <DetailItem
           icon="leaf-outline"
           label="Paddy"
-          value={formatLabel(
-            harvest?.paddyType ?? "-"
-          )}
+          value={formatLabel(harvest?.paddyType ?? "-")}
         />
 
         <DetailItem
           icon="cube-outline"
           label="Quantity"
-          value={
-            harvest
-              ? `${formatNumber(
-                  harvest.quantity
-                )} kg`
-              : "-"
-          }
+          value={harvest ? `${formatNumber(harvest.quantity)} kg` : "-"}
         />
 
         <DetailItem
           icon="cash-outline"
           label="Miller offer"
-          value={
-            demand
-              ? `Rs.${demand.offeredPrice.toFixed(
-                  2
-                )}`
-              : "-"
-          }
+          value={demand ? `Rs.${demand.offeredPrice.toFixed(2)}` : "-"}
         />
 
         <DetailItem
           icon="location-outline"
           label="District"
-          value={
-            miller?.district ?? "-"
-          }
+          value={miller?.district ?? "-"}
         />
       </View>
 
       <View style={styles.timelineRow}>
-        <Ionicons
-          name="calendar-outline"
-          size={15}
-          color="#64748B"
-        />
+        <Ionicons name="calendar-outline" size={15} color="#64748B" />
 
         <Text style={styles.timelineText}>
-          Sent{" "}
-          {formatDate(selection.createdAt)}
+          Sent {formatDate(selection.createdAt)}
         </Text>
       </View>
 
-      {selection.status ===
-      "negotiation_ready" ? (
+      {selection.status === "negotiation_ready" ? (
         <Pressable
           onPress={() => {
-            /*
-             * Connect to negotiation screen
-             * in the next phase.
-             */
+            if (!harvest || !demand) {
+              return;
+            }
+
+            router.push({
+              pathname: "/(c03-marketplace)/negotiation-start",
+
+              params: {
+                selectionId: selection._id,
+
+                paddyType: harvest.paddyType,
+
+                quantity: String(
+                  Math.min(harvest.quantity, demand.quantityNeeded),
+                ),
+
+                farmerExpectedPrice: String(harvest.expectedPrice),
+
+                millerOffer: String(demand.offeredPrice),
+
+                flReferencePrice: String(harvest.aiPredictedPrice),
+
+                matchingScore: String(selection.matchingScore),
+              },
+            });
           }}
           style={({ pressed }) => [
             styles.negotiationButton,
             pressed && styles.pressed,
           ]}
         >
-          <Ionicons
-            name="sparkles"
-            size={18}
-            color="#FFFFFF"
-          />
+          <Ionicons name="sparkles" size={18} color="#FFFFFF" />
 
-          <Text
-            style={
-              styles.negotiationButtonText
-            }
-          >
-            Start AI Negotiation
-          </Text>
+          <Text style={styles.negotiationButtonText}>Start AI Negotiation</Text>
         </Pressable>
       ) : null}
     </View>

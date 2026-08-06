@@ -84,6 +84,7 @@ const SEASON_META: Record<
 interface FormErrors {
   quantity?: string;
   expectedPrice?: string;
+  minimumAcceptablePrice?: string;
 }
 
 export default function AddHarvestScreen() {
@@ -96,6 +97,11 @@ export default function AddHarvestScreen() {
   const [quantity, setQuantity] = useState("");
   const [expectedPrice, setExpectedPrice] =
     useState("");
+
+  const [
+    minimumAcceptablePrice,
+    setMinimumAcceptablePrice,
+  ] = useState("");
 
   const [errors, setErrors] =
     useState<FormErrors>({});
@@ -159,6 +165,9 @@ export default function AddHarvestScreen() {
     const parsedExpectedPrice =
       Number(expectedPrice);
 
+    const parsedMinimumAcceptablePrice =
+      Number(minimumAcceptablePrice);
+
     if (!quantity.trim()) {
       nextErrors.quantity =
         "Please enter the harvest quantity.";
@@ -181,6 +190,23 @@ export default function AddHarvestScreen() {
         "Expected price must be greater than zero.";
     }
 
+    if (!minimumAcceptablePrice.trim()) {
+      nextErrors.minimumAcceptablePrice =
+        "Please enter your minimum acceptable price.";
+    } else if (
+      !Number.isFinite(parsedMinimumAcceptablePrice) ||
+      parsedMinimumAcceptablePrice <= 0
+    ) {
+      nextErrors.minimumAcceptablePrice =
+        "Minimum acceptable price must be greater than zero.";
+    } else if (
+      Number.isFinite(parsedExpectedPrice) &&
+      parsedMinimumAcceptablePrice > parsedExpectedPrice
+    ) {
+      nextErrors.minimumAcceptablePrice =
+        "Minimum acceptable price cannot exceed your expected price.";
+    }
+
     setErrors(nextErrors);
 
     return Object.keys(nextErrors).length === 0;
@@ -201,6 +227,9 @@ export default function AddHarvestScreen() {
     season,
     quantity: Number(quantity),
     expectedPrice: Number(expectedPrice),
+    minimumAcceptablePrice: Number(
+      minimumAcceptablePrice
+    ),
   };
 
   console.log("Submitting harvest:", payload);
@@ -214,6 +243,9 @@ export default function AddHarvestScreen() {
       season,
       quantity: Number(quantity),
       expectedPrice: Number(expectedPrice),
+      minimumAcceptablePrice: Number(
+        minimumAcceptablePrice
+      ),
     });
 
   console.log(
@@ -527,6 +559,23 @@ export default function AddHarvestScreen() {
               icon="pricetag-outline"
               error={errors.expectedPrice}
               helper="Enter the amount in Sri Lankan Rupees."
+            />
+
+            <NumericField
+              label="Minimum acceptable price per kilogram"
+              value={minimumAcceptablePrice}
+              onChangeText={(value) => {
+                setMinimumAcceptablePrice(value);
+                setErrors((current) => ({
+                  ...current,
+                  minimumAcceptablePrice: undefined,
+                }));
+              }}
+              placeholder="  120"
+              unit="LKR/kg"
+              icon="shield-checkmark-outline"
+              error={errors.minimumAcceptablePrice}
+              helper="Private: used only by your Farmer AI agent during negotiation."
             />
 
             {estimatedValue !== null ? (

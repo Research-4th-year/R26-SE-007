@@ -15,6 +15,15 @@ const createDemand = {
     offeredPrice: Joi.number()
       .positive()
       .required(),
+
+    maximumBuyingPrice: Joi.number()
+      .positive()
+      .min(Joi.ref("offeredPrice"))
+      .required()
+      .messages({
+        "number.min":
+          "Maximum buying price cannot be below the opening offered price.",
+  }),
   }),
 };
 
