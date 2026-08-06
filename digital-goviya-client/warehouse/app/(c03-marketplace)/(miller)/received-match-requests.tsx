@@ -5,12 +5,16 @@ import {
 } from "expo-router";
 import {
   useCallback,
+  useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Animated,
+  Easing,
   Pressable,
   RefreshControl,
   SafeAreaView,
@@ -45,6 +49,62 @@ interface FarmerSummary {
   farmerName: string;
   district: string;
   location: string;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Small animation helpers — purely presentational, no logic changes  */
+/* ------------------------------------------------------------------ */
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
+function usePressScale(target = 0.96) {
+  const scale = useRef(new Animated.Value(1)).current;
+
+  const onPressIn = () => {
+    Animated.spring(scale, {
+      toValue: target,
+      useNativeDriver: true,
+      speed: 40,
+      bounciness: 6,
+    }).start();
+  };
+
+  const onPressOut = () => {
+    Animated.spring(scale, {
+      toValue: 1,
+      useNativeDriver: true,
+      speed: 40,
+      bounciness: 6,
+    }).start();
+  };
+
+  return { scale, onPressIn, onPressOut };
+}
+
+function useEntrance(delay = 0) {
+  const progress = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(progress, {
+      toValue: 1,
+      duration: 420,
+      delay,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+  }, [progress, delay]);
+
+  return {
+    opacity: progress,
+    transform: [
+      {
+        translateY: progress.interpolate({
+          inputRange: [0, 1],
+          outputRange: [16, 0],
+        }),
+      },
+    ],
+  };
 }
 
 export default function ReceivedMatchRequestsScreen() {
@@ -178,39 +238,7 @@ export default function ReceivedMatchRequestsScreen() {
 
   return (
     <SafeAreaView style={styles.screen}>
-      <View style={styles.header}>
-        <Pressable
-          onPress={() => router.back()}
-          style={({ pressed }) => [
-            styles.headerButton,
-            pressed && styles.pressed,
-          ]}
-        >
-          <Ionicons
-            name="arrow-back"
-            size={21}
-            color="#1F2937"
-          />
-        </Pressable>
-
-        <View style={styles.headerText}>
-          <Text style={styles.headerTitle}>
-            Match Requests
-          </Text>
-
-          <Text style={styles.headerSubtitle}>
-            Farmer harvest requests
-          </Text>
-        </View>
-
-        <View style={styles.headerIcon}>
-          <Ionicons
-            name="leaf-outline"
-            size={20}
-            color="#92400E"
-          />
-        </View>
-      </View>
+      <Header />
 
       <ScrollView
         contentContainerStyle={[
@@ -224,8 +252,8 @@ export default function ReceivedMatchRequestsScreen() {
             onRefresh={() =>
               void loadSelections(true)
             }
-            tintColor="#92400E"
-            colors={["#92400E"]}
+            tintColor="#B45309"
+            colors={["#B45309"]}
           />
         }
         showsVerticalScrollIndicator={false}
@@ -241,48 +269,36 @@ export default function ReceivedMatchRequestsScreen() {
           <EmptyState />
         ) : (
           <>
-            <View style={styles.summaryCard}>
-              <SummaryMetric
-                label="Pending"
-                value={pendingCount}
-                icon="time-outline"
-              />
-
-              <View style={styles.summaryDivider} />
-
-              <SummaryMetric
-                label="Ready"
-                value={readyCount}
-                icon="checkmark-circle-outline"
-              />
-
-              <View style={styles.summaryDivider} />
-
-              <SummaryMetric
-                label="Total"
-                value={
-                  sortedSelections.length
-                }
-                icon="documents-outline"
-              />
-            </View>
+            <SummaryStrip
+              pendingCount={pendingCount}
+              readyCount={readyCount}
+              totalCount={sortedSelections.length}
+            />
 
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>
                 Received requests
               </Text>
 
-              <Text style={styles.refreshHint}>
-                Pull to refresh
-              </Text>
+              <View style={styles.refreshHintRow}>
+                <Ionicons
+                  name="arrow-down-circle-outline"
+                  size={12}
+                  color="#B5AB92"
+                />
+                <Text style={styles.refreshHint}>
+                  Pull to refresh
+                </Text>
+              </View>
             </View>
 
             <View style={styles.requestList}>
               {sortedSelections.map(
-                (selection) => (
+                (selection, index) => (
                   <MillerRequestCard
                     key={selection._id}
                     selection={selection}
+                    index={index}
                     processing={
                       processingId ===
                       selection._id
@@ -310,13 +326,195 @@ export default function ReceivedMatchRequestsScreen() {
   );
 }
 
+/* ------------------------------------------------------------------ */
+/*  Header                                                             */
+/* ------------------------------------------------------------------ */
+
+function Header() {
+  const { scale, onPressIn, onPressOut } =
+    usePressScale(0.9);
+
+  const iconEntrance = useRef(
+    new Animated.Value(0)
+  ).current;
+
+  useEffect(() => {
+    Animated.spring(iconEntrance, {
+      toValue: 1,
+      useNativeDriver: true,
+      speed: 14,
+      bounciness: 10,
+    }).start();
+  }, [iconEntrance]);
+
+  return (
+    <View style={styles.header}>
+      <AnimatedPressable
+        onPress={() => router.back()}
+        onPressIn={onPressIn}
+        onPressOut={onPressOut}
+        style={[
+          styles.headerButton,
+          { transform: [{ scale }] },
+        ]}
+      >
+        <Ionicons
+          name="arrow-back"
+          size={21}
+          color="#3F2A14"
+        />
+      </AnimatedPressable>
+
+      <View style={styles.headerText}>
+        <Text style={styles.headerTitle}>
+          Match Requests
+        </Text>
+
+        <Text style={styles.headerSubtitle}>
+          Farmer harvest requests
+        </Text>
+      </View>
+
+      <Animated.View
+        style={[
+          styles.headerIcon,
+          {
+            transform: [
+              { scale: iconEntrance },
+              {
+                rotate: iconEntrance.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: ["-40deg", "0deg"],
+                }),
+              },
+            ],
+          },
+        ]}
+      >
+        <Ionicons
+          name="leaf-outline"
+          size={20}
+          color="#92400E"
+        />
+      </Animated.View>
+    </View>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Summary strip                                                      */
+/* ------------------------------------------------------------------ */
+
+function SummaryStrip({
+  pendingCount,
+  readyCount,
+  totalCount,
+}: {
+  pendingCount: number;
+  readyCount: number;
+  totalCount: number;
+}) {
+  const entrance = useEntrance(40);
+
+  return (
+    <Animated.View
+      style={[styles.summaryCard, entrance]}
+    >
+      <SummaryMetric
+        label="Pending"
+        value={pendingCount}
+        icon="time-outline"
+        tint="#B45309"
+      />
+
+      <View style={styles.summaryDivider} />
+
+      <SummaryMetric
+        label="Ready"
+        value={readyCount}
+        icon="checkmark-circle-outline"
+        tint="#166534"
+      />
+
+      <View style={styles.summaryDivider} />
+
+      <SummaryMetric
+        label="Total"
+        value={totalCount}
+        icon="documents-outline"
+        tint="#78350F"
+      />
+    </Animated.View>
+  );
+}
+
+function SummaryMetric({
+  label,
+  value,
+  icon,
+  tint,
+}: {
+  label: string;
+  value: number;
+  icon: keyof typeof Ionicons.glyphMap;
+  tint: string;
+}) {
+  const [display, setDisplay] = useState(0);
+  const counter = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    counter.setValue(0);
+
+    const listenerId = counter.addListener(
+      ({ value: current }) => {
+        setDisplay(Math.round(current));
+      }
+    );
+
+    Animated.timing(counter, {
+      toValue: value,
+      duration: 620,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: false,
+    }).start();
+
+    return () => counter.removeListener(listenerId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value]);
+
+  return (
+    <View style={styles.summaryMetric}>
+      <View
+        style={[
+          styles.summaryIconChip,
+          { backgroundColor: `${tint}14` },
+        ]}
+      >
+        <Ionicons name={icon} size={17} color={tint} />
+      </View>
+
+      <Text style={[styles.summaryValue, { color: tint }]}>
+        {display}
+      </Text>
+
+      <Text style={styles.summaryLabel}>{label}</Text>
+    </View>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Request card — "trade slip" ticket styling                         */
+/* ------------------------------------------------------------------ */
+
 function MillerRequestCard({
   selection,
+  index,
   processing,
   onAccept,
   onReject,
 }: {
   selection: MatchSelection;
+  index: number;
   processing: boolean;
   onAccept: () => void;
   onReject: () => void;
@@ -336,8 +534,47 @@ function MillerRequestCard({
   const status =
     getStatusDisplay(selection.status);
 
+  const entrance = useEntrance(
+    Math.min(index, 6) * 70
+  );
+
+  const reject = usePressScale(0.97);
+  const accept = usePressScale(0.97);
+  const negotiate = usePressScale(0.97);
+
+  const pulse = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    if (selection.status !== "pending") {
+      return;
+    }
+
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulse, {
+          toValue: 0.45,
+          duration: 900,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulse, {
+          toValue: 1,
+          duration: 900,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ])
+    );
+
+    loop.start();
+
+    return () => loop.stop();
+  }, [pulse, selection.status]);
+
   return (
-    <View style={styles.requestCard}>
+    <Animated.View
+      style={[styles.requestCard, entrance]}
+    >
       <View style={styles.requestTopRow}>
         <View style={styles.farmerIcon}>
           <Ionicons name="person-outline" size={22} color="#92400E" />
@@ -358,37 +595,37 @@ function MillerRequestCard({
         <View
           style={[
             styles.statusBadge,
-            {
-              backgroundColor: status.background,
-            },
+            { backgroundColor: status.background },
           ]}
         >
+          {selection.status === "pending" ? (
+            <Animated.View
+              style={[
+                styles.statusDot,
+                {
+                  backgroundColor: status.color,
+                  opacity: pulse,
+                },
+              ]}
+            />
+          ) : null}
+
           <Text
-            style={[
-              styles.statusText,
-              {
-                color: status.color,
-              },
-            ]}
+            style={[styles.statusText, { color: status.color }]}
           >
             {status.label}
           </Text>
         </View>
       </View>
 
-      <View style={styles.matchScoreCard}>
-        <View>
-          <Text style={styles.matchScoreLabel}>AI match score</Text>
-
-          <Text style={styles.matchScoreDescription}>
-            Harvest-demand compatibility
-          </Text>
-        </View>
-
-        <Text style={styles.matchScoreValue}>
-          {selection.matchingScore.toFixed(0)}%
-        </Text>
+      {/* die-cut ticket divider — the card's one signature detail */}
+      <View style={styles.ticketDivider}>
+        <View style={styles.ticketNotchLeft} />
+        <View style={styles.ticketDashLine} />
+        <View style={styles.ticketNotchRight} />
       </View>
+
+      <MatchScoreBar score={selection.matchingScore} />
 
       <View style={styles.harvestPanel}>
         <View style={styles.harvestHeader}>
@@ -431,7 +668,7 @@ function MillerRequestCard({
       </View>
 
       <View style={styles.dateRow}>
-        <Ionicons name="time-outline" size={15} color="#64748B" />
+        <Ionicons name="time-outline" size={15} color="#8A8371" />
 
         <Text style={styles.dateText}>
           Received {formatDate(selection.createdAt)}
@@ -440,26 +677,29 @@ function MillerRequestCard({
 
       {selection.status === "pending" ? (
         <View style={styles.actionRow}>
-          <Pressable
+          <AnimatedPressable
             disabled={processing}
             onPress={onReject}
-            style={({ pressed }) => [
+            onPressIn={reject.onPressIn}
+            onPressOut={reject.onPressOut}
+            style={[
               styles.rejectButton,
-              pressed && styles.pressed,
+              { transform: [{ scale: reject.scale }] },
               processing && styles.disabled,
             ]}
           >
             <Ionicons name="close-circle-outline" size={18} color="#B91C1C" />
-
             <Text style={styles.rejectText}>Reject</Text>
-          </Pressable>
+          </AnimatedPressable>
 
-          <Pressable
+          <AnimatedPressable
             disabled={processing}
             onPress={onAccept}
-            style={({ pressed }) => [
+            onPressIn={accept.onPressIn}
+            onPressOut={accept.onPressOut}
+            style={[
               styles.acceptButton,
-              pressed && styles.pressed,
+              { transform: [{ scale: accept.scale }] },
               processing && styles.disabled,
             ]}
           >
@@ -472,16 +712,15 @@ function MillerRequestCard({
                   size={18}
                   color="#FFFFFF"
                 />
-
                 <Text style={styles.acceptText}>Accept</Text>
               </>
             )}
-          </Pressable>
+          </AnimatedPressable>
         </View>
       ) : null}
 
       {selection.status === "negotiation_ready" ? (
-        <Pressable
+        <AnimatedPressable
           onPress={() => {
             if (!harvest || !demand) {
               return;
@@ -509,44 +748,66 @@ function MillerRequestCard({
               },
             });
           }}
-          style={({ pressed }) => [
+          onPressIn={negotiate.onPressIn}
+          onPressOut={negotiate.onPressOut}
+          style={[
             styles.negotiationButton,
-            pressed && styles.pressed,
+            { transform: [{ scale: negotiate.scale }] },
           ]}
         >
           <Ionicons name="sparkles" size={18} color="#FFFFFF" />
-
           <Text style={styles.negotiationButtonText}>Start AI Negotiation</Text>
-        </Pressable>
+        </AnimatedPressable>
       ) : null}
-    </View>
+    </Animated.View>
   );
 }
 
-function SummaryMetric({
-  label,
-  value,
-  icon,
-}: {
-  label: string;
-  value: number;
-  icon: keyof typeof Ionicons.glyphMap;
-}) {
+function MatchScoreBar({ score }: { score: number }) {
+  const [display, setDisplay] = useState(0);
+  const anim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const listenerId = anim.addListener(({ value }) => {
+      setDisplay(Math.round(value));
+    });
+
+    Animated.timing(anim, {
+      toValue: score,
+      duration: 700,
+      delay: 120,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: false,
+    }).start();
+
+    return () => anim.removeListener(listenerId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [score]);
+
+  const width = anim.interpolate({
+    inputRange: [0, 100],
+    outputRange: ["0%", "100%"],
+    extrapolate: "clamp",
+  });
+
   return (
-    <View style={styles.summaryMetric}>
-      <Ionicons
-        name={icon}
-        size={20}
-        color="#92400E"
-      />
+    <View style={styles.matchScoreCard}>
+      <View style={styles.matchScoreTopRow}>
+        <View>
+          <Text style={styles.matchScoreLabel}>AI match score</Text>
+          <Text style={styles.matchScoreDescription}>
+            Harvest-demand compatibility
+          </Text>
+        </View>
 
-      <Text style={styles.summaryValue}>
-        {value}
-      </Text>
+        <Text style={styles.matchScoreValue}>{display}%</Text>
+      </View>
 
-      <Text style={styles.summaryLabel}>
-        {label}
-      </Text>
+      <View style={styles.matchScoreTrack}>
+        <Animated.View
+          style={[styles.matchScoreFill, { width }]}
+        />
+      </View>
     </View>
   );
 }
@@ -579,33 +840,80 @@ function DetailItem({
   );
 }
 
+/* ------------------------------------------------------------------ */
+/*  Loading / empty / error states                                     */
+/* ------------------------------------------------------------------ */
+
 function LoadingState() {
+  const shimmer = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(shimmer, {
+          toValue: 1,
+          duration: 900,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(shimmer, {
+          toValue: 0,
+          duration: 900,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ])
+    );
+
+    loop.start();
+
+    return () => loop.stop();
+  }, [shimmer]);
+
+  const opacity = shimmer.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.5, 1],
+  });
+
   return (
     <SafeAreaView style={styles.screen}>
-      <View style={styles.centerState}>
-        <View style={styles.loadingIcon}>
-          <ActivityIndicator
-            size="large"
-            color="#92400E"
-          />
+      <Header />
+
+      <View style={styles.content}>
+        <Animated.View style={[styles.skeletonSummary, { opacity }]} />
+
+        {[0, 1, 2].map((row) => (
+          <Animated.View
+            key={row}
+            style={[styles.skeletonCard, { opacity }]}
+          >
+            <View style={styles.skeletonAvatarRow}>
+              <View style={styles.skeletonAvatar} />
+              <View style={styles.skeletonLines}>
+                <View style={styles.skeletonLineWide} />
+                <View style={styles.skeletonLineNarrow} />
+              </View>
+            </View>
+            <View style={styles.skeletonBlock} />
+          </Animated.View>
+        ))}
+
+        <View style={styles.loadingCaption}>
+          <ActivityIndicator size="small" color="#B45309" />
+          <Text style={styles.loadingCaptionText}>
+            Retrieving farmer matching requests
+          </Text>
         </View>
-
-        <Text style={styles.stateTitle}>
-          Loading requests
-        </Text>
-
-        <Text style={styles.stateText}>
-          Retrieving Farmer matching
-          requests.
-        </Text>
       </View>
     </SafeAreaView>
   );
 }
 
 function EmptyState() {
+  const entrance = useEntrance(0);
+
   return (
-    <View style={styles.centerState}>
+    <Animated.View style={[styles.centerState, entrance]}>
       <View style={styles.emptyIcon}>
         <Ionicons
           name="leaf-outline"
@@ -622,7 +930,7 @@ function EmptyState() {
         Farmer requests matching one of your
         open demands will appear here.
       </Text>
-    </View>
+    </Animated.View>
   );
 }
 
@@ -633,8 +941,11 @@ function ErrorState({
   message: string;
   onRetry: () => void;
 }) {
+  const retry = usePressScale(0.96);
+  const entrance = useEntrance(0);
+
   return (
-    <View style={styles.centerState}>
+    <Animated.View style={[styles.centerState, entrance]}>
       <View style={styles.errorIcon}>
         <Ionicons
           name="warning-outline"
@@ -651,11 +962,13 @@ function ErrorState({
         {message}
       </Text>
 
-      <Pressable
+      <AnimatedPressable
         onPress={onRetry}
-        style={({ pressed }) => [
+        onPressIn={retry.onPressIn}
+        onPressOut={retry.onPressOut}
+        style={[
           styles.retryButton,
-          pressed && styles.pressed,
+          { transform: [{ scale: retry.scale }] },
         ]}
       >
         <Ionicons
@@ -667,10 +980,14 @@ function ErrorState({
         <Text style={styles.retryText}>
           Try Again
         </Text>
-      </Pressable>
-    </View>
+      </AnimatedPressable>
+    </Animated.View>
   );
 }
+
+/* ------------------------------------------------------------------ */
+/*  Data helpers — unchanged logic                                     */
+/* ------------------------------------------------------------------ */
 
 function getHarvest(
   value: MatchSelection["harvestId"]
@@ -718,7 +1035,7 @@ function getStatusDisplay(
     case "pending":
       return {
         label: "New Request",
-        color: "#92400E",
+        color: "#B45309",
         background: "#FEF3C7",
       };
 
@@ -783,8 +1100,12 @@ function formatDate(
   ).format(date);
 }
 
-const CREAM = "#FBF8F1";
-const BORDER = "#ECE6D6";
+/* ------------------------------------------------------------------ */
+/*  Styles                                                              */
+/* ------------------------------------------------------------------ */
+
+const CREAM = "#FAF6EC";
+const BORDER = "#ECE3D0";
 
 const styles = StyleSheet.create({
   screen: {
@@ -817,13 +1138,14 @@ const styles = StyleSheet.create({
   },
 
   headerTitle: {
-    color: "#1F2937",
+    color: "#231708",
     fontSize: 18,
     fontWeight: "800",
+    letterSpacing: -0.2,
   },
 
   headerSubtitle: {
-    color: "#7A7364",
+    color: "#8A8371",
     fontSize: 10,
     marginTop: 2,
   },
@@ -850,7 +1172,7 @@ const styles = StyleSheet.create({
   summaryCard: {
     flexDirection: "row",
     alignItems: "center",
-    borderRadius: 20,
+    borderRadius: 22,
     padding: 15,
     backgroundColor: "#FFFBEB",
     borderWidth: 1,
@@ -863,17 +1185,26 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 
+  summaryIconChip: {
+    width: 32,
+    height: 32,
+    borderRadius: 11,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
   summaryValue: {
-    color: "#78350F",
-    fontSize: 18,
+    fontSize: 19,
     fontWeight: "900",
-    marginTop: 5,
+    marginTop: 7,
   },
 
   summaryLabel: {
-    color: "#7A7364",
+    color: "#8A8371",
     fontSize: 8.5,
     marginTop: 2,
+    textTransform: "uppercase",
+    letterSpacing: 0.4,
   },
 
   summaryDivider: {
@@ -890,26 +1221,40 @@ const styles = StyleSheet.create({
   },
 
   sectionTitle: {
-    color: "#1F2937",
+    color: "#231708",
     fontSize: 15,
     fontWeight: "800",
   },
 
+  refreshHintRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+
   refreshHint: {
-    color: "#9CA3AF",
+    color: "#B5AB92",
     fontSize: 9,
   },
 
   requestList: {
-    gap: 15,
+    gap: 16,
   },
 
   requestCard: {
-    borderRadius: 22,
-    padding: 17,
+    borderRadius: 24,
+    paddingTop: 17,
+    paddingHorizontal: 17,
+    paddingBottom: 17,
     backgroundColor: "#FFFFFF",
     borderWidth: 1,
     borderColor: BORDER,
+    shadowColor: "#3F2A14",
+    shadowOpacity: 0.06,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 2,
+    overflow: "visible",
   },
 
   requestTopRow: {
@@ -932,22 +1277,31 @@ const styles = StyleSheet.create({
   },
 
   farmerName: {
-    color: "#1F2937",
+    color: "#231708",
     fontSize: 14,
     fontWeight: "800",
   },
 
   locationText: {
-    color: "#7A7364",
+    color: "#8A8371",
     fontSize: 9.5,
     marginTop: 2,
   },
 
   statusBadge: {
-    maxWidth: 115,
+    maxWidth: 130,
     borderRadius: 999,
     paddingHorizontal: 9,
     paddingVertical: 6,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+  },
+
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
   },
 
   statusText: {
@@ -956,14 +1310,54 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
 
-  matchScoreCard: {
+  ticketDivider: {
+    height: 1,
+    marginTop: 16,
+    marginHorizontal: -17,
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
+    position: "relative",
+  },
+
+  ticketNotchLeft: {
+    position: "absolute",
+    left: -9,
+    top: -9,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: CREAM,
+  },
+
+  ticketNotchRight: {
+    position: "absolute",
+    right: -9,
+    top: -9,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: CREAM,
+  },
+
+  ticketDashLine: {
+    flex: 1,
+    marginHorizontal: 20,
+    borderTopWidth: 1.5,
+    borderStyle: "dashed",
+    borderColor: "#E4D9BE",
+  },
+
+  matchScoreCard: {
     borderRadius: 16,
     padding: 13,
     backgroundColor: "#FFFBEB",
     marginTop: 16,
+  },
+
+  matchScoreTopRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
 
   matchScoreLabel: {
@@ -973,15 +1367,29 @@ const styles = StyleSheet.create({
   },
 
   matchScoreDescription: {
-    color: "#7A7364",
+    color: "#8A8371",
     fontSize: 8.5,
     marginTop: 3,
   },
 
   matchScoreValue: {
-    color: "#92400E",
+    color: "#B45309",
     fontSize: 22,
     fontWeight: "900",
+  },
+
+  matchScoreTrack: {
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: "#FDE68A",
+    marginTop: 10,
+    overflow: "hidden",
+  },
+
+  matchScoreFill: {
+    height: "100%",
+    borderRadius: 3,
+    backgroundColor: "#B45309",
   },
 
   harvestPanel: {
@@ -1014,7 +1422,7 @@ const styles = StyleSheet.create({
   },
 
   harvestTitle: {
-    color: "#1F2937",
+    color: "#231708",
     fontSize: 13,
     fontWeight: "800",
     marginTop: 2,
@@ -1032,7 +1440,7 @@ const styles = StyleSheet.create({
   },
 
   detailLabel: {
-    color: "#94A3B8",
+    color: "#9CA3AF",
     fontSize: 8,
   },
 
@@ -1044,7 +1452,7 @@ const styles = StyleSheet.create({
   },
 
   detailValueEmphasized: {
-    color: "#92400E",
+    color: "#B45309",
   },
 
   dateRow: {
@@ -1055,7 +1463,7 @@ const styles = StyleSheet.create({
   },
 
   dateText: {
-    color: "#64748B",
+    color: "#8A8371",
     fontSize: 9,
   },
 
@@ -1108,7 +1516,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-    backgroundColor: "#af8b0b",
+    backgroundColor: "#B45309",
     marginTop: 16,
   },
 
@@ -1123,16 +1531,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingHorizontal: 28,
     paddingVertical: 70,
-  },
-
-  loadingIcon: {
-    width: 76,
-    height: 76,
-    borderRadius: 25,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#FFFBEB",
-    marginBottom: 18,
   },
 
   emptyIcon: {
@@ -1156,7 +1554,7 @@ const styles = StyleSheet.create({
   },
 
   stateTitle: {
-    color: "#1F2937",
+    color: "#231708",
     fontSize: 19,
     fontWeight: "800",
     textAlign: "center",
@@ -1188,12 +1586,77 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
 
-  pressed: {
-    opacity: 0.82,
-    transform: [{ scale: 0.98 }],
-  },
-
   disabled: {
     opacity: 0.55,
+  },
+
+  /* Skeleton loading state */
+
+  skeletonSummary: {
+    height: 79,
+    borderRadius: 22,
+    backgroundColor: "#F1E9D6",
+    marginBottom: 23,
+  },
+
+  skeletonCard: {
+    borderRadius: 24,
+    padding: 17,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: BORDER,
+    marginBottom: 16,
+  },
+
+  skeletonAvatarRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
+  skeletonAvatar: {
+    width: 45,
+    height: 45,
+    borderRadius: 15,
+    backgroundColor: "#F1E9D6",
+  },
+
+  skeletonLines: {
+    marginLeft: 11,
+    flex: 1,
+    gap: 8,
+  },
+
+  skeletonLineWide: {
+    height: 12,
+    width: "55%",
+    borderRadius: 6,
+    backgroundColor: "#F1E9D6",
+  },
+
+  skeletonLineNarrow: {
+    height: 10,
+    width: "35%",
+    borderRadius: 5,
+    backgroundColor: "#F1E9D6",
+  },
+
+  skeletonBlock: {
+    height: 90,
+    borderRadius: 16,
+    backgroundColor: "#F6F1E4",
+    marginTop: 16,
+  },
+
+  loadingCaption: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    marginTop: 6,
+  },
+
+  loadingCaptionText: {
+    color: "#8A8371",
+    fontSize: 11,
   },
 });
