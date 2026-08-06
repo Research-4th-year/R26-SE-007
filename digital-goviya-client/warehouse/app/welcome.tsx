@@ -39,10 +39,7 @@ const LANGUAGES: { code: LangCode; label: string; native: string }[] = [
   { code: "ta", label: "Tamil", native: "தமி" },
 ];
 
-// ---------------------------------------------------------
-// Hero backdrop — sunrise over a paddy field, sits behind
-// the content and fades into the white sheet below.
-// ---------------------------------------------------------
+
 function PaddyBackdrop() {
   const h = 350;
   return (

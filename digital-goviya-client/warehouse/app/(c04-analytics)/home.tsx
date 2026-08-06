@@ -91,7 +91,7 @@ export default function AnalyticsHomeScreen() {
           >
             <Text style={styles.welcomeText}>
               Get an instant price estimate, or see how prices may move over
-              the next few weeks — powered by AI trained on real market data.
+              the next few weeks.
             </Text>
 
             {/* Predict card */}
