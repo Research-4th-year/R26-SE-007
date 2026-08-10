@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { GoogleMap, useJsApiLoader, Marker } from '@react-google-maps/api';
 import { districtData, districtToZoneMap } from '../data/constants';
 
@@ -7,6 +7,36 @@ const mapContainerStyle = {
   height: '250px',
   borderRadius: '12px',
   marginBottom: '15px'
+};
+
+const getCurrentSeason = () => {
+  const month = new Date().getMonth(); // 0 = Jan, 11 = Dec
+  // Yala: April (3) to August (7)
+  if (month >= 3 && month <= 7) return 'Yala';
+  return 'Maha';
+};
+
+const findClosestLocation = (lat, lon) => {
+  let closestDist = Infinity;
+  let bestMatch = null;
+  
+  for (const [district, cities] of Object.entries(districtData)) {
+    for (const city of cities) {
+      // Simple euclidean distance is fine for this scale
+      const dist = Math.pow(city.lat - lat, 2) + Math.pow(city.lon - lon, 2);
+      if (dist < closestDist) {
+        closestDist = dist;
+        bestMatch = {
+          District: district,
+          City: city.name,
+          Zone: districtToZoneMap[district] || 'Dry Zone',
+          lat: city.lat,
+          lon: city.lon
+        };
+      }
+    }
+  }
+  return bestMatch;
 };
 
 function Advisory() {
@@ -21,7 +51,7 @@ function Advisory() {
     lat: districtData["Anuradhapura"][0].lat,
     lon: districtData["Anuradhapura"][0].lon,
     Zone: 'Dry Zone',
-    Season: 'Annual',
+    Season: getCurrentSeason(),
     Salinity_Prone: 'No',
     Iron_Toxicity_Prone: 'No',
     field_id: 'field_001'
@@ -64,11 +94,26 @@ function Advisory() {
   };
 
   const onMapClick = (e) => {
-    setAdvisoryData({
-      ...advisoryData,
-      lat: e.latLng.lat(),
-      lon: e.latLng.lng()
-    });
+    const clickedLat = e.latLng.lat();
+    const clickedLon = e.latLng.lng();
+    const match = findClosestLocation(clickedLat, clickedLon);
+    
+    if (match) {
+      setAdvisoryData({
+        ...advisoryData,
+        District: match.District,
+        City: match.City,
+        Zone: match.Zone,
+        lat: clickedLat,
+        lon: clickedLon
+      });
+    } else {
+      setAdvisoryData({
+        ...advisoryData,
+        lat: clickedLat,
+        lon: clickedLon
+      });
+    }
   };
 
   const handleAdvisorySubmit = async (e) => {
@@ -173,7 +218,7 @@ function Advisory() {
         {/* 2. Advisory Fields */}
         <div className="form-row">
           <div className="form-group">
-            <label>Climatic Zone</label>
+            <label>Climatic Zone (Auto-Detected)</label>
             <select name="Zone" value={advisoryData.Zone} onChange={handleAdvisoryChange}>
               <option value="Dry Zone">Dry Zone</option>
               <option value="Wet Zone">Wet Zone</option>
@@ -181,28 +226,11 @@ function Advisory() {
             </select>
           </div>
           <div className="form-group">
-            <label>Season</label>
+            <label>Season (Auto-Detected)</label>
             <select name="Season" value={advisoryData.Season} onChange={handleAdvisoryChange}>
-              <option value="Maha">Maha</option>
-              <option value="Yala">Yala</option>
+              <option value="Maha">Maha (Sept - Mar)</option>
+              <option value="Yala">Yala (Apr - Aug)</option>
               <option value="Annual">Annual</option>
-            </select>
-          </div>
-        </div>
-
-        <div className="form-row">
-          <div className="form-group">
-            <label>Salinity Prone</label>
-            <select name="Salinity_Prone" value={advisoryData.Salinity_Prone} onChange={handleAdvisoryChange}>
-              <option value="No">No</option>
-              <option value="Yes">Yes</option>
-            </select>
-          </div>
-          <div className="form-group">
-            <label>Iron Toxicity Prone</label>
-            <select name="Iron_Toxicity_Prone" value={advisoryData.Iron_Toxicity_Prone} onChange={handleAdvisoryChange}>
-              <option value="No">No</option>
-              <option value="Yes">Yes</option>
             </select>
           </div>
         </div>
@@ -257,11 +285,11 @@ function Advisory() {
               }}>
                 {suitabilityResult.suitability_score} / 5
               </div>
-              <p style={{ fontSize: '0.8rem', color: '#94a3b8', marginBottom: '15px' }}>
+              <p style={{ fontSize: '0.8rem', color: '#3c4047ff', marginBottom: '15px' }}>
                 (1 is Excellent, 5 is Poor)
               </p>
               
-              <div className="reasoning-box" style={{ background: 'rgba(0,0,0,0.2)', padding: '10px', borderRadius: '8px', fontSize: '0.9rem', marginBottom: '15px', color: '#e2e8f0' }}>
+              <div className="reasoning-box" style={{ background: 'rgba(0,0,0,0.2)', padding: '10px', borderRadius: '8px', fontSize: '0.9rem', marginBottom: '15px', color: '#000000ff' }}>
                 {suitabilityResult.reasoning}
               </div>
 
