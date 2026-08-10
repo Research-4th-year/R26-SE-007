@@ -272,3 +272,70 @@ def get_latest_sensor_data():
         print(f"Error fetching Firebase data: {e}")
         
     return default_data
+
+# Advisory History API
+from database import get_db_connection
+from pydantic import BaseModel
+
+class AdvisoryHistoryItem(BaseModel):
+    field_id: str
+    district: str
+    city: str
+    zone: str
+    season: str
+    predicted_variety: str
+    suitability_score: int
+
+@app.post("/api/history")
+def save_history(item: AdvisoryHistoryItem):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('''
+            INSERT INTO advisory_history 
+            (field_id, district, city, zone, season, predicted_variety, suitability_score) 
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        ''', (item.field_id, item.district, item.city, item.zone, item.season, item.predicted_variety, item.suitability_score))
+        conn.commit()
+        new_id = cursor.lastrowid
+        conn.close()
+        return {"message": "Saved successfully", "id": new_id}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/history")
+def get_history():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('SELECT * FROM advisory_history ORDER BY id DESC')
+        rows = cursor.fetchall()
+        conn.close()
+        return [dict(row) for row in rows]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.put("/api/history/{id}")
+def update_history(id: int, field_id: str):
+    # For now, just updating the field_id as requested
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('UPDATE advisory_history SET field_id = ? WHERE id = ?', (field_id, id))
+        conn.commit()
+        conn.close()
+        return {"message": "Updated successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.delete("/api/history/{id}")
+def delete_history(id: int):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('DELETE FROM advisory_history WHERE id = ?', (id,))
+        conn.commit()
+        conn.close()
+        return {"message": "Deleted successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

@@ -61,6 +61,82 @@ function Advisory() {
   const [result, setResult] = useState(null);
   const [suitabilityResult, setSuitabilityResult] = useState(null);
   const [error, setError] = useState(null);
+  
+  // History State
+  const [historyData, setHistoryData] = useState([]);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    fetchHistory();
+  }, []);
+
+  const fetchHistory = async () => {
+    try {
+      const response = await fetch('http://127.0.0.1:8000/api/history');
+      if (response.ok) {
+        const data = await response.json();
+        setHistoryData(data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch history:", err);
+    }
+  };
+
+  const saveToHistory = async () => {
+    if (!result || !suitabilityResult) return;
+    setSaving(true);
+    try {
+      const payload = {
+        field_id: advisoryData.field_id,
+        district: advisoryData.District,
+        city: advisoryData.City,
+        zone: advisoryData.Zone,
+        season: advisoryData.Season,
+        predicted_variety: result.predicted_variety_code,
+        suitability_score: suitabilityResult.suitability_score
+      };
+      
+      const response = await fetch('http://127.0.0.1:8000/api/history', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      
+      if (response.ok) {
+        fetchHistory(); // refresh table
+      }
+    } catch (err) {
+      console.error("Failed to save history:", err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const deleteHistory = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this record?")) return;
+    try {
+      const response = await fetch(`http://127.0.0.1:8000/api/history/${id}`, {
+        method: 'DELETE'
+      });
+      if (response.ok) fetchHistory();
+    } catch (err) {
+      console.error("Failed to delete history:", err);
+    }
+  };
+
+  const editFieldId = async (id, currentFieldId) => {
+    const newFieldId = window.prompt("Enter new Field ID:", currentFieldId);
+    if (!newFieldId || newFieldId === currentFieldId) return;
+    
+    try {
+      const response = await fetch(`http://127.0.0.1:8000/api/history/${id}?field_id=${encodeURIComponent(newFieldId)}`, {
+        method: 'PUT'
+      });
+      if (response.ok) fetchHistory();
+    } catch (err) {
+      console.error("Failed to update history:", err);
+    }
+  };
 
   const handleAdvisoryChange = (e) => {
     const { name, value } = e.target;
@@ -309,6 +385,47 @@ function Advisory() {
               </div>
             </div>
           )}
+          
+          <button 
+            onClick={saveToHistory} 
+            className="submit-btn" 
+            style={{ marginTop: '20px', background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' }}
+            disabled={saving}
+          >
+            {saving ? 'Saving...' : '💾 Save Result to History'}
+          </button>
+        </div>
+      )}
+
+      {/* History Table */}
+      {historyData.length > 0 && (
+        <div className="glass-panel" style={{ overflowX: 'auto', padding: '20px' }}>
+          <h3 style={{ marginBottom: '15px', color: '#1e293b' }}>Saved Advisory History</h3>
+          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '600px' }}>
+            <thead>
+              <tr style={{ borderBottom: '2px solid rgba(0,0,0,0.1)', color: '#64748b' }}>
+                <th style={{ padding: '12px 8px' }}>Field ID</th>
+                <th style={{ padding: '12px 8px' }}>Location</th>
+                <th style={{ padding: '12px 8px' }}>Variety</th>
+                <th style={{ padding: '12px 8px' }}>Score</th>
+                <th style={{ padding: '12px 8px' }}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {historyData.map(row => (
+                <tr key={row.id} style={{ borderBottom: '1px solid rgba(0,0,0,0.05)' }}>
+                  <td style={{ padding: '12px 8px', fontWeight: '500' }}>{row.field_id}</td>
+                  <td style={{ padding: '12px 8px' }}>{row.city}, {row.district}</td>
+                  <td style={{ padding: '12px 8px', color: '#10b981', fontWeight: 'bold' }}>{row.predicted_variety}</td>
+                  <td style={{ padding: '12px 8px' }}>{row.suitability_score}/5</td>
+                  <td style={{ padding: '12px 8px' }}>
+                    <button onClick={() => editFieldId(row.id, row.field_id)} style={{ marginRight: '10px', background: 'none', border: 'none', cursor: 'pointer', color: '#3b82f6' }}>✏️</button>
+                    <button onClick={() => deleteHistory(row.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444' }}>🗑️</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
     </div>
