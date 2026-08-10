@@ -14,6 +14,7 @@ const notificationRoutes = require("./routes/notification.routes");
 const dashboardRoutes = require("./routes/dashboard.routes");
 const negotiationRoutes = require("./routes/negotiation.routes");
 const authRoutes = require("./routes/auth.routes");
+const contactRequestRoutes = require("./routes/contactRequest.routes");
 
 const app = express();
 
@@ -40,6 +41,7 @@ app.use("/api/match-selections", matchSelectionRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/negotiations", negotiationRoutes );
+app.use("/api/contact-requests", contactRequestRoutes);
 
 
 // send back a 404 error for any unknown api request

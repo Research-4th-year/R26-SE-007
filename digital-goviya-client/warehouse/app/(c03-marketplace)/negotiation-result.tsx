@@ -13,6 +13,7 @@ import {
   ActivityIndicator,
   Animated,
   Easing,
+  Linking,
   Pressable,
   SafeAreaView,
   ScrollView,
@@ -30,6 +31,10 @@ import {
 } from "@/services/c03-marketplace/negotiation.service";
 
 import {
+  contactRequestService,
+} from "@/services/c03-marketplace/contact-request.service";
+
+import {
   getApiErrorMessage,
 } from "@/utils/c03-marketplace/getApiErrorMessage";
 
@@ -37,6 +42,10 @@ import type {
   Negotiation,
   NegotiationHistoryItem,
 } from "@/types/c03-marketplace/negotiation.types";
+
+import type {
+  ContactRequestState,
+} from "@/types/c03-marketplace/contact-request.types";
 
 /* ------------------------------------------------------------------ */
 /*  Small animation helpers — purely presentational, no logic changes  */
@@ -113,6 +122,21 @@ export default function NegotiationResultScreen() {
 
   const [errorMessage, setErrorMessage] =
     useState<string | null>(null);
+
+  const [
+    contactState,
+    setContactState,
+  ] = useState<ContactRequestState | null>(null);
+
+  const [
+    contactLoading,
+    setContactLoading,
+  ] = useState(false);
+
+  const [
+    contactProcessing,
+    setContactProcessing,
+  ] = useState(false);
 
   const fade = useRef(
     new Animated.Value(0)
@@ -194,6 +218,121 @@ export default function NegotiationResultScreen() {
     fade,
     rise,
   ]);
+
+  useEffect(() => {
+    if (
+      !negotiation ||
+      negotiation.status !== "agreed"
+    ) {
+      setContactState(null);
+      return;
+    }
+
+    const loadContactState = async () => {
+      try {
+        setContactLoading(true);
+
+        const response =
+          await contactRequestService
+            .getForNegotiation(
+              negotiation._id
+            );
+
+        setContactState(
+          response.data
+        );
+      } catch (error) {
+        console.error(
+          "Load contact state failed:",
+          error
+        );
+      } finally {
+        setContactLoading(false);
+      }
+    };
+
+    void loadContactState();
+  }, [negotiation]);
+
+  const handleCreateContactRequest =
+    async () => {
+      if (
+        !negotiation ||
+        contactProcessing
+      ) {
+        return;
+      }
+
+      try {
+        setContactProcessing(true);
+
+        await contactRequestService
+          .create({
+            negotiationId:
+              negotiation._id,
+          });
+
+        const refreshed =
+          await contactRequestService
+            .getForNegotiation(
+              negotiation._id
+            );
+
+        setContactState(
+          refreshed.data
+        );
+      } catch (error) {
+        setErrorMessage(
+          getApiErrorMessage(error)
+        );
+      } finally {
+        setContactProcessing(false);
+      }
+    };
+
+  const handleContactResponse =
+    async (
+      decision:
+        | "accepted"
+        | "rejected"
+    ) => {
+      if (
+        !contactState?.request ||
+        contactProcessing
+      ) {
+        return;
+      }
+
+      try {
+        setContactProcessing(true);
+
+        const response =
+          await contactRequestService
+            .respond(
+              contactState.request._id,
+              decision
+            );
+
+        setContactState({
+          ...contactState,
+          request:
+            response.data.request,
+          contactUnlocked:
+            response.data
+              .contactUnlocked,
+          canRespond: false,
+          canRequest: false,
+          contact: response.data.contact ?? null,
+          exists: true,
+        });
+      } catch (error) {
+        setErrorMessage(
+          getApiErrorMessage(error)
+        );
+      } finally {
+        setContactProcessing(false);
+      }
+    };
 
   if (loading) {
     return <LoadingState theme={theme} />;
@@ -299,6 +438,29 @@ export default function NegotiationResultScreen() {
                 negotiation
                   .priceDifferenceFromReference
               )}
+            />
+          ) : null}
+
+          {agreed ? (
+            <ContactAccessCard
+              theme={theme}
+              role={user?.role}
+              state={contactState}
+              loading={contactLoading}
+              processing={contactProcessing}
+              onRequest={() =>
+                void handleCreateContactRequest()
+              }
+              onAccept={() =>
+                void handleContactResponse(
+                  "accepted"
+                )
+              }
+              onReject={() =>
+                void handleContactResponse(
+                  "rejected"
+                )
+              }
             />
           ) : null}
 
@@ -826,6 +988,661 @@ function HistoryCard({
   );
 }
 
+
+function ContactAccessCard({
+  theme,
+  role,
+  state,
+  loading,
+  processing,
+  onRequest,
+  onAccept,
+  onReject,
+}: {
+  theme: ResultTheme;
+  role: string | undefined;
+  state: ContactRequestState | null;
+  loading: boolean;
+  processing: boolean;
+  onRequest: () => void;
+  onAccept: () => void;
+  onReject: () => void;
+}) {
+  const entrance = useEntrance(390);
+
+  const otherParty =
+    role === "miller"
+      ? state?.contact?.farmer
+      : state?.contact?.miller;
+
+  const otherPartyLabel =
+    role === "miller"
+      ? "Farmer"
+      : "Miller";
+
+  const requesterIsMe =
+    state?.request?.requestedBy ===
+    role;
+
+  const openPhone = async () => {
+    if (!otherParty?.phone) {
+      return;
+    }
+
+    await Linking.openURL(
+      `tel:${otherParty.phone}`
+    );
+  };
+
+  const openWhatsApp = async () => {
+    if (!otherParty?.phone) {
+      return;
+    }
+
+    const normalized =
+      normalizeSriLankanPhone(
+        otherParty.phone
+      );
+
+    const message =
+      "Hello, I am contacting you regarding our agreed paddy marketplace negotiation.";
+
+    await Linking.openURL(
+      `https://wa.me/${normalized}?text=${encodeURIComponent(
+        message
+      )}`
+    );
+  };
+
+  if (loading) {
+    return (
+      <Animated.View
+        style={[
+          styles.contactCard,
+          {
+            borderColor:
+              theme.border,
+          },
+          entrance,
+        ]}
+      >
+        <View
+          style={[
+            styles.contactIcon,
+            {
+              backgroundColor:
+                theme.soft,
+            },
+          ]}
+        >
+          <ActivityIndicator
+            size="small"
+            color={theme.primary}
+          />
+        </View>
+
+        <View style={styles.contactBody}>
+          <Text
+            style={[
+              styles.contactTitle,
+              {
+                color: theme.dark,
+              },
+            ]}
+          >
+            Checking contact access
+          </Text>
+
+          <Text
+            style={styles.contactDescription}
+          >
+            Secure contact permissions are being verified.
+          </Text>
+        </View>
+      </Animated.View>
+    );
+  }
+
+  if (!state) {
+    return null;
+  }
+
+  if (
+    state.contactUnlocked &&
+    otherParty
+  ) {
+    return (
+      <Animated.View
+        style={[
+          styles.contactCard,
+          styles.contactUnlockedCard,
+          {
+            borderColor:
+              theme.border,
+          },
+          entrance,
+        ]}
+      >
+        <View style={styles.contactTopRow}>
+          <View
+            style={[
+              styles.contactIcon,
+              {
+                backgroundColor:
+                  theme.soft,
+              },
+            ]}
+          >
+            <Ionicons
+              name="lock-open-outline"
+              size={23}
+              color={theme.primary}
+            />
+          </View>
+
+          <View style={styles.contactBody}>
+            <Text
+              style={[
+                styles.contactEyebrow,
+                {
+                  color:
+                    theme.primary,
+                },
+              ]}
+            >
+              CONTACT UNLOCKED
+            </Text>
+
+            <Text
+              style={[
+                styles.contactTitle,
+                {
+                  color:
+                    theme.dark,
+                },
+              ]}
+            >
+              {otherPartyLabel} contact is available
+            </Text>
+
+            <Text
+              style={styles.contactDescription}
+            >
+              Both participants approved contact exchange after the successful AI negotiation.
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.contactIdentity}>
+          <View
+            style={[
+              styles.contactAvatar,
+              {
+                backgroundColor:
+                  theme.soft,
+              },
+            ]}
+          >
+            <Ionicons
+              name={
+                role === "miller"
+                  ? "leaf-outline"
+                  : "business-outline"
+              }
+              size={21}
+              color={theme.primary}
+            />
+          </View>
+
+          <View style={styles.contactIdentityText}>
+            <Text style={styles.contactName}>
+              {role === "miller"
+                ? otherParty.farmerName ||
+                  otherParty.name
+                : otherParty.millName ||
+                  otherParty.name}
+            </Text>
+
+            <Text style={styles.contactLocation}>
+              {otherParty.location}, {otherParty.district}
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.contactActions}>
+          <Pressable
+            onPress={() =>
+              void openPhone()
+            }
+            style={({ pressed }) => [
+              styles.contactActionButton,
+              {
+                backgroundColor:
+                  theme.primary,
+              },
+              pressed &&
+                styles.contactActionPressed,
+            ]}
+          >
+            <Ionicons
+              name="call-outline"
+              size={19}
+              color="#FFFFFF"
+            />
+
+            <Text
+              style={styles.contactActionText}
+            >
+              Call
+            </Text>
+          </Pressable>
+
+          <Pressable
+            onPress={() =>
+              void openWhatsApp()
+            }
+            style={({ pressed }) => [
+              styles.contactActionButton,
+              styles.whatsAppButton,
+              pressed &&
+                styles.contactActionPressed,
+            ]}
+          >
+            <Ionicons
+              name="logo-whatsapp"
+              size={20}
+              color="#FFFFFF"
+            />
+
+            <Text
+              style={styles.contactActionText}
+            >
+              WhatsApp
+            </Text>
+          </Pressable>
+        </View>
+      </Animated.View>
+    );
+  }
+
+  if (
+    state.exists &&
+    state.request?.status === "rejected"
+  ) {
+    return (
+      <Animated.View
+        style={[
+          styles.contactCard,
+          styles.contactRejectedCard,
+          entrance,
+        ]}
+      >
+        <View style={styles.contactTopRow}>
+          <View style={styles.contactRejectedIcon}>
+            <Ionicons
+              name="close-circle-outline"
+              size={23}
+              color="#B91C1C"
+            />
+          </View>
+
+          <View style={styles.contactBody}>
+            <Text style={styles.contactRejectedTitle}>
+              Contact request declined
+            </Text>
+
+            <Text style={styles.contactDescription}>
+              Contact details remain private because the other participant did not approve the request.
+            </Text>
+          </View>
+        </View>
+      </Animated.View>
+    );
+  }
+
+  if (
+    state.exists &&
+    state.request?.status === "pending" &&
+    state.canRespond
+  ) {
+    return (
+      <Animated.View
+        style={[
+          styles.contactCard,
+          {
+            borderColor:
+              theme.border,
+          },
+          entrance,
+        ]}
+      >
+        <View style={styles.contactTopRow}>
+          <View
+            style={[
+              styles.contactIcon,
+              {
+                backgroundColor:
+                  theme.soft,
+              },
+            ]}
+          >
+            <Ionicons
+              name="mail-unread-outline"
+              size={23}
+              color={theme.primary}
+            />
+          </View>
+
+          <View style={styles.contactBody}>
+            <Text
+              style={[
+                styles.contactEyebrow,
+                {
+                  color:
+                    theme.primary,
+                },
+              ]}
+            >
+              CONTACT REQUEST
+            </Text>
+
+            <Text
+              style={[
+                styles.contactTitle,
+                {
+                  color:
+                    theme.dark,
+                },
+              ]}
+            >
+              The other participant wants to connect
+            </Text>
+
+            <Text style={styles.contactDescription}>
+              Accept to unlock phone and WhatsApp contact for both sides.
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.contactResponseActions}>
+          <Pressable
+            disabled={processing}
+            onPress={onReject}
+            style={({ pressed }) => [
+              styles.contactRejectButton,
+              pressed &&
+                styles.contactActionPressed,
+              processing &&
+                styles.contactDisabled,
+            ]}
+          >
+            <Ionicons
+              name="close-outline"
+              size={19}
+              color="#B91C1C"
+            />
+
+            <Text style={styles.contactRejectText}>
+              Reject
+            </Text>
+          </Pressable>
+
+          <Pressable
+            disabled={processing}
+            onPress={onAccept}
+            style={({ pressed }) => [
+              styles.contactAcceptButton,
+              {
+                backgroundColor:
+                  theme.primary,
+              },
+              pressed &&
+                styles.contactActionPressed,
+              processing &&
+                styles.contactDisabled,
+            ]}
+          >
+            {processing ? (
+              <ActivityIndicator
+                size="small"
+                color="#FFFFFF"
+              />
+            ) : (
+              <>
+                <Ionicons
+                  name="checkmark-outline"
+                  size={19}
+                  color="#FFFFFF"
+                />
+
+                <Text
+                  style={styles.contactAcceptText}
+                >
+                  Accept Access
+                </Text>
+              </>
+            )}
+          </Pressable>
+        </View>
+      </Animated.View>
+    );
+  }
+
+  if (
+    state.exists &&
+    state.request?.status === "pending" &&
+    requesterIsMe
+  ) {
+    return (
+      <Animated.View
+        style={[
+          styles.contactCard,
+          {
+            borderColor:
+              theme.border,
+          },
+          entrance,
+        ]}
+      >
+        <View style={styles.contactTopRow}>
+          <View
+            style={[
+              styles.contactIcon,
+              {
+                backgroundColor:
+                  theme.soft,
+              },
+            ]}
+          >
+            <Ionicons
+              name="time-outline"
+              size={23}
+              color={theme.primary}
+            />
+          </View>
+
+          <View style={styles.contactBody}>
+            <Text
+              style={[
+                styles.contactEyebrow,
+                {
+                  color:
+                    theme.primary,
+                },
+              ]}
+            >
+              REQUEST PENDING
+            </Text>
+
+            <Text
+              style={[
+                styles.contactTitle,
+                {
+                  color:
+                    theme.dark,
+                },
+              ]}
+            >
+              Waiting for approval
+            </Text>
+
+            <Text style={styles.contactDescription}>
+              Your contact request was sent successfully. Phone and WhatsApp remain protected until the other participant accepts.
+            </Text>
+          </View>
+        </View>
+
+        <View
+          style={[
+            styles.contactPendingStatus,
+            {
+              backgroundColor:
+                theme.soft,
+            },
+          ]}
+        >
+          <ActivityIndicator
+            size="small"
+            color={theme.primary}
+          />
+
+          <Text
+            style={[
+              styles.contactPendingText,
+              {
+                color:
+                  theme.dark,
+              },
+            ]}
+          >
+            Awaiting response
+          </Text>
+        </View>
+      </Animated.View>
+    );
+  }
+
+  if (state.canRequest) {
+    return (
+      <Animated.View
+        style={[
+          styles.contactCard,
+          {
+            borderColor:
+              theme.border,
+          },
+          entrance,
+        ]}
+      >
+        <View style={styles.contactTopRow}>
+          <View
+            style={[
+              styles.contactIcon,
+              {
+                backgroundColor:
+                  theme.soft,
+              },
+            ]}
+          >
+            <Ionicons
+              name="shield-checkmark-outline"
+              size={23}
+              color={theme.primary}
+            />
+          </View>
+
+          <View style={styles.contactBody}>
+            <Text
+              style={[
+                styles.contactEyebrow,
+                {
+                  color:
+                    theme.primary,
+                },
+              ]}
+            >
+              SECURE CONTACT ACCESS
+            </Text>
+
+            <Text
+              style={[
+                styles.contactTitle,
+                {
+                  color:
+                    theme.dark,
+                },
+              ]}
+            >
+              Continue the conversation
+            </Text>
+
+            <Text style={styles.contactDescription}>
+              The AI agents reached an agreement. Request permission to securely exchange phone and WhatsApp contact details.
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.contactPrivacyNote}>
+          <Ionicons
+            name="lock-closed-outline"
+            size={16}
+            color="#64748B"
+          />
+
+          <Text style={styles.contactPrivacyText}>
+            Contact information stays private until the other participant approves.
+          </Text>
+        </View>
+
+        <Pressable
+          disabled={processing}
+          onPress={onRequest}
+          style={({ pressed }) => [
+            styles.requestContactButton,
+            {
+              backgroundColor:
+                theme.primary,
+            },
+            pressed &&
+              styles.contactActionPressed,
+            processing &&
+              styles.contactDisabled,
+          ]}
+        >
+          {processing ? (
+            <ActivityIndicator
+              size="small"
+              color="#FFFFFF"
+            />
+          ) : (
+            <>
+              <Ionicons
+                name="chatbubble-ellipses-outline"
+                size={19}
+                color="#FFFFFF"
+              />
+
+              <Text
+                style={styles.requestContactText}
+              >
+                Request Contact Access
+              </Text>
+
+              <Ionicons
+                name="arrow-forward"
+                size={17}
+                color="#FFFFFF"
+              />
+            </>
+          )}
+        </Pressable>
+      </Animated.View>
+    );
+  }
+
+  return null;
+}
+
 function DoneButton({
   theme,
   role,
@@ -867,6 +1684,23 @@ function readString(
   return Array.isArray(value)
     ? value[0] ?? ""
     : value ?? "";
+}
+
+function normalizeSriLankanPhone(
+  phone: string
+): string {
+  const digits =
+    phone.replace(/\D/g, "");
+
+  if (digits.startsWith("94")) {
+    return digits;
+  }
+
+  if (digits.startsWith("0")) {
+    return `94${digits.slice(1)}`;
+  }
+
+  return digits;
 }
 
 function formatLabel(
@@ -1045,6 +1879,241 @@ const styles = StyleSheet.create({
     fontSize: 9,
     lineHeight: 14,
     marginTop: 2,
+  },
+
+  contactCard: {
+    borderRadius: 22,
+    padding: 16,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    marginTop: 18,
+    shadowColor: "#000",
+    shadowOpacity: 0.035,
+    shadowRadius: 8,
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
+    elevation: 2,
+  },
+
+  contactUnlockedCard: {
+    backgroundColor: "#FFFFFF",
+  },
+
+  contactRejectedCard: {
+    backgroundColor: "#FFF7F7",
+    borderColor: "#FECACA",
+  },
+
+  contactTopRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 11,
+  },
+
+  contactIcon: {
+    width: 45,
+    height: 45,
+    borderRadius: 15,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  contactRejectedIcon: {
+    width: 45,
+    height: 45,
+    borderRadius: 15,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FEF2F2",
+  },
+
+  contactBody: {
+    flex: 1,
+  },
+
+  contactEyebrow: {
+    fontSize: 8,
+    fontWeight: "900",
+    letterSpacing: 0.9,
+  },
+
+  contactTitle: {
+    fontSize: 13,
+    fontWeight: "900",
+    marginTop: 2,
+  },
+
+  contactRejectedTitle: {
+    color: "#991B1B",
+    fontSize: 13,
+    fontWeight: "900",
+  },
+
+  contactDescription: {
+    color: "#64748B",
+    fontSize: 9.5,
+    lineHeight: 15,
+    marginTop: 4,
+  },
+
+  contactPrivacyNote: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 7,
+    borderRadius: 14,
+    padding: 11,
+    backgroundColor: "#F8FAFC",
+    marginTop: 14,
+  },
+
+  contactPrivacyText: {
+    flex: 1,
+    color: "#64748B",
+    fontSize: 8.5,
+    lineHeight: 14,
+  },
+
+  requestContactButton: {
+    minHeight: 50,
+    borderRadius: 15,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    marginTop: 13,
+  },
+
+  requestContactText: {
+    color: "#FFFFFF",
+    fontSize: 10.5,
+    fontWeight: "900",
+  },
+
+  contactPendingStatus: {
+    minHeight: 44,
+    borderRadius: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    marginTop: 14,
+  },
+
+  contactPendingText: {
+    fontSize: 9.5,
+    fontWeight: "800",
+  },
+
+  contactResponseActions: {
+    flexDirection: "row",
+    gap: 10,
+    marginTop: 15,
+  },
+
+  contactRejectButton: {
+    flex: 1,
+    minHeight: 48,
+    borderRadius: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    backgroundColor: "#FEF2F2",
+    borderWidth: 1,
+    borderColor: "#FECACA",
+  },
+
+  contactRejectText: {
+    color: "#B91C1C",
+    fontSize: 10,
+    fontWeight: "800",
+  },
+
+  contactAcceptButton: {
+    flex: 1.25,
+    minHeight: 48,
+    borderRadius: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+  },
+
+  contactAcceptText: {
+    color: "#FFFFFF",
+    fontSize: 10,
+    fontWeight: "900",
+  },
+
+  contactIdentity: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    borderRadius: 16,
+    padding: 12,
+    backgroundColor: "#F8FAFC",
+    marginTop: 15,
+  },
+
+  contactAvatar: {
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  contactIdentityText: {
+    flex: 1,
+  },
+
+  contactName: {
+    color: "#1F2937",
+    fontSize: 12,
+    fontWeight: "900",
+  },
+
+  contactLocation: {
+    color: "#64748B",
+    fontSize: 8.5,
+    marginTop: 3,
+  },
+
+  contactActions: {
+    flexDirection: "row",
+    gap: 10,
+    marginTop: 13,
+  },
+
+  contactActionButton: {
+    flex: 1,
+    minHeight: 49,
+    borderRadius: 15,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 7,
+  },
+
+  whatsAppButton: {
+    backgroundColor: "#16A34A",
+  },
+
+  contactActionText: {
+    color: "#FFFFFF",
+    fontSize: 10.5,
+    fontWeight: "900",
+  },
+
+  contactActionPressed: {
+    opacity: 0.84,
+    transform: [{ scale: 0.98 }],
+  },
+
+  contactDisabled: {
+    opacity: 0.55,
   },
 
   sectionTitle: {
