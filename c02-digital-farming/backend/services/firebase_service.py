@@ -15,7 +15,7 @@ def init_firebase():
             cred = credentials.Certificate(cred_path)
             # You might need to update the databaseURL depending on your Firebase project settings
             firebase_admin.initialize_app(cred, {
-                'databaseURL': 'https://your-project-id.firebaseio.com/'
+                'databaseURL': 'https://esp32-project01-1641b-default-rtdb.firebaseio.com/'
             })
             print("Firebase initialized successfully.")
         except Exception as e:

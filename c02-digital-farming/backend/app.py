@@ -291,15 +291,30 @@ def save_history(item: AdvisoryHistoryItem):
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute('''
-            INSERT INTO advisory_history 
-            (field_id, district, city, zone, season, predicted_variety, suitability_score) 
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        ''', (item.field_id, item.district, item.city, item.zone, item.season, item.predicted_variety, item.suitability_score))
+        
+        cursor.execute('SELECT id FROM advisory_history WHERE field_id = ?', (item.field_id,))
+        existing_row = cursor.fetchone()
+        
+        if existing_row:
+            cursor.execute('''
+                UPDATE advisory_history 
+                SET district = ?, city = ?, zone = ?, season = ?, predicted_variety = ?, suitability_score = ?, created_at = CURRENT_TIMESTAMP
+                WHERE field_id = ?
+            ''', (item.district, item.city, item.zone, item.season, item.predicted_variety, item.suitability_score, item.field_id))
+            new_id = existing_row['id']
+            msg = "Updated successfully"
+        else:
+            cursor.execute('''
+                INSERT INTO advisory_history 
+                (field_id, district, city, zone, season, predicted_variety, suitability_score) 
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            ''', (item.field_id, item.district, item.city, item.zone, item.season, item.predicted_variety, item.suitability_score))
+            new_id = cursor.lastrowid
+            msg = "Saved successfully"
+            
         conn.commit()
-        new_id = cursor.lastrowid
         conn.close()
-        return {"message": "Saved successfully", "id": new_id}
+        return {"message": msg, "id": new_id}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

@@ -347,3 +347,72 @@ input[type="checkbox"] {
   font-weight: 500;
   border: 1px solid #fca5a5;
 }
+/* Additional Styles for Result Cards to improve UI layout */
+.merged-results-card {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 30px;
+  text-align: left; /* Fix centering text causing run-on lines */
+}
+
+@media (min-width: 768px) {
+  .merged-results-card {
+    grid-template-columns: 1fr 1fr; /* Two column layout on desktop */
+  }
+}
+
+.merged-variety-section, .merged-suitability-section {
+  background: rgba(16, 185, 129, 0.05);
+  border: 1px solid rgba(16, 185, 129, 0.15);
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.merged-variety-section h2, .merged-suitability-section h2 {
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-bottom: 15px;
+  text-align: left;
+}
+
+.variety-details {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.detail-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 15px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  border: 1px solid rgba(0,0,0,0.02);
+}
+
+.detail-item .label {
+  font-weight: 500;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.detail-item .value {
+  font-weight: 700;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+}
+
+.reasoning-box {
+  line-height: 1.5;
+}
+
+.merged-results-card > .submit-btn {
+  grid-column: 1 / -1;
+}
