@@ -46,13 +46,13 @@ const negotiationSchema = new mongoose.Schema(
 
     farmerId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: "Farmer",
       default: null,
     },
 
     millerId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: "Miller",
       default: null,
     },
 
@@ -103,7 +103,7 @@ const negotiationSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 module.exports = mongoose.model(
