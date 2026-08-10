@@ -15,6 +15,7 @@ export interface CreateDemandRequest {
   paddyType: PaddyType;
   quantityNeeded: number;
   offeredPrice: number;
+  maximumBuyingPrice: number;
 }
 
 export interface MillerDemand {
@@ -40,11 +41,4 @@ export interface GetDemandsResponse {
   success: boolean;
   count: number;
   data: MillerDemand[];
-}
-
-export interface CreateDemandRequest {
-  paddyType: PaddyType;
-  quantityNeeded: number;
-  offeredPrice: number;
-  maximumBuyingPrice: number;
 }

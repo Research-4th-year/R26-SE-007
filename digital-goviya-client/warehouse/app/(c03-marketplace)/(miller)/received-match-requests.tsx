@@ -277,7 +277,7 @@ export default function ReceivedMatchRequestsScreen() {
 
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>
-                Received requests
+                Matching activity
               </Text>
 
               <View style={styles.refreshHintRow}>
@@ -534,6 +534,13 @@ function MillerRequestCard({
   const status =
     getStatusDisplay(selection.status);
 
+  const isIncoming =
+    selection.initiatedBy === "farmer";
+
+  const isPendingIncoming =
+    isIncoming &&
+    selection.status === "pending";
+
   const entrance = useEntrance(
     Math.min(index, 6) * 70
   );
@@ -545,7 +552,7 @@ function MillerRequestCard({
   const pulse = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
-    if (selection.status !== "pending") {
+    if (!isPendingIncoming) {
       return;
     }
 
@@ -569,12 +576,50 @@ function MillerRequestCard({
     loop.start();
 
     return () => loop.stop();
-  }, [pulse, selection.status]);
+  }, [pulse, isPendingIncoming]);
 
   return (
     <Animated.View
       style={[styles.requestCard, entrance]}
     >
+      <View
+        style={[
+          styles.directionBadge,
+          isIncoming
+            ? styles.incomingBadge
+            : styles.outgoingBadge,
+        ]}
+      >
+        <Ionicons
+          name={
+            isIncoming
+              ? "arrow-down-outline"
+              : "arrow-up-outline"
+          }
+          size={12}
+          color={
+            isIncoming
+              ? "#92400E"
+              : "#64748B"
+          }
+        />
+
+        <Text
+          style={[
+            styles.directionText,
+            {
+              color: isIncoming
+                ? "#92400E"
+                : "#64748B",
+            },
+          ]}
+        >
+          {isIncoming
+            ? "FARMER REQUEST"
+            : "SENT REQUEST"}
+        </Text>
+      </View>
+
       <View style={styles.requestTopRow}>
         <View style={styles.farmerIcon}>
           <Ionicons name="person-outline" size={22} color="#92400E" />
@@ -598,7 +643,7 @@ function MillerRequestCard({
             { backgroundColor: status.background },
           ]}
         >
-          {selection.status === "pending" ? (
+          {isPendingIncoming ? (
             <Animated.View
               style={[
                 styles.statusDot,
@@ -671,11 +716,12 @@ function MillerRequestCard({
         <Ionicons name="time-outline" size={15} color="#8A8371" />
 
         <Text style={styles.dateText}>
-          Received {formatDate(selection.createdAt)}
+          {isIncoming ? "Received" : "Sent"}{" "}
+          {formatDate(selection.createdAt)}
         </Text>
       </View>
 
-      {selection.status === "pending" ? (
+      {isPendingIncoming ? (
         <View style={styles.actionRow}>
           <AnimatedPressable
             disabled={processing}
@@ -1255,6 +1301,31 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 6 },
     elevation: 2,
     overflow: "visible",
+  },
+
+  directionBadge: {
+    alignSelf: "flex-start",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    marginBottom: 11,
+  },
+
+  incomingBadge: {
+    backgroundColor: "#FEF3C7",
+  },
+
+  outgoingBadge: {
+    backgroundColor: "#F1F5F9",
+  },
+
+  directionText: {
+    fontSize: 7.5,
+    fontWeight: "900",
+    letterSpacing: 0.5,
   },
 
   requestTopRow: {

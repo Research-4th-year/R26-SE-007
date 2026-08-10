@@ -3,7 +3,9 @@ export type PaddyType =
   | "samba"
   | "keeri samba";
 
-export type PaddySeason = "maha" | "yala";
+export type PaddySeason =
+  | "maha"
+  | "yala";
 
 export interface BilingualRecommendation {
   english: string;
@@ -15,6 +17,7 @@ export interface CreateHarvestRequest {
   season: PaddySeason;
   quantity: number;
   expectedPrice: number;
+  minimumAcceptablePrice: number;
 }
 
 export interface Harvest {
@@ -101,12 +104,4 @@ export interface GetHarvestsResponse {
   success: boolean;
   count: number;
   data: Harvest[];
-}
-
-export interface CreateHarvestRequest {
-  paddyType: PaddyType;
-  season: PaddySeason;
-  quantity: number;
-  expectedPrice: number;
-  minimumAcceptablePrice: number;
 }

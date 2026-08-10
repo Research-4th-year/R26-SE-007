@@ -3,11 +3,17 @@ const mongoose = require("mongoose");
 const Harvest = require(
   "../models/harvest.model"
 );
+
 const MillerDemand = require(
   "../models/millerDemand.model"
 );
+
 const Farmer = require(
   "../models/farmer.model"
+);
+
+const Miller = require(
+  "../models/miller.model"
 );
 
 const MAX_MATCH_SCORE = 100;
@@ -29,23 +35,35 @@ const getConfidence = (percentage) => {
   if (percentage >= 85) {
     return {
       level: "HIGH",
-      english: "High matching confidence",
-      sinhala: "ඉහළ ගැළපීමේ විශ්වාසය",
+
+      english:
+        "High matching confidence",
+
+      sinhala:
+        "ඉහළ ගැළපීමේ විශ්වාසය",
     };
   }
 
   if (percentage >= 65) {
     return {
       level: "MEDIUM",
-      english: "Medium matching confidence",
-      sinhala: "මධ්‍යම ගැළපීමේ විශ්වාසය",
+
+      english:
+        "Medium matching confidence",
+
+      sinhala:
+        "මධ්‍යම ගැළපීමේ විශ්වාසය",
     };
   }
 
   return {
     level: "LOW",
-    english: "Low matching confidence",
-    sinhala: "අඩු ගැළපීමේ විශ්වාසය",
+
+    english:
+      "Low matching confidence",
+
+    sinhala:
+      "අඩු ගැළපීමේ විශ්වාසය",
   };
 };
 
@@ -61,46 +79,81 @@ const getPriority = (percentage) => {
   return "MODERATE_MATCH";
 };
 
-const getRecommendation = (
+const getFarmerRecommendation = (
   percentage
 ) => {
   if (percentage >= 85) {
     return {
       english:
-        "This miller is highly recommended because the demand closely matches your location, paddy type, quantity and AI-predicted market price.",
+        "This Miller is highly recommended because the demand closely matches your district, paddy variety, quantity and AI-predicted market price.",
 
       sinhala:
-        "ස්ථානය, වී වර්ගය, ප්‍රමාණය සහ AI පුරෝකථනය කළ වෙළඳපොළ මිල අනුව මෙම වී මෝල්කරු ඉතා සුදුසු ගැළපීමකි.",
+        "දිස්ත්‍රික්කය, වී වර්ගය, ප්‍රමාණය සහ AI පුරෝකථනය කළ වෙළඳපොළ මිල අනුව මෙම මෝල්කරු ඉතා සුදුසු ගැළපීමකි.",
     };
   }
 
   if (percentage >= 65) {
     return {
       english:
-        "This miller is a suitable match for your harvest. Review the offered price and continue with the miller for further discussion.",
+        "This Miller is a suitable match for your harvest. Review the offered price before sending a matching request.",
 
       sinhala:
-        "මෙම වී මෝල්කරු ඔබගේ අස්වැන්න සඳහා සුදුසු ගැළපීමකි. ලබා දෙන මිල පරීක්ෂා කර වැඩිදුර සාකච්ඡා සඳහා මෝල්කරු සමඟ ඉදිරියට යන්න.",
+        "මෙම මෝල්කරු ඔබගේ අස්වැන්න සඳහා සුදුසු ගැළපීමකි. ගැළපීමේ ඉල්ලීම යැවීමට පෙර ලබා දෙන මිල පරීක්ෂා කරන්න.",
     };
   }
 
   return {
     english:
-      "This demand partially matches your harvest. Compare it with other available miller demands before making a decision.",
+      "This Miller demand partially matches your harvest. Compare it with other available demands before deciding.",
 
     sinhala:
-      "මෙම ඉල්ලුම ඔබගේ අස්වැන්නට අර්ධ වශයෙන් ගැළපේ. තීරණයක් ගැනීමට පෙර වෙනත් මෝල්කරුවන්ගේ ඉල්ලුම් සමඟ සසඳන්න.",
+      "මෙම මෝල්කරුගේ ඉල්ලුම ඔබගේ අස්වැන්නට අර්ධ වශයෙන් ගැළපේ. තීරණයක් ගැනීමට පෙර වෙනත් ඉල්ලුම් සමඟ සසඳන්න.",
+  };
+};
+
+const getMillerRecommendation = (
+  percentage
+) => {
+  if (percentage >= 85) {
+    return {
+      english:
+        "This Farmer harvest is highly recommended because its district, paddy variety, quantity and AI-predicted market price closely match your demand.",
+
+      sinhala:
+        "දිස්ත්‍රික්කය, වී වර්ගය, ප්‍රමාණය සහ AI පුරෝකථනය කළ වෙළඳපොළ මිල අනුව මෙම ගොවියාගේ අස්වැන්න ඔබගේ ඉල්ලුමට ඉතා හොඳින් ගැළපේ.",
+    };
+  }
+
+  if (percentage >= 65) {
+    return {
+      english:
+        "This Farmer harvest is a suitable match for your demand. Review the harvest and price information before sending a request.",
+
+      sinhala:
+        "මෙම ගොවියාගේ අස්වැන්න ඔබගේ ඉල්ලුමට සුදුසු ගැළපීමකි. ඉල්ලීමක් යැවීමට පෙර අස්වැන්න සහ මිල තොරතුරු පරීක්ෂා කරන්න.",
+    };
+  }
+
+  return {
+    english:
+      "This harvest partially matches your purchasing demand. Compare it with other available Farmer harvests.",
+
+    sinhala:
+      "මෙම අස්වැන්න ඔබගේ මිලදී ගැනීමේ ඉල්ලුමට අර්ධ වශයෙන් ගැළපේ. වෙනත් ගොවීන්ගේ අස්වැන්න සමඟ සසඳන්න.",
   };
 };
 
 /**
- * Calculate explainable compatibility between one harvest
- * and one populated MillerDemand document.
+ * Common matching algorithm.
+ *
+ * The same calculation is used in both directions so
+ * Farmer and Miller see a consistent compatibility score.
  */
 const evaluateDemand = ({
   demand,
   harvest,
   farmer,
+  perspective = "farmer",
 }) => {
   const miller = demand.millerId;
 
@@ -121,195 +174,283 @@ const evaluateDemand = ({
 
   const reasons = [];
 
-  // 1. Location compatibility: maximum 40
+  /**
+   * 1. District compatibility
+   * Maximum: 40
+   */
   const sameDistrict =
     normalizeText(miller.district) ===
     normalizeText(farmer.district);
 
   if (sameDistrict) {
     score += 40;
+
     breakdown.location = 40;
 
     reasons.push({
       english:
-        "The miller is located in the same district.",
+        "The Farmer and Miller are located in the same district.",
+
       sinhala:
-        "වී මෝල්කරු එකම දිස්ත්‍රික්කයේ පිහිටා ඇත.",
+        "ගොවියා සහ මෝල්කරු එකම දිස්ත්‍රික්කයේ පිහිටා ඇත.",
     });
   } else {
     reasons.push({
       english:
-        "The miller is located in a different district.",
+        "The Farmer and Miller are located in different districts.",
+
       sinhala:
-        "වී මෝල්කරු වෙනත් දිස්ත්‍රික්කයක පිහිටා ඇත.",
+        "ගොවියා සහ මෝල්කරු වෙනස් දිස්ත්‍රික්කවල පිහිටා ඇත.",
     });
   }
 
-  // 2. Paddy type compatibility: maximum 30
+  /**
+   * 2. Paddy type
+   * Maximum: 30
+   */
   const samePaddyType =
-    normalizeText(demand.paddyType) ===
-    normalizeText(harvest.paddyType);
+    normalizeText(
+      demand.paddyType
+    ) ===
+    normalizeText(
+      harvest.paddyType
+    );
 
   if (samePaddyType) {
     score += 30;
+
     breakdown.paddyType = 30;
 
     reasons.push({
       english:
-        "The miller requires the same paddy variety.",
+        "The harvest paddy variety exactly matches the Miller demand.",
+
       sinhala:
-        "මෝල්කරුට අවශ්‍ය වන්නේ එකම වී වර්ගයයි.",
+        "අස්වැන්නේ වී වර්ගය මෝල්කරුගේ ඉල්ලුමට නිවැරදිව ගැළපේ.",
     });
   } else {
     reasons.push({
       english:
-        "The miller's requested paddy variety is different.",
+        "The paddy varieties do not match.",
+
       sinhala:
-        "මෝල්කරුට අවශ්‍ය වී වර්ගය වෙනස් වේ.",
+        "වී වර්ග එකිනෙකට නොගැළපේ.",
     });
   }
 
-  // 3. FL price compatibility: maximum 20
+  /**
+   * 3. AI price compatibility
+   * Maximum: 20
+   */
   const referencePrice =
-    Number(harvest.aiPredictedPrice) ||
-    Number(harvest.expectedPrice);
+    Number(
+      harvest.aiPredictedPrice
+    ) ||
+    Number(
+      harvest.expectedPrice
+    );
 
-  const offeredPrice = Number(
-    demand.offeredPrice
-  );
+  const offeredPrice =
+    Number(
+      demand.offeredPrice
+    );
 
-  const priceDifference = Math.abs(
-    referencePrice - offeredPrice
-  );
+  const priceDifference =
+    Math.abs(
+      referencePrice -
+        offeredPrice
+    );
 
   if (priceDifference <= 5) {
     score += 20;
-    breakdown.priceCompatibility = 20;
+
+    breakdown.priceCompatibility =
+      20;
 
     reasons.push({
       english:
-        "The offered price is very close to the AI-predicted market price.",
+        "The Miller offer is very close to the AI-predicted market price.",
 
       sinhala:
-        "ලබා දෙන මිල AI පුරෝකථනය කළ වෙළඳපොළ මිලට ඉතා සමීප වේ.",
+        "මෝල්කරුගේ මිල AI පුරෝකථනය කළ වෙළඳපොළ මිලට ඉතා සමීප වේ.",
     });
-  } else if (priceDifference <= 10) {
+  } else if (
+    priceDifference <= 10
+  ) {
     score += 15;
-    breakdown.priceCompatibility = 15;
+
+    breakdown.priceCompatibility =
+      15;
 
     reasons.push({
       english:
-        "The offered price is reasonably close to the AI-predicted market price.",
+        "The Miller offer is reasonably close to the AI-predicted market price.",
 
       sinhala:
-        "ලබා දෙන මිල AI පුරෝකථනය කළ වෙළඳපොළ මිලට සාධාරණ ලෙස සමීප වේ.",
+        "මෝල්කරුගේ මිල AI පුරෝකථනය කළ වෙළඳපොළ මිලට සාධාරණ ලෙස සමීප වේ.",
     });
-  } else if (priceDifference <= 20) {
+  } else if (
+    priceDifference <= 20
+  ) {
     score += 10;
-    breakdown.priceCompatibility = 10;
+
+    breakdown.priceCompatibility =
+      10;
 
     reasons.push({
       english:
-        "There is a moderate difference between the offered price and the AI-predicted price.",
+        "There is a moderate difference between the Miller offer and AI-predicted price.",
 
       sinhala:
-        "ලබා දෙන මිල සහ AI පුරෝකථනය කළ මිල අතර මධ්‍යම වෙනසක් පවතී.",
+        "මෝල්කරුගේ මිල සහ AI පුරෝකථනය කළ මිල අතර මධ්‍යම වෙනසක් පවතී.",
     });
   } else {
     score += 5;
-    breakdown.priceCompatibility = 5;
+
+    breakdown.priceCompatibility =
+      5;
 
     reasons.push({
       english:
-        "The offered price differs considerably from the AI-predicted market price.",
+        "There is a considerable difference between the Miller offer and AI market reference.",
 
       sinhala:
-        "ලබා දෙන මිල AI පුරෝකථනය කළ වෙළඳපොළ මිලෙන් සැලකිය යුතු ලෙස වෙනස් වේ.",
+        "මෝල්කරුගේ මිල සහ AI වෙළඳපොළ මිල අතර සැලකිය යුතු වෙනසක් පවතී.",
     });
   }
 
-  // 4. Quantity compatibility: maximum 10
+  /**
+   * 4. Quantity compatibility
+   * Maximum: 10
+   *
+   * We keep your existing matching rule so your Farmer
+   * matching scores do not unexpectedly change.
+   */
   const quantityCompatible =
     Number(harvest.quantity) <=
-    Number(demand.quantityNeeded);
+    Number(
+      demand.quantityNeeded
+    );
 
   if (quantityCompatible) {
     score += 10;
-    breakdown.quantityCompatibility = 10;
+
+    breakdown.quantityCompatibility =
+      10;
 
     reasons.push({
       english:
-        "The miller's required quantity can cover your available harvest.",
+        "The Miller demand can accommodate the available harvest quantity.",
 
       sinhala:
-        "මෝල්කරුට අවශ්‍ය ප්‍රමාණය ඔබගේ පවතින අස්වැන්න ආවරණය කරයි.",
+        "මෝල්කරුගේ ඉල්ලුම පවතින අස්වැන්න ප්‍රමාණය ආවරණය කළ හැකිය.",
     });
   } else {
     reasons.push({
       english:
-        "The miller's required quantity is lower than your available harvest.",
+        "The available harvest quantity is greater than this Miller demand.",
 
       sinhala:
-        "මෝල්කරුට අවශ්‍ය ප්‍රමාණය ඔබගේ පවතින අස්වැන්නට වඩා අඩුය.",
+        "පවතින අස්වැන්න ප්‍රමාණය මෙම මෝල්කරුගේ ඉල්ලුමට වඩා වැඩිය.",
     });
   }
 
-  const matchingPercentage = Number(
-    (
-      (score / MAX_MATCH_SCORE) *
-      100
-    ).toFixed(2)
-  );
+  const matchingPercentage =
+    Number(
+      (
+        (score /
+          MAX_MATCH_SCORE) *
+        100
+      ).toFixed(2)
+    );
 
   return {
     score,
-    maximumScore: MAX_MATCH_SCORE,
+
+    maximumScore:
+      MAX_MATCH_SCORE,
+
     matchingPercentage,
 
-    priority: getPriority(
-      matchingPercentage
-    ),
+    priority:
+      getPriority(
+        matchingPercentage
+      ),
 
-    confidence: getConfidence(
-      matchingPercentage
-    ),
+    confidence:
+      getConfidence(
+        matchingPercentage
+      ),
 
-    scoreBreakdown: breakdown,
+    scoreBreakdown:
+      breakdown,
 
     priceAnalysis: {
-      aiPredictedPrice: Number(
-        referencePrice.toFixed(2)
-      ),
+      aiPredictedPrice:
+        Number(
+          referencePrice.toFixed(
+            2
+          )
+        ),
 
-      millerOfferedPrice: Number(
-        offeredPrice.toFixed(2)
-      ),
+      millerOfferedPrice:
+        Number(
+          offeredPrice.toFixed(
+            2
+          )
+        ),
 
-      absoluteDifference: Number(
-        priceDifference.toFixed(2)
-      ),
+      absoluteDifference:
+        Number(
+          priceDifference.toFixed(
+            2
+          )
+        ),
+    },
+
+    quantityAnalysis: {
+      harvestQuantity:
+        Number(
+          harvest.quantity
+        ),
+
+      demandQuantity:
+        Number(
+          demand.quantityNeeded
+        ),
+
+      compatible:
+        quantityCompatible,
     },
 
     reasons,
 
-    recommendation: getRecommendation(
-      matchingPercentage
-    ),
+    recommendation:
+      perspective === "miller"
+        ? getMillerRecommendation(
+            matchingPercentage
+          )
+        : getFarmerRecommendation(
+            matchingPercentage
+          ),
   };
 };
 
 /**
- * GET /api/matching/:harvestId
+ * FARMER FLOW
  *
- * Returns the top five ranked open Miller demands for
- * a harvest belonging to the authenticated Farmer.
+ * GET /api/matching/harvest/:harvestId
+ *
+ * Farmer selects one Harvest.
+ * Return matching Miller demands.
  */
 const matchHarvest = async (
   req,
   res
 ) => {
   try {
-    const { harvestId } = req.params;
+    const { harvestId } =
+      req.params;
 
     if (
       !mongoose.Types.ObjectId.isValid(
@@ -318,64 +459,75 @@ const matchHarvest = async (
     ) {
       return res.status(400).json({
         success: false,
-        message: "Invalid harvest ID.",
+
+        message:
+          "Invalid harvest ID.",
       });
     }
 
-    // 1. Find the harvest
-    const harvest = await Harvest.findById(
-      harvestId
-    );
+    const harvest =
+      await Harvest.findById(
+        harvestId
+      );
 
     if (!harvest) {
       return res.status(404).json({
         success: false,
-        message: "Harvest not found.",
+
+        message:
+          "Harvest not found.",
       });
     }
 
-    // 2. Only an available harvest can be matched
-    if (harvest.status !== "available") {
+    if (
+      harvest.status !==
+      "available"
+    ) {
       return res.status(400).json({
         success: false,
+
         message:
           "Only available harvests can be matched.",
       });
     }
 
-    // 3. Confirm that this harvest belongs to the
-    // authenticated Farmer
-    const farmer = await Farmer.findOne({
-      _id: harvest.farmerId,
-      user: req.user._id,
-    });
+    const farmer =
+      await Farmer.findOne({
+        _id: harvest.farmerId,
+
+        user:
+          req.user._id,
+      });
 
     if (!farmer) {
       return res.status(403).json({
         success: false,
+
         message:
           "You are not authorized to match this harvest.",
       });
     }
 
-    // 4. Retrieve open demands for the same paddy type
-    const safePaddyType = escapeRegex(
-      harvest.paddyType
-    );
+    const safePaddyType =
+      escapeRegex(
+        harvest.paddyType
+      );
 
     const demands =
       await MillerDemand.find({
         status: "open",
 
         paddyType: {
-          $regex: new RegExp(
-            `^${safePaddyType}$`,
-            "i"
-          ),
+          $regex:
+            new RegExp(
+              `^${safePaddyType}$`,
+              "i"
+            ),
         },
       })
         .populate({
           path: "millerId",
+
           select:
             "name millName district location businessRegistrationNumber purchasingCapacityKg",
         })
@@ -383,76 +535,300 @@ const matchHarvest = async (
           createdAt: -1,
         });
 
-    // 5. Ignore demands whose Miller profile no longer exists
-    const validDemands = demands.filter(
-      (demand) => demand.millerId
-    );
+    const validDemands =
+      demands.filter(
+        (demand) =>
+          demand.millerId
+      );
 
-    // 6. Evaluate every demand
-    const matched = validDemands.map(
-      (demand) => {
-        const evaluation =
-          evaluateDemand({
+    const matched =
+      validDemands.map(
+        (demand) => {
+          const evaluation =
+            evaluateDemand({
+              demand,
+              harvest,
+              farmer,
+              perspective:
+                "farmer",
+            });
+
+          return {
             demand,
-            harvest,
-            farmer,
-          });
 
-        return {
-          demand,
-          miller: demand.millerId,
-          ...evaluation,
-        };
-      }
-    );
+            miller:
+              demand.millerId,
 
-    // 7. Rank strongest matches first
+            ...evaluation,
+          };
+        }
+      );
+
     matched.sort(
       (first, second) =>
         second.matchingPercentage -
         first.matchingPercentage
     );
 
-    // 8. Return the top five recommendations
-    return res.status(200).json({
-      success: true,
+    return res
+      .status(200)
+      .json({
+        success: true,
 
-      data: {
-        harvest,
+        data: {
+          harvest,
 
-        farmer: {
-          id: farmer._id,
-          farmerName:
-            farmer.farmerName,
-          district: farmer.district,
-          location: farmer.location,
+          farmer: {
+            id:
+              farmer._id,
+
+            farmerName:
+              farmer.farmerName,
+
+            district:
+              farmer.district,
+
+            location:
+              farmer.location,
+          },
+
+          totalOpenMatchingDemands:
+            matched.length,
+
+          matches:
+            matched.slice(
+              0,
+              5
+            ),
         },
-
-        totalOpenMatchingDemands:
-          matched.length,
-
-        matches: matched.slice(0, 5),
-      },
-    });
+      });
   } catch (error) {
     console.error(
       "MATCH HARVEST ERROR:",
       error
     );
 
-    return res.status(500).json({
-      success: false,
-      message:
-        error.message ||
-        "Failed to retrieve harvest matches.",
-    });
+    return res
+      .status(500)
+      .json({
+        success: false,
+
+        message:
+          error.message ||
+          "Failed to retrieve harvest matches.",
+      });
+  }
+};
+
+/**
+ * MILLER FLOW
+ *
+ * GET /api/matching/demand/:demandId
+ *
+ * Miller selects one open demand.
+ * Return matching Farmer harvests.
+ */
+const matchDemand = async (
+  req,
+  res
+) => {
+  try {
+    const { demandId } =
+      req.params;
+
+    if (
+      !mongoose.Types.ObjectId.isValid(
+        demandId
+      )
+    ) {
+      return res.status(400).json({
+        success: false,
+
+        message:
+          "Invalid demand ID.",
+      });
+    }
+
+    const miller =
+      await Miller.findOne({
+        user:
+          req.user._id,
+      });
+
+    if (!miller) {
+      return res.status(404).json({
+        success: false,
+
+        message:
+          "Miller profile not found.",
+      });
+    }
+
+    const demand =
+      await MillerDemand.findOne({
+        _id: demandId,
+
+        millerId:
+          miller._id,
+      });
+
+    if (!demand) {
+      return res.status(404).json({
+        success: false,
+
+        message:
+          "Demand not found or does not belong to this Miller.",
+      });
+    }
+
+    if (
+      demand.status !== "open"
+    ) {
+      return res.status(400).json({
+        success: false,
+
+        message:
+          "Only open demands can search for matching Farmer harvests.",
+      });
+    }
+
+    const safePaddyType =
+      escapeRegex(
+        demand.paddyType
+      );
+
+    const harvests =
+      await Harvest.find({
+        status: "available",
+
+        paddyType: {
+          $regex:
+            new RegExp(
+              `^${safePaddyType}$`,
+              "i"
+            ),
+        },
+      })
+        .populate({
+          path: "farmerId",
+
+          select:
+            "farmerName district location farmName farmSizeAcres mainPaddyVariety",
+        })
+        .sort({
+          createdAt: -1,
+        });
+
+    const validHarvests =
+      harvests.filter(
+        (harvest) =>
+          harvest.farmerId
+      );
+
+    const matched =
+      validHarvests.map(
+        (harvest) => {
+          const farmer =
+            harvest.farmerId;
+
+          /**
+           * evaluateDemand expects demand.millerId
+           * to contain the populated Miller object.
+           *
+           * This is only an in-memory matching object.
+           * Nothing is changed in MongoDB.
+           */
+          const evaluationDemand = {
+            ...demand.toObject(),
+
+            millerId:
+              miller,
+          };
+
+          const evaluation =
+            evaluateDemand({
+              demand:
+                evaluationDemand,
+
+              harvest,
+
+              farmer,
+
+              perspective:
+                "miller",
+            });
+
+          return {
+            harvest,
+
+            farmer,
+
+            ...evaluation,
+          };
+        }
+      );
+
+    matched.sort(
+      (first, second) =>
+        second.matchingPercentage -
+        first.matchingPercentage
+    );
+
+    return res
+      .status(200)
+      .json({
+        success: true,
+
+        data: {
+          demand,
+
+          miller: {
+            id:
+              miller._id,
+
+            name:
+              miller.name,
+
+            millName:
+              miller.millName,
+
+            district:
+              miller.district,
+
+            location:
+              miller.location,
+          },
+
+          totalAvailableMatchingHarvests:
+            matched.length,
+
+          matches:
+            matched.slice(
+              0,
+              5
+            ),
+        },
+      });
+  } catch (error) {
+    console.error(
+      "MATCH MILLER DEMAND ERROR:",
+      error
+    );
+
+    return res
+      .status(500)
+      .json({
+        success: false,
+
+        message:
+          error.message ||
+          "Failed to retrieve Farmer matches.",
+      });
   }
 };
 
 module.exports = {
   matchHarvest,
-
-  // Exported so the Match Selection controller can
-  // calculate the score again on the backend.
+  matchDemand,
   evaluateDemand,
 };

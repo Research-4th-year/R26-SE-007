@@ -331,6 +331,52 @@ function DemandCard({ demand }: DemandCardProps) {
         </View>
       </View>
 
+
+      {demand.status === "open" ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`Find matching Farmers for ${formatLabel(
+            demand.paddyType
+          )} demand`}
+          onPress={() =>
+            router.push({
+              pathname:
+                "/(c03-marketplace)/(miller)/matched-farmers",
+              params: {
+                demandId: demand._id,
+              },
+            })
+          }
+          style={({ pressed }) => [
+            styles.findFarmersButton,
+            pressed && styles.pressed,
+          ]}
+        >
+          <LinearGradient
+            colors={["#92400E", "#78350F"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.findFarmersButtonGradient}
+          >
+            <View style={styles.findFarmersButtonIcon}>
+              <Ionicons name="sparkles" size={17} color="#FDE68A" />
+            </View>
+
+            <View style={styles.findFarmersButtonTextArea}>
+              <Text style={styles.findFarmersButtonText}>
+                Find Matching Farmers
+              </Text>
+
+              <Text style={styles.findFarmersButtonSubtext}>
+                AI-rank available harvests
+              </Text>
+            </View>
+
+            <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
+          </LinearGradient>
+        </Pressable>
+      ) : null}
+
       <View style={styles.cardFooter}>
         <View style={styles.activityDot} />
 
@@ -864,6 +910,47 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontFamily: "Poppins_700Bold",
     marginTop: 3,
+  },
+
+  findFarmersButton: {
+    borderRadius: 16,
+    overflow: "hidden",
+    marginTop: 14,
+  },
+
+  findFarmersButtonGradient: {
+    minHeight: 54,
+    borderRadius: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 14,
+    gap: 10,
+  },
+
+  findFarmersButtonIcon: {
+    width: 34,
+    height: 34,
+    borderRadius: 11,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255,255,255,0.12)",
+  },
+
+  findFarmersButtonTextArea: {
+    flex: 1,
+  },
+
+  findFarmersButtonText: {
+    color: "#FFFFFF",
+    fontSize: 10.5,
+    fontFamily: "Poppins_700Bold",
+  },
+
+  findFarmersButtonSubtext: {
+    color: "rgba(255,255,255,0.65)",
+    fontSize: 8,
+    fontFamily: "Poppins_500Medium",
+    marginTop: 1,
   },
 
   cardFooter: {

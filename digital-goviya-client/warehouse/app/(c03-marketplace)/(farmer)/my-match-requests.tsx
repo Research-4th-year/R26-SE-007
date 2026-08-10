@@ -10,6 +10,7 @@ import {
 } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Pressable,
   RefreshControl,
   SafeAreaView,
@@ -28,7 +29,6 @@ import {
 } from "@/utils/c03-marketplace/getApiErrorMessage";
 
 import type {
-  HarvestMatch,
   MatchSelection,
   MillerSummary,
 } from "@/types/c03-marketplace/matching.types";
@@ -52,6 +52,9 @@ export default function MyMatchRequestsScreen() {
     useState(false);
 
   const [errorMessage, setErrorMessage] =
+    useState<string | null>(null);
+
+  const [processingId, setProcessingId] =
     useState<string | null>(null);
 
   const loadSelections = useCallback(
@@ -120,6 +123,47 @@ export default function MyMatchRequestsScreen() {
         selection.status ===
         "negotiation_ready"
     ).length;
+
+  const respondToMatch = async (
+    selectionId: string,
+    decision: "accepted" | "rejected",
+  ): Promise<void> => {
+    if (processingId) {
+      return;
+    }
+
+    try {
+      setProcessingId(selectionId);
+
+      const response =
+        await matchingService.respondToSelection(
+          selectionId,
+          decision,
+        );
+
+      setSelections((current) =>
+        current.map((selection) =>
+          selection._id === selectionId
+            ? response.data.selection
+            : selection,
+        ),
+      );
+
+      Alert.alert(
+        decision === "accepted"
+          ? "Match accepted"
+          : "Match rejected",
+        response.message,
+      );
+    } catch (error) {
+      Alert.alert(
+        "Unable to update request",
+        getApiErrorMessage(error),
+      );
+    } finally {
+      setProcessingId(null);
+    }
+  };
 
   if (loading) {
     return <LoadingState />;
@@ -218,7 +262,7 @@ export default function MyMatchRequestsScreen() {
 
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>
-                Sent requests
+                Matching activity
               </Text>
 
               <Text style={styles.refreshHint}>
@@ -232,6 +276,21 @@ export default function MyMatchRequestsScreen() {
                   <FarmerRequestCard
                     key={selection._id}
                     selection={selection}
+                    processing={
+                      processingId === selection._id
+                    }
+                    onAccept={() =>
+                      void respondToMatch(
+                        selection._id,
+                        "accepted",
+                      )
+                    }
+                    onReject={() =>
+                      void respondToMatch(
+                        selection._id,
+                        "rejected",
+                      )
+                    }
                   />
                 )
               )}
@@ -245,8 +304,14 @@ export default function MyMatchRequestsScreen() {
 
 function FarmerRequestCard({
   selection,
+  processing,
+  onAccept,
+  onReject,
 }: {
   selection: MatchSelection;
+  processing: boolean;
+  onAccept: () => void;
+  onReject: () => void;
 }) {
   const harvest = getHarvest(
     selection.harvestId
@@ -263,8 +328,53 @@ function FarmerRequestCard({
   const status =
     getStatusDisplay(selection.status);
 
+  const isIncoming =
+    selection.initiatedBy === "miller";
+
+  const isPendingIncoming =
+    isIncoming &&
+    selection.status === "pending";
+
   return (
     <View style={styles.requestCard}>
+      <View
+        style={[
+          styles.directionBadge,
+          isIncoming
+            ? styles.incomingBadge
+            : styles.outgoingBadge,
+        ]}
+      >
+        <Ionicons
+          name={
+            isIncoming
+              ? "arrow-down-outline"
+              : "arrow-up-outline"
+          }
+          size={12}
+          color={
+            isIncoming
+              ? "#15803D"
+              : "#64748B"
+          }
+        />
+
+        <Text
+          style={[
+            styles.directionText,
+            {
+              color: isIncoming
+                ? "#15803D"
+                : "#64748B",
+            },
+          ]}
+        >
+          {isIncoming
+            ? "MILLER REQUEST"
+            : "SENT REQUEST"}
+        </Text>
+      </View>
+
       <View style={styles.requestTopRow}>
         <View style={styles.millerIcon}>
           <Ionicons name="business-outline" size={22} color="#15803D" />
@@ -345,9 +455,63 @@ function FarmerRequestCard({
         <Ionicons name="calendar-outline" size={15} color="#64748B" />
 
         <Text style={styles.timelineText}>
-          Sent {formatDate(selection.createdAt)}
+          {isIncoming ? "Received" : "Sent"}{" "}
+          {formatDate(selection.createdAt)}
         </Text>
       </View>
+
+      {isPendingIncoming ? (
+        <View style={styles.responseActions}>
+          <Pressable
+            disabled={processing}
+            onPress={onReject}
+            style={({ pressed }) => [
+              styles.rejectButton,
+              pressed && styles.pressed,
+              processing && styles.disabled,
+            ]}
+          >
+            <Ionicons
+              name="close-circle-outline"
+              size={18}
+              color="#B91C1C"
+            />
+
+            <Text style={styles.rejectText}>
+              Reject
+            </Text>
+          </Pressable>
+
+          <Pressable
+            disabled={processing}
+            onPress={onAccept}
+            style={({ pressed }) => [
+              styles.acceptButton,
+              pressed && styles.pressed,
+              processing && styles.disabled,
+            ]}
+          >
+            {processing ? (
+              <ActivityIndicator
+                size="small"
+                color="#FFFFFF"
+              />
+            ) : (
+              <>
+                <Ionicons
+                  name="checkmark-circle-outline"
+                  size={18}
+                  color="#FFFFFF"
+                />
+
+                <Text style={styles.acceptText}>
+                  Accept Match
+                </Text>
+              </>
+            )}
+          </Pressable>
+        </View>
+      ) : null}
 
       {selection.status === "negotiation_ready" ? (
         <Pressable
@@ -807,6 +971,31 @@ const styles = StyleSheet.create({
     borderColor: "#E5E7EB",
   },
 
+  directionBadge: {
+    alignSelf: "flex-start",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    marginBottom: 11,
+  },
+
+  incomingBadge: {
+    backgroundColor: "#DCFCE7",
+  },
+
+  outgoingBadge: {
+    backgroundColor: "#F1F5F9",
+  },
+
+  directionText: {
+    fontSize: 7.5,
+    fontWeight: "900",
+    letterSpacing: 0.5,
+  },
+
   requestTopRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -948,6 +1137,52 @@ const styles = StyleSheet.create({
   timelineText: {
     color: "#64748B",
     fontSize: 9,
+  },
+
+  responseActions: {
+    flexDirection: "row",
+    gap: 10,
+    marginTop: 15,
+  },
+
+  rejectButton: {
+    flex: 1,
+    minHeight: 47,
+    borderRadius: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    backgroundColor: "#FEF2F2",
+    borderWidth: 1,
+    borderColor: "#FECACA",
+  },
+
+  rejectText: {
+    color: "#B91C1C",
+    fontSize: 10.5,
+    fontWeight: "800",
+  },
+
+  acceptButton: {
+    flex: 1.2,
+    minHeight: 47,
+    borderRadius: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    backgroundColor: "#15803D",
+  },
+
+  acceptText: {
+    color: "#FFFFFF",
+    fontSize: 10.5,
+    fontWeight: "900",
+  },
+
+  disabled: {
+    opacity: 0.55,
   },
 
   negotiationButton: {

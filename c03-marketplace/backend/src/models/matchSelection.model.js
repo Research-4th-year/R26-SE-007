@@ -1,76 +1,102 @@
 const mongoose = require("mongoose");
 
-const matchSelectionSchema = new mongoose.Schema(
+const matchSelectionSchema =
+  new mongoose.Schema(
     {
-        harvestId: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "Harvest",
-            required: true
-        },
+      harvestId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Harvest",
+        required: true,
+        index: true,
+      },
 
-        farmerId: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "Farmer",
-            required: true
-        },
+      farmerId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Farmer",
+        required: true,
+        index: true,
+      },
 
-        millerId: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "Miller",
-            required: true
-        },
+      millerId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Miller",
+        required: true,
+        index: true,
+      },
 
-        demandId: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "MillerDemand",
-            required: true
-        },
+      demandId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "MillerDemand",
+        required: true,
+        index: true,
+      },
 
-        matchingScore: {
-            type: Number,
-            min: 0,
-            max: 100,
-            required: true
-        },
+      matchingScore: {
+        type: Number,
+        min: 0,
+        max: 100,
+        required: true,
+      },
 
-        status: {
-            type: String,
-            enum: [
-                "pending",
-                "negotiation_ready",
-                "rejected",
-                "cancelled"
-            ],
-            default: "pending"
-        },
+      /**
+       * Who originally sent the matching request?
+       *
+       * farmer:
+       * Farmer selected a Miller demand.
+       * Miller must respond.
+       *
+       * miller:
+       * Miller selected a Farmer harvest.
+       * Farmer must respond.
+       */
+      initiatedBy: {
+        type: String,
+        enum: ["farmer", "miller"],
+        required: true,
+        index: true,
+      },
 
-        farmerSelectedAt: {
-            type: Date,
-            default: Date.now
-        },
+      status: {
+        type: String,
+        enum: [
+          "pending",
+          "negotiation_ready",
+          "rejected",
+          "cancelled",
+        ],
+        default: "pending",
+        index: true,
+      },
 
-        millerRespondedAt: {
-            type: Date,
-            default: null
-        }
+      initiatedAt: {
+        type: Date,
+        default: Date.now,
+      },
+
+      respondedAt: {
+        type: Date,
+        default: null,
+      },
     },
     {
-        timestamps: true
+      timestamps: true,
+      versionKey: false,
     }
-);
+  );
 
-// Prevent the same harvest-demand pair from being selected twice
+// The same Harvest + Demand pair cannot create
+// multiple matching requests.
 matchSelectionSchema.index(
-    {
-        harvestId: 1,
-        demandId: 1
-    },
-    {
-        unique: true
-    }
+  {
+    harvestId: 1,
+    demandId: 1,
+  },
+  {
+    unique: true,
+  }
 );
 
 module.exports = mongoose.model(
-    "MatchSelection",
-    matchSelectionSchema
+  "MatchSelection",
+  matchSelectionSchema
 );

@@ -3,15 +3,19 @@ const mongoose = require("mongoose");
 const Harvest = require(
   "../models/harvest.model"
 );
+
 const Farmer = require(
   "../models/farmer.model"
 );
+
 const Miller = require(
   "../models/miller.model"
 );
+
 const MillerDemand = require(
   "../models/millerDemand.model"
 );
+
 const MatchSelection = require(
   "../models/matchSelection.model"
 );
@@ -22,21 +26,52 @@ const {
   "./matching.controller"
 );
 
-const normalizeText = (value = "") => {
+const normalizeText = (
+  value = ""
+) => {
   return String(value)
     .trim()
     .toLowerCase();
 };
 
+const populateSelection =
+  async (selectionId) => {
+    return MatchSelection
+      .findById(selectionId)
+
+      .populate({
+        path: "harvestId",
+      })
+
+      .populate({
+        path: "farmerId",
+
+        select:
+          "farmerName district location farmName",
+      })
+
+      .populate({
+        path: "millerId",
+
+        select:
+          "name millName district location businessRegistrationNumber purchasingCapacityKg",
+      })
+
+      .populate({
+        path: "demandId",
+      });
+  };
+
 /**
+ * FARMER INITIATES
+ *
  * POST /api/match-selections/create
  *
- * Farmer selects one or more ranked Miller demands.
- *
  * Body:
+ *
  * {
- *   "harvestId": "...",
- *   "demandIds": ["...", "..."]
+ *   harvestId,
+ *   demandIds: []
  * }
  */
 const createSelections = async (
@@ -57,26 +92,32 @@ const createSelections = async (
     ) {
       return res.status(400).json({
         success: false,
+
         message:
           "A valid harvest ID is required.",
       });
     }
 
     if (
-      !Array.isArray(demandIds) ||
+      !Array.isArray(
+        demandIds
+      ) ||
       demandIds.length === 0
     ) {
       return res.status(400).json({
         success: false,
+
         message:
           "Select at least one Miller demand.",
       });
     }
 
-    // Limit selection count to the five matches displayed
-    if (demandIds.length > 5) {
+    if (
+      demandIds.length > 5
+    ) {
       return res.status(400).json({
         success: false,
+
         message:
           "A maximum of five Miller demands can be selected.",
       });
@@ -93,6 +134,7 @@ const createSelections = async (
     if (invalidDemandId) {
       return res.status(400).json({
         success: false,
+
         message:
           "One or more demand IDs are invalid.",
       });
@@ -100,81 +142,104 @@ const createSelections = async (
 
     const uniqueDemandIds = [
       ...new Set(
-        demandIds.map((id) =>
-          String(id)
+        demandIds.map(
+          String
         )
       ),
     ];
 
-    // 1. Find harvest
-    const harvest = await Harvest.findById(
-      harvestId
-    );
+    const harvest =
+      await Harvest.findById(
+        harvestId
+      );
 
     if (!harvest) {
       return res.status(404).json({
         success: false,
-        message: "Harvest not found.",
+
+        message:
+          "Harvest not found.",
       });
     }
 
-    if (harvest.status !== "available") {
+    if (
+      harvest.status !==
+      "available"
+    ) {
       return res.status(400).json({
         success: false,
+
         message:
           "Only available harvests can be submitted for matching.",
       });
     }
 
-    // 2. Confirm that the authenticated Farmer owns it
-    const farmer = await Farmer.findOne({
-      _id: harvest.farmerId,
-      user: req.user._id,
-    });
+    const farmer =
+      await Farmer.findOne({
+        _id:
+          harvest.farmerId,
+
+        user:
+          req.user._id,
+      });
 
     if (!farmer) {
       return res.status(403).json({
         success: false,
+
         message:
           "You are not authorized to select matches for this harvest.",
       });
     }
 
-    // 3. Get selected open demands and populate Millers
     const demands =
       await MillerDemand.find({
         _id: {
-          $in: uniqueDemandIds,
+          $in:
+            uniqueDemandIds,
         },
 
         status: "open",
       }).populate({
-        path: "millerId",
+        path:
+          "millerId",
+
         select:
           "name millName district location businessRegistrationNumber purchasingCapacityKg",
       });
 
-    const demandMap = new Map(
-      demands.map((demand) => [
-        String(demand._id),
-        demand,
-      ])
-    );
+    const demandMap =
+      new Map(
+        demands.map(
+          (demand) => [
+            String(
+              demand._id
+            ),
 
-    const createdSelections = [];
-    const skippedSelections = [];
+            demand,
+          ]
+        )
+      );
 
-    // 4. Validate and create every selection
+    const createdSelections =
+      [];
+
+    const skippedSelections =
+      [];
+
     for (
       const demandId of
       uniqueDemandIds
     ) {
       const demand =
-        demandMap.get(demandId);
+        demandMap.get(
+          demandId
+        );
 
       if (!demand) {
         skippedSelections.push({
           demandId,
+
           reason:
             "Demand was not found or is no longer open.",
         });
@@ -182,9 +247,12 @@ const createSelections = async (
         continue;
       }
 
-      if (!demand.millerId) {
+      if (
+        !demand.millerId
+      ) {
         skippedSelections.push({
           demandId,
+
           reason:
             "The linked Miller profile was not found.",
         });
@@ -192,7 +260,6 @@ const createSelections = async (
         continue;
       }
 
-      // Prevent submitting a different paddy type
       if (
         normalizeText(
           demand.paddyType
@@ -203,6 +270,7 @@ const createSelections = async (
       ) {
         skippedSelections.push({
           demandId,
+
           reason:
             "The demand paddy type does not match the harvest.",
         });
@@ -210,62 +278,62 @@ const createSelections = async (
         continue;
       }
 
-      // Do not trust matching scores sent by the frontend.
-      // Calculate it again using backend data.
       const evaluation =
         evaluateDemand({
           demand,
           harvest,
           farmer,
+          perspective:
+            "farmer",
         });
 
       try {
         const selection =
           await MatchSelection.create({
-            harvestId: harvest._id,
-            farmerId: farmer._id,
+            harvestId:
+              harvest._id,
+
+            farmerId:
+              farmer._id,
 
             millerId:
               demand.millerId._id,
 
-            demandId: demand._id,
+            demandId:
+              demand._id,
 
             matchingScore:
-              evaluation.matchingPercentage,
+              evaluation
+                .matchingPercentage,
 
-            status: "pending",
+            initiatedBy:
+              "farmer",
 
-            farmerSelectedAt:
+            status:
+              "pending",
+
+            initiatedAt:
               new Date(),
           });
 
-        const populatedSelection =
-          await MatchSelection.findById(
+        const populated =
+          await populateSelection(
             selection._id
-          )
-            .populate("harvestId")
-            .populate({
-              path: "farmerId",
-              select:
-                "farmerName district location",
-            })
-            .populate({
-              path: "millerId",
-              select:
-                "name millName district location",
-            })
-            .populate("demandId");
+          );
 
         createdSelections.push(
-          populatedSelection
+          populated
         );
       } catch (error) {
-        // Duplicate unique harvest-demand pair
-        if (error.code === 11000) {
+        if (
+          error.code ===
+          11000
+        ) {
           skippedSelections.push({
             demandId,
+
             reason:
-              "This harvest-demand match was already selected.",
+              "A matching request already exists for this Harvest and Demand.",
           });
 
           continue;
@@ -276,7 +344,8 @@ const createSelections = async (
     }
 
     if (
-      createdSelections.length === 0
+      createdSelections.length ===
+      0
     ) {
       return res.status(409).json({
         success: false,
@@ -286,7 +355,9 @@ const createSelections = async (
 
         data: {
           harvestId:
-            String(harvest._id),
+            String(
+              harvest._id
+            ),
 
           createdCount: 0,
 
@@ -304,11 +375,16 @@ const createSelections = async (
       success: true,
 
       message:
-        "Matching requests were sent successfully.",
+        "Matching requests were sent to the selected Millers.",
 
       data: {
         harvestId:
-          String(harvest._id),
+          String(
+            harvest._id
+          ),
+
+        initiatedBy:
+          "farmer",
 
         createdCount:
           createdSelections.length,
@@ -324,7 +400,7 @@ const createSelections = async (
     });
   } catch (error) {
     console.error(
-      "CREATE MATCH SELECTIONS ERROR:",
+      "CREATE FARMER MATCH REQUEST ERROR:",
       error
     );
 
@@ -333,390 +409,891 @@ const createSelections = async (
 
       message:
         error.message ||
-        "Failed to create matching selections.",
+        "Failed to create Farmer matching requests.",
     });
   }
 };
 
 /**
- * PATCH /api/match-selections/:selectionId/respond
+ * MILLER INITIATES
  *
- * Miller accepts or rejects a Farmer's matching request.
+ * POST /api/match-selections/create-by-miller
  *
  * Body:
+ *
  * {
- *   "decision": "accepted"
+ *   demandId,
+ *   harvestIds: []
+ * }
+ */
+const createSelectionsByMiller =
+  async (req, res) => {
+    try {
+      const {
+        demandId,
+        harvestIds,
+      } = req.body;
+
+      if (
+        !demandId ||
+        !mongoose.Types.ObjectId.isValid(
+          demandId
+        )
+      ) {
+        return res.status(400).json({
+          success: false,
+
+          message:
+            "A valid demand ID is required.",
+        });
+      }
+
+      if (
+        !Array.isArray(
+          harvestIds
+        ) ||
+        harvestIds.length ===
+          0
+      ) {
+        return res.status(400).json({
+          success: false,
+
+          message:
+            "Select at least one Farmer harvest.",
+        });
+      }
+
+      if (
+        harvestIds.length > 5
+      ) {
+        return res.status(400).json({
+          success: false,
+
+          message:
+            "A maximum of five Farmer harvests can be selected.",
+        });
+      }
+
+      const invalidHarvestId =
+        harvestIds.find(
+          (id) =>
+            !mongoose.Types.ObjectId.isValid(
+              id
+            )
+        );
+
+      if (invalidHarvestId) {
+        return res.status(400).json({
+          success: false,
+
+          message:
+            "One or more harvest IDs are invalid.",
+        });
+      }
+
+      const uniqueHarvestIds =
+        [
+          ...new Set(
+            harvestIds.map(
+              String
+            )
+          ),
+        ];
+
+      const miller =
+        await Miller.findOne({
+          user:
+            req.user._id,
+        });
+
+      if (!miller) {
+        return res.status(404).json({
+          success: false,
+
+          message:
+            "Miller profile not found.",
+        });
+      }
+
+      const demand =
+        await MillerDemand.findOne({
+          _id:
+            demandId,
+
+          millerId:
+            miller._id,
+        });
+
+      if (!demand) {
+        return res.status(404).json({
+          success: false,
+
+          message:
+            "Demand not found or does not belong to this Miller.",
+        });
+      }
+
+      if (
+        demand.status !==
+        "open"
+      ) {
+        return res.status(400).json({
+          success: false,
+
+          message:
+            "Only open demands can be used for matching.",
+        });
+      }
+
+      const harvests =
+        await Harvest.find({
+          _id: {
+            $in:
+              uniqueHarvestIds,
+          },
+
+          status:
+            "available",
+        }).populate({
+          path:
+            "farmerId",
+
+          select:
+            "farmerName district location farmName farmSizeAcres mainPaddyVariety",
+        });
+
+      const harvestMap =
+        new Map(
+          harvests.map(
+            (harvest) => [
+              String(
+                harvest._id
+              ),
+
+              harvest,
+            ]
+          )
+        );
+
+      const createdSelections =
+        [];
+
+      const skippedSelections =
+        [];
+
+      for (
+        const harvestId of
+        uniqueHarvestIds
+      ) {
+        const harvest =
+          harvestMap.get(
+            harvestId
+          );
+
+        if (!harvest) {
+          skippedSelections.push({
+            harvestId,
+
+            reason:
+              "Harvest was not found or is no longer available.",
+          });
+
+          continue;
+        }
+
+        if (
+          !harvest.farmerId
+        ) {
+          skippedSelections.push({
+            harvestId,
+
+            reason:
+              "The linked Farmer profile was not found.",
+          });
+
+          continue;
+        }
+
+        if (
+          normalizeText(
+            harvest.paddyType
+          ) !==
+          normalizeText(
+            demand.paddyType
+          )
+        ) {
+          skippedSelections.push({
+            harvestId,
+
+            reason:
+              "The Harvest paddy type does not match the Miller demand.",
+          });
+
+          continue;
+        }
+
+        const farmer =
+          harvest.farmerId;
+
+        const evaluationDemand =
+          {
+            ...demand.toObject(),
+
+            millerId:
+              miller,
+          };
+
+        const evaluation =
+          evaluateDemand({
+            demand:
+              evaluationDemand,
+
+            harvest,
+            farmer,
+
+            perspective:
+              "miller",
+          });
+
+        try {
+          const selection =
+            await MatchSelection.create({
+              harvestId:
+                harvest._id,
+
+              farmerId:
+                farmer._id,
+
+              millerId:
+                miller._id,
+
+              demandId:
+                demand._id,
+
+              matchingScore:
+                evaluation
+                  .matchingPercentage,
+
+              initiatedBy:
+                "miller",
+
+              status:
+                "pending",
+
+              initiatedAt:
+                new Date(),
+            });
+
+          const populated =
+            await populateSelection(
+              selection._id
+            );
+
+          createdSelections.push(
+            populated
+          );
+        } catch (error) {
+          if (
+            error.code ===
+            11000
+          ) {
+            skippedSelections.push({
+              harvestId,
+
+              reason:
+                "A matching request already exists for this Harvest and Demand.",
+            });
+
+            continue;
+          }
+
+          throw error;
+        }
+      }
+
+      if (
+        createdSelections.length ===
+        0
+      ) {
+        return res.status(409).json({
+          success: false,
+
+          message:
+            "No new matching requests were created.",
+
+          data: {
+            demandId:
+              String(
+                demand._id
+              ),
+
+            createdCount:
+              0,
+
+            skippedCount:
+              skippedSelections.length,
+
+            selections:
+              [],
+
+            skippedSelections,
+          },
+        });
+      }
+
+      return res
+        .status(201)
+        .json({
+          success: true,
+
+          message:
+            "Matching requests were sent to the selected Farmers.",
+
+          data: {
+            demandId:
+              String(
+                demand._id
+              ),
+
+            initiatedBy:
+              "miller",
+
+            createdCount:
+              createdSelections.length,
+
+            skippedCount:
+              skippedSelections.length,
+
+            selections:
+              createdSelections,
+
+            skippedSelections,
+          },
+        });
+    } catch (error) {
+      console.error(
+        "CREATE MILLER MATCH REQUEST ERROR:",
+        error
+      );
+
+      return res.status(500).json({
+        success: false,
+
+        message:
+          error.message ||
+          "Failed to create Miller matching requests.",
+      });
+    }
+  };
+
+/**
+ * Either Farmer or Miller responds.
+ *
+ * Only the OTHER participant can respond.
+ *
+ * PATCH
+ * /api/match-selections/:selectionId/respond
+ *
+ * Body:
+ *
+ * {
+ *   decision: "accepted"
  * }
  *
  * or
  *
  * {
- *   "decision": "rejected"
+ *   decision: "rejected"
  * }
  */
-const respondToSelection = async (
-  req,
-  res
-) => {
-  try {
-    const { selectionId } =
-      req.params;
+const respondToSelection =
+  async (req, res) => {
+    try {
+      const {
+        selectionId,
+      } = req.params;
 
-    const { decision } = req.body;
+      const {
+        decision,
+      } = req.body;
 
-    if (
-      !mongoose.Types.ObjectId.isValid(
-        selectionId
-      )
-    ) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Invalid match selection ID.",
-      });
-    }
-
-    if (
-      !["accepted", "rejected"].includes(
-        decision
-      )
-    ) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Decision must be either accepted or rejected.",
-      });
-    }
-
-    // 1. Find authenticated Miller profile
-    const miller = await Miller.findOne({
-      user: req.user._id,
-    });
-
-    if (!miller) {
-      return res.status(404).json({
-        success: false,
-        message:
-          "Miller profile not found.",
-      });
-    }
-
-    // 2. Find selection belonging to this Miller
-    const selection =
-      await MatchSelection.findOne({
-        _id: selectionId,
-        millerId: miller._id,
-      })
-        .populate("harvestId")
-        .populate({
-          path: "farmerId",
-          select:
-            "farmerName district location",
-        })
-        .populate({
-          path: "millerId",
-          select:
-            "name millName district location",
-        })
-        .populate("demandId");
-
-    if (!selection) {
-      return res.status(404).json({
-        success: false,
-        message:
-          "Matching request was not found or does not belong to this Miller.",
-      });
-    }
-
-    if (
-      selection.status !== "pending"
-    ) {
-      return res.status(409).json({
-        success: false,
-        message:
-          "This matching request has already been processed.",
-      });
-    }
-
-    if (decision === "accepted") {
-      // Ensure the linked records are still available
       if (
-        !selection.harvestId ||
-        selection.harvestId.status !==
-          "available"
+        !mongoose.Types.ObjectId.isValid(
+          selectionId
+        )
       ) {
-        return res.status(409).json({
+        return res.status(400).json({
           success: false,
+
           message:
-            "The selected harvest is no longer available.",
+            "Invalid match selection ID.",
         });
       }
 
       if (
-        !selection.demandId ||
-        selection.demandId.status !==
-          "open"
+        ![
+          "accepted",
+          "rejected",
+        ].includes(
+          decision
+        )
       ) {
-        return res.status(409).json({
+        return res.status(400).json({
           success: false,
+
           message:
-            "The selected demand is no longer open.",
+            "Decision must be either accepted or rejected.",
         });
       }
 
+      const selection =
+        await MatchSelection.findById(
+          selectionId
+        );
+
+      if (!selection) {
+        return res.status(404).json({
+          success: false,
+
+          message:
+            "Matching request not found.",
+        });
+      }
+
+      if (
+        selection.status !==
+        "pending"
+      ) {
+        return res.status(409).json({
+          success: false,
+
+          message:
+            "This matching request has already been processed.",
+        });
+      }
+
+      /**
+       * Farmer initiated request:
+       * only Miller can respond.
+       */
+      if (
+        selection.initiatedBy ===
+        "farmer"
+      ) {
+        if (
+          req.user.role !==
+          "miller"
+        ) {
+          return res.status(403).json({
+            success: false,
+
+            message:
+              "Only the selected Miller can respond to this Farmer request.",
+          });
+        }
+
+        const miller =
+          await Miller.findOne({
+            user:
+              req.user._id,
+          });
+
+        if (
+          !miller ||
+          String(
+            miller._id
+          ) !==
+            String(
+              selection.millerId
+            )
+        ) {
+          return res.status(403).json({
+            success: false,
+
+            message:
+              "You are not authorized to respond to this request.",
+          });
+        }
+      }
+
+      /**
+       * Miller initiated request:
+       * only Farmer can respond.
+       */
+      if (
+        selection.initiatedBy ===
+        "miller"
+      ) {
+        if (
+          req.user.role !==
+          "farmer"
+        ) {
+          return res.status(403).json({
+            success: false,
+
+            message:
+              "Only the selected Farmer can respond to this Miller request.",
+          });
+        }
+
+        const farmer =
+          await Farmer.findOne({
+            user:
+              req.user._id,
+          });
+
+        if (
+          !farmer ||
+          String(
+            farmer._id
+          ) !==
+            String(
+              selection.farmerId
+            )
+        ) {
+          return res.status(403).json({
+            success: false,
+
+            message:
+              "You are not authorized to respond to this request.",
+          });
+        }
+      }
+
+      const harvest =
+        await Harvest.findById(
+          selection.harvestId
+        );
+
+      const demand =
+        await MillerDemand.findById(
+          selection.demandId
+        );
+
+      if (
+        decision ===
+        "accepted"
+      ) {
+        if (
+          !harvest ||
+          harvest.status !==
+            "available"
+        ) {
+          return res.status(409).json({
+            success: false,
+
+            message:
+              "The selected Harvest is no longer available.",
+          });
+        }
+
+        if (
+          !demand ||
+          demand.status !==
+            "open"
+        ) {
+          return res.status(409).json({
+            success: false,
+
+            message:
+              "The selected Miller demand is no longer open.",
+          });
+        }
+
+        selection.status =
+          "negotiation_ready";
+
+        selection.respondedAt =
+          new Date();
+
+        await selection.save();
+
+        await Harvest
+          .findByIdAndUpdate(
+            harvest._id,
+            {
+              status:
+                "matched",
+            },
+            {
+              runValidators:
+                true,
+            }
+          );
+
+        await MillerDemand
+          .findByIdAndUpdate(
+            demand._id,
+            {
+              status:
+                "negotiation_ready",
+            },
+            {
+              runValidators:
+                true,
+            }
+          );
+
+        /**
+         * Once this Harvest + Demand combination is accepted,
+         * cancel other pending selections that compete for
+         * either the same Harvest or the same Demand.
+         */
+        await MatchSelection.updateMany(
+          {
+            _id: {
+              $ne:
+                selection._id,
+            },
+
+            status:
+              "pending",
+
+            $or: [
+              {
+                harvestId:
+                  harvest._id,
+              },
+
+              {
+                demandId:
+                  demand._id,
+              },
+            ],
+          },
+
+          {
+            status:
+              "cancelled",
+
+            respondedAt:
+              new Date(),
+          }
+        );
+
+        const updatedSelection =
+          await populateSelection(
+            selection._id
+          );
+
+        return res
+          .status(200)
+          .json({
+            success: true,
+
+            message:
+              "Match accepted. Farmer and Miller can now proceed to AI negotiation.",
+
+            data: {
+              selection:
+                updatedSelection,
+            },
+          });
+      }
+
+      /**
+       * Rejection
+       */
       selection.status =
-        "negotiation_ready";
+        "rejected";
 
-      selection.millerRespondedAt =
+      selection.respondedAt =
         new Date();
 
       await selection.save();
 
-      // Reserve the demand for this accepted match
-      await MillerDemand.findByIdAndUpdate(
-        selection.demandId._id,
-        {
-          status:
-            "negotiation_ready",
-        },
-        {
-          runValidators: true,
-        }
-      );
-
-      // Mark harvest as matched
-      await Harvest.findByIdAndUpdate(
-        selection.harvestId._id,
-        {
-          status: "matched",
-        },
-        {
-          runValidators: true,
-        }
-      );
-
-      // Other pending requests for the same demand can no
-      // longer use this demand.
-      await MatchSelection.updateMany(
-        {
-          demandId:
-            selection.demandId._id,
-
-          _id: {
-            $ne: selection._id,
-          },
-
-          status: "pending",
-        },
-        {
-          status: "cancelled",
-          millerRespondedAt:
-            new Date(),
-        }
-      );
-
       const updatedSelection =
-        await MatchSelection.findById(
+        await populateSelection(
           selection._id
-        )
-          .populate("harvestId")
-          .populate({
-            path: "farmerId",
-            select:
-              "farmerName district location",
-          })
-          .populate({
-            path: "millerId",
-            select:
-              "name millName district location",
-          })
-          .populate("demandId");
+        );
 
-      return res.status(200).json({
-        success: true,
+      return res
+        .status(200)
+        .json({
+          success: true,
+
+          message:
+            "Matching request rejected.",
+
+          data: {
+            selection:
+              updatedSelection,
+          },
+        });
+    } catch (error) {
+      console.error(
+        "RESPOND TO MATCH ERROR:",
+        error
+      );
+
+      return res.status(500).json({
+        success: false,
 
         message:
-          "Match accepted. The Farmer and Miller can now proceed to AI negotiation.",
-
-        data: {
-          selection:
-            updatedSelection,
-        },
+          error.message ||
+          "Failed to process the matching request.",
       });
     }
-
-    // Rejection flow
-    selection.status = "rejected";
-
-    selection.millerRespondedAt =
-      new Date();
-
-    await selection.save();
-
-    const updatedSelection =
-      await MatchSelection.findById(
-        selection._id
-      )
-        .populate("harvestId")
-        .populate({
-          path: "farmerId",
-          select:
-            "farmerName district location",
-        })
-        .populate({
-          path: "millerId",
-          select:
-            "name millName district location",
-        })
-        .populate("demandId");
-
-    return res.status(200).json({
-      success: true,
-
-      message:
-        "Matching request rejected.",
-
-      data: {
-        selection:
-          updatedSelection,
-      },
-    });
-  } catch (error) {
-    console.error(
-      "RESPOND TO MATCH ERROR:",
-      error
-    );
-
-    return res.status(500).json({
-      success: false,
-
-      message:
-        error.message ||
-        "Failed to process the matching request.",
-    });
-  }
-};
+  };
 
 /**
  * GET /api/match-selections/miller
  *
- * Returns selections received by the authenticated Miller.
+ * Returns both:
+ * - requests sent by Miller
+ * - requests received by Miller
  */
-const getMillerSelections = async (
-  req,
-  res
-) => {
-  try {
-    const miller = await Miller.findOne({
-      user: req.user._id,
-    });
-
-    if (!miller) {
-      return res.status(404).json({
-        success: false,
-        message:
-          "Miller profile not found.",
-      });
-    }
-
-    const selections =
-      await MatchSelection.find({
-        millerId: miller._id,
-      })
-        .populate("harvestId")
-        .populate({
-          path: "farmerId",
-          select:
-            "farmerName district location",
-        })
-        .populate({
-          path: "demandId",
-        })
-        .sort({
-          createdAt: -1,
+const getMillerSelections =
+  async (req, res) => {
+    try {
+      const miller =
+        await Miller.findOne({
+          user:
+            req.user._id,
         });
 
-    return res.status(200).json({
-      success: true,
-      count: selections.length,
-      data: selections,
-    });
-  } catch (error) {
-    console.error(
-      "GET MILLER SELECTIONS ERROR:",
-      error
-    );
+      if (!miller) {
+        return res.status(404).json({
+          success: false,
 
-    return res.status(500).json({
-      success: false,
+          message:
+            "Miller profile not found.",
+        });
+      }
 
-      message:
-        error.message ||
-        "Failed to retrieve Miller selections.",
-    });
-  }
-};
+      const selections =
+        await MatchSelection.find({
+          millerId:
+            miller._id,
+        })
+          .populate(
+            "harvestId"
+          )
+
+          .populate({
+            path:
+              "farmerId",
+
+            select:
+              "farmerName district location farmName",
+          })
+
+          .populate({
+            path:
+              "demandId",
+          })
+
+          .sort({
+            createdAt: -1,
+          });
+
+      return res
+        .status(200)
+        .json({
+          success: true,
+
+          count:
+            selections.length,
+
+          data:
+            selections,
+        });
+    } catch (error) {
+      console.error(
+        "GET MILLER SELECTIONS ERROR:",
+        error
+      );
+
+      return res.status(500).json({
+        success: false,
+
+        message:
+          error.message ||
+          "Failed to retrieve Miller matching requests.",
+      });
+    }
+  };
 
 /**
  * GET /api/match-selections/farmer
  *
- * Returns selections submitted by the authenticated Farmer.
+ * Returns both:
+ * - requests sent by Farmer
+ * - requests received by Farmer
  */
-const getFarmerSelections = async (
-  req,
-  res
-) => {
-  try {
-    const farmer = await Farmer.findOne({
-      user: req.user._id,
-    });
-
-    if (!farmer) {
-      return res.status(404).json({
-        success: false,
-        message:
-          "Farmer profile not found.",
-      });
-    }
-
-    const selections =
-      await MatchSelection.find({
-        farmerId: farmer._id,
-      })
-        .populate("harvestId")
-        .populate({
-          path: "millerId",
-          select:
-            "name millName district location businessRegistrationNumber purchasingCapacityKg",
-        })
-        .populate("demandId")
-        .sort({
-          createdAt: -1,
+const getFarmerSelections =
+  async (req, res) => {
+    try {
+      const farmer =
+        await Farmer.findOne({
+          user:
+            req.user._id,
         });
 
-    return res.status(200).json({
-      success: true,
-      count: selections.length,
-      data: selections,
-    });
-  } catch (error) {
-    console.error(
-      "GET FARMER SELECTIONS ERROR:",
-      error
-    );
+      if (!farmer) {
+        return res.status(404).json({
+          success: false,
 
-    return res.status(500).json({
-      success: false,
+          message:
+            "Farmer profile not found.",
+        });
+      }
 
-      message:
-        error.message ||
-        "Failed to retrieve Farmer selections.",
-    });
-  }
-};
+      const selections =
+        await MatchSelection.find({
+          farmerId:
+            farmer._id,
+        })
+          .populate(
+            "harvestId"
+          )
+
+          .populate({
+            path:
+              "millerId",
+
+            select:
+              "name millName district location businessRegistrationNumber purchasingCapacityKg",
+          })
+
+          .populate(
+            "demandId"
+          )
+
+          .sort({
+            createdAt: -1,
+          });
+
+      return res
+        .status(200)
+        .json({
+          success: true,
+
+          count:
+            selections.length,
+
+          data:
+            selections,
+        });
+    } catch (error) {
+      console.error(
+        "GET FARMER SELECTIONS ERROR:",
+        error
+      );
+
+      return res.status(500).json({
+        success: false,
+
+        message:
+          error.message ||
+          "Failed to retrieve Farmer matching requests.",
+      });
+    }
+  };
 
 module.exports = {
   createSelections,
+  createSelectionsByMiller,
   respondToSelection,
   getMillerSelections,
   getFarmerSelections,
