@@ -20,6 +20,12 @@ const User = require(
   "../models/user.model"
 );
 
+const {
+  createMarketplaceNotification,
+} = require(
+  "../services/notification.service"
+);
+
 /**
  * Resolve the logged-in marketplace profile.
  */
@@ -313,6 +319,65 @@ const createContactRequest =
             new Date(),
         });
 
+      const [
+        contactFarmer,
+        contactMiller,
+      ] = await Promise.all([
+        Farmer.findById(
+          negotiation.farmerId
+        ),
+        Miller.findById(
+          negotiation.millerId
+        ),
+      ]);
+
+      const requesterName =
+        role === "farmer"
+          ? contactFarmer?.farmerName ||
+            "Farmer"
+          : contactMiller?.millName ||
+            contactMiller?.name ||
+            "Miller";
+
+      await createMarketplaceNotification({
+        recipientType:
+          role === "farmer"
+            ? "miller"
+            : "farmer",
+
+        recipientId:
+          role === "farmer"
+            ? negotiation.millerId
+            : negotiation.farmerId,
+
+        actorType: role,
+        actorId:
+          profile._id,
+        actorName:
+          requesterName,
+
+        type:
+          "CONTACT_REQUEST",
+
+        titleEnglish:
+          "Contact access requested",
+        titleSinhala:
+          "සම්බන්ධතා ප්‍රවේශය ඉල්ලා ඇත",
+
+        messageEnglish:
+          `${requesterName} requested contact access after the successful AI negotiation.`,
+        messageSinhala:
+          `${requesterName} සාර්ථක AI සාකච්ඡාවෙන් පසු සම්බන්ධතා ප්‍රවේශය ඉල්ලා ඇත.`,
+
+        relatedNegotiationId:
+          negotiation._id,
+        relatedNegotiationCode:
+          negotiation.negotiationId,
+
+        relatedContactRequestId:
+          request._id,
+      });
+
       return res
         .status(201)
         .json({
@@ -512,27 +577,98 @@ const respondToContactRequest =
 
       await request.save();
 
+      const negotiation =
+        await Negotiation.findById(
+          request.negotiationId
+        );
+
+      if (!negotiation) {
+        return res
+          .status(409)
+          .json({
+            success: false,
+
+            message:
+              "The linked negotiation could not be found.",
+          });
+      }
+
+      const [
+        responseFarmer,
+        responseMiller,
+      ] = await Promise.all([
+        Farmer.findById(
+          request.farmerId
+        ),
+        Miller.findById(
+          request.millerId
+        ),
+      ]);
+
+      const responderName =
+        role === "farmer"
+          ? responseFarmer?.farmerName ||
+            "Farmer"
+          : responseMiller?.millName ||
+            responseMiller?.name ||
+            "Miller";
+
+      await createMarketplaceNotification({
+        recipientType:
+          request.requestedBy,
+
+        recipientId:
+          request.requestedBy ===
+          "farmer"
+            ? request.farmerId
+            : request.millerId,
+
+        actorType: role,
+        actorId:
+          profile._id,
+        actorName:
+          responderName,
+
+        type:
+          decision === "accepted"
+            ? "CONTACT_ACCEPTED"
+            : "CONTACT_REJECTED",
+
+        titleEnglish:
+          decision === "accepted"
+            ? "Contact access accepted"
+            : "Contact access declined",
+
+        titleSinhala:
+          decision === "accepted"
+            ? "සම්බන්ධතා ප්‍රවේශය පිළිගෙන ඇත"
+            : "සම්බන්ධතා ප්‍රවේශය ප්‍රතික්ෂේප කර ඇත",
+
+        messageEnglish:
+          decision === "accepted"
+            ? `${responderName} accepted your contact request. Phone and WhatsApp are now unlocked.`
+            : `${responderName} declined your contact request.`,
+
+        messageSinhala:
+          decision === "accepted"
+            ? `${responderName} ඔබගේ සම්බන්ධතා ඉල්ලීම පිළිගෙන ඇත. දුරකථන සහ WhatsApp දැන් ලබා ගත හැකිය.`
+            : `${responderName} ඔබගේ සම්බන්ධතා ඉල්ලීම ප්‍රතික්ෂේප කර ඇත.`,
+
+        relatedNegotiationId:
+          negotiation._id,
+        relatedNegotiationCode:
+          negotiation.negotiationId,
+
+        relatedContactRequestId:
+          request._id,
+      });
+
       let contact = null;
 
       if (
         decision ===
         "accepted"
       ) {
-        const negotiation =
-          await Negotiation.findById(
-            request.negotiationId
-          );
-
-        if (!negotiation) {
-          return res
-            .status(409)
-            .json({
-              success: false,
-
-              message:
-                "The linked negotiation could not be found.",
-            });
-        }
 
         contact =
           await buildContactData(

@@ -26,6 +26,12 @@ const {
   "./matching.controller"
 );
 
+const {
+  createMarketplaceNotification,
+} = require(
+  "../services/notification.service"
+);
+
 const normalizeText = (
   value = ""
 ) => {
@@ -324,6 +330,61 @@ const createSelections = async (
         createdSelections.push(
           populated
         );
+
+          await createMarketplaceNotification({
+            recipientType: "farmer",
+            recipientId:
+              farmer._id,
+            actorType: "miller",
+            actorId:
+              miller._id,
+            actorName:
+              miller.millName ||
+              miller.name,
+            type:
+              "MATCH_REQUEST",
+
+            titleEnglish:
+              "New Miller match request",
+            titleSinhala:
+              "නව මෝල්කරු ගැළපීමේ ඉල්ලීමක්",
+
+            messageEnglish:
+              `${miller.millName || miller.name} sent a match request for your ${harvest.paddyType} harvest.`,
+            messageSinhala:
+              `${miller.millName || miller.name} විසින් ඔබගේ ${harvest.paddyType} අස්වැන්න සඳහා ගැළපීමේ ඉල්ලීමක් යවා ඇත.`,
+
+            relatedHarvestId:
+              harvest._id,
+            relatedSelectionId:
+              selection._id,
+          });
+
+        await createMarketplaceNotification({
+          recipientType: "miller",
+          recipientId:
+            demand.millerId._id,
+          actorType: "farmer",
+          actorId: farmer._id,
+          actorName:
+            farmer.farmerName,
+          type: "MATCH_REQUEST",
+
+          titleEnglish:
+            "New Farmer match request",
+          titleSinhala:
+            "නව ගොවි ගැළපීමේ ඉල්ලීමක්",
+
+          messageEnglish:
+            `${farmer.farmerName} sent a match request for ${harvest.paddyType} paddy.`,
+          messageSinhala:
+            `${farmer.farmerName} විසින් ${harvest.paddyType} වී සඳහා ගැළපීමේ ඉල්ලීමක් යවා ඇත.`,
+
+          relatedHarvestId:
+            harvest._id,
+          relatedSelectionId:
+            selection._id,
+        });
       } catch (error) {
         if (
           error.code ===
@@ -970,6 +1031,18 @@ const respondToSelection =
           selection.demandId
         );
 
+      const [
+        selectionFarmer,
+        selectionMiller,
+      ] = await Promise.all([
+        Farmer.findById(
+          selection.farmerId
+        ),
+        Miller.findById(
+          selection.millerId
+        ),
+      ]);
+
       if (
         decision ===
         "accepted"
@@ -1076,6 +1149,127 @@ const respondToSelection =
             selection._id
           );
 
+        const initiatorRecipient =
+          selection.initiatedBy ===
+          "farmer"
+            ? {
+                type: "farmer",
+                id:
+                  selection.farmerId,
+              }
+            : {
+                type: "miller",
+                id:
+                  selection.millerId,
+              };
+
+        const responderProfile =
+          selection.initiatedBy ===
+          "farmer"
+            ? selectionMiller
+            : selectionFarmer;
+
+        const responderName =
+          selection.initiatedBy ===
+          "farmer"
+            ? selectionMiller?.millName ||
+              selectionMiller?.name ||
+              "Miller"
+            : selectionFarmer?.farmerName ||
+              "Farmer";
+
+        await createMarketplaceNotification({
+          recipientType:
+            initiatorRecipient.type,
+          recipientId:
+            initiatorRecipient.id,
+          actorType:
+            selection.initiatedBy ===
+            "farmer"
+              ? "miller"
+              : "farmer",
+          actorId:
+            responderProfile?._id ||
+            null,
+          actorName:
+            responderName,
+          type:
+            "MATCH_ACCEPTED",
+
+          titleEnglish:
+            "Match request accepted",
+          titleSinhala:
+            "ගැළපීමේ ඉල්ලීම පිළිගෙන ඇත",
+
+          messageEnglish:
+            `${responderName} accepted your match request. AI negotiation is now ready.`,
+          messageSinhala:
+            `${responderName} ඔබගේ ගැළපීමේ ඉල්ලීම පිළිගෙන ඇත. AI සාකච්ඡාව දැන් සූදානම්ය.`,
+
+          relatedHarvestId:
+            harvest._id,
+          relatedSelectionId:
+            selection._id,
+        });
+
+        await Promise.all([
+          createMarketplaceNotification({
+            recipientType:
+              "farmer",
+            recipientId:
+              selection.farmerId,
+            actorType:
+              "system",
+            actorName:
+              "Digital Goviya AI",
+            type:
+              "NEGOTIATION_READY",
+
+            titleEnglish:
+              "AI negotiation ready",
+            titleSinhala:
+              "AI සාකච්ඡාව සූදානම්",
+
+            messageEnglish:
+              `Your match with ${selectionMiller?.millName || selectionMiller?.name || "the Miller"} is ready for AI negotiation.`,
+            messageSinhala:
+              `ඔබගේ ගැළපීම AI සාකච්ඡාව සඳහා සූදානම්ය.`,
+
+            relatedHarvestId:
+              harvest._id,
+            relatedSelectionId:
+              selection._id,
+          }),
+
+          createMarketplaceNotification({
+            recipientType:
+              "miller",
+            recipientId:
+              selection.millerId,
+            actorType:
+              "system",
+            actorName:
+              "Digital Goviya AI",
+            type:
+              "NEGOTIATION_READY",
+
+            titleEnglish:
+              "AI negotiation ready",
+            titleSinhala:
+              "AI සාකච්ඡාව සූදානම්",
+
+            messageEnglish:
+              `Your match with ${selectionFarmer?.farmerName || "the Farmer"} is ready for AI negotiation.`,
+            messageSinhala:
+              `ඔබගේ ගැළපීම AI සාකච්ඡාව සඳහා සූදානම්ය.`,
+
+            relatedHarvestId:
+              harvest._id,
+            relatedSelectionId:
+              selection._id,
+          }),
+        ]);
+
         return res
           .status(200)
           .json({
@@ -1106,6 +1300,66 @@ const respondToSelection =
         await populateSelection(
           selection._id
         );
+
+      const rejectionRecipient =
+        selection.initiatedBy ===
+        "farmer"
+          ? {
+              type: "farmer",
+              id:
+                selection.farmerId,
+            }
+          : {
+              type: "miller",
+              id:
+                selection.millerId,
+            };
+
+      const rejectionActorName =
+        selection.initiatedBy ===
+        "farmer"
+          ? selectionMiller?.millName ||
+            selectionMiller?.name ||
+            "Miller"
+          : selectionFarmer?.farmerName ||
+            "Farmer";
+
+      await createMarketplaceNotification({
+        recipientType:
+          rejectionRecipient.type,
+        recipientId:
+          rejectionRecipient.id,
+        actorType:
+          selection.initiatedBy ===
+          "farmer"
+            ? "miller"
+            : "farmer",
+        actorId:
+          selection.initiatedBy ===
+          "farmer"
+            ? selectionMiller?._id
+            : selectionFarmer?._id,
+        actorName:
+          rejectionActorName,
+        type:
+          "MATCH_REJECTED",
+
+        titleEnglish:
+          "Match request declined",
+        titleSinhala:
+          "ගැළපීමේ ඉල්ලීම ප්‍රතික්ෂේප කර ඇත",
+
+        messageEnglish:
+          `${rejectionActorName} declined your match request.`,
+        messageSinhala:
+          `${rejectionActorName} ඔබගේ ගැළපීමේ ඉල්ලීම ප්‍රතික්ෂේප කර ඇත.`,
+
+        relatedHarvestId:
+          harvest?._id ||
+          selection.harvestId,
+        relatedSelectionId:
+          selection._id,
+      });
 
       return res
         .status(200)

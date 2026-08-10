@@ -1,143 +1,211 @@
+const mongoose = require("mongoose");
+
 const Notification = require(
-    "../models/notification.model"
+  "../models/notification.model"
 );
 
-// Get notifications for a farmer or miller
-const getNotifications = async (req, res) => {
-    try {
-        const {
-            recipientType,
-            recipientId
-        } = req.params;
+const Farmer = require(
+  "../models/farmer.model"
+);
 
-        if (
-            !["farmer", "miller"].includes(
-                recipientType
-            )
-        ) {
-            return res.status(400).json({
-                success: false,
-                message:
-                    "Recipient type must be farmer or miller."
-            });
+const Miller = require(
+  "../models/miller.model"
+);
+
+const resolveCurrentRecipient = async (
+  user
+) => {
+  if (user.role === "farmer") {
+    const farmer = await Farmer.findOne({
+      user: user._id,
+    });
+
+    return farmer
+      ? {
+          recipientType: "farmer",
+          recipientId: farmer._id,
         }
+      : null;
+  }
 
-        const notifications =
-            await Notification.find({
-                recipientType,
-                recipientId
-            })
-                .sort({
-                    createdAt: -1
-                })
-                .populate("relatedHarvestId")
-                .populate("relatedSelectionId");
+  const miller = await Miller.findOne({
+    user: user._id,
+  });
 
-        const unreadCount =
-            await Notification.countDocuments({
-                recipientType,
-                recipientId,
-                isRead: false
-            });
-
-        return res.status(200).json({
-            success: true,
-
-            unreadCount,
-
-            count: notifications.length,
-
-            data: notifications
-        });
-    } catch (error) {
-        return res.status(500).json({
-            success: false,
-            message: error.message
-        });
-    }
+  return miller
+    ? {
+        recipientType: "miller",
+        recipientId: miller._id,
+      }
+    : null;
 };
 
-// Mark one notification as read
+const getMyNotifications = async (
+  req,
+  res
+) => {
+  try {
+    const recipient =
+      await resolveCurrentRecipient(
+        req.user
+      );
+
+    if (!recipient) {
+      return res.status(404).json({
+        success: false,
+        message:
+          `${req.user.role} profile not found.`,
+      });
+    }
+
+    const notifications =
+      await Notification.find(
+        recipient
+      )
+        .sort({
+          createdAt: -1,
+        })
+        .limit(150);
+
+    const unreadCount =
+      await Notification.countDocuments({
+        ...recipient,
+        isRead: false,
+      });
+
+    return res.status(200).json({
+      success: true,
+      unreadCount,
+      count: notifications.length,
+      data: notifications,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message:
+        error.message ||
+        "Failed to retrieve notifications.",
+    });
+  }
+};
+
 const markNotificationAsRead = async (
-    req,
-    res
+  req,
+  res
 ) => {
-    try {
-        const { notificationId } = req.params;
+  try {
+    const {
+      notificationId,
+    } = req.params;
 
-        const notification =
-            await Notification.findByIdAndUpdate(
-                notificationId,
-                {
-                    isRead: true,
-                    readAt: new Date()
-                },
-                {
-                    new: true
-                }
-            );
-
-        if (!notification) {
-            return res.status(404).json({
-                success: false,
-                message: "Notification not found."
-            });
-        }
-
-        return res.status(200).json({
-            success: true,
-
-            message:
-                "Notification marked as read.",
-
-            data: notification
-        });
-    } catch (error) {
-        return res.status(500).json({
-            success: false,
-            message: error.message
-        });
+    if (
+      !mongoose.Types.ObjectId.isValid(
+        notificationId
+      )
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Invalid notification ID.",
+      });
     }
+
+    const recipient =
+      await resolveCurrentRecipient(
+        req.user
+      );
+
+    if (!recipient) {
+      return res.status(404).json({
+        success: false,
+        message:
+          `${req.user.role} profile not found.`,
+      });
+    }
+
+    const notification =
+      await Notification.findOneAndUpdate(
+        {
+          _id: notificationId,
+          ...recipient,
+        },
+        {
+          isRead: true,
+          readAt: new Date(),
+        },
+        {
+          new: true,
+        }
+      );
+
+    if (!notification) {
+      return res.status(404).json({
+        success: false,
+        message:
+          "Notification not found.",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message:
+        "Notification marked as read.",
+      data: notification,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message:
+        error.message ||
+        "Failed to update notification.",
+    });
+  }
 };
 
-// Mark all notifications as read
-const markAllNotificationsAsRead = async (
-    req,
-    res
-) => {
+const markAllNotificationsAsRead =
+  async (req, res) => {
     try {
-        const {
-            recipientType,
-            recipientId
-        } = req.params;
-
-        await Notification.updateMany(
-            {
-                recipientType,
-                recipientId,
-                isRead: false
-            },
-            {
-                isRead: true,
-                readAt: new Date()
-            }
+      const recipient =
+        await resolveCurrentRecipient(
+          req.user
         );
 
-        return res.status(200).json({
-            success: true,
-            message:
-                "All notifications marked as read."
+      if (!recipient) {
+        return res.status(404).json({
+          success: false,
+          message:
+            `${req.user.role} profile not found.`,
         });
+      }
+
+      await Notification.updateMany(
+        {
+          ...recipient,
+          isRead: false,
+        },
+        {
+          isRead: true,
+          readAt: new Date(),
+        }
+      );
+
+      return res.status(200).json({
+        success: true,
+        message:
+          "All notifications marked as read.",
+      });
     } catch (error) {
-        return res.status(500).json({
-            success: false,
-            message: error.message
-        });
+      return res.status(500).json({
+        success: false,
+        message:
+          error.message ||
+          "Failed to update notifications.",
+      });
     }
-};
+  };
 
 module.exports = {
-    getNotifications,
-    markNotificationAsRead,
-    markAllNotificationsAsRead
+  getMyNotifications,
+  markNotificationAsRead,
+  markAllNotificationsAsRead,
 };

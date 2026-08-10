@@ -1,31 +1,44 @@
 const express = require("express");
 
 const {
-    getNotifications,
-    markNotificationAsRead,
-    markAllNotificationsAsRead
+  authenticate,
+  authorizeRoles,
 } = require(
-    "../controllers/notification.controller"
+  "../middlewares/auth.middleware"
+);
+
+const {
+  getMyNotifications,
+  markNotificationAsRead,
+  markAllNotificationsAsRead,
+} = require(
+  "../controllers/notification.controller"
 );
 
 const router = express.Router();
 
-// Get farmer or miller notifications
+router.use(authenticate);
+
+router.use(
+  authorizeRoles(
+    "farmer",
+    "miller"
+  )
+);
+
 router.get(
-    "/:recipientType/:recipientId",
-    getNotifications
+  "/mine",
+  getMyNotifications
 );
 
-// Mark one notification as read
 router.patch(
-    "/:notificationId/read",
-    markNotificationAsRead
+  "/read-all",
+  markAllNotificationsAsRead
 );
 
-// Mark all notifications as read
 router.patch(
-    "/:recipientType/:recipientId/read-all",
-    markAllNotificationsAsRead
+  "/:notificationId/read",
+  markNotificationAsRead
 );
 
 module.exports = router;

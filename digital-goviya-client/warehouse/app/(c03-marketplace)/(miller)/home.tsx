@@ -121,17 +121,51 @@ export default function MillerHomeScreen() {
             </View>
           </View>
 
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Open profile"
-            style={({ pressed }) => [
-              styles.profileButton,
-              pressed && styles.profileButtonPressed,
-            ]}
-            onPress={() => router.push("./profile")}
-          >
-            <Ionicons name="person-outline" size={21} color="#92400E" />
-          </Pressable>
+          <View style={styles.headerActions}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Open notifications"
+              style={({ pressed }) => [
+                styles.notificationButton,
+                pressed && styles.profileButtonPressed,
+              ]}
+              onPress={() =>
+                router.push("/(c03-marketplace)/notifications")
+              }
+            >
+              <Ionicons
+                name="notifications-outline"
+                size={21}
+                color="#92400E"
+              />
+
+              {summary?.unreadNotifications ? (
+                <View style={styles.headerNotificationBadge}>
+                  <Text style={styles.headerNotificationBadgeText}>
+                    {summary.unreadNotifications > 99
+                      ? "99+"
+                      : summary.unreadNotifications}
+                  </Text>
+                </View>
+              ) : null}
+            </Pressable>
+
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Open profile"
+              style={({ pressed }) => [
+                styles.profileButton,
+                pressed && styles.profileButtonPressed,
+              ]}
+              onPress={() => router.push("./profile")}
+            >
+              <Ionicons
+                name="person-outline"
+                size={21}
+                color="#92400E"
+              />
+            </Pressable>
+          </View>
         </View>
 
         {/* Hero */}
@@ -509,6 +543,45 @@ const styles = StyleSheet.create({
     color: INK_MUTED,
     fontSize: 10.5,
     fontFamily: "Poppins_500Medium",
+  },
+
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 9,
+  },
+
+  notificationButton: {
+    width: 46,
+    height: 46,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    position: "relative",
+  },
+
+  headerNotificationBadge: {
+    position: "absolute",
+    top: -4,
+    right: -3,
+    minWidth: 19,
+    height: 19,
+    borderRadius: 10,
+    paddingHorizontal: 4,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#DC2626",
+    borderWidth: 2,
+    borderColor: "#FFFFFF",
+  },
+
+  headerNotificationBadgeText: {
+    color: "#FFFFFF",
+    fontSize: 7,
+    fontWeight: "900",
   },
 
   profileButton: {

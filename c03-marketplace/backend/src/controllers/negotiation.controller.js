@@ -26,6 +26,12 @@ const MillerDemand = require(
 );
 
 const {
+  createMarketplaceNotification,
+} = require(
+  "../services/notification.service"
+);
+
+const {
   runNegotiation,
   checkNegotiationHealth,
 } = require(
@@ -234,18 +240,25 @@ const startNegotiation = async (
       max_rounds: 6,
     };
 
-    console.log("NEGOTIATION PAYLOAD:", JSON.stringify(payload, null, 2));
+    console.log(
+      "NEGOTIATION PAYLOAD:",
+      JSON.stringify(
+        payload,
+        null,
+        2
+      )
+    );
 
     const result =
-      await runNegotiation(payload);
+      await runNegotiation(
+        payload
+      );
 
     const savedNegotiation =
       await Negotiation.create({
         negotiationId:
           result.negotiation_id,
 
-        // Reuse listingId as the MatchSelection link
-        // unless you later rename it to selectionId.
         listingId:
           selection._id,
 
@@ -284,7 +297,10 @@ const startNegotiation = async (
           result.history,
       });
 
-    if (result.status === "agreed") {
+    if (
+      result.status ===
+      "agreed"
+    ) {
       await Promise.all([
         Harvest.findByIdAndUpdate(
           harvest._id,
@@ -307,6 +323,72 @@ const startNegotiation = async (
           }
         ),
       ]);
+
+      await Promise.all([
+        createMarketplaceNotification({
+          recipientType:
+            "farmer",
+          recipientId:
+            farmer._id,
+          actorType:
+            "system",
+          actorName:
+            "Digital Goviya AI",
+          type:
+            "NEGOTIATION_AGREED",
+
+          titleEnglish:
+            "AI negotiation successful",
+          titleSinhala:
+            "AI සාකච්ඡාව සාර්ථකයි",
+
+          messageEnglish:
+            `Agreement reached with ${miller.millName || miller.name} at Rs.${Number(result.agreed_price).toFixed(2)}/kg.`,
+          messageSinhala:
+            `${miller.millName || miller.name} සමඟ කිලෝග්‍රෑමයකට රු.${Number(result.agreed_price).toFixed(2)} මිලකට එකඟතාවයකට පැමිණ ඇත.`,
+
+          relatedHarvestId:
+            harvest._id,
+          relatedSelectionId:
+            selection._id,
+          relatedNegotiationId:
+            savedNegotiation._id,
+          relatedNegotiationCode:
+            savedNegotiation.negotiationId,
+        }),
+
+        createMarketplaceNotification({
+          recipientType:
+            "miller",
+          recipientId:
+            miller._id,
+          actorType:
+            "system",
+          actorName:
+            "Digital Goviya AI",
+          type:
+            "NEGOTIATION_AGREED",
+
+          titleEnglish:
+            "AI negotiation successful",
+          titleSinhala:
+            "AI සාකච්ඡාව සාර්ථකයි",
+
+          messageEnglish:
+            `Agreement reached with ${farmer.farmerName} at Rs.${Number(result.agreed_price).toFixed(2)}/kg.`,
+          messageSinhala:
+            `${farmer.farmerName} සමඟ කිලෝග්‍රෑමයකට රු.${Number(result.agreed_price).toFixed(2)} මිලකට එකඟතාවයකට පැමිණ ඇත.`,
+
+          relatedHarvestId:
+            harvest._id,
+          relatedSelectionId:
+            selection._id,
+          relatedNegotiationId:
+            savedNegotiation._id,
+          relatedNegotiationCode:
+            savedNegotiation.negotiationId,
+        }),
+      ]);
     } else {
       await MillerDemand.findByIdAndUpdate(
         demand._id,
@@ -318,15 +400,83 @@ const startNegotiation = async (
           runValidators: true,
         }
       );
+
+      await Promise.all([
+        createMarketplaceNotification({
+          recipientType:
+            "farmer",
+          recipientId:
+            farmer._id,
+          actorType:
+            "system",
+          actorName:
+            "Digital Goviya AI",
+          type:
+            "NEGOTIATION_FAILED",
+
+          titleEnglish:
+            "AI negotiation ended",
+          titleSinhala:
+            "AI සාකච්ඡාව අවසන් විය",
+
+          messageEnglish:
+            `No agreement was reached with ${miller.millName || miller.name}.`,
+          messageSinhala:
+            `${miller.millName || miller.name} සමඟ එකඟතාවයකට පැමිණීමට නොහැකි විය.`,
+
+          relatedHarvestId:
+            harvest._id,
+          relatedSelectionId:
+            selection._id,
+          relatedNegotiationId:
+            savedNegotiation._id,
+          relatedNegotiationCode:
+            savedNegotiation.negotiationId,
+        }),
+
+        createMarketplaceNotification({
+          recipientType:
+            "miller",
+          recipientId:
+            miller._id,
+          actorType:
+            "system",
+          actorName:
+            "Digital Goviya AI",
+          type:
+            "NEGOTIATION_FAILED",
+
+          titleEnglish:
+            "AI negotiation ended",
+          titleSinhala:
+            "AI සාකච්ඡාව අවසන් විය",
+
+          messageEnglish:
+            `No agreement was reached with ${farmer.farmerName}.`,
+          messageSinhala:
+            `${farmer.farmerName} සමඟ එකඟතාවයකට පැමිණීමට නොහැකි විය.`,
+
+          relatedHarvestId:
+            harvest._id,
+          relatedSelectionId:
+            selection._id,
+          relatedNegotiationId:
+            savedNegotiation._id,
+          relatedNegotiationCode:
+            savedNegotiation.negotiationId,
+        }),
+      ]);
     }
 
     return res.status(201).json({
       success: true,
       message:
-        result.status === "agreed"
+        result.status ===
+        "agreed"
           ? "The AI agents reached an agreement."
           : "The AI negotiation completed without an agreement.",
-      data: savedNegotiation,
+      data:
+        savedNegotiation,
     });
   } catch (error) {
     console.error(
@@ -379,7 +529,8 @@ const getNegotiation = async (
 
     return res.status(200).json({
       success: true,
-      data: negotiation,
+      data:
+        negotiation,
     });
   } catch (error) {
     return res.status(500).json({
