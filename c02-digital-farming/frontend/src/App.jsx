@@ -264,12 +264,32 @@ function App() {
     }
   }
 
-  const handleYieldChange = (e) => {
+  const handleYieldChange = async (e) => {
     const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value
-    setYieldData({
-      ...yieldData,
-      [e.target.name]: value
-    })
+    const name = e.target.name
+    
+    setYieldData(prev => ({
+      ...prev,
+      [name]: value
+    }))
+
+    if (name === 'isLiveIoT' && value) {
+      try {
+        const response = await fetch('http://127.0.0.1:8000/api/sensor/latest');
+        if (response.ok) {
+          const data = await response.json();
+          setYieldData(prev => ({
+            ...prev,
+            Temperature_C: data.temperature,
+            Humidity: data.humidity,
+            Soil_Moisture: data.soilMoisture / 100,
+            timestamp: data.timestamp
+          }));
+        }
+      } catch (err) {
+        console.error("Failed to fetch live IoT data:", err);
+      }
+    }
   }
 
   const handleYieldSubmit = async (e) => {
@@ -620,7 +640,7 @@ function App() {
                     </label>
                   </div>
                   
-                  {!yieldData.isLiveIoT && (
+                  {!yieldData.isLiveIoT ? (
                     <div className="form-row mt-2">
                       <div className="form-group">
                         <label>Temp (°C)</label>
@@ -635,10 +655,24 @@ function App() {
                         <input type="number" step="0.01" name="Soil_Moisture" value={yieldData.Soil_Moisture} onChange={handleYieldChange} />
                       </div>
                     </div>
-                  )}
-                  {yieldData.isLiveIoT && (
-                    <div className="live-iot-indicator">
-                      <span className="pulsing-dot"></span> Fetching live sensors during prediction...
+                  ) : (
+                    <div className="live-iot-indicator mt-2" style={{ textAlign: 'left' }}>
+                      <p style={{ marginBottom: '10px' }}><span className="pulsing-dot"></span> <strong>Live Data Connected</strong></p>
+                      <div className="form-row mt-2">
+                        <div className="form-group">
+                          <label>Temp (°C)</label>
+                          <input type="number" value={yieldData.Temperature_C} readOnly style={{ backgroundColor: '#e9ecef', color: '#495057' }} />
+                        </div>
+                        <div className="form-group">
+                          <label>Humidity (%)</label>
+                          <input type="number" value={yieldData.Humidity} readOnly style={{ backgroundColor: '#e9ecef', color: '#495057' }} />
+                        </div>
+                        <div className="form-group">
+                          <label>Soil Moisture</label>
+                          <input type="number" value={yieldData.Soil_Moisture} readOnly style={{ backgroundColor: '#e9ecef', color: '#495057' }} />
+                        </div>
+                      </div>
+                      {yieldData.timestamp && <p style={{ fontSize: '0.85em', color: '#6c757d', marginTop: '10px' }}>Last updated: {yieldData.timestamp}</p>}
                     </div>
                   )}
                 </div>

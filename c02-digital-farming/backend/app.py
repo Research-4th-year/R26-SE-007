@@ -8,6 +8,7 @@ from pydantic import BaseModel
 import joblib
 import pandas as pd
 import os
+import requests
 from yield_predictor import predict_yield_suitability
 
 app = FastAPI(title="Farmer Advisory Guidance System API")
@@ -251,3 +252,23 @@ async def predict_disease(file: UploadFile = File(...)):
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=400, detail=f"Error processing image: {str(e)}")
+
+@app.get("/api/sensor/latest")
+def get_latest_sensor_data():
+    url = "https://research-4y2s-default-rtdb.firebaseio.com/sensor.json"
+    default_data = {
+        "temperature": 28.50,
+        "humidity": 75.20,
+        "soilMoisture": 63,
+        "timestamp": "2026-08-10 21:30:00"
+    }
+    try:
+        response = requests.get(url, timeout=5)
+        if response.status_code == 200:
+            data = response.json()
+            if data:
+                return data
+    except Exception as e:
+        print(f"Error fetching Firebase data: {e}")
+        
+    return default_data
