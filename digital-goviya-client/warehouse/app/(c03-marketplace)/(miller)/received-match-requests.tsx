@@ -51,6 +51,8 @@ interface FarmerSummary {
   location: string;
 }
 
+type RequestTypeFilter = "received" | "sent";
+
 /* ------------------------------------------------------------------ */
 /*  Small animation helpers — purely presentational, no logic changes  */
 /* ------------------------------------------------------------------ */
@@ -123,6 +125,9 @@ export default function ReceivedMatchRequestsScreen() {
   const [errorMessage, setErrorMessage] =
     useState<string | null>(null);
 
+  const [requestType, setRequestType] =
+    useState<RequestTypeFilter>("received");
+
   const loadSelections = useCallback(
     async (
       showRefreshIndicator = false
@@ -175,6 +180,28 @@ export default function ReceivedMatchRequestsScreen() {
           ).getTime()
       ),
     [selections]
+  );
+
+  const receivedCount = useMemo(
+    () =>
+      sortedSelections.filter(
+        (selection) =>
+          selection.initiatedBy === "farmer"
+      ).length,
+    [sortedSelections]
+  );
+
+  const sentCount =
+    sortedSelections.length - receivedCount;
+
+  const filteredSelections = useMemo(
+    () =>
+      sortedSelections.filter((selection) =>
+        requestType === "received"
+          ? selection.initiatedBy === "farmer"
+          : selection.initiatedBy !== "farmer"
+      ),
+    [sortedSelections, requestType]
   );
 
   const pendingCount =
@@ -275,6 +302,13 @@ export default function ReceivedMatchRequestsScreen() {
               totalCount={sortedSelections.length}
             />
 
+            <RequestTypeToggle
+              value={requestType}
+              onChange={setRequestType}
+              receivedCount={receivedCount}
+              sentCount={sentCount}
+            />
+
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>
                 Matching activity
@@ -292,33 +326,37 @@ export default function ReceivedMatchRequestsScreen() {
               </View>
             </View>
 
-            <View style={styles.requestList}>
-              {sortedSelections.map(
-                (selection, index) => (
-                  <MillerRequestCard
-                    key={selection._id}
-                    selection={selection}
-                    index={index}
-                    processing={
-                      processingId ===
-                      selection._id
-                    }
-                    onAccept={() =>
-                      void respond(
-                        selection._id,
-                        "accepted"
-                      )
-                    }
-                    onReject={() =>
-                      void respond(
-                        selection._id,
-                        "rejected"
-                      )
-                    }
-                  />
-                )
-              )}
-            </View>
+            {filteredSelections.length === 0 ? (
+              <FilteredEmptyState type={requestType} />
+            ) : (
+              <View style={styles.requestList}>
+                {filteredSelections.map(
+                  (selection, index) => (
+                    <MillerRequestCard
+                      key={selection._id}
+                      selection={selection}
+                      index={index}
+                      processing={
+                        processingId ===
+                        selection._id
+                      }
+                      onAccept={() =>
+                        void respond(
+                          selection._id,
+                          "accepted"
+                        )
+                      }
+                      onReject={() =>
+                        void respond(
+                          selection._id,
+                          "rejected"
+                        )
+                      }
+                    />
+                  )
+                )}
+              </View>
+            )}
           </>
         )}
       </ScrollView>
@@ -499,6 +537,132 @@ function SummaryMetric({
 
       <Text style={styles.summaryLabel}>{label}</Text>
     </View>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Received / Sent segmented filter                                   */
+/*  One rounded rectangle, split into two clickable halves.            */
+/* ------------------------------------------------------------------ */
+
+function RequestTypeToggle({
+  value,
+  onChange,
+  receivedCount,
+  sentCount,
+}: {
+  value: RequestTypeFilter;
+  onChange: (value: RequestTypeFilter) => void;
+  receivedCount: number;
+  sentCount: number;
+}) {
+  const entrance = useEntrance(80);
+
+  const receivedActive = value === "received";
+  const sentActive = value === "sent";
+
+  return (
+    <Animated.View
+      style={[styles.typeToggle, entrance]}
+    >
+      <Pressable
+        onPress={() => onChange("received")}
+        accessibilityRole="button"
+        accessibilityLabel="Show received requests"
+        style={[
+          styles.typeToggleHalf,
+          receivedActive &&
+            styles.typeToggleHalfActive,
+        ]}
+      >
+        <Ionicons
+          name="arrow-down-outline"
+          size={14}
+          color={
+            receivedActive
+              ? "#FFFFFF"
+              : "#92400E"
+          }
+        />
+
+        <Text
+          style={[
+            styles.typeToggleText,
+            receivedActive &&
+              styles.typeToggleTextActive,
+          ]}
+        >
+          Received
+        </Text>
+
+        <View
+          style={[
+            styles.typeToggleCount,
+            receivedActive &&
+              styles.typeToggleCountActive,
+          ]}
+        >
+          <Text
+            style={[
+              styles.typeToggleCountText,
+              receivedActive &&
+                styles.typeToggleCountTextActive,
+            ]}
+          >
+            {receivedCount}
+          </Text>
+        </View>
+      </Pressable>
+
+      <Pressable
+        onPress={() => onChange("sent")}
+        accessibilityRole="button"
+        accessibilityLabel="Show sent requests"
+        style={[
+          styles.typeToggleHalf,
+          sentActive &&
+            styles.typeToggleHalfActive,
+        ]}
+      >
+        <Ionicons
+          name="arrow-up-outline"
+          size={14}
+          color={
+            sentActive
+              ? "#FFFFFF"
+              : "#64748B"
+          }
+        />
+
+        <Text
+          style={[
+            styles.typeToggleText,
+            sentActive &&
+              styles.typeToggleTextActive,
+          ]}
+        >
+          Sent
+        </Text>
+
+        <View
+          style={[
+            styles.typeToggleCount,
+            sentActive &&
+              styles.typeToggleCountActive,
+          ]}
+        >
+          <Text
+            style={[
+              styles.typeToggleCountText,
+              sentActive &&
+                styles.typeToggleCountTextActive,
+            ]}
+          >
+            {sentCount}
+          </Text>
+        </View>
+      </Pressable>
+    </Animated.View>
   );
 }
 
@@ -980,6 +1144,43 @@ function EmptyState() {
   );
 }
 
+function FilteredEmptyState({
+  type,
+}: {
+  type: RequestTypeFilter;
+}) {
+  const entrance = useEntrance(0);
+
+  return (
+    <Animated.View
+      style={[styles.filteredEmpty, entrance]}
+    >
+      <View style={styles.filteredEmptyIcon}>
+        <Ionicons
+          name={
+            type === "received"
+              ? "arrow-down-outline"
+              : "arrow-up-outline"
+          }
+          size={26}
+          color="#92400E"
+        />
+      </View>
+
+      <Text style={styles.filteredEmptyTitle}>
+        No {type === "received" ? "received" : "sent"}{" "}
+        requests
+      </Text>
+
+      <Text style={styles.filteredEmptyText}>
+        {type === "received"
+          ? "Requests farmers send you will show up here."
+          : "Requests you send to farmers will show up here."}
+      </Text>
+    </Animated.View>
+  );
+}
+
 function ErrorState({
   message,
   onRetry,
@@ -1223,7 +1424,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFBEB",
     borderWidth: 1,
     borderColor: "#FDE68A",
-    marginBottom: 23,
+    marginBottom: 16,
   },
 
   summaryMetric: {
@@ -1257,6 +1458,71 @@ const styles = StyleSheet.create({
     width: 1,
     height: 49,
     backgroundColor: "#FDE68A",
+  },
+
+  /* Received / Sent segmented toggle */
+
+  typeToggle: {
+    flexDirection: "row",
+    borderRadius: 16,
+    padding: 4,
+    backgroundColor: "#F5F1E8",
+    borderWidth: 1,
+    borderColor: BORDER,
+    marginBottom: 23,
+  },
+
+  typeToggleHalf: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    minHeight: 42,
+    borderRadius: 12,
+  },
+
+  typeToggleHalfActive: {
+    backgroundColor: "#92400E",
+    shadowColor: "#92400E",
+    shadowOpacity: 0.28,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 2,
+  },
+
+  typeToggleText: {
+    color: "#5C4A2E",
+    fontSize: 11,
+    fontWeight: "800",
+  },
+
+  typeToggleTextActive: {
+    color: "#FFFFFF",
+  },
+
+  typeToggleCount: {
+    minWidth: 20,
+    borderRadius: 999,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(146,64,14,0.12)",
+  },
+
+  typeToggleCountActive: {
+    backgroundColor: "rgba(255,255,255,0.22)",
+  },
+
+  typeToggleCountText: {
+    color: "#92400E",
+    fontSize: 9,
+    fontWeight: "800",
+  },
+
+  typeToggleCountTextActive: {
+    color: "#FFFFFF",
   },
 
   sectionHeader: {
@@ -1659,6 +1925,43 @@ const styles = StyleSheet.create({
 
   disabled: {
     opacity: 0.55,
+  },
+
+  /* Filtered (Received/Sent) empty state */
+
+  filteredEmpty: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 46,
+    paddingHorizontal: 26,
+    borderRadius: 22,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: BORDER,
+  },
+
+  filteredEmptyIcon: {
+    width: 58,
+    height: 58,
+    borderRadius: 19,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FEF3C7",
+  },
+
+  filteredEmptyTitle: {
+    color: "#231708",
+    fontSize: 14,
+    fontWeight: "800",
+    marginTop: 13,
+  },
+
+  filteredEmptyText: {
+    color: "#8A8371",
+    fontSize: 10,
+    marginTop: 5,
+    textAlign: "center",
+    lineHeight: 15,
   },
 
   /* Skeleton loading state */

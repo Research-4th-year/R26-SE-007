@@ -1,6 +1,13 @@
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect } from "expo-router";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useFonts,
+  Poppins_800ExtraBold,
+  Poppins_700Bold,
+  Poppins_600SemiBold,
+  Poppins_500Medium,
+} from "@expo-google-fonts/poppins";
 import {
   ActivityIndicator,
   Animated,
@@ -10,16 +17,16 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
 import {
-  useFonts,
-  Poppins_800ExtraBold,
-  Poppins_700Bold,
-  Poppins_600SemiBold,
-  Poppins_500Medium,
-} from "@expo-google-fonts/poppins";
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import { demandService } from "@/services/c03-marketplace/demand.service";
 import { getApiErrorMessage } from "@/utils/c03-marketplace/getApiErrorMessage";
@@ -28,16 +35,102 @@ import type {
   MillerDemand,
 } from "@/types/c03-marketplace/demand.types";
 
+type DemandStatusFilter =
+  | "all"
+  | "active"
+  | DemandStatus;
+
+type PaddyFilter =
+  | "all"
+  | "nadu"
+  | "samba"
+  | "keeri samba";
+
+type SortOption =
+  | "newest"
+  | "oldest"
+  | "quantity_high"
+  | "quantity_low"
+  | "price_high"
+  | "price_low";
+
+type ViewMode = "cards" | "compact";
+
+/* ------------------------------------------------------------------ */
+/*  THEME                                                             */
+/*  Same base palette as before, extended with a few derived tones    */
+/*  so the same colors can be reused with more depth across the UI.   */
+/* ------------------------------------------------------------------ */
 const CREAM = "#FBF8F1";
 const CARD_BORDER = "#ECE6D6";
 const INK = "#16241C";
 const INK_MUTED = "#7A7364";
 
+const SURFACE = "#FFFFFF";
+const SURFACE_ALT = "#FAFAF7";
+const SURFACE_TINT = "#FEF3C7";
+
+const ACCENT = "#92400E";
+const ACCENT_DARK = "#78350F";
+const ACCENT_LIGHT = "#FDE68A";
+const GOLD = "#F5C542";
+
+const PADDY_FILTERS: Array<{
+  label: string;
+  value: PaddyFilter;
+}> = [
+  { label: "All varieties", value: "all" },
+  { label: "Nadu", value: "nadu" },
+  { label: "Samba", value: "samba" },
+  { label: "Keeri Samba", value: "keeri samba" },
+];
+
+const SORT_OPTIONS: Array<{
+  label: string;
+  value: SortOption;
+}> = [
+  { label: "Newest", value: "newest" },
+  { label: "Oldest", value: "oldest" },
+  {
+    label: "Highest quantity",
+    value: "quantity_high",
+  },
+  {
+    label: "Lowest quantity",
+    value: "quantity_low",
+  },
+  {
+    label: "Highest price",
+    value: "price_high",
+  },
+  {
+    label: "Lowest price",
+    value: "price_low",
+  },
+];
+
 export default function MyDemandsScreen() {
-  const [demands, setDemands] = useState<MillerDemand[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [demands, setDemands] =
+    useState<MillerDemand[]>([]);
+  const [loading, setLoading] =
+    useState(true);
+  const [refreshing, setRefreshing] =
+    useState(false);
+  const [errorMessage, setErrorMessage] =
+    useState<string | null>(null);
+
+  const [searchQuery, setSearchQuery] =
+    useState("");
+  const [statusFilter, setStatusFilter] =
+    useState<DemandStatusFilter>("all");
+  const [paddyFilter, setPaddyFilter] =
+    useState<PaddyFilter>("all");
+  const [sortOption, setSortOption] =
+    useState<SortOption>("newest");
+  const [viewMode, setViewMode] =
+    useState<ViewMode>("cards");
+  const [filtersOpen, setFiltersOpen] =
+    useState(false);
 
   const [fontsLoaded] = useFonts({
     Poppins_800ExtraBold,
@@ -46,26 +139,48 @@ export default function MyDemandsScreen() {
     Poppins_500Medium,
   });
 
-  const loadDemands = useCallback(async (showRefreshIndicator = false) => {
-    try {
-      setErrorMessage(null);
+  const fade =
+    useRef(
+      new Animated.Value(0)
+    ).current;
 
-      if (showRefreshIndicator) {
-        setRefreshing(true);
-      } else {
-        setLoading(true);
+  const rise =
+    useRef(
+      new Animated.Value(14)
+    ).current;
+
+  const loadDemands = useCallback(
+    async (
+      showRefreshIndicator = false
+    ) => {
+      try {
+        setErrorMessage(null);
+
+        if (showRefreshIndicator) {
+          setRefreshing(true);
+        } else {
+          setLoading(true);
+        }
+
+        const response =
+          await demandService.getMyDemands();
+
+        setDemands(
+          Array.isArray(response.data)
+            ? response.data
+            : []
+        );
+      } catch (error) {
+        setErrorMessage(
+          getApiErrorMessage(error)
+        );
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
       }
-
-      const response = await demandService.getMyDemands();
-
-      setDemands(Array.isArray(response.data) ? response.data : []);
-    } catch (error) {
-      setErrorMessage(getApiErrorMessage(error));
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, []);
+    },
+    []
+  );
 
   useFocusEffect(
     useCallback(() => {
@@ -73,58 +188,173 @@ export default function MyDemandsScreen() {
     }, [loadDemands])
   );
 
-  const sortedDemands = useMemo(() => {
-    return [...demands].sort(
-      (first, second) =>
-        new Date(second.createdAt).getTime() -
-        new Date(first.createdAt).getTime()
-    );
-  }, [demands]);
-
-  // Derived, display-only stat counts for the summary strip.
-  const statCounts = useMemo(() => {
-    const counts = {
-      open: 0,
-      negotiating: 0,
-      agreed: 0,
-    };
-
-    for (const demand of demands) {
-      if (demand.status === "open") counts.open += 1;
-      else if (
-        demand.status === "negotiation_ready" ||
-        demand.status === "negotiating"
-      )
-        counts.negotiating += 1;
-      else if (demand.status === "agreement_reached") counts.agreed += 1;
+  useEffect(() => {
+    if (!fontsLoaded || loading) {
+      return;
     }
 
-    return counts;
-  }, [demands]);
+    fade.setValue(0);
+    rise.setValue(14);
 
-  // Entrance animation — presentation only, mirrors the other marketplace screens.
-  const cardsFade = useRef(new Animated.Value(0)).current;
-  const cardsRise = useRef(new Animated.Value(14)).current;
-
-  useEffect(() => {
-    if (!fontsLoaded || loading) return;
-    cardsFade.setValue(0);
-    cardsRise.setValue(14);
     Animated.parallel([
-      Animated.timing(cardsFade, {
+      Animated.timing(fade, {
         toValue: 1,
         duration: 380,
         useNativeDriver: true,
       }),
-      Animated.timing(cardsRise, {
+      Animated.timing(rise, {
         toValue: 0,
         duration: 380,
         useNativeDriver: true,
       }),
     ]).start();
-  }, [fontsLoaded, loading]);
+  }, [fontsLoaded, loading, fade, rise]);
 
-  if (!fontsLoaded) return null;
+  const stats = useMemo(() => {
+    return demands.reduce(
+      (result, demand) => {
+        result.total += 1;
+
+        if (demand.status === "open") {
+          result.open += 1;
+        } else if (
+          demand.status ===
+            "negotiation_ready" ||
+          demand.status === "negotiating"
+        ) {
+          result.negotiating += 1;
+        } else if (
+          demand.status ===
+          "agreement_reached"
+        ) {
+          result.agreed += 1;
+        }
+
+        return result;
+      },
+      {
+        total: 0,
+        open: 0,
+        negotiating: 0,
+        agreed: 0,
+      }
+    );
+  }, [demands]);
+
+  const filteredDemands = useMemo(() => {
+    const normalizedQuery =
+      searchQuery.trim().toLowerCase();
+
+    const result = demands.filter(
+      (demand) => {
+        const matchesStatus =
+          statusFilter === "all" ||
+          (statusFilter === "active"
+            ? demand.status === "negotiation_ready" ||
+              demand.status === "negotiating"
+            : demand.status === statusFilter);
+
+        const matchesPaddy =
+          paddyFilter === "all" ||
+          demand.paddyType
+            .trim()
+            .toLowerCase() === paddyFilter;
+
+        const searchableText = [
+          demand.paddyType,
+          demand.status,
+          String(demand.quantityNeeded),
+          String(demand.offeredPrice),
+        ]
+          .join(" ")
+          .toLowerCase();
+
+        const matchesSearch =
+          !normalizedQuery ||
+          searchableText.includes(
+            normalizedQuery
+          );
+
+        return (
+          matchesStatus &&
+          matchesPaddy &&
+          matchesSearch
+        );
+      }
+    );
+
+    return [...result].sort(
+      (first, second) => {
+        switch (sortOption) {
+          case "oldest":
+            return (
+              new Date(first.createdAt).getTime() -
+              new Date(second.createdAt).getTime()
+            );
+
+          case "quantity_high":
+            return (
+              Number(
+                second.quantityNeeded
+              ) -
+              Number(
+                first.quantityNeeded
+              )
+            );
+
+          case "quantity_low":
+            return (
+              Number(
+                first.quantityNeeded
+              ) -
+              Number(
+                second.quantityNeeded
+              )
+            );
+
+          case "price_high":
+            return (
+              Number(second.offeredPrice) -
+              Number(first.offeredPrice)
+            );
+
+          case "price_low":
+            return (
+              Number(first.offeredPrice) -
+              Number(second.offeredPrice)
+            );
+
+          case "newest":
+          default:
+            return (
+              new Date(second.createdAt).getTime() -
+              new Date(first.createdAt).getTime()
+            );
+        }
+      }
+    );
+  }, [
+    demands,
+    searchQuery,
+    statusFilter,
+    paddyFilter,
+    sortOption,
+  ]);
+
+  const activeFilterCount =
+    (statusFilter !== "all" ? 1 : 0) +
+    (paddyFilter !== "all" ? 1 : 0);
+
+  const clearFilters = () => {
+    setSearchQuery("");
+    setStatusFilter("all");
+    setPaddyFilter("all");
+    setSortOption("newest");
+  };
+
+  if (!fontsLoaded) {
+    return null;
+  }
 
   if (loading) {
     return <LoadingState />;
@@ -140,197 +370,683 @@ export default function MyDemandsScreen() {
             pressed && styles.pressed,
           ]}
         >
-          <Ionicons name="arrow-back" size={20} color="#78350F" />
+          <Ionicons
+            name="arrow-back"
+            size={20}
+            color={ACCENT_DARK}
+          />
         </Pressable>
 
         <View style={styles.headerText}>
-          <Text style={styles.headerTitle}>My Demands</Text>
-
-          <Text style={styles.headerSubtitle}>
-            {sortedDemands.length} published
+          <Text style={styles.headerTitle}>
+            My Demands
           </Text>
+          <View style={styles.headerSubtitleRow}>
+            <View style={styles.headerSubtitleDot} />
+            <Text style={styles.headerSubtitle}>
+              {stats.total} published
+            </Text>
+          </View>
         </View>
 
         <Pressable
-          onPress={() => router.push("./create-demand")}
+          onPress={() =>
+            router.push("./create-demand")
+          }
           style={({ pressed }) => [
             styles.addShadow,
             pressed && styles.pressed,
           ]}
         >
           <LinearGradient
-            colors={["#FDE68A", "#F5C542"]}
+            colors={[ACCENT_LIGHT, GOLD]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.addButton}
           >
-            <Ionicons name="add" size={22} color="#78350F" />
+            <Ionicons
+              name="add"
+              size={22}
+              color={ACCENT_DARK}
+            />
           </LinearGradient>
         </Pressable>
       </View>
 
-      <ScrollView
-        contentContainerStyle={[
-          styles.content,
-          sortedDemands.length === 0 && styles.emptyContent,
+      <Animated.View
+        style={[
+          styles.animatedFlex,
+          {
+            opacity: fade,
+            transform: [{ translateY: rise }],
+          },
         ]}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={() => void loadDemands(true)}
-            colors={["#92400E"]}
-            tintColor="#92400E"
-          />
-        }
       >
-        {errorMessage ? (
-          <ErrorState message={errorMessage} onRetry={() => void loadDemands()} />
-        ) : sortedDemands.length === 0 ? (
-          <EmptyState />
-        ) : (
-          <Animated.View
-            style={{
-              opacity: cardsFade,
-              transform: [{ translateY: cardsRise }],
-            }}
-          >
-            {/* Portfolio summary hero */}
-            <LinearGradient
-              colors={["#92400E", "#78350F"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.summaryHero}
-            >
-              <View style={styles.summaryHeroTopRow}>
-                <View style={styles.summaryHeroIcon}>
-                  <Ionicons name="analytics-outline" size={22} color="#FFFFFF" />
+        <ScrollView
+          contentContainerStyle={[
+            styles.content,
+            demands.length === 0 &&
+              styles.emptyContent,
+          ]}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={() =>
+                void loadDemands(true)
+              }
+              colors={[ACCENT]}
+              tintColor={ACCENT}
+            />
+          }
+        >
+          {errorMessage ? (
+            <ErrorState
+              message={errorMessage}
+              onRetry={() =>
+                void loadDemands()
+              }
+            />
+          ) : demands.length === 0 ? (
+            <EmptyState />
+          ) : (
+            <>
+              <LinearGradient
+                colors={[ACCENT, ACCENT_DARK]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.summaryHero}
+              >
+                <View
+                  style={styles.summaryHeroDecoCircleOne}
+                  pointerEvents="none"
+                />
+                <View
+                  style={styles.summaryHeroDecoCircleTwo}
+                  pointerEvents="none"
+                />
+
+                <View style={styles.summaryHeroTopRow}>
+                  <View style={styles.summaryHeroIcon}>
+                    <Ionicons
+                      name="analytics-outline"
+                      size={22}
+                      color={SURFACE}
+                    />
+                  </View>
+
+                  <View
+                    style={
+                      styles.summaryHeroTextArea
+                    }
+                  >
+                    <Text
+                      style={
+                        styles.summaryHeroEyebrow
+                      }
+                    >
+                      DEMAND PORTFOLIO
+                    </Text>
+                    <Text
+                      style={
+                        styles.summaryHeroTitle
+                      }
+                    >
+                      Manage purchasing requirements
+                    </Text>
+                  </View>
                 </View>
 
-                <View style={styles.summaryHeroTextArea}>
-                  <Text style={styles.summaryHeroEyebrow}>DEMAND PORTFOLIO</Text>
-                  <Text style={styles.summaryHeroTitle}>
-                    {sortedDemands.length} requirement
-                    {sortedDemands.length === 1 ? "" : "s"} tracked
+                <View style={styles.statChipRow}>
+                  <StatChip
+                    label="Total"
+                    value={stats.total}
+                    icon="layers-outline"
+                    selected={statusFilter === "all"}
+                    onPress={() =>
+                      setStatusFilter("all")
+                    }
+                  />
+                  <StatChip
+                    label="Open"
+                    value={stats.open}
+                    icon="radio-button-on-outline"
+                    selected={statusFilter === "open"}
+                    onPress={() =>
+                      setStatusFilter("open")
+                    }
+                  />
+                  <StatChip
+                    label="Active"
+                    value={stats.negotiating}
+                    icon="pulse-outline"
+                    selected={statusFilter === "active"}
+                    onPress={() =>
+                      setStatusFilter("active")
+                    }
+                  />
+                  <StatChip
+                    label="Agreed"
+                    value={stats.agreed}
+                    icon="checkmark-done-outline"
+                    selected={
+                      statusFilter ===
+                      "agreement_reached"
+                    }
+                    onPress={() =>
+                      setStatusFilter(
+                        "agreement_reached"
+                      )
+                    }
+                  />
+                </View>
+              </LinearGradient>
+
+              <View style={styles.searchRow}>
+                <View style={styles.searchBox}>
+                  <View style={styles.searchIconWrap}>
+                    <Ionicons
+                      name="search-outline"
+                      size={17}
+                      color={ACCENT}
+                    />
+                  </View>
+
+                  <TextInput
+                    value={searchQuery}
+                    onChangeText={setSearchQuery}
+                    placeholder="Search paddy, status, quantity..."
+                    placeholderTextColor="#A8A091"
+                    style={styles.searchInput}
+                    autoCapitalize="none"
+                    returnKeyType="search"
+                  />
+
+                  {searchQuery.length > 0 ? (
+                    <Pressable
+                      onPress={() =>
+                        setSearchQuery("")
+                      }
+                    >
+                      <Ionicons
+                        name="close-circle"
+                        size={18}
+                        color="#A8A091"
+                      />
+                    </Pressable>
+                  ) : null}
+                </View>
+
+                <Pressable
+                  onPress={() =>
+                    setFiltersOpen(
+                      (current) => !current
+                    )
+                  }
+                  style={[
+                    styles.filterButton,
+                    (filtersOpen ||
+                      activeFilterCount > 0) &&
+                      styles.filterButtonActive,
+                  ]}
+                >
+                  <Ionicons
+                    name="options-outline"
+                    size={19}
+                    color={
+                      filtersOpen ||
+                      activeFilterCount > 0
+                        ? SURFACE
+                        : ACCENT
+                    }
+                  />
+
+                  {activeFilterCount > 0 ? (
+                    <View
+                      style={
+                        styles.filterCountBadge
+                      }
+                    >
+                      <Text
+                        style={
+                          styles.filterCountText
+                        }
+                      >
+                        {activeFilterCount}
+                      </Text>
+                    </View>
+                  ) : null}
+                </Pressable>
+              </View>
+
+              {filtersOpen ? (
+                <View
+                  style={
+                    styles.filterPanel
+                  }
+                >
+                  <View
+                    style={
+                      styles.filterPanelHeader
+                    }
+                  >
+                    <View>
+                      <Text
+                        style={
+                          styles.filterPanelTitle
+                        }
+                      >
+                        Refine results
+                      </Text>
+                      <Text
+                        style={
+                          styles.filterPanelSubtitle
+                        }
+                      >
+                        Variety and sorting options
+                      </Text>
+                    </View>
+
+                    <Pressable
+                      onPress={clearFilters}
+                      style={styles.clearFiltersButton}
+                    >
+                      <Text
+                        style={
+                          styles.clearFiltersText
+                        }
+                      >
+                        Clear all
+                      </Text>
+                    </Pressable>
+                  </View>
+
+                  <Text
+                    style={
+                      styles.filterLabel
+                    }
+                  >
+                    Paddy variety
                   </Text>
+
+                  <View
+                    style={styles.wrapRow}
+                  >
+                    {PADDY_FILTERS.map(
+                      (item) => {
+                        const selected =
+                          paddyFilter ===
+                          item.value;
+
+                        return (
+                          <Pressable
+                            key={item.value}
+                            onPress={() =>
+                              setPaddyFilter(
+                                item.value
+                              )
+                            }
+                            style={[
+                              styles.optionChip,
+                              selected &&
+                                styles.optionChipSelected,
+                            ]}
+                          >
+                            <Text
+                              style={[
+                                styles.optionChipText,
+                                selected &&
+                                  styles.optionChipTextSelected,
+                              ]}
+                            >
+                              {item.label}
+                            </Text>
+                          </Pressable>
+                        );
+                      }
+                    )}
+                  </View>
+
+                  <View style={styles.filterDivider} />
+
+                  <Text
+                    style={[
+                      styles.filterLabel,
+                      {
+                        marginTop: 3,
+                      },
+                    ]}
+                  >
+                    Sort by
+                  </Text>
+
+                  <View
+                    style={styles.wrapRow}
+                  >
+                    {SORT_OPTIONS.map(
+                      (item) => {
+                        const selected =
+                          sortOption ===
+                          item.value;
+
+                        return (
+                          <Pressable
+                            key={item.value}
+                            onPress={() =>
+                              setSortOption(
+                                item.value
+                              )
+                            }
+                            style={[
+                              styles.optionChip,
+                              selected &&
+                                styles.optionChipSelected,
+                            ]}
+                          >
+                            <Text
+                              style={[
+                                styles.optionChipText,
+                                selected &&
+                                  styles.optionChipTextSelected,
+                              ]}
+                            >
+                              {item.label}
+                            </Text>
+                          </Pressable>
+                        );
+                      }
+                    )}
+                  </View>
+                </View>
+              ) : null}
+
+              <View
+                style={
+                  styles.resultsToolbar
+                }
+              >
+                <View style={styles.resultsToolbarLeft}>
+                  <View style={styles.sectionAccentBar} />
+                  <View>
+                    <Text
+                      style={
+                        styles.sectionTitle
+                      }
+                    >
+                      Demands
+                    </Text>
+                    <Text
+                      style={
+                        styles.resultMeta
+                      }
+                    >
+                      {filteredDemands.length} of{" "}
+                      {demands.length} shown
+                    </Text>
+                  </View>
+                </View>
+
+                <View
+                  style={styles.viewToggle}
+                >
+                  <Pressable
+                    onPress={() =>
+                      setViewMode("cards")
+                    }
+                    style={[
+                      styles.viewToggleButton,
+                      viewMode === "cards" &&
+                        styles.viewToggleButtonActive,
+                    ]}
+                  >
+                    <Ionicons
+                      name="albums-outline"
+                      size={17}
+                      color={
+                        viewMode ===
+                        "cards"
+                          ? SURFACE
+                          : INK_MUTED
+                      }
+                    />
+                  </Pressable>
+
+                  <Pressable
+                    onPress={() =>
+                      setViewMode("compact")
+                    }
+                    style={[
+                      styles.viewToggleButton,
+                      viewMode === "compact" &&
+                        styles.viewToggleButtonActive,
+                    ]}
+                  >
+                    <Ionicons
+                      name="list-outline"
+                      size={18}
+                      color={
+                        viewMode ===
+                        "compact"
+                          ? SURFACE
+                          : INK_MUTED
+                      }
+                    />
+                  </Pressable>
                 </View>
               </View>
 
-              <View style={styles.statChipRow}>
-                <StatChip
-                  icon="radio-button-on-outline"
-                  label="Open"
-                  value={statCounts.open}
+              {filteredDemands.length ===
+              0 ? (
+                <FilteredEmptyState
+                  onClear={clearFilters}
                 />
-                <StatChip
-                  icon="chatbubbles-outline"
-                  label="Negotiating"
-                  value={statCounts.negotiating}
-                />
-                <StatChip
-                  icon="checkmark-done-outline"
-                  label="Agreed"
-                  value={statCounts.agreed}
-                />
-              </View>
-            </LinearGradient>
-
-            {/* Ticket perforation — signature motif shared across the marketplace */}
-            <View style={styles.perforationRow}>
-              <View style={styles.perforationNotchLeft} />
-              <View style={styles.perforationLine} />
-              <View style={styles.perforationNotchRight} />
-            </View>
-
-            <View style={styles.listHeader}>
-              <Text style={styles.sectionTitle}>Recent demands</Text>
-              <View style={styles.refreshHintRow}>
-                <Ionicons name="arrow-down-circle-outline" size={12} color="#B7AF9C" />
-                <Text style={styles.refreshHint}>Pull to refresh</Text>
-              </View>
-            </View>
-
-            <View style={styles.list}>
-              {sortedDemands.map((demand) => (
-                <DemandCard key={demand._id} demand={demand} />
-              ))}
-            </View>
-          </Animated.View>
-        )}
-      </ScrollView>
+              ) : (
+                <View style={styles.list}>
+                  {filteredDemands.map(
+                    (demand) =>
+                      viewMode ===
+                      "compact" ? (
+                        <CompactDemandCard
+                          key={demand._id}
+                          demand={demand}
+                        />
+                      ) : (
+                        <DemandCard
+                          key={demand._id}
+                          demand={demand}
+                        />
+                      )
+                  )}
+                </View>
+              )}
+            </>
+          )}
+        </ScrollView>
+      </Animated.View>
     </SafeAreaView>
   );
 }
 
-interface StatChipProps {
-  icon: keyof typeof Ionicons.glyphMap;
+function StatChip({
+  label,
+  value,
+  icon,
+  selected = false,
+  onPress,
+}: {
   label: string;
   value: number;
-}
-
-function StatChip({ icon, label, value }: StatChipProps) {
+  icon: keyof typeof Ionicons.glyphMap;
+  selected?: boolean;
+  onPress?: () => void;
+}) {
   return (
-    <View style={styles.statChip}>
-      <Ionicons name={icon} size={13} color="#FDE68A" />
-      <Text style={styles.statChipValue}>{value}</Text>
-      <Text style={styles.statChipLabel}>{label}</Text>
-    </View>
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`Filter demands by ${label}`}
+      style={({ pressed }) => [
+        styles.statChip,
+        selected && styles.statChipSelected,
+        pressed && styles.pressed,
+      ]}
+    >
+      <Ionicons
+        name={icon}
+        size={12}
+        color={
+          selected
+            ? "#FFFFFF"
+            : "rgba(255,255,255,0.75)"
+        }
+        style={styles.statChipIcon}
+      />
+      <Text
+        style={[
+          styles.statChipValue,
+          selected && styles.statChipValueSelected,
+        ]}
+      >
+        {value}
+      </Text>
+      <Text
+        style={[
+          styles.statChipLabel,
+          selected && styles.statChipLabelSelected,
+        ]}
+      >
+        {label}
+      </Text>
+    </Pressable>
   );
 }
 
-interface DemandCardProps {
+function DemandCard({
+  demand,
+}: {
   demand: MillerDemand;
-}
+}) {
+  const visual = getStatusStyle(demand.status);
 
-function DemandCard({ demand }: DemandCardProps) {
   return (
     <View style={styles.demandCard}>
+      <View
+        style={[
+          styles.demandCardAccentBar,
+          { backgroundColor: visual.text },
+        ]}
+      />
+
       <View style={styles.cardHeader}>
-        <View style={styles.paddyIcon}>
-          <Ionicons name="leaf-outline" size={21} color="#92400E" />
+        <LinearGradient
+          colors={[SURFACE_TINT, ACCENT_LIGHT]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.paddyIcon}
+        >
+          <Ionicons
+            name="leaf-outline"
+            size={21}
+            color={ACCENT}
+          />
+        </LinearGradient>
+
+        <View
+          style={styles.cardTitleArea}
+        >
+          <Text style={styles.paddyTitle}>
+            {formatLabel(
+              demand.paddyType
+            )}
+          </Text>
+          <View style={styles.createdDateRow}>
+            <Ionicons
+              name="time-outline"
+              size={10}
+              color="#B7AF9C"
+            />
+            <Text
+              style={styles.createdDate}
+            >
+              {formatDate(
+                demand.createdAt
+              )}
+            </Text>
+          </View>
         </View>
 
-        <View style={styles.cardTitleArea}>
-          <Text style={styles.paddyTitle}>{formatLabel(demand.paddyType)}</Text>
-
-          <Text style={styles.createdDate}>{formatDate(demand.createdAt)}</Text>
-        </View>
-
-        <DemandStatusBadge status={demand.status} />
+        <DemandStatusBadge
+          status={demand.status}
+        />
       </View>
 
-      <View style={styles.metricContainer}>
+      <View
+        style={styles.metricContainer}
+      >
         <View style={styles.metric}>
           <View style={styles.metricIcon}>
-            <Ionicons name="cube-outline" size={17} color="#78350F" />
+            <Ionicons
+              name="cube-outline"
+              size={17}
+              color={ACCENT_DARK}
+            />
           </View>
 
           <View>
-            <Text style={styles.metricLabel}>Quantity needed</Text>
-
-            <Text style={styles.metricValue}>
-              {formatNumber(demand.quantityNeeded)} kg
+            <Text
+              style={styles.metricLabel}
+            >
+              Quantity needed
+            </Text>
+            <Text
+              style={styles.metricValue}
+            >
+              {formatNumber(
+                demand.quantityNeeded
+              )}{" "}
+              kg
             </Text>
           </View>
         </View>
 
-        <View style={styles.metricDivider} />
+        <View
+          style={styles.metricDivider}
+        />
 
         <View style={styles.metric}>
-          <View style={[styles.metricIcon, styles.priceMetricIcon]}>
-            <Ionicons name="cash-outline" size={17} color="#92400E" />
+          <View
+            style={[
+              styles.metricIcon,
+              styles.priceMetricIcon,
+            ]}
+          >
+            <Ionicons
+              name="cash-outline"
+              size={17}
+              color={ACCENT}
+            />
           </View>
 
           <View>
-            <Text style={styles.metricLabel}>Offered price</Text>
-
-            <Text style={styles.priceMetricValue}>
-              {formatCurrency(demand.offeredPrice)}/kg
+            <Text
+              style={styles.metricLabel}
+            >
+              Offered price
+            </Text>
+            <Text
+              style={
+                styles.priceMetricValue
+              }
+            >
+              {formatCurrency(
+                demand.offeredPrice
+              )}
+              /kg
             </Text>
           </View>
         </View>
       </View>
-
 
       {demand.status === "open" ? (
         <Pressable
@@ -349,63 +1065,224 @@ function DemandCard({ demand }: DemandCardProps) {
           }
           style={({ pressed }) => [
             styles.findFarmersButton,
-            pressed && styles.pressed,
+            pressed &&
+              styles.pressed,
           ]}
         >
           <LinearGradient
-            colors={["#92400E", "#78350F"]}
+            colors={[ACCENT, ACCENT_DARK]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
-            style={styles.findFarmersButtonGradient}
+            style={
+              styles.findFarmersButtonGradient
+            }
           >
-            <View style={styles.findFarmersButtonIcon}>
-              <Ionicons name="sparkles" size={17} color="#FDE68A" />
+            <View
+              style={
+                styles.findFarmersButtonIcon
+              }
+            >
+              <Ionicons
+                name="sparkles"
+                size={17}
+                color={ACCENT_LIGHT}
+              />
             </View>
 
-            <View style={styles.findFarmersButtonTextArea}>
-              <Text style={styles.findFarmersButtonText}>
+            <View
+              style={
+                styles.findFarmersButtonTextArea
+              }
+            >
+              <Text
+                style={
+                  styles.findFarmersButtonText
+                }
+              >
                 Find Matching Farmers
               </Text>
-
-              <Text style={styles.findFarmersButtonSubtext}>
+              <Text
+                style={
+                  styles.findFarmersButtonSubtext
+                }
+              >
                 AI-rank available harvests
               </Text>
             </View>
 
-            <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
+            <View style={styles.findFarmersButtonArrow}>
+              <Ionicons
+                name="arrow-forward"
+                size={16}
+                color={SURFACE}
+              />
+            </View>
           </LinearGradient>
         </Pressable>
       ) : null}
 
       <View style={styles.cardFooter}>
-        <View style={styles.activityDot} />
+        <View
+          style={[
+            styles.activityDot,
+            {
+              backgroundColor: visual.text,
+            },
+          ]}
+        />
 
-        <Text style={styles.activityText}>
-          {getDemandActivityText(demand.status)}
+        <Text
+          style={styles.activityText}
+        >
+          {getDemandActivityText(
+            demand.status
+          )}
         </Text>
 
         <Ionicons
           name="chevron-forward"
           size={15}
           color="#D8CFB8"
-          style={styles.cardFooterChevron}
         />
       </View>
     </View>
   );
 }
 
-interface DemandStatusBadgeProps {
-  status: DemandStatus;
-}
-
-function DemandStatusBadge({ status }: DemandStatusBadgeProps) {
-  const badgeStyle = getStatusStyle(status);
+function CompactDemandCard({
+  demand,
+}: {
+  demand: MillerDemand;
+}) {
+  const visual = getStatusStyle(demand.status);
 
   return (
-    <View style={[styles.statusBadge, { backgroundColor: badgeStyle.background }]}>
-      <View style={[styles.statusDot, { backgroundColor: badgeStyle.text }]} />
-      <Text style={[styles.statusText, { color: badgeStyle.text }]}>
+    <View style={styles.compactCard}>
+      <View
+        style={[
+          styles.compactAccentBar,
+          { backgroundColor: visual.text },
+        ]}
+      />
+
+      <View style={styles.compactIcon}>
+        <Ionicons
+          name="leaf-outline"
+          size={21}
+          color={ACCENT}
+        />
+      </View>
+
+      <View style={styles.compactBody}>
+        <View style={styles.compactTop}>
+          <Text
+            style={styles.compactTitle}
+          >
+            {formatLabel(
+              demand.paddyType
+            )}
+          </Text>
+
+          <DemandStatusBadge
+            status={demand.status}
+            compact
+          />
+        </View>
+
+        <Text
+          style={styles.compactSubtitle}
+        >
+          {formatNumber(
+            demand.quantityNeeded
+          )}{" "}
+          kg •{" "}
+          {formatCurrency(
+            demand.offeredPrice
+          )}
+          /kg
+        </Text>
+
+        <Text
+          style={styles.compactActivity}
+        >
+          {getDemandActivityText(
+            demand.status
+          )}
+        </Text>
+      </View>
+
+      {demand.status === "open" ? (
+        <Pressable
+          onPress={() =>
+            router.push({
+              pathname:
+                "/(c03-marketplace)/(miller)/matched-farmers",
+              params: {
+                demandId: demand._id,
+              },
+            })
+          }
+          style={
+            styles.compactAction
+          }
+        >
+          <Ionicons
+            name="search-outline"
+            size={18}
+            color={SURFACE}
+          />
+        </Pressable>
+      ) : (
+        <Ionicons
+          name="chevron-forward"
+          size={18}
+          color="#B7AF9C"
+        />
+      )}
+    </View>
+  );
+}
+
+function DemandStatusBadge({
+  status,
+  compact = false,
+}: {
+  status: DemandStatus;
+  compact?: boolean;
+}) {
+  const visual =
+    getStatusStyle(status);
+
+  return (
+    <View
+      style={[
+        styles.statusBadge,
+        {
+          backgroundColor:
+            visual.background,
+          borderColor: visual.border,
+        },
+        compact &&
+          styles.statusBadgeCompact,
+      ]}
+    >
+      <View
+        style={[
+          styles.statusDot,
+          {
+            backgroundColor:
+              visual.text,
+          },
+        ]}
+      />
+      <Text
+        style={[
+          styles.statusText,
+          {
+            color: visual.text,
+          },
+        ]}
+      >
         {formatLabel(status)}
       </Text>
     </View>
@@ -416,44 +1293,73 @@ function LoadingState() {
   return (
     <SafeAreaView style={styles.screen}>
       <View style={styles.centerState}>
-        <View style={styles.loadingIcon}>
-          <ActivityIndicator size="large" color="#92400E" />
-        </View>
+        <LinearGradient
+          colors={[SURFACE_TINT, ACCENT_LIGHT]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.loadingIcon}
+        >
+          <ActivityIndicator
+            size="large"
+            color={ACCENT}
+          />
+        </LinearGradient>
 
-        <Text style={styles.stateTitle}>Loading demands</Text>
-
-        <Text style={styles.stateDescription}>
-          Retrieving your latest paddy requirements.
+        <Text style={styles.stateTitle}>
+          Loading demands
+        </Text>
+        <Text
+          style={styles.stateDescription}
+        >
+          Retrieving your latest paddy
+          requirements.
         </Text>
       </View>
     </SafeAreaView>
   );
 }
 
-interface ErrorStateProps {
+function ErrorState({
+  message,
+  onRetry,
+}: {
   message: string;
   onRetry: () => void;
-}
-
-function ErrorState({ message, onRetry }: ErrorStateProps) {
+}) {
   return (
     <View style={styles.centerState}>
       <View style={styles.errorIcon}>
-        <Ionicons name="cloud-offline-outline" size={31} color="#B91C1C" />
+        <Ionicons
+          name="cloud-offline-outline"
+          size={31}
+          color="#B91C1C"
+        />
       </View>
 
-      <Text style={styles.stateTitle}>Unable to load demands</Text>
-
-      <Text style={styles.stateDescription}>{message}</Text>
+      <Text style={styles.stateTitle}>
+        Unable to load demands
+      </Text>
+      <Text
+        style={styles.stateDescription}
+      >
+        {message}
+      </Text>
 
       <Pressable
         onPress={onRetry}
-        style={({ pressed }) => [styles.retryShadow, pressed && styles.pressed]}
+        style={({ pressed }) => [
+          styles.retryButton,
+          pressed && styles.pressed,
+        ]}
       >
-        <View style={styles.retryButton}>
-          <Ionicons name="refresh" size={17} color="#FFFFFF" />
-          <Text style={styles.retryText}>Try Again</Text>
-        </View>
+        <Ionicons
+          name="refresh"
+          size={17}
+          color={SURFACE}
+        />
+        <Text style={styles.retryText}>
+          Try Again
+        </Text>
       </Pressable>
     </View>
   );
@@ -462,125 +1368,224 @@ function ErrorState({ message, onRetry }: ErrorStateProps) {
 function EmptyState() {
   return (
     <View style={styles.centerState}>
-      <View style={styles.emptyIcon}>
-        <Ionicons name="document-text-outline" size={37} color="#92400E" />
-      </View>
+      <LinearGradient
+        colors={[SURFACE_TINT, ACCENT_LIGHT]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.emptyIcon}
+      >
+        <Ionicons
+          name="document-text-outline"
+          size={37}
+          color={ACCENT}
+        />
+      </LinearGradient>
 
-      <Text style={styles.stateTitle}>No demands yet</Text>
+      <Text style={styles.stateTitle}>
+        No demands yet
+      </Text>
 
-      <Text style={styles.stateDescription}>
-        Publish your first paddy requirement to start finding suitable
-        farmer harvests.
+      <Text
+        style={styles.stateDescription}
+      >
+        Publish your first paddy requirement
+        to start finding suitable farmer
+        harvests.
       </Text>
 
       <Pressable
-        onPress={() => router.push("./create-demand")}
-        style={({ pressed }) => [styles.emptyShadow, pressed && styles.pressed]}
+        onPress={() =>
+          router.push("./create-demand")
+        }
+        style={({ pressed }) => [
+          styles.emptyButton,
+          pressed && styles.pressed,
+        ]}
       >
-        <LinearGradient
-          colors={["#FDE68A", "#F5C542"]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={styles.emptyButton}
+        <Ionicons
+          name="add-circle-outline"
+          size={19}
+          color={ACCENT_DARK}
+        />
+        <Text
+          style={styles.emptyButtonText}
         >
-          <Ionicons name="add-circle-outline" size={19} color="#78350F" />
-          <Text style={styles.emptyButtonText}>Create First Demand</Text>
-        </LinearGradient>
+          Create First Demand
+        </Text>
       </Pressable>
     </View>
   );
 }
 
-function getStatusStyle(status: DemandStatus): {
+function FilteredEmptyState({
+  onClear,
+}: {
+  onClear: () => void;
+}) {
+  return (
+    <View style={styles.filteredEmpty}>
+      <View
+        style={styles.filteredEmptyIcon}
+      >
+        <Ionicons
+          name="search-outline"
+          size={27}
+          color={ACCENT}
+        />
+      </View>
+
+      <Text
+        style={styles.filteredEmptyTitle}
+      >
+        No matching demands
+      </Text>
+      <Text
+        style={styles.filteredEmptyText}
+      >
+        Try changing your search or filter
+        options.
+      </Text>
+
+      <Pressable
+        onPress={onClear}
+        style={({ pressed }) => [
+          styles.clearButton,
+          pressed && styles.pressed,
+        ]}
+      >
+        <Text
+          style={styles.clearButtonText}
+        >
+          Clear filters
+        </Text>
+      </Pressable>
+    </View>
+  );
+}
+
+function getStatusStyle(
+  status: DemandStatus
+): {
   background: string;
   text: string;
+  border: string;
 } {
   switch (status) {
     case "open":
-      return { background: "#FEF3C7", text: "#92400E" };
-
+      return {
+        background: "#FEF3C7",
+        text: "#92400E",
+        border: "#FDE68A",
+      };
     case "negotiation_ready":
-      return { background: "#DBEAFE", text: "#1D4ED8" };
-
+      return {
+        background: "#DBEAFE",
+        text: "#1D4ED8",
+        border: "#BFDBFE",
+      };
     case "negotiating":
-      return { background: "#FDE68A", text: "#78350F" };
-
+      return {
+        background: "#FDE68A",
+        text: "#78350F",
+        border: "#F5C542",
+      };
     case "agreement_reached":
-      return { background: "#D1FAE5", text: "#065F46" };
-
+      return {
+        background: "#D1FAE5",
+        text: "#065F46",
+        border: "#A7F3D0",
+      };
     case "negotiation_failed":
     case "rejected":
-      return { background: "#FEE2E2", text: "#B91C1C" };
-
+      return {
+        background: "#FEE2E2",
+        text: "#B91C1C",
+        border: "#FECACA",
+      };
     case "cancelled":
-      return { background: "#F1EEE4", text: "#7A7364" };
-
     default:
-      return { background: "#F1EEE4", text: "#7A7364" };
+      return {
+        background: "#F1EEE4",
+        text: "#7A7364",
+        border: "#ECE6D6",
+      };
   }
 }
 
-function getDemandActivityText(status: DemandStatus): string {
+function getDemandActivityText(
+  status: DemandStatus
+): string {
   switch (status) {
     case "open":
       return "Available for harvest matching";
-
     case "negotiation_ready":
       return "Ready to start negotiation";
-
     case "negotiating":
       return "AI negotiation is active";
-
     case "agreement_reached":
       return "An agreement was reached";
-
     case "negotiation_failed":
       return "Negotiation ended without agreement";
-
     case "rejected":
       return "The demand was rejected";
-
     case "cancelled":
       return "The demand was cancelled";
-
     default:
       return "Demand status updated";
   }
 }
 
-function formatLabel(value: string): string {
+function formatLabel(
+  value: string
+): string {
   return value
     .trim()
     .split(/[\s_-]+/)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+    .map(
+      (part) =>
+        part.charAt(0).toUpperCase() +
+        part.slice(1).toLowerCase()
+    )
     .join(" ");
 }
 
-function formatNumber(value: number): string {
+function formatNumber(
+  value: number
+): string {
   return new Intl.NumberFormat("en-LK", {
     maximumFractionDigits: 2,
   }).format(value);
 }
 
-function formatCurrency(value: number): string {
-  return `LKR ${new Intl.NumberFormat("en-LK", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(value)}`;
+function formatCurrency(
+  value: number
+): string {
+  return `LKR ${new Intl.NumberFormat(
+    "en-LK",
+    {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }
+  ).format(value)}`;
 }
 
-function formatDate(value: string): string {
+function formatDate(
+  value: string
+): string {
   const date = new Date(value);
 
   if (Number.isNaN(date.getTime())) {
     return "Date unavailable";
   }
 
-  return new Intl.DateTimeFormat("en-LK", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  }).format(date);
+  return new Intl.DateTimeFormat(
+    "en-LK",
+    {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    }
+  ).format(date);
 }
 
 const styles = StyleSheet.create({
@@ -588,17 +1593,24 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: CREAM,
   },
-
+  animatedFlex: {
+    flex: 1,
+  },
   navigationHeader: {
     minHeight: 72,
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 18,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: SURFACE,
     borderBottomWidth: 1,
     borderBottomColor: CARD_BORDER,
+    shadowColor: "#5C4A24",
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 2,
+    zIndex: 10,
   },
-
   headerButton: {
     width: 42,
     height: 42,
@@ -609,34 +1621,44 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: CARD_BORDER,
   },
-
   headerText: {
     flex: 1,
     marginHorizontal: 14,
   },
-
   headerTitle: {
     color: INK,
     fontSize: 18,
     fontFamily: "Poppins_800ExtraBold",
+    letterSpacing: 0.2,
   },
-
+  headerSubtitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    marginTop: 3,
+  },
+  headerSubtitleDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: GOLD,
+  },
   headerSubtitle: {
     color: INK_MUTED,
     fontSize: 11,
     fontFamily: "Poppins_500Medium",
-    marginTop: 2,
   },
-
   addShadow: {
     borderRadius: 14,
     shadowColor: "#D97706",
     shadowOpacity: 0.3,
     shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
     elevation: 4,
   },
-
   addButton: {
     width: 42,
     height: 42,
@@ -644,195 +1666,385 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-
   content: {
     padding: 18,
-    paddingBottom: 40,
+    paddingBottom: 42,
   },
-
   emptyContent: {
     flexGrow: 1,
     justifyContent: "center",
   },
-
-  // Portfolio summary hero
   summaryHero: {
-    borderRadius: 24,
+    borderRadius: 26,
     padding: 20,
-    gap: 16,
+    marginBottom: 18,
     overflow: "hidden",
+    position: "relative",
+    shadowColor: ACCENT_DARK,
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 5,
   },
-
+  summaryHeroDecoCircleOne: {
+    position: "absolute",
+    width: 150,
+    height: 150,
+    borderRadius: 75,
+    backgroundColor: "rgba(255,255,255,0.06)",
+    top: -60,
+    right: -40,
+  },
+  summaryHeroDecoCircleTwo: {
+    position: "absolute",
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    backgroundColor: "rgba(255,255,255,0.05)",
+    bottom: -35,
+    left: -25,
+  },
   summaryHeroTopRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
   },
-
   summaryHeroIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
+    width: 46,
+    height: 46,
+    borderRadius: 15,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(255,255,255,0.14)",
+    backgroundColor:
+      "rgba(255,255,255,0.16)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.22)",
   },
-
   summaryHeroTextArea: {
     flex: 1,
   },
-
   summaryHeroEyebrow: {
-    color: "#FDE68A",
-    fontSize: 9.5,
+    color: ACCENT_LIGHT,
+    fontSize: 9,
     fontFamily: "Poppins_700Bold",
-    letterSpacing: 1.2,
+    letterSpacing: 1.4,
   },
-
   summaryHeroTitle: {
-    color: "#FFFFFF",
-    fontSize: 15.5,
+    color: SURFACE,
+    fontSize: 15,
     fontFamily: "Poppins_700Bold",
     marginTop: 4,
   },
-
   statChipRow: {
     flexDirection: "row",
-    gap: 8,
+    gap: 7,
+    marginTop: 18,
   },
-
   statChip: {
     flex: 1,
     borderRadius: 14,
     paddingVertical: 10,
-    paddingHorizontal: 8,
-    backgroundColor: "rgba(255,255,255,0.1)",
-    borderWidth: 1,
-    borderColor: "rgba(253,230,138,0.28)",
     alignItems: "center",
-    gap: 3,
+    backgroundColor:
+      "rgba(255,255,255,0.12)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.16)",
   },
-
+  statChipSelected: {
+    backgroundColor: "rgba(255,255,255,0.26)",
+    borderColor: "rgba(255,255,255,0.55)",
+  },
+  statChipIcon: {
+    marginBottom: 4,
+  },
   statChipValue: {
-    color: "#FFFFFF",
+    color: SURFACE,
     fontSize: 16,
     fontFamily: "Poppins_800ExtraBold",
+  },
+  statChipValueSelected: {
+    color: SURFACE,
+  },
+  statChipLabel: {
+    color: "rgba(255,255,255,0.75)",
+    fontSize: 8,
+    fontFamily: "Poppins_600SemiBold",
     marginTop: 2,
   },
-
-  statChipLabel: {
-    color: "rgba(255,255,255,0.7)",
-    fontSize: 9,
-    fontFamily: "Poppins_600SemiBold",
-    textAlign: "center",
+  statChipLabelSelected: {
+    color: "rgba(255,255,255,0.95)",
   },
-
-  // Ticket perforation — signature motif shared across the marketplace
-  perforationRow: {
+  searchRow: {
     flexDirection: "row",
-    alignItems: "center",
-    height: 20,
+    gap: 9,
+    marginBottom: 12,
   },
-
-  perforationLine: {
+  searchBox: {
     flex: 1,
-    height: 0,
-    borderTopWidth: 1.5,
-    borderStyle: "dashed",
-    borderColor: "#D8CFB8",
-    marginHorizontal: -6,
-  },
-
-  perforationNotchLeft: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: CREAM,
-    marginLeft: -8,
-  },
-
-  perforationNotchRight: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: CREAM,
-    marginRight: -8,
-  },
-
-  listHeader: {
+    minHeight: 50,
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
+    gap: 9,
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    backgroundColor: SURFACE,
+    borderWidth: 1,
+    borderColor: CARD_BORDER,
+    shadowColor: "#5C4A24",
+    shadowOpacity: 0.03,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 1,
+  },
+  searchIconWrap: {
+    width: 30,
+    height: 30,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: SURFACE_TINT,
+  },
+  searchInput: {
+    flex: 1,
+    color: INK,
+    fontSize: 11,
+    fontFamily: "Poppins_500Medium",
+    paddingVertical: 0,
+  },
+  filterButton: {
+    width: 50,
+    height: 50,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FEF3C7",
+    borderWidth: 1,
+    borderColor: "#FDE68A",
+    position: "relative",
+  },
+  filterButtonActive: {
+    backgroundColor: ACCENT,
+    borderColor: ACCENT,
+    shadowColor: ACCENT,
+    shadowOpacity: 0.35,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 3,
+  },
+  filterCountBadge: {
+    position: "absolute",
+    right: -4,
+    top: -5,
+    minWidth: 19,
+    height: 19,
+    borderRadius: 10,
+    paddingHorizontal: 4,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: GOLD,
+    borderWidth: 2,
+    borderColor: SURFACE,
+  },
+  filterCountText: {
+    color: ACCENT_DARK,
+    fontSize: 7,
+    fontFamily: "Poppins_800ExtraBold",
+  },
+  filterPanel: {
+    borderRadius: 22,
+    padding: 17,
+    backgroundColor: SURFACE,
+    borderWidth: 1,
+    borderColor: ACCENT_LIGHT,
+    marginBottom: 18,
+    shadowColor: "#5C4A24",
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 5 },
+    elevation: 2,
+  },
+  filterPanelHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 15,
+  },
+  filterPanelTitle: {
+    color: INK,
+    fontSize: 13,
+    fontFamily: "Poppins_800ExtraBold",
+  },
+  filterPanelSubtitle: {
+    color: "#A8A091",
+    fontSize: 8.5,
+    fontFamily: "Poppins_500Medium",
+    marginTop: 2,
+  },
+  clearFiltersButton: {
+    borderRadius: 999,
+    paddingHorizontal: 11,
+    paddingVertical: 6,
+    backgroundColor: SURFACE_TINT,
+  },
+  clearFiltersText: {
+    color: ACCENT,
+    fontSize: 9,
+    fontFamily: "Poppins_700Bold",
+  },
+  filterLabel: {
+    color: "#6B6253",
+    fontSize: 9,
+    fontFamily: "Poppins_700Bold",
+    marginBottom: 8,
+    textTransform: "uppercase",
+    letterSpacing: 0.4,
+  },
+  filterDivider: {
+    height: 1,
+    backgroundColor: "#F1EEE4",
+    marginVertical: 15,
+  },
+  wrapRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 7,
+  },
+  optionChip: {
+    borderRadius: 999,
+    paddingHorizontal: 11,
+    paddingVertical: 7,
+    backgroundColor: SURFACE_ALT,
+    borderWidth: 1,
+    borderColor: "#ECE6D6",
+  },
+  optionChipSelected: {
+    backgroundColor: "#FEF3C7",
+    borderColor: GOLD,
+    shadowColor: GOLD,
+    shadowOpacity: 0.35,
+    shadowRadius: 5,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 1,
+  },
+  optionChipText: {
+    color: INK_MUTED,
+    fontSize: 8.5,
+    fontFamily: "Poppins_600SemiBold",
+  },
+  optionChipTextSelected: {
+    color: ACCENT_DARK,
+    fontFamily: "Poppins_700Bold",
+  },
+  resultsToolbar: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: 4,
     marginBottom: 13,
   },
-
+  resultsToolbarLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 9,
+  },
+  sectionAccentBar: {
+    width: 4,
+    height: 26,
+    borderRadius: 2,
+    backgroundColor: GOLD,
+  },
   sectionTitle: {
     color: INK,
     fontSize: 15.5,
     fontFamily: "Poppins_700Bold",
   },
-
-  refreshHintRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-
-  refreshHint: {
-    color: "#B7AF9C",
-    fontSize: 10,
+  resultMeta: {
+    color: "#A8A091",
+    fontSize: 8.5,
     fontFamily: "Poppins_500Medium",
+    marginTop: 2,
   },
-
+  viewToggle: {
+    flexDirection: "row",
+    gap: 4,
+    padding: 4,
+    borderRadius: 12,
+    backgroundColor: "#EFEADA",
+  },
+  viewToggleButton: {
+    width: 34,
+    height: 32,
+    borderRadius: 9,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  viewToggleButtonActive: {
+    backgroundColor: ACCENT,
+    shadowColor: ACCENT,
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+  },
   list: {
     gap: 13,
   },
-
   demandCard: {
-    borderRadius: 20,
+    borderRadius: 22,
     padding: 16,
-    backgroundColor: "#FFFFFF",
+    paddingLeft: 20,
+    backgroundColor: SURFACE,
     borderWidth: 1,
     borderColor: CARD_BORDER,
     shadowColor: "#5C4A24",
     shadowOpacity: 0.05,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 3 },
+    shadowRadius: 12,
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
     elevation: 1,
+    overflow: "hidden",
+    position: "relative",
   },
-
+  demandCardAccentBar: {
+    position: "absolute",
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 4,
+  },
   cardHeader: {
     flexDirection: "row",
     alignItems: "center",
   },
-
   paddyIcon: {
     width: 44,
     height: 44,
     borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#FEF3C7",
   },
-
   cardTitleArea: {
     flex: 1,
     marginLeft: 12,
   },
-
   paddyTitle: {
     color: INK,
     fontSize: 14.5,
     fontFamily: "Poppins_700Bold",
   },
-
+  createdDateRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    marginTop: 4,
+  },
   createdDate: {
     color: "#B7AF9C",
-    fontSize: 10,
+    fontSize: 9.5,
     fontFamily: "Poppins_500Medium",
-    marginTop: 3,
   },
-
   statusBadge: {
     maxWidth: 120,
     flexDirection: "row",
@@ -841,44 +2053,43 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     paddingHorizontal: 9,
     paddingVertical: 6,
+    borderWidth: 1,
   },
-
+  statusBadgeCompact: {
+    paddingHorizontal: 7,
+    paddingVertical: 4,
+  },
   statusDot: {
     width: 5,
     height: 5,
     borderRadius: 3,
   },
-
   statusText: {
-    fontSize: 8.5,
+    fontSize: 8,
     fontFamily: "Poppins_700Bold",
   },
-
   metricContainer: {
     flexDirection: "row",
     alignItems: "center",
-    borderRadius: 15,
+    borderRadius: 16,
     padding: 13,
-    backgroundColor: "#FAFAF7",
+    backgroundColor: SURFACE_ALT,
     borderWidth: 1,
     borderColor: "#F1EEE4",
     marginTop: 15,
   },
-
   metric: {
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
     gap: 9,
   },
-
   metricDivider: {
     width: 1,
     height: 38,
     backgroundColor: CARD_BORDER,
     marginHorizontal: 11,
   },
-
   metricIcon: {
     width: 34,
     height: 34,
@@ -887,72 +2098,76 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: "#EFEADA",
   },
-
   priceMetricIcon: {
     backgroundColor: "#FEF3C7",
   },
-
   metricLabel: {
     color: INK_MUTED,
-    fontSize: 9,
+    fontSize: 8.5,
     fontFamily: "Poppins_500Medium",
   },
-
   metricValue: {
     color: INK,
-    fontSize: 12,
+    fontSize: 11.5,
     fontFamily: "Poppins_700Bold",
     marginTop: 3,
   },
-
   priceMetricValue: {
-    color: "#92400E",
-    fontSize: 12,
+    color: ACCENT,
+    fontSize: 11.5,
     fontFamily: "Poppins_700Bold",
     marginTop: 3,
   },
-
   findFarmersButton: {
-    borderRadius: 16,
+    borderRadius: 17,
     overflow: "hidden",
     marginTop: 14,
+    shadowColor: ACCENT_DARK,
+    shadowOpacity: 0.28,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 5 },
+    elevation: 3,
   },
-
   findFarmersButtonGradient: {
     minHeight: 54,
-    borderRadius: 16,
+    borderRadius: 17,
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 14,
     gap: 10,
   },
-
   findFarmersButtonIcon: {
     width: 34,
     height: 34,
     borderRadius: 11,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(255,255,255,0.12)",
+    backgroundColor:
+      "rgba(255,255,255,0.14)",
   },
-
   findFarmersButtonTextArea: {
     flex: 1,
   },
-
   findFarmersButtonText: {
-    color: "#FFFFFF",
+    color: SURFACE,
     fontSize: 10.5,
     fontFamily: "Poppins_700Bold",
   },
-
   findFarmersButtonSubtext: {
-    color: "rgba(255,255,255,0.65)",
+    color:
+      "rgba(255,255,255,0.65)",
     fontSize: 8,
     fontFamily: "Poppins_500Medium",
     marginTop: 1,
   },
-
+  findFarmersButtonArrow: {
+    width: 28,
+    height: 28,
+    borderRadius: 9,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255,255,255,0.14)",
+  },
   cardFooter: {
     flexDirection: "row",
     alignItems: "center",
@@ -962,42 +2177,105 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     marginTop: 14,
   },
-
   activityDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: "#22C55E",
   },
-
   activityText: {
     flex: 1,
     color: INK_MUTED,
-    fontSize: 10.5,
+    fontSize: 10,
     fontFamily: "Poppins_600SemiBold",
   },
-
-  cardFooterChevron: {
-    marginLeft: "auto",
+  compactCard: {
+    minHeight: 91,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 11,
+    borderRadius: 20,
+    padding: 14,
+    paddingLeft: 18,
+    backgroundColor: SURFACE,
+    borderWidth: 1,
+    borderColor: CARD_BORDER,
+    shadowColor: "#5C4A24",
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 1,
+    overflow: "hidden",
+    position: "relative",
   },
-
+  compactAccentBar: {
+    position: "absolute",
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 4,
+  },
+  compactIcon: {
+    width: 43,
+    height: 43,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FEF3C7",
+  },
+  compactBody: {
+    flex: 1,
+  },
+  compactTop: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 8,
+  },
+  compactTitle: {
+    flex: 1,
+    color: INK,
+    fontSize: 12,
+    fontFamily: "Poppins_800ExtraBold",
+  },
+  compactSubtitle: {
+    color: INK_MUTED,
+    fontSize: 8.5,
+    fontFamily: "Poppins_500Medium",
+    marginTop: 4,
+  },
+  compactActivity: {
+    color: "#A16207",
+    fontSize: 8,
+    fontFamily: "Poppins_600SemiBold",
+    marginTop: 4,
+  },
+  compactAction: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: ACCENT,
+    shadowColor: ACCENT,
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 2,
+  },
   centerState: {
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 27,
-    paddingVertical: 50,
+    paddingVertical: 55,
   },
-
   loadingIcon: {
     width: 72,
     height: 72,
     borderRadius: 24,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#FEF3C7",
     marginBottom: 18,
   },
-
   errorIcon: {
     width: 72,
     height: 72,
@@ -1006,85 +2284,119 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: "#FEF2F2",
     marginBottom: 18,
+    borderWidth: 1,
+    borderColor: "#FECACA",
   },
-
   emptyIcon: {
     width: 92,
     height: 92,
     borderRadius: 30,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#FEF3C7",
-    marginBottom: 20,
+    marginBottom: 18,
   },
-
   stateTitle: {
     color: INK,
     fontSize: 18,
     fontFamily: "Poppins_800ExtraBold",
     textAlign: "center",
   },
-
   stateDescription: {
     color: INK_MUTED,
-    fontSize: 12.5,
-    lineHeight: 19,
+    fontSize: 10,
     fontFamily: "Poppins_500Medium",
+    lineHeight: 17,
     textAlign: "center",
-    marginTop: 8,
+    marginTop: 7,
     maxWidth: 290,
   },
-
-  retryShadow: {
-    borderRadius: 15,
-    marginTop: 20,
-  },
-
   retryButton: {
-    minHeight: 48,
+    minHeight: 45,
+    borderRadius: 13,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 8,
-    borderRadius: 15,
-    paddingHorizontal: 22,
-    backgroundColor: "#B91C1C",
-  },
-
-  retryText: {
-    color: "#FFFFFF",
-    fontSize: 13,
-    fontFamily: "Poppins_700Bold",
-  },
-
-  emptyShadow: {
-    borderRadius: 15,
-    marginTop: 22,
-    shadowColor: "#D97706",
+    gap: 7,
+    paddingHorizontal: 18,
+    backgroundColor: ACCENT,
+    marginTop: 17,
+    shadowColor: ACCENT,
     shadowOpacity: 0.3,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 5 },
-    elevation: 5,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 3,
   },
-
+  retryText: {
+    color: SURFACE,
+    fontSize: 10,
+    fontFamily: "Poppins_700Bold",
+  },
   emptyButton: {
-    minHeight: 50,
+    minHeight: 47,
+    borderRadius: 14,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 8,
-    borderRadius: 15,
-    paddingHorizontal: 22,
+    gap: 7,
+    paddingHorizontal: 18,
+    backgroundColor: ACCENT_LIGHT,
+    marginTop: 18,
+    shadowColor: GOLD,
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 2,
   },
-
   emptyButtonText: {
-    color: "#78350F",
-    fontSize: 13,
+    color: ACCENT_DARK,
+    fontSize: 10,
     fontFamily: "Poppins_700Bold",
   },
-
+  filteredEmpty: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 42,
+    paddingHorizontal: 25,
+    borderRadius: 22,
+    backgroundColor: SURFACE,
+    borderWidth: 1,
+    borderColor: CARD_BORDER,
+  },
+  filteredEmptyIcon: {
+    width: 58,
+    height: 58,
+    borderRadius: 19,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FEF3C7",
+  },
+  filteredEmptyTitle: {
+    color: INK,
+    fontSize: 14,
+    fontFamily: "Poppins_800ExtraBold",
+    marginTop: 13,
+  },
+  filteredEmptyText: {
+    color: INK_MUTED,
+    fontSize: 9,
+    fontFamily: "Poppins_500Medium",
+    marginTop: 4,
+    textAlign: "center",
+  },
+  clearButton: {
+    borderRadius: 12,
+    paddingHorizontal: 15,
+    paddingVertical: 9,
+    backgroundColor: "#FEF3C7",
+    marginTop: 13,
+  },
+  clearButtonText: {
+    color: ACCENT_DARK,
+    fontSize: 9,
+    fontFamily: "Poppins_700Bold",
+  },
   pressed: {
-    opacity: 0.85,
+    opacity: 0.84,
     transform: [{ scale: 0.98 }],
   },
 });
