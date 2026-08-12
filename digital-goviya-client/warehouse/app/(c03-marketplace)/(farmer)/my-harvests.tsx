@@ -54,17 +54,6 @@ type SortOption =
 
 type ViewMode = "cards" | "compact";
 
-const STATUS_FILTERS: Array<{
-  label: string;
-  value: HarvestStatusFilter;
-}> = [
-  { label: "All", value: "all" },
-  { label: "Available", value: "available" },
-  { label: "Matched", value: "matched" },
-  { label: "Sold", value: "sold" },
-  { label: "Cancelled", value: "cancelled" },
-];
-
 const PADDY_FILTERS: Array<{
   label: string;
   value: PaddyFilter;
@@ -422,18 +411,38 @@ export default function MyHarvestsScreen() {
                   <SummaryStat
                     label="Total"
                     value={stats.total}
+                    selected={statusFilter === "all"}
+                    onPress={() =>
+                      setStatusFilter("all")
+                    }
                   />
                   <SummaryStat
                     label="Available"
                     value={stats.available}
+                    selected={
+                      statusFilter === "available"
+                    }
+                    onPress={() =>
+                      setStatusFilter("available")
+                    }
                   />
                   <SummaryStat
                     label="Matched"
                     value={stats.matched}
+                    selected={
+                      statusFilter === "matched"
+                    }
+                    onPress={() =>
+                      setStatusFilter("matched")
+                    }
                   />
                   <SummaryStat
                     label="Sold"
                     value={stats.sold}
+                    selected={statusFilter === "sold"}
+                    onPress={() =>
+                      setStatusFilter("sold")
+                    }
                   />
                 </View>
               </LinearGradient>
@@ -511,47 +520,6 @@ export default function MyHarvestsScreen() {
                     </View>
                   ) : null}
                 </Pressable>
-              </View>
-
-              <View style={styles.quickStatusScroller}>
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={
-                    styles.chipRow
-                  }
-                >
-                  {STATUS_FILTERS.map((item) => {
-                    const selected =
-                      statusFilter === item.value;
-
-                    return (
-                      <Pressable
-                        key={item.value}
-                        onPress={() =>
-                          setStatusFilter(
-                            item.value
-                          )
-                        }
-                        style={[
-                          styles.statusFilterChip,
-                          selected &&
-                            styles.statusFilterChipSelected,
-                        ]}
-                      >
-                        <Text
-                          style={[
-                            styles.statusFilterText,
-                            selected &&
-                              styles.statusFilterTextSelected,
-                          ]}
-                        >
-                          {item.label}
-                        </Text>
-                      </Pressable>
-                    );
-                  })}
-                </ScrollView>
               </View>
 
               {filtersOpen ? (
@@ -763,19 +731,42 @@ export default function MyHarvestsScreen() {
 function SummaryStat({
   label,
   value,
+  selected = false,
+  onPress,
 }: {
   label: string;
   value: number;
+  selected?: boolean;
+  onPress?: () => void;
 }) {
   return (
-    <View style={styles.summaryStat}>
-      <Text style={styles.summaryStatValue}>
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`Filter harvests by ${label}`}
+      style={({ pressed }) => [
+        styles.summaryStat,
+        selected && styles.summaryStatSelected,
+        pressed && styles.pressed,
+      ]}
+    >
+      <Text
+        style={[
+          styles.summaryStatValue,
+          selected && styles.summaryStatValueSelected,
+        ]}
+      >
         {value}
       </Text>
-      <Text style={styles.summaryStatLabel}>
+      <Text
+        style={[
+          styles.summaryStatLabel,
+          selected && styles.summaryStatLabelSelected,
+        ]}
+      >
         {label}
       </Text>
-    </View>
+    </Pressable>
   );
 }
 
@@ -1576,7 +1567,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 18,
-    paddingBottom: 120,
+    paddingBottom: 42,
   },
   emptyContent: {
     flexGrow: 1,
@@ -1625,17 +1616,31 @@ const styles = StyleSheet.create({
     paddingVertical: 9,
     backgroundColor:
       "rgba(255,255,255,0.1)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.14)",
+  },
+  summaryStatSelected: {
+    backgroundColor:
+      "rgba(255,255,255,0.26)",
+    borderColor:
+      "rgba(255,255,255,0.55)",
   },
   summaryStatValue: {
     color: "#FFFFFF",
     fontSize: 16,
     fontFamily: "Poppins_800ExtraBold",
   },
+  summaryStatValueSelected: {
+    color: "#FFFFFF",
+  },
   summaryStatLabel: {
     color: "rgba(255,255,255,0.7)",
     fontSize: 8,
     fontFamily: "Poppins_600SemiBold",
     marginTop: 2,
+  },
+  summaryStatLabelSelected: {
+    color: "rgba(255,255,255,0.95)",
   },
   searchRow: {
     flexDirection: "row",
@@ -1694,34 +1699,6 @@ const styles = StyleSheet.create({
     color: "#78350F",
     fontSize: 7,
     fontFamily: "Poppins_800ExtraBold",
-  },
-  quickStatusScroller: {
-    marginHorizontal: -18,
-  },
-  chipRow: {
-    gap: 8,
-    paddingHorizontal: 18,
-    paddingBottom: 12,
-  },
-  statusFilterChip: {
-    borderRadius: 999,
-    paddingHorizontal: 13,
-    paddingVertical: 8,
-    backgroundColor: "#FFFFFF",
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-  },
-  statusFilterChipSelected: {
-    backgroundColor: "#14532D",
-    borderColor: "#14532D",
-  },
-  statusFilterText: {
-    color: "#64748B",
-    fontSize: 9,
-    fontFamily: "Poppins_700Bold",
-  },
-  statusFilterTextSelected: {
-    color: "#FFFFFF",
   },
   filterPanel: {
     borderRadius: 20,
