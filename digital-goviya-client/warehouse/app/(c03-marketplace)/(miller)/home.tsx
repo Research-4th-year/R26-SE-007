@@ -504,7 +504,7 @@ const styles = StyleSheet.create({
 
   content: {
     padding: 20,
-    paddingBottom: 36,
+    paddingBottom: 120,
   },
 
   header: {

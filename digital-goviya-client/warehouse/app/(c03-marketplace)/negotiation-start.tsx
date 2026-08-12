@@ -1615,7 +1615,7 @@ const styles = StyleSheet.create({
 
   content: {
     padding: 17,
-    paddingBottom: 42,
+    paddingBottom: 120,
   },
 
   heroCard: {

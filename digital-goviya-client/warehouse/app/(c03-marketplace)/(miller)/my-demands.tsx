@@ -1668,7 +1668,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 18,
-    paddingBottom: 42,
+    paddingBottom: 120,
   },
   emptyContent: {
     flexGrow: 1,

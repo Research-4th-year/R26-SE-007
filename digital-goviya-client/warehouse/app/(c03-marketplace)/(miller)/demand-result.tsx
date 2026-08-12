@@ -267,7 +267,7 @@ const styles = StyleSheet.create({
 
   content: {
     padding: 18,
-    paddingBottom: 40,
+    paddingBottom: 120,
   },
 
   // Hero

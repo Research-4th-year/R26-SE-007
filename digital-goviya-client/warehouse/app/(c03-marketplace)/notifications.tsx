@@ -939,7 +939,7 @@ const styles =
 
     content: {
       padding: 17,
-      paddingBottom: 42,
+      paddingBottom: 120,
     },
 
     centerState: {
