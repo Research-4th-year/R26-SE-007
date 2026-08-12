@@ -40,7 +40,7 @@ const negotiationSchema = new mongoose.Schema(
 
     listingId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Listing",
+      ref: "MatchSelection",
       default: null,
     },
 
