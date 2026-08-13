@@ -1,49 +1,142 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { GoogleMap, useJsApiLoader, Marker } from '@react-google-maps/api';
 import { districtData } from '../data/constants';
 
+const mapContainerStyle = {
+  width: '100%',
+  height: '250px',
+  borderRadius: '12px',
+  marginBottom: '15px'
+};
+
+const findClosestLocation = (lat, lon) => {
+  let closestDist = Infinity;
+  let bestMatch = null;
+  
+  for (const [district, cities] of Object.entries(districtData)) {
+    for (const city of cities) {
+      const dist = Math.pow(city.lat - lat, 2) + Math.pow(city.lon - lon, 2);
+      if (dist < closestDist) {
+        closestDist = dist;
+        bestMatch = {
+          District: district,
+          City: city.name,
+          lat: city.lat,
+          lon: city.lon
+        };
+      }
+    }
+  }
+  return bestMatch;
+};
+
 function YieldPrediction() {
+  const { isLoaded } = useJsApiLoader({
+    id: 'google-map-script',
+    // googleMapsApiKey: "AIzaSyCfNslBQ-Q_czbhuPrr0oqmbMPbGZmoARc"
+  });
+
   const [loading, setLoading] = useState(false);
+  const [fetchingData, setFetchingData] = useState(false);
   const [error, setError] = useState(null);
   const [yieldResult, setYieldResult] = useState(null);
+  const [environmentalData, setEnvironmentalData] = useState(null);
 
   const [yieldData, setYieldData] = useState({
     District: 'Anuradhapura',
+    City: 'Anuradhapura City',
+    lat: districtData["Anuradhapura"][0].lat,
+    lon: districtData["Anuradhapura"][0].lon,
     Total_Land_Size: 1000,
     Land_Size_Unit: 'Hectares',
     Paddy_Type: 'Bg 352',
-    Temperature_C: 28.5,
-    Humidity: 75.0,
-    Soil_Moisture: 0.3,
-    isLiveIoT: false
+    field_id: 'field_001',
+    useFirebase: false
   });
 
-  const handleYieldChange = async (e) => {
-    const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
-    const name = e.target.name;
+  const handleYieldChange = (e) => {
+    const { name, value } = e.target;
     
-    setYieldData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-
-    if (name === 'isLiveIoT' && value) {
-      try {
-        const response = await fetch('http://127.0.0.1:8000/api/sensor/latest');
-        if (response.ok) {
-          const data = await response.json();
-          setYieldData(prev => ({
-            ...prev,
-            Temperature_C: data.temperature,
-            Humidity: data.humidity,
-            Soil_Moisture: data.soilMoisture / 100,
-            timestamp: data.timestamp
-          }));
-        }
-      } catch (err) {
-        console.error("Failed to fetch live IoT data:", err);
+    if (name === 'District') {
+      const defaultCity = districtData[value][0];
+      setYieldData({
+        ...yieldData,
+        District: value,
+        City: defaultCity.name,
+        lat: defaultCity.lat,
+        lon: defaultCity.lon
+      });
+    } else if (name === 'City') {
+      const selectedCityObj = districtData[yieldData.District].find(c => c.name === value);
+      if (selectedCityObj) {
+        setYieldData({
+          ...yieldData,
+          City: value,
+          lat: selectedCityObj.lat,
+          lon: selectedCityObj.lon
+        });
       }
+    } else {
+      setYieldData({
+        ...yieldData,
+        [name]: value
+      });
     }
   };
+
+  const onMapClick = (e) => {
+    const clickedLat = e.latLng.lat();
+    const clickedLon = e.latLng.lng();
+    const match = findClosestLocation(clickedLat, clickedLon);
+    
+    if (match) {
+      setYieldData({
+        ...yieldData,
+        District: match.District,
+        City: match.City,
+        lat: clickedLat,
+        lon: clickedLon
+      });
+    } else {
+      setYieldData({
+        ...yieldData,
+        lat: clickedLat,
+        lon: clickedLon
+      });
+    }
+  };
+
+  useEffect(() => {
+    const fetchEnvironmentData = async () => {
+      setFetchingData(true);
+      setError(null);
+      try {
+        const response = await fetch('http://127.0.0.1:8000/api/environment_data', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            lat: yieldData.lat,
+            lon: yieldData.lon,
+            field_id: yieldData.field_id,
+            use_firebase: yieldData.useFirebase
+          }),
+        });
+        if (!response.ok) throw new Error('Failed to fetch environmental data');
+        const data = await response.json();
+        setEnvironmentalData(data);
+      } catch (err) {
+        console.error("Auto-fetch error:", err.message);
+      } finally {
+        setFetchingData(false);
+      }
+    };
+
+    const timeoutId = setTimeout(() => {
+      fetchEnvironmentData();
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [yieldData.lat, yieldData.lon, yieldData.field_id, yieldData.useFirebase]);
 
   const handleYieldSubmit = async (e) => {
     e.preventDefault();
@@ -68,9 +161,10 @@ function YieldPrediction() {
           District: yieldData.District,
           Total_Land_Size: final_land_size_ha,
           Paddy_Type: yieldData.Paddy_Type,
-          Temperature_C: parseFloat(yieldData.Temperature_C),
-          Humidity: parseFloat(yieldData.Humidity),
-          Soil_Moisture: parseFloat(yieldData.Soil_Moisture)
+          lat: yieldData.lat,
+          lon: yieldData.lon,
+          field_id: yieldData.field_id,
+          use_firebase: yieldData.useFirebase
         }),
       });
 
@@ -144,55 +238,85 @@ function YieldPrediction() {
           </div>
         </div>
 
-        <div className="iot-panel">
-          <h3>Environmental Factors</h3>
-          <div className="toggle-group">
-            <label>
-              <input 
-                type="checkbox" 
-                name="isLiveIoT" 
-                checked={yieldData.isLiveIoT} 
-                onChange={handleYieldChange} 
-              /> Use Live IoT Feed
-            </label>
+        <div className="form-group">
+          <label>Select Location via Map or Dropdowns</label>
+          <div className="form-row">
+            <div className="form-group" style={{ marginBottom: '10px' }}>
+              <select name="District" value={yieldData.District} onChange={handleYieldChange}>
+                {Object.keys(districtData).map(dist => (
+                  <option key={dist} value={dist}>{dist}</option>
+                ))}
+              </select>
+            </div>
+            <div className="form-group" style={{ marginBottom: '10px' }}>
+              <select name="City" value={yieldData.City} onChange={handleYieldChange}>
+                {districtData[yieldData.District].map(c => (
+                  <option key={c.name} value={c.name}>{c.name}</option>
+                ))}
+              </select>
+            </div>
           </div>
           
-          {!yieldData.isLiveIoT ? (
-            <div className="form-row mt-2">
-              <div className="form-group">
-                <label>Temp (°C)</label>
-                <input type="number" step="0.1" name="Temperature_C" value={yieldData.Temperature_C} onChange={handleYieldChange} />
-              </div>
-              <div className="form-group">
-                <label>Humidity (%)</label>
-                <input type="number" step="0.1" name="Humidity" value={yieldData.Humidity} onChange={handleYieldChange} />
-              </div>
-              <div className="form-group">
-                <label>Soil Moisture</label>
-                <input type="number" step="0.01" name="Soil_Moisture" value={yieldData.Soil_Moisture} onChange={handleYieldChange} />
-              </div>
-            </div>
-          ) : (
-            <div className="live-iot-indicator mt-2" style={{ textAlign: 'left' }}>
-              <p style={{ marginBottom: '10px' }}><span className="pulsing-dot"></span> <strong>Live Data Connected</strong></p>
-              <div className="form-row mt-2">
-                <div className="form-group">
-                  <label>Temp (°C)</label>
-                  <input type="number" value={yieldData.Temperature_C} readOnly style={{ backgroundColor: '#e9ecef', color: '#495057' }} />
-                </div>
-                <div className="form-group">
-                  <label>Humidity (%)</label>
-                  <input type="number" value={yieldData.Humidity} readOnly style={{ backgroundColor: '#e9ecef', color: '#495057' }} />
-                </div>
-                <div className="form-group">
-                  <label>Soil Moisture</label>
-                  <input type="number" value={yieldData.Soil_Moisture} readOnly style={{ backgroundColor: '#e9ecef', color: '#495057' }} />
-                </div>
-              </div>
-              {yieldData.timestamp && <p style={{ fontSize: '0.85em', color: '#6c757d', marginTop: '10px' }}>Last updated: {yieldData.timestamp}</p>}
+          {isLoaded && (
+            <div style={{ borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(255, 255, 255, 0.1)', marginBottom: '5px' }}>
+              <GoogleMap
+                mapContainerStyle={mapContainerStyle}
+                center={{ lat: yieldData.lat, lng: yieldData.lon }}
+                zoom={9}
+                onClick={onMapClick}
+              >
+                <Marker position={{ lat: yieldData.lat, lng: yieldData.lon }} />
+              </GoogleMap>
             </div>
           )}
+          <div style={{ textAlign: 'center', fontSize: '0.85rem', color: '#94a3b8', marginBottom: '15px' }}>
+            Selected Coord: {yieldData.lat.toFixed(4)}, {yieldData.lon.toFixed(4)}
+          </div>
         </div>
+
+        <div className="form-group checkbox-group" style={{ background: 'rgba(255,255,255,0.05)', padding: '15px', borderRadius: '12px', marginBottom: '15px' }}>
+          <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', margin: 0, fontWeight: 'bold' }}>
+            <input
+              type="checkbox"
+              name="useFirebase"
+              checked={yieldData.useFirebase}
+              onChange={(e) => handleYieldChange({ target: { name: 'useFirebase', value: e.target.checked } })}
+              style={{ marginRight: '10px', width: '20px', height: '20px' }}
+            />
+            Use Firebase IoT Sensor Data
+          </label>
+        </div>
+
+        {yieldData.useFirebase && (
+          <div className="form-group">
+            <label htmlFor="field_id">ESP32 Field ID (For IoT Integration)</label>
+            <input type="text" name="field_id" id="field_id" value={yieldData.field_id} onChange={handleYieldChange} style={{ marginBottom: '10px' }} />
+          </div>
+        )}
+
+        {environmentalData && (
+          <div className="variety-details fade-in" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '20px', background: 'rgba(0,0,0,0.2)', padding: '15px', borderRadius: '12px', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
+            <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+              <h4 style={{ margin: 0, color: '#34d399' }}>Live Environmental Factors</h4>
+              {fetchingData && <span className="pulsing-dot" style={{ display: 'inline-block', width: '10px', height: '10px', backgroundColor: '#34d399', borderRadius: '50%' }}></span>}
+            </div>
+            <div className="detail-item" style={{ background: 'rgba(255,255,255,0.05)' }}>
+              <span className="label">Temp</span>
+              <span className="value">{environmentalData.Temperature_C.toFixed(2)}°C</span>
+            </div>
+            <div className="detail-item" style={{ background: 'rgba(255,255,255,0.05)' }}>
+              <span className="label">Humidity</span>
+              <span className="value">{environmentalData.Humidity.toFixed(2)}%</span>
+            </div>
+            <div className="detail-item" style={{ gridColumn: '1 / -1', background: 'rgba(255,255,255,0.05)' }}>
+              <span className="label">Soil Moisture</span>
+              <span className="value">{environmentalData.Soil_Moisture.toFixed(2)} m³/m³</span>
+            </div>
+            <p style={{ gridColumn: '1 / -1', fontSize: '0.8rem', color: '#94a3b8', margin: '5px 0 0 0', textAlign: 'center' }}>
+              {yieldData.useFirebase ? 'Averaged with real-time IoT sensors' : 'Fetched from 14-day Weather Forecast'}
+            </p>
+          </div>
+        )}
 
         <button type="submit" className="submit-btn" disabled={loading}>
           {loading ? 'Predicting Yield...' : 'Predict Yield & Production'}
@@ -207,6 +331,24 @@ function YieldPrediction() {
               {yieldResult.total_estimated_production_mt.toFixed(2)} <span style={{ fontSize: '1.2rem', color: '#94a3b8' }}>Metric Tons</span>
             </div>
             
+            <div className="yield-insights" style={{ marginTop: '20px' }}>
+              <h3 style={{ marginBottom: '15px', color: '#10b981' }}>Automated Environmental Data</h3>
+              <div className="variety-details" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                <div className="detail-item">
+                  <span className="label">Temp</span>
+                  <span className="value">{yieldResult.environmental_factors.Temperature_C.toFixed(2)}°C</span>
+                </div>
+                <div className="detail-item">
+                  <span className="label">Humidity</span>
+                  <span className="value">{yieldResult.environmental_factors.Humidity.toFixed(2)}%</span>
+                </div>
+                <div className="detail-item" style={{ gridColumn: '1 / -1' }}>
+                  <span className="label">Soil Moisture</span>
+                  <span className="value">{yieldResult.environmental_factors.Soil_Moisture.toFixed(2)} m³/m³</span>
+                </div>
+              </div>
+            </div>
+            
             <div style={{ padding: '15px', background: 'rgba(255,255,255,0.05)', borderRadius: '12px', marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '10px' }}>
                 <span style={{ color: '#cbd5e1' }}>Yield per Hectare</span>
@@ -219,7 +361,7 @@ function YieldPrediction() {
             </div>
 
             <div className="reasoning-box" style={{ background: 'rgba(0,0,0,0.2)', padding: '15px', borderRadius: '12px', fontSize: '0.95rem', color: '#e2e8f0', textAlign: 'left' }}>
-              <h3 style={{ marginTop: 0, marginBottom: '10px', fontSize: '1.1rem', color: '#fff' }}>Agronomic Insights</h3>
+              <h3 style={{ marginTop: 0, marginBottom: '10px', fontSize: '1.1rem', color: '#10b981' }}>Agronomic Recommendations</h3>
               <ul style={{ margin: 0, paddingLeft: '20px' }}>
                 {yieldResult.agronomic_recommendations && yieldResult.agronomic_recommendations.map((insight, idx) => (
                   <li key={idx} style={{ marginBottom: '8px' }}>{insight}</li>

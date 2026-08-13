@@ -7,7 +7,7 @@ from firebase_admin import db
 import os
 
 # Initialize Firebase App
-def init_firebase():
+def init_firebase():        
     if not firebase_admin._apps:
         # Assuming the service account key is in the backend root directory
         cred_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'firebase_service_account.json')

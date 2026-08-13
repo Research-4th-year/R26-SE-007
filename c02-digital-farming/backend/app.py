@@ -9,7 +9,10 @@ import joblib
 import pandas as pd
 import os
 import requests
+import numpy as np
 from yield_predictor import predict_yield_suitability
+from services.firebase_service import fetch_iot_data, init_firebase
+from services.weather_api import fetch_forecast_weather
 
 app = FastAPI(title="Farmer Advisory Guidance System API")
 
@@ -33,9 +36,16 @@ class YieldPredictionInput(BaseModel):
     District: str
     Total_Land_Size: float
     Paddy_Type: str
-    Temperature_C: float
-    Humidity: float
-    Soil_Moisture: float
+    lat: float
+    lon: float
+    field_id: str
+    use_firebase: bool = False
+    
+class EnvironmentDataRequest(BaseModel):
+    lat: float
+    lon: float
+    field_id: str
+    use_firebase: bool = False
 
 # Global variables for model and category data
 model = None
@@ -115,12 +125,61 @@ def predict_yield_type(input_data: PredictionInput):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+@app.post("/api/environment_data")
+def get_environment_data(input_data: EnvironmentDataRequest):
+    try:
+        forecast_data = fetch_forecast_weather(input_data.lat, input_data.lon)
+        if not forecast_data:
+            raise ValueError(f"Failed to fetch forecast for {input_data.lat}, {input_data.lon}")
+            
+        combined_temp = forecast_data['forecast_temp_mean']
+        combined_hum = forecast_data['forecast_humidity_mean']
+        
+        # Default soil moisture if Firebase is disabled or fails
+        combined_moisture = 0.35 
+        
+        if input_data.use_firebase and input_data.field_id:
+            init_firebase()
+            iot_data = fetch_iot_data(input_data.field_id)
+            if iot_data:
+                combined_temp = (iot_data['temp_mean'] + forecast_data['forecast_temp_mean']) / 2
+                combined_hum = (iot_data['humidity_mean'] + forecast_data['forecast_humidity_mean']) / 2
+                combined_moisture = iot_data['soil_moisture_7']
+            else:
+                print(f"Warning: No IoT data found for field {input_data.field_id}. Falling back to default soil moisture.")
+        
+        return {
+            "Temperature_C": float(combined_temp),
+            "Humidity": float(combined_hum),
+            "Soil_Moisture": float(combined_moisture)
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.post("/predict_yield_production")
 def predict_yield_production(input_data: YieldPredictionInput):
     if yield_pipeline is None:
         raise HTTPException(status_code=500, detail="Yield prediction model is not loaded. Please train the model first.")
         
     try:
+        forecast_data = fetch_forecast_weather(input_data.lat, input_data.lon)
+        if not forecast_data:
+            raise ValueError(f"Failed to fetch forecast for {input_data.lat}, {input_data.lon}")
+            
+        combined_temp = forecast_data['forecast_temp_mean']
+        combined_hum = forecast_data['forecast_humidity_mean']
+        combined_moisture = 0.35
+        
+        if input_data.use_firebase and input_data.field_id:
+            init_firebase()
+            iot_data = fetch_iot_data(input_data.field_id)
+            if iot_data:
+                combined_temp = (iot_data['temp_mean'] + forecast_data['forecast_temp_mean']) / 2
+                combined_hum = (iot_data['humidity_mean'] + forecast_data['forecast_humidity_mean']) / 2
+                combined_moisture = iot_data['soil_moisture_7']
+            else:
+                print(f"Warning: No IoT data found for field {input_data.field_id}.")
+        
         # Extract components from pipeline
         model_xgb = yield_pipeline['model']
         encoders = yield_pipeline['encoders']
@@ -128,7 +187,14 @@ def predict_yield_production(input_data: YieldPredictionInput):
         features = yield_pipeline['feature_names']
         
         # Prepare input dataframe
-        input_dict = input_data.dict()
+        input_dict = {
+            'District': input_data.District,
+            'Total_Land_Size': input_data.Total_Land_Size,
+            'Paddy_Type': input_data.Paddy_Type,
+            'Temperature_C': combined_temp,
+            'Humidity': combined_hum,
+            'Soil_Moisture': combined_moisture
+        }
         input_df = pd.DataFrame([input_dict])
         
         # Encode categorical features
@@ -155,19 +221,24 @@ def predict_yield_production(input_data: YieldPredictionInput):
         
         # Simple agronomic insights
         insights = []
-        if input_data.Soil_Moisture < 0.2:
+        if combined_moisture < 0.2:
             insights.append("Soil moisture is very low. Consider increasing irrigation immediately to prevent yield loss.")
-        elif input_data.Soil_Moisture > 0.4:
+        elif combined_moisture > 0.4:
             insights.append("Soil moisture is high. Ensure proper drainage to avoid root rot.")
         else:
             insights.append("Soil moisture is optimal for this paddy type.")
             
-        if input_data.Temperature_C > 32:
+        if combined_temp > 32:
             insights.append("Temperature is slightly high, which may cause heat stress during flowering stages.")
             
         return {
             "predicted_yield_kg_per_ha": float(predicted_yield),
             "total_estimated_production_mt": float(total_production),
+            "environmental_factors": {
+                "Temperature_C": float(combined_temp),
+                "Humidity": float(combined_hum),
+                "Soil_Moisture": float(combined_moisture)
+            },
             "confidence_interval": {
                 "lower": float(predicted_yield * 0.85),
                 "upper": float(predicted_yield * 1.15)
@@ -295,6 +366,7 @@ def get_latest_sensor_data():
 
 # Advisory History API
 from database import get_db_connection
+# pyrefly: ignore [missing-import]
 from pydantic import BaseModel
 
 class AdvisoryHistoryItem(BaseModel):
