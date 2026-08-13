@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { GoogleMap, useJsApiLoader, Marker } from '@react-google-maps/api';
 import { districtData, districtToZoneMap } from '../data/constants';
+import FarmerGuidance from '../components/FarmerGuidance';
 
 const mapContainerStyle = {
   width: '100%',
@@ -54,7 +55,9 @@ function Advisory() {
     Season: getCurrentSeason(),
     Salinity_Prone: 'No',
     Iron_Toxicity_Prone: 'No',
-    field_id: 'field_001'
+    field_id: 'field_001',
+    Irrigation: 'Irrigated',
+    Cultivation_Date: new Date().toISOString().split('T')[0]
   });
 
   const [loading, setLoading] = useState(false);
@@ -311,7 +314,21 @@ function Advisory() {
           </div>
         </div>
 
-        {/* 3. Field ID */}
+        <div className="form-row">
+          <div className="form-group">
+            <label>Irrigation Method</label>
+            <select name="Irrigation" value={advisoryData.Irrigation} onChange={handleAdvisoryChange}>
+              <option value="Irrigated">Irrigated (වාරිමාර්ග)</option>
+              <option value="Rainfed">Rainfed (වර්ෂාපෝෂිත)</option>
+            </select>
+          </div>
+          <div className="form-group">
+            <label>Cultivation Date (Optional)</label>
+            <input type="date" name="Cultivation_Date" value={advisoryData.Cultivation_Date} onChange={handleAdvisoryChange} />
+          </div>
+        </div>
+
+        {/* 4. Field ID */}
         <div className="form-group">
           <label htmlFor="field_id">ESP32 Field ID (Firebase node)</label>
           <input type="text" name="field_id" id="field_id" value={advisoryData.field_id} onChange={handleAdvisoryChange} />
@@ -395,6 +412,17 @@ function Advisory() {
             {saving ? 'Saving...' : '💾 Save Result to History'}
           </button>
         </div>
+      )}
+
+      {/* Farmer Crop Guidance */}
+      {result && result.details && (
+        <FarmerGuidance 
+          variety={result.predicted_variety_code}
+          ageGroup={result.details.Age_Group}
+          zone={advisoryData.Zone}
+          irrigation={advisoryData.Irrigation}
+          cultivationDate={advisoryData.Cultivation_Date}
+        />
       )}
 
       {/* History Table */}
