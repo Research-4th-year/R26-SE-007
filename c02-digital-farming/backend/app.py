@@ -42,33 +42,53 @@ model = None
 category_data = None
 yield_pipeline = None
 
+import time
+
 @app.on_event("startup")
 def load_resources():
     global model, category_data, yield_pipeline
     
-    # Load model
+    # ANSI Colors
+    C_GREEN = '\033[92m'
+    C_BLUE = '\033[94m'
+    C_CYAN = '\033[96m'
+    C_YELLOW = '\033[93m'
+    C_END = '\033[0m'
+
+    print(f"\n{C_CYAN}=================================================={C_END}")
+    print(f"{C_CYAN}🚀 STARTING FARMER ADVISORY BACKEND SERVICES...{C_END}")
+    print(f"{C_CYAN}=================================================={C_END}\n")
+    
+    time.sleep(0.3)
+    print(f"{C_BLUE}[STEP 1/3]{C_END} Loading Rice Variety ML Model...")
     model_path = os.path.join(os.path.dirname(__file__), 'models', 'rice_variety_predictor.pkl')
     try:
         model = joblib.load(model_path)
-        print("Model loaded successfully.")
+        print(f"   {C_GREEN}✔ Model loaded successfully!{C_END}")
     except FileNotFoundError:
-        print(f"Warning: Model not found at {model_path}. Please run train_model.py first.")
+        print(f"   {C_YELLOW}⚠ Warning: Model not found at {model_path}.{C_END}")
     
-    # Load category data for enhanced response
+    time.sleep(0.3)
+    print(f"\n{C_BLUE}[STEP 2/3]{C_END} Caching Rice Category Dataset...")
     category_path = os.path.join(os.path.dirname(__file__), '..', 'dataset', 'SL_Rice_Varietal_CategoryBased_Dataset.csv')
     try:
         category_data = pd.read_csv(category_path)
         category_data.set_index('Variety_Code', inplace=True)
+        print(f"   {C_GREEN}✔ Dataset cached into memory!{C_END}")
     except FileNotFoundError:
-        print(f"Warning: Category dataset not found at {category_path}.")
+        print(f"   {C_YELLOW}⚠ Warning: Category dataset not found.{C_END}")
         
-    # Load yield prediction pipeline
+    time.sleep(0.3)
+    print(f"\n{C_BLUE}[STEP 3/3]{C_END} Loading Yield Prediction Pipeline...")
     yield_model_path = os.path.join(os.path.dirname(__file__), 'models', 'yield_prediction_pipeline.pkl')
     try:
         yield_pipeline = joblib.load(yield_model_path)
-        print("Yield prediction pipeline loaded successfully.")
+        print(f"   {C_GREEN}✔ Yield pipeline ready for predictions!{C_END}")
     except FileNotFoundError:
-        print(f"Warning: Yield prediction model not found at {yield_model_path}. Please run train_yield_prediction.py first.")
+        print(f"   {C_YELLOW}⚠ Warning: Yield prediction model not found.{C_END}")
+
+    print(f"\n{C_GREEN}✅ SERVER IS LIVE AND LISTENING!{C_END}")
+    print(f"{C_CYAN}=================================================={C_END}\n")
 
 @app.post("/predict")
 def predict_yield_type(input_data: PredictionInput):

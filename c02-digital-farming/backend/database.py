@@ -27,6 +27,7 @@ def init_db():
     ''')
     conn.commit()
     conn.close()
+    print("\033[94m[SYSTEM]\033[0m SQLite Database Checked/Initialized!")
 
 # Initialize DB on import
 init_db()
