@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { GoogleMap, useJsApiLoader, Marker } from '@react-google-maps/api';
 import { districtData, districtToZoneMap } from '../data/constants';
 import FarmerGuidance from '../components/FarmerGuidance';
+import FertilizerSummary from '../components/FertilizerSummary';
 
 const mapContainerStyle = {
   width: '100%',
@@ -68,6 +69,7 @@ function Advisory() {
   // History State
   const [historyData, setHistoryData] = useState([]);
   const [saving, setSaving] = useState(false);
+  const [selectedHistory, setSelectedHistory] = useState(null);
 
   useEffect(() => {
     fetchHistory();
@@ -416,13 +418,19 @@ function Advisory() {
 
       {/* Farmer Crop Guidance */}
       {result && result.details && (
-        <FarmerGuidance 
-          variety={result.predicted_variety_code}
-          ageGroup={result.details.Age_Group}
-          zone={advisoryData.Zone}
-          irrigation={advisoryData.Irrigation}
-          cultivationDate={advisoryData.Cultivation_Date}
-        />
+        <>
+          <FarmerGuidance 
+            variety={result.predicted_variety_code}
+            ageGroup={result.details.Age_Group}
+            zone={advisoryData.Zone}
+            irrigation={advisoryData.Irrigation}
+            cultivationDate={advisoryData.Cultivation_Date}
+          />
+          <FertilizerSummary 
+            zone={advisoryData.Zone} 
+            ageGroup={result.details.Age_Group} 
+          />
+        </>
       )}
 
       {/* History Table */}
@@ -441,19 +449,106 @@ function Advisory() {
             </thead>
             <tbody>
               {historyData.map(row => (
-                <tr key={row.id} style={{ borderBottom: '1px solid rgba(0,0,0,0.05)' }}>
+                <tr 
+                  key={row.id} 
+                  onClick={() => setSelectedHistory(row)}
+                  style={{ borderBottom: '1px solid rgba(0,0,0,0.05)', cursor: 'pointer', transition: 'background 0.2s' }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(0,0,0,0.02)'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                >
                   <td style={{ padding: '12px 8px', fontWeight: '500' }}>{row.field_id}</td>
                   <td style={{ padding: '12px 8px' }}>{row.city}, {row.district}</td>
                   <td style={{ padding: '12px 8px', color: '#10b981', fontWeight: 'bold' }}>{row.predicted_variety}</td>
                   <td style={{ padding: '12px 8px' }}>{row.suitability_score}/5</td>
                   <td style={{ padding: '12px 8px' }}>
-                    <button onClick={() => editFieldId(row.id, row.field_id)} style={{ marginRight: '10px', background: 'none', border: 'none', cursor: 'pointer', color: '#3b82f6' }}>✏️</button>
-                    <button onClick={() => deleteHistory(row.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444' }}>🗑️</button>
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); editFieldId(row.id, row.field_id); }} 
+                      style={{ marginRight: '10px', background: 'none', border: 'none', cursor: 'pointer', color: '#3b82f6' }}
+                      title="Edit Field ID"
+                    >✏️</button>
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); deleteHistory(row.id); }} 
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444' }}
+                      title="Delete Record"
+                    >🗑️</button>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* History Details Modal */}
+      {selectedHistory && (
+        <div style={{
+          position: 'fixed',
+          top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 1000,
+          backdropFilter: 'blur(4px)'
+        }} onClick={() => setSelectedHistory(null)}>
+          <div style={{
+            background: '#fff',
+            padding: '30px',
+            borderRadius: '16px',
+            width: '90%',
+            maxWidth: '500px',
+            boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)',
+            position: 'relative'
+          }} onClick={(e) => e.stopPropagation()}>
+            <button 
+              onClick={() => setSelectedHistory(null)}
+              style={{
+                position: 'absolute',
+                top: '15px', right: '15px',
+                background: 'none', border: 'none',
+                fontSize: '1.5rem', cursor: 'pointer',
+                color: '#64748b'
+              }}
+            >&times;</button>
+            
+            <h3 style={{ color: '#0f172a', margin: '0 0 20px 0', fontSize: '1.5rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '10px' }}>
+              Advisory Details
+            </h3>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', fontSize: '0.95rem' }}>
+              <div>
+                <span style={{ color: '#64748b', display: 'block', fontSize: '0.8rem' }}>Field ID</span>
+                <strong style={{ color: '#1e293b' }}>{selectedHistory.field_id}</strong>
+              </div>
+              <div>
+                <span style={{ color: '#64748b', display: 'block', fontSize: '0.8rem' }}>Location</span>
+                <strong style={{ color: '#1e293b' }}>{selectedHistory.city}, {selectedHistory.district}</strong>
+              </div>
+              <div>
+                <span style={{ color: '#64748b', display: 'block', fontSize: '0.8rem' }}>Climatic Zone</span>
+                <strong style={{ color: '#1e293b' }}>{selectedHistory.zone}</strong>
+              </div>
+              <div>
+                <span style={{ color: '#64748b', display: 'block', fontSize: '0.8rem' }}>Season</span>
+                <strong style={{ color: '#1e293b' }}>{selectedHistory.season}</strong>
+              </div>
+              <div style={{ gridColumn: '1 / -1', background: '#f8fafc', padding: '15px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                <span style={{ color: '#64748b', display: 'block', fontSize: '0.85rem' }}>Predicted Optimal Variety</span>
+                <strong style={{ color: '#10b981', fontSize: '1.5rem' }}>{selectedHistory.predicted_variety}</strong>
+              </div>
+              <div style={{ gridColumn: '1 / -1', background: '#f8fafc', padding: '15px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                <span style={{ color: '#64748b', display: 'block', fontSize: '0.85rem' }}>Field Suitability Score (1-5)</span>
+                <strong style={{ color: selectedHistory.suitability_score <= 2 ? '#10b981' : (selectedHistory.suitability_score <= 3 ? '#f59e0b' : '#ef4444'), fontSize: '1.5rem' }}>
+                  {selectedHistory.suitability_score}
+                </strong>
+              </div>
+              {selectedHistory.created_at && (
+                <div style={{ gridColumn: '1 / -1', textAlign: 'right', marginTop: '10px' }}>
+                  <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>Saved on: {new Date(selectedHistory.created_at + 'Z').toLocaleString()}</span>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
     </div>

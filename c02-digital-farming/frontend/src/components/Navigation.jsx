@@ -27,6 +27,12 @@ function Navigation() {
         >
           Disease Detection
         </Link>
+        <Link 
+          to="/fertilizer" 
+          className={`nav-item ${location.pathname === '/fertilizer' ? 'active' : ''}`}
+        >
+          Fertilizer Guide
+        </Link>
       </div>
     </nav>
   );

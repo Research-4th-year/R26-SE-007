@@ -3,6 +3,7 @@ import Navigation from './components/Navigation';
 import Advisory from './pages/Advisory';
 import YieldPrediction from './pages/YieldPrediction';
 import DiseaseDetection from './pages/DiseaseDetection';
+import FertilizerGuide from './pages/FertilizerGuide';
 import './App.css';
 
 function App() {
@@ -15,6 +16,7 @@ function App() {
             <Route path="/" element={<Advisory />} />
             <Route path="/yield" element={<YieldPrediction />} />
             <Route path="/disease" element={<DiseaseDetection />} />
+            <Route path="/fertilizer" element={<FertilizerGuide />} />
           </Routes>
         </main>
       </div>
