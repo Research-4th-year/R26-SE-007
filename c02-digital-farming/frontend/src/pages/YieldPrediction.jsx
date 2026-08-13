@@ -201,15 +201,7 @@ function YieldPrediction() {
       {error && <div className="error-message">{error}</div>}
 
       <form onSubmit={handleYieldSubmit} className="prediction-form glass-panel">
-        <div className="form-group">
-          <label htmlFor="yield_district">District</label>
-          <select name="District" id="yield_district" value={yieldData.District} onChange={handleYieldChange}>
-            {Object.keys(districtData).map(dist => (
-              <option key={dist} value={dist}>{dist}</option>
-            ))}
-          </select>
-        </div>
-
+        {/* Replaced top redundant District dropdown with nothing, moved to map section */}
         <div className="form-row">
           <div className="form-group">
             <label htmlFor="Total_Land_Size">Land Size</label>
@@ -239,26 +231,10 @@ function YieldPrediction() {
         </div>
 
         <div className="form-group">
-          <label>Select Location via Map or Dropdowns</label>
-          <div className="form-row">
-            <div className="form-group" style={{ marginBottom: '10px' }}>
-              <select name="District" value={yieldData.District} onChange={handleYieldChange}>
-                {Object.keys(districtData).map(dist => (
-                  <option key={dist} value={dist}>{dist}</option>
-                ))}
-              </select>
-            </div>
-            <div className="form-group" style={{ marginBottom: '10px' }}>
-              <select name="City" value={yieldData.City} onChange={handleYieldChange}>
-                {districtData[yieldData.District].map(c => (
-                  <option key={c.name} value={c.name}>{c.name}</option>
-                ))}
-              </select>
-            </div>
-          </div>
+          <label>Select Location via Map</label>
           
           {isLoaded && (
-            <div style={{ borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(255, 255, 255, 0.1)', marginBottom: '5px' }}>
+            <div style={{ borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(255, 255, 255, 0.1)', marginBottom: '15px' }}>
               <GoogleMap
                 mapContainerStyle={mapContainerStyle}
                 center={{ lat: yieldData.lat, lng: yieldData.lon }}
@@ -269,8 +245,24 @@ function YieldPrediction() {
               </GoogleMap>
             </div>
           )}
-          <div style={{ textAlign: 'center', fontSize: '0.85rem', color: '#94a3b8', marginBottom: '15px' }}>
-            Selected Coord: {yieldData.lat.toFixed(4)}, {yieldData.lon.toFixed(4)}
+          
+          <div style={{ 
+            background: '#f8fafc', 
+            padding: '15px', 
+            borderRadius: '8px', 
+            border: '1px solid #e2e8f0',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center'
+          }}>
+            <div>
+              <span style={{ color: '#64748b', fontSize: '0.85rem', display: 'block' }}>Nearest City (Auto-detected)</span>
+              <strong style={{ color: '#1e293b', fontSize: '1.1rem' }}>{yieldData.City}, {yieldData.District}</strong>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <span style={{ color: '#64748b', fontSize: '0.75rem', display: 'block' }}>Coordinates</span>
+              <code style={{ color: '#3b82f6', fontSize: '0.85rem' }}>{yieldData.lat.toFixed(4)}, {yieldData.lon.toFixed(4)}</code>
+            </div>
           </div>
         </div>
 

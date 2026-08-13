@@ -261,26 +261,10 @@ function Advisory() {
         
         {/* 1. Map Section */}
         <div className="form-group">
-          <label>Select Location via Map or Dropdowns</label>
-          <div className="form-row">
-            <div className="form-group" style={{ marginBottom: '10px' }}>
-              <select name="District" value={advisoryData.District} onChange={handleAdvisoryChange}>
-                {Object.keys(districtData).map(dist => (
-                  <option key={dist} value={dist}>{dist}</option>
-                ))}
-              </select>
-            </div>
-            <div className="form-group" style={{ marginBottom: '10px' }}>
-              <select name="City" value={advisoryData.City} onChange={handleAdvisoryChange}>
-                {districtData[advisoryData.District].map(c => (
-                  <option key={c.name} value={c.name}>{c.name}</option>
-                ))}
-              </select>
-            </div>
-          </div>
+          <label>Select Location via Map</label>
           
           {isLoaded && (
-            <div style={{ borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(255, 255, 255, 0.1)', marginBottom: '5px' }}>
+            <div style={{ borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(255, 255, 255, 0.1)', marginBottom: '15px' }}>
               <GoogleMap
                 mapContainerStyle={mapContainerStyle}
                 center={{ lat: advisoryData.lat, lng: advisoryData.lon }}
@@ -291,8 +275,24 @@ function Advisory() {
               </GoogleMap>
             </div>
           )}
-          <div style={{ textAlign: 'center', fontSize: '0.85rem', color: '#94a3b8', marginBottom: '15px' }}>
-            Selected Coord: {advisoryData.lat.toFixed(4)}, {advisoryData.lon.toFixed(4)}
+          
+          <div style={{ 
+            background: '#f8fafc', 
+            padding: '15px', 
+            borderRadius: '8px', 
+            border: '1px solid #e2e8f0',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center'
+          }}>
+            <div>
+              <span style={{ color: '#64748b', fontSize: '0.85rem', display: 'block' }}>Nearest City (Auto-detected)</span>
+              <strong style={{ color: '#1e293b', fontSize: '1.1rem' }}>{advisoryData.City}, {advisoryData.District}</strong>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <span style={{ color: '#64748b', fontSize: '0.75rem', display: 'block' }}>Coordinates</span>
+              <code style={{ color: '#3b82f6', fontSize: '0.85rem' }}>{advisoryData.lat.toFixed(4)}, {advisoryData.lon.toFixed(4)}</code>
+            </div>
           </div>
         </div>
 
