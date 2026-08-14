@@ -14,7 +14,9 @@ import {
 
 import {
   ActivityIndicator,
+  Alert,
   Linking,
+  Modal,
   Pressable,
   SafeAreaView,
   ScrollView,
@@ -36,6 +38,14 @@ import {
 } from "@/services/c03-marketplace/partner.service";
 
 import {
+  harvestService,
+} from "@/services/c03-marketplace/harvest.service";
+
+import {
+  demandService,
+} from "@/services/c03-marketplace/demand.service";
+
+import {
   getApiErrorMessage,
 } from "@/utils/c03-marketplace/getApiErrorMessage";
 
@@ -45,6 +55,14 @@ import type {
   PartnerHarvestOpportunity,
   PartnerType,
 } from "@/types/c03-marketplace/partner.types";
+
+import type {
+  Harvest,
+} from "@/types/c03-marketplace/harvest.types";
+
+import type {
+  MillerDemand,
+} from "@/types/c03-marketplace/demand.types";
 
 export default function PartnerDetailScreen() {
   const params =
@@ -83,6 +101,47 @@ export default function PartnerDetailScreen() {
     useState<
       string | null
     >(null);
+
+  const [
+    opportunityModalVisible,
+    setOpportunityModalVisible,
+  ] = useState(false);
+
+  const [
+    selectedPartnerDemand,
+    setSelectedPartnerDemand,
+  ] =
+    useState<
+      PartnerDemandOpportunity | null
+    >(null);
+
+  const [
+    selectedPartnerHarvest,
+    setSelectedPartnerHarvest,
+  ] =
+    useState<
+      PartnerHarvestOpportunity | null
+    >(null);
+
+  const [
+    myHarvests,
+    setMyHarvests,
+  ] = useState<Harvest[]>([]);
+
+  const [
+    myDemands,
+    setMyDemands,
+  ] = useState<MillerDemand[]>([]);
+
+  const [
+    resourcesLoading,
+    setResourcesLoading,
+  ] = useState(false);
+
+  const [
+    selectedResourceId,
+    setSelectedResourceId,
+  ] = useState<string | null>(null);
 
   const isFarmer =
     user?.role === "farmer";
@@ -280,6 +339,217 @@ export default function PartnerDetailScreen() {
       `https://wa.me/${normalizeSriLankanPhone(
         phone
       )}`
+    );
+  }
+
+  async function openDemandMatching(
+    demand: PartnerDemandOpportunity
+  ) {
+    try {
+      setSelectedPartnerDemand(
+        demand
+      );
+
+      setSelectedPartnerHarvest(
+        null
+      );
+
+      setSelectedResourceId(
+        null
+      );
+
+      setMyHarvests([]);
+
+      setOpportunityModalVisible(
+        true
+      );
+
+      setResourcesLoading(
+        true
+      );
+
+      const response =
+        await harvestService.getMyHarvests();
+
+      const availableHarvests =
+        Array.isArray(
+          response.data
+        )
+          ? response.data.filter(
+              (harvest) =>
+                harvest.status ===
+                  "available" &&
+                harvest.paddyType
+                  .trim()
+                  .toLowerCase() ===
+                  demand.paddyType
+                    .trim()
+                    .toLowerCase()
+            )
+          : [];
+
+      setMyHarvests(
+        availableHarvests
+      );
+    } catch (error) {
+      setOpportunityModalVisible(
+        false
+      );
+
+      Alert.alert(
+        "Unable to load Harvests",
+        getApiErrorMessage(
+          error
+        )
+      );
+    } finally {
+      setResourcesLoading(
+        false
+      );
+    }
+  }
+
+  async function openHarvestMatching(
+    harvest: PartnerHarvestOpportunity
+  ) {
+    try {
+      setSelectedPartnerHarvest(
+        harvest
+      );
+
+      setSelectedPartnerDemand(
+        null
+      );
+
+      setSelectedResourceId(
+        null
+      );
+
+      setMyDemands([]);
+
+      setOpportunityModalVisible(
+        true
+      );
+
+      setResourcesLoading(
+        true
+      );
+
+      const response =
+        await demandService.getMyDemands();
+
+      const openDemands =
+        Array.isArray(
+          response.data
+        )
+          ? response.data.filter(
+              (demand) =>
+                demand.status ===
+                  "open" &&
+                demand.paddyType
+                  .trim()
+                  .toLowerCase() ===
+                  harvest.paddyType
+                    .trim()
+                    .toLowerCase()
+            )
+          : [];
+
+      setMyDemands(
+        openDemands
+      );
+    } catch (error) {
+      setOpportunityModalVisible(
+        false
+      );
+
+      Alert.alert(
+        "Unable to load Demands",
+        getApiErrorMessage(
+          error
+        )
+      );
+    } finally {
+      setResourcesLoading(
+        false
+      );
+    }
+  }
+
+  function closeOpportunityModal() {
+    setOpportunityModalVisible(
+      false
+    );
+
+    setSelectedPartnerDemand(
+      null
+    );
+
+    setSelectedPartnerHarvest(
+      null
+    );
+
+    setSelectedResourceId(
+      null
+    );
+  }
+
+  function continueToMatching() {
+    if (
+      !selectedResourceId
+    ) {
+      return;
+    }
+
+    const resourceId =
+      selectedResourceId;
+
+    closeOpportunityModal();
+
+    if (
+      user?.role ===
+      "farmer"
+    ) {
+      router.push({
+        pathname:
+          "/(c03-marketplace)/(farmer)/matched-millers" as any,
+
+        params: {
+          harvestId:
+            resourceId,
+        },
+      });
+
+      return;
+    }
+
+    router.push({
+      pathname:
+        "/(c03-marketplace)/(miller)/matched-farmers" as any,
+
+      params: {
+        demandId:
+          resourceId,
+      },
+    });
+  }
+
+  function createMissingResource() {
+    closeOpportunityModal();
+
+    if (
+      user?.role ===
+      "farmer"
+    ) {
+      router.push(
+        "/(c03-marketplace)/(farmer)/add-harvest" as any
+      );
+
+      return;
+    }
+
+    router.push(
+      "/(c03-marketplace)/(miller)/create-demand" as any
     );
   }
 
@@ -1012,6 +1282,9 @@ export default function PartnerDetailScreen() {
                 theme={
                   theme
                 }
+                onMatch={
+                  openDemandMatching
+                }
               />
             ) : (
               <HarvestOpportunities
@@ -1020,6 +1293,9 @@ export default function PartnerDetailScreen() {
                 }
                 theme={
                   theme
+                }
+                onMatch={
+                  openHarvestMatching
                 }
               />
             )}
@@ -1319,6 +1595,493 @@ export default function PartnerDetailScreen() {
           </View>
         )}
       </ScrollView>
+
+      <Modal
+        visible={
+          opportunityModalVisible
+        }
+        transparent
+        animationType="fade"
+        statusBarTranslucent
+        onRequestClose={
+          closeOpportunityModal
+        }
+      >
+        <Pressable
+          style={
+            styles.modalOverlay
+          }
+          onPress={
+            closeOpportunityModal
+          }
+        >
+          <Pressable
+            style={
+              styles.matchModal
+            }
+            onPress={() => {}}
+          >
+            <View
+              style={
+                styles.modalHandle
+              }
+            />
+
+            <View
+              style={
+                styles.modalHeader
+              }
+            >
+              <View
+                style={[
+                  styles.modalIcon,
+                  {
+                    backgroundColor:
+                      theme.soft,
+                  },
+                ]}
+              >
+                <Ionicons
+                  name="git-compare-outline"
+                  size={23}
+                  color={
+                    theme.primary
+                  }
+                />
+              </View>
+
+              <View
+                style={{
+                  flex: 1,
+                }}
+              >
+                <Text
+                  style={
+                    styles.modalTitle
+                  }
+                >
+                  Match Opportunity
+                </Text>
+
+                <Text
+                  style={
+                    styles.modalSubtitle
+                  }
+                >
+                  {user?.role ===
+                  "farmer"
+                    ? "Choose one of your available Harvests"
+                    : "Choose one of your open Demands"}
+                </Text>
+              </View>
+
+              <Pressable
+                onPress={
+                  closeOpportunityModal
+                }
+                style={
+                  styles.modalClose
+                }
+              >
+                <Ionicons
+                  name="close"
+                  size={20}
+                  color="#64748B"
+                />
+              </Pressable>
+            </View>
+
+            {selectedPartnerDemand ? (
+              <View
+                style={
+                  styles.targetOpportunity
+                }
+              >
+                <Text
+                  style={
+                    styles.targetLabel
+                  }
+                >
+                  MILLER DEMAND
+                </Text>
+
+                <Text
+                  style={
+                    styles.targetTitle
+                  }
+                >
+                  {formatPaddyType(
+                    selectedPartnerDemand.paddyType
+                  )}
+                </Text>
+
+                <Text
+                  style={
+                    styles.targetText
+                  }
+                >
+                  {formatNumber(
+                    selectedPartnerDemand.quantityNeeded
+                  )}{" "}
+                  kg •{" "}
+                  {formatCurrency(
+                    selectedPartnerDemand.offeredPrice
+                  )}
+                  /kg
+                </Text>
+              </View>
+            ) : null}
+
+            {selectedPartnerHarvest ? (
+              <View
+                style={
+                  styles.targetOpportunity
+                }
+              >
+                <Text
+                  style={
+                    styles.targetLabel
+                  }
+                >
+                  FARMER HARVEST
+                </Text>
+
+                <Text
+                  style={
+                    styles.targetTitle
+                  }
+                >
+                  {formatPaddyType(
+                    selectedPartnerHarvest.paddyType
+                  )}
+                </Text>
+
+                <Text
+                  style={
+                    styles.targetText
+                  }
+                >
+                  {formatNumber(
+                    selectedPartnerHarvest.quantity
+                  )}{" "}
+                  kg • Expected{" "}
+                  {formatCurrency(
+                    selectedPartnerHarvest.expectedPrice
+                  )}
+                  /kg
+                </Text>
+              </View>
+            ) : null}
+
+            <Text
+              style={
+                styles.chooseTitle
+              }
+            >
+              {user?.role ===
+              "farmer"
+                ? "Choose your Harvest"
+                : "Choose your Demand"}
+            </Text>
+
+            {resourcesLoading ? (
+              <View
+                style={
+                  styles.modalLoading
+                }
+              >
+                <ActivityIndicator
+                  color={
+                    theme.primary
+                  }
+                />
+
+                <Text
+                  style={
+                    styles.modalLoadingText
+                  }
+                >
+                  Loading compatible marketplace records...
+                </Text>
+              </View>
+            ) : user?.role ===
+              "farmer" ? (
+              myHarvests.length >
+              0 ? (
+                <ScrollView
+                  style={
+                    styles.resourceList
+                  }
+                  showsVerticalScrollIndicator={
+                    false
+                  }
+                >
+                  {myHarvests.map(
+                    (harvest) => {
+                      const selected =
+                        selectedResourceId ===
+                        harvest._id;
+
+                      return (
+                        <Pressable
+                          key={
+                            harvest._id
+                          }
+                          onPress={() =>
+                            setSelectedResourceId(
+                              harvest._id
+                            )
+                          }
+                          style={[
+                            styles.resourceCard,
+                            selected && {
+                              borderColor:
+                                theme.primary,
+                              backgroundColor:
+                                theme.soft,
+                            },
+                          ]}
+                        >
+                          <View
+                            style={
+                              styles.radioOuter
+                            }
+                          >
+                            {selected ? (
+                              <View
+                                style={[
+                                  styles.radioInner,
+                                  {
+                                    backgroundColor:
+                                      theme.primary,
+                                  },
+                                ]}
+                              />
+                            ) : null}
+                          </View>
+
+                          <View
+                            style={{
+                              flex: 1,
+                            }}
+                          >
+                            <Text
+                              style={
+                                styles.resourceTitle
+                              }
+                            >
+                              {formatPaddyType(
+                                harvest.paddyType
+                              )}
+                            </Text>
+
+                            <Text
+                              style={
+                                styles.resourceText
+                              }
+                            >
+                              {formatNumber(
+                                harvest.quantity
+                              )}{" "}
+                              kg •{" "}
+                              {formatPaddyType(
+                                harvest.season
+                              )}
+                            </Text>
+
+                            <Text
+                              style={
+                                styles.resourcePrice
+                              }
+                            >
+                              Expected{" "}
+                              {formatCurrency(
+                                harvest.expectedPrice
+                              )}
+                              /kg
+                            </Text>
+                          </View>
+                        </Pressable>
+                      );
+                    }
+                  )}
+                </ScrollView>
+              ) : (
+                <NoCompatibleResource
+                  role="farmer"
+                  theme={
+                    theme
+                  }
+                  onCreate={
+                    createMissingResource
+                  }
+                />
+              )
+            ) : myDemands.length >
+              0 ? (
+              <ScrollView
+                style={
+                  styles.resourceList
+                }
+                showsVerticalScrollIndicator={
+                  false
+                }
+              >
+                {myDemands.map(
+                  (demand) => {
+                    const selected =
+                      selectedResourceId ===
+                      demand._id;
+
+                    return (
+                      <Pressable
+                        key={
+                          demand._id
+                        }
+                        onPress={() =>
+                          setSelectedResourceId(
+                            demand._id
+                          )
+                        }
+                        style={[
+                          styles.resourceCard,
+                          selected && {
+                            borderColor:
+                              theme.primary,
+                            backgroundColor:
+                              theme.soft,
+                          },
+                        ]}
+                      >
+                        <View
+                          style={
+                            styles.radioOuter
+                          }
+                        >
+                          {selected ? (
+                            <View
+                              style={[
+                                styles.radioInner,
+                                {
+                                  backgroundColor:
+                                    theme.primary,
+                                },
+                              ]}
+                            />
+                          ) : null}
+                        </View>
+
+                        <View
+                          style={{
+                            flex: 1,
+                          }}
+                        >
+                          <Text
+                            style={
+                              styles.resourceTitle
+                            }
+                          >
+                            {formatPaddyType(
+                              demand.paddyType
+                            )}
+                          </Text>
+
+                          <Text
+                            style={
+                              styles.resourceText
+                            }
+                          >
+                            {formatNumber(
+                              demand.quantityNeeded
+                            )}{" "}
+                            kg needed
+                          </Text>
+
+                          <Text
+                            style={
+                              styles.resourcePrice
+                            }
+                          >
+                            Offer{" "}
+                            {formatCurrency(
+                              demand.offeredPrice
+                            )}
+                            /kg
+                          </Text>
+                        </View>
+                      </Pressable>
+                    );
+                  }
+                )}
+              </ScrollView>
+            ) : (
+              <NoCompatibleResource
+                role="miller"
+                theme={
+                  theme
+                }
+                onCreate={
+                  createMissingResource
+                }
+              />
+            )}
+
+            <View
+              style={
+                styles.modalInfo
+              }
+            >
+              <Ionicons
+                name="shield-checkmark-outline"
+                size={17}
+                color="#64748B"
+              />
+
+              <Text
+                style={
+                  styles.modalInfoText
+                }
+              >
+                The AI matching engine will still calculate compatibility before a match request can be sent.
+              </Text>
+            </View>
+
+            <Pressable
+              disabled={
+                !selectedResourceId ||
+                resourcesLoading
+              }
+              onPress={
+                continueToMatching
+              }
+              style={[
+                styles.continueButton,
+                {
+                  backgroundColor:
+                    theme.primary,
+                },
+                (!selectedResourceId ||
+                  resourcesLoading) &&
+                  styles.disabledButton,
+              ]}
+            >
+              <Ionicons
+                name="sparkles"
+                size={18}
+                color="#FFFFFF"
+              />
+
+              <Text
+                style={
+                  styles.continueButtonText
+                }
+              >
+                Check AI Match
+              </Text>
+            </Pressable>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -1326,12 +2089,17 @@ export default function PartnerDetailScreen() {
 function DemandOpportunities({
   demands,
   theme,
+  onMatch,
 }: {
   demands:
     PartnerDemandOpportunity[];
 
   theme:
     Theme;
+
+  onMatch: (
+    demand: PartnerDemandOpportunity
+  ) => void;
 }) {
   if (
     demands.length ===
@@ -1435,16 +2203,34 @@ function DemandOpportunities({
               />
             </View>
 
-            <Text
-              style={
-                styles.opportunityHint
+            <Pressable
+              onPress={() =>
+                onMatch(
+                  demand
+                )
               }
+              style={[
+                styles.matchOpportunityButton,
+                {
+                  backgroundColor:
+                    theme.primary,
+                },
+              ]}
             >
-              Use one of your Harvests
-              to find and request a
-              matching opportunity with
-              this Miller.
-            </Text>
+              <Ionicons
+                name="git-compare-outline"
+                size={17}
+                color="#FFFFFF"
+              />
+
+              <Text
+                style={
+                  styles.matchOpportunityText
+                }
+              >
+                Match with this Demand
+              </Text>
+            </Pressable>
           </View>
         )
       )}
@@ -1455,12 +2241,17 @@ function DemandOpportunities({
 function HarvestOpportunities({
   harvests,
   theme,
+  onMatch,
 }: {
   harvests:
     PartnerHarvestOpportunity[];
 
   theme:
     Theme;
+
+  onMatch: (
+    harvest: PartnerHarvestOpportunity
+  ) => void;
 }) {
   if (
     harvests.length ===
@@ -1538,7 +2329,7 @@ function HarvestOpportunities({
                   {formatPaddyType(
                     harvest.season
                   )}{" "}
-                  harvest
+                  Harvest
                 </Text>
               </View>
 
@@ -1574,16 +2365,34 @@ function HarvestOpportunities({
               />
             </View>
 
-            <Text
-              style={
-                styles.opportunityHint
+            <Pressable
+              onPress={() =>
+                onMatch(
+                  harvest
+                )
               }
+              style={[
+                styles.matchOpportunityButton,
+                {
+                  backgroundColor:
+                    theme.primary,
+                },
+              ]}
             >
-              Use one of your Demands
-              to match with this
-              Farmer's available
-              harvest.
-            </Text>
+              <Ionicons
+                name="git-compare-outline"
+                size={17}
+                color="#FFFFFF"
+              />
+
+              <Text
+                style={
+                  styles.matchOpportunityText
+                }
+              >
+                Match with this Harvest
+              </Text>
+            </Pressable>
           </View>
         )
       )}
@@ -1622,6 +2431,106 @@ function OpportunityEmpty({
       >
         {text}
       </Text>
+    </View>
+  );
+}
+
+function NoCompatibleResource({
+  role,
+  theme,
+  onCreate,
+}: {
+  role:
+    | "farmer"
+    | "miller";
+
+  theme:
+    Theme;
+
+  onCreate:
+    () => void;
+}) {
+  return (
+    <View
+      style={
+        styles.noResourceCard
+      }
+    >
+      <View
+        style={[
+          styles.noResourceIcon,
+          {
+            backgroundColor:
+              theme.soft,
+          },
+        ]}
+      >
+        <Ionicons
+          name={
+            role ===
+            "farmer"
+              ? "leaf-outline"
+              : "storefront-outline"
+          }
+          size={25}
+          color={
+            theme.primary
+          }
+        />
+      </View>
+
+      <Text
+        style={
+          styles.noResourceTitle
+        }
+      >
+        No compatible{" "}
+        {role ===
+        "farmer"
+          ? "Harvest"
+          : "Demand"}
+      </Text>
+
+      <Text
+        style={
+          styles.noResourceText
+        }
+      >
+        {role ===
+        "farmer"
+          ? "You need an available Harvest of the same paddy variety before checking this match."
+          : "You need an open Demand of the same paddy variety before checking this match."}
+      </Text>
+
+      <Pressable
+        style={[
+          styles.createResourceButton,
+          {
+            backgroundColor:
+              theme.primary,
+          },
+        ]}
+        onPress={
+          onCreate
+        }
+      >
+        <Ionicons
+          name="add"
+          size={17}
+          color="#FFFFFF"
+        />
+
+        <Text
+          style={
+            styles.createResourceText
+          }
+        >
+          {role ===
+          "farmer"
+            ? "Add Harvest"
+            : "Create Demand"}
+        </Text>
+      </Pressable>
     </View>
   );
 }
@@ -3217,4 +4126,265 @@ const styles =
       marginTop:
         2,
     },
+
+    matchOpportunityButton: {
+      minHeight: 44,
+      borderRadius: 13,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 6,
+      marginTop: 11,
+    },
+
+    matchOpportunityText: {
+      color: "#FFFFFF",
+      fontSize: 8.5,
+      fontWeight: "900",
+    },
+
+    modalOverlay: {
+      flex: 1,
+      justifyContent: "flex-end",
+      backgroundColor: "rgba(15,23,42,0.46)",
+    },
+
+    matchModal: {
+      maxHeight: "88%",
+      paddingHorizontal: 18,
+      paddingTop: 10,
+      paddingBottom: 28,
+      borderTopLeftRadius: 28,
+      borderTopRightRadius: 28,
+      backgroundColor: "#FFFFFF",
+    },
+
+    modalHandle: {
+      alignSelf: "center",
+      width: 40,
+      height: 4,
+      borderRadius: 999,
+      backgroundColor: "#CBD5E1",
+      marginBottom: 16,
+    },
+
+    modalHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 10,
+    },
+
+    modalIcon: {
+      width: 47,
+      height: 47,
+      borderRadius: 15,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+
+    modalTitle: {
+      color: "#1F2937",
+      fontSize: 15,
+      fontWeight: "900",
+    },
+
+    modalSubtitle: {
+      color: "#64748B",
+      fontSize: 8,
+      marginTop: 2,
+    },
+
+    modalClose: {
+      width: 38,
+      height: 38,
+      borderRadius: 12,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: "#F1F5F9",
+    },
+
+    targetOpportunity: {
+      padding: 13,
+      borderRadius: 16,
+      backgroundColor: "#F8FAFC",
+      borderWidth: 1,
+      borderColor: "#E2E8F0",
+      marginTop: 15,
+    },
+
+    targetLabel: {
+      color: "#94A3B8",
+      fontSize: 6.5,
+      fontWeight: "900",
+      letterSpacing: 0.8,
+    },
+
+    targetTitle: {
+      color: "#1F2937",
+      fontSize: 11,
+      fontWeight: "900",
+      marginTop: 4,
+    },
+
+    targetText: {
+      color: "#64748B",
+      fontSize: 8,
+      marginTop: 3,
+    },
+
+    chooseTitle: {
+      color: "#1F2937",
+      fontSize: 11,
+      fontWeight: "900",
+      marginTop: 16,
+      marginBottom: 9,
+    },
+
+    modalLoading: {
+      minHeight: 130,
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 8,
+    },
+
+    modalLoadingText: {
+      color: "#64748B",
+      fontSize: 8,
+    },
+
+    resourceList: {
+      maxHeight: 260,
+    },
+
+    resourceCard: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 10,
+      padding: 12,
+      borderRadius: 15,
+      backgroundColor: "#FFFFFF",
+      borderWidth: 1,
+      borderColor: "#E5E7EB",
+      marginBottom: 8,
+    },
+
+    radioOuter: {
+      width: 20,
+      height: 20,
+      borderRadius: 10,
+      borderWidth: 2,
+      borderColor: "#CBD5E1",
+      alignItems: "center",
+      justifyContent: "center",
+    },
+
+    radioInner: {
+      width: 10,
+      height: 10,
+      borderRadius: 5,
+    },
+
+    resourceTitle: {
+      color: "#1F2937",
+      fontSize: 10,
+      fontWeight: "900",
+    },
+
+    resourceText: {
+      color: "#64748B",
+      fontSize: 7.5,
+      marginTop: 2,
+    },
+
+    resourcePrice: {
+      color: "#334155",
+      fontSize: 8,
+      fontWeight: "800",
+      marginTop: 3,
+    },
+
+    modalInfo: {
+      flexDirection: "row",
+      alignItems: "flex-start",
+      gap: 7,
+      padding: 10,
+      borderRadius: 13,
+      backgroundColor: "#F8FAFC",
+      marginTop: 11,
+    },
+
+    modalInfoText: {
+      flex: 1,
+      color: "#64748B",
+      fontSize: 7.5,
+      lineHeight: 12,
+    },
+
+    continueButton: {
+      minHeight: 50,
+      borderRadius: 15,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 7,
+      marginTop: 12,
+    },
+
+    continueButtonText: {
+      color: "#FFFFFF",
+      fontSize: 9.5,
+      fontWeight: "900",
+    },
+
+    disabledButton: {
+      opacity: 0.45,
+    },
+
+    noResourceCard: {
+      alignItems: "center",
+      padding: 18,
+      borderRadius: 16,
+      backgroundColor: "#F8FAFC",
+    },
+
+    noResourceIcon: {
+      width: 52,
+      height: 52,
+      borderRadius: 17,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+
+    noResourceTitle: {
+      color: "#1F2937",
+      fontSize: 10,
+      fontWeight: "900",
+      marginTop: 9,
+    },
+
+    noResourceText: {
+      color: "#64748B",
+      fontSize: 7.5,
+      lineHeight: 12,
+      textAlign: "center",
+      marginTop: 3,
+    },
+
+    createResourceButton: {
+      minHeight: 40,
+      paddingHorizontal: 17,
+      borderRadius: 12,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 5,
+      marginTop: 11,
+    },
+
+    createResourceText: {
+      color: "#FFFFFF",
+      fontSize: 8,
+      fontWeight: "900",
+    },
+
   });
