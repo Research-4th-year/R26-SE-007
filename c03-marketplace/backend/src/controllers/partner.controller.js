@@ -24,9 +24,22 @@ const FavoritePartner = require(
   "../models/favoritePartner.model"
 );
 
-/**
- * Resolve the logged-in marketplace profile.
- */
+const Connection = require(
+  "../models/connection.model"
+);
+
+const Harvest = require(
+  "../models/harvest.model"
+);
+
+const MillerDemand = require(
+  "../models/millerDemand.model"
+);
+
+// ======================================================
+// CURRENT USER PROFILE
+// ======================================================
+
 const getCurrentProfile = async (
   user
 ) => {
@@ -46,22 +59,138 @@ const getCurrentProfile = async (
       : null;
   }
 
-  const miller =
-    await Miller.findOne({
-      user: user._id,
-    });
+  if (
+    user.role === "miller"
+  ) {
+    const miller =
+      await Miller.findOne({
+        user: user._id,
+      });
 
-  return miller
-    ? {
-        type: "miller",
-        profile: miller,
-      }
-    : null;
+    return miller
+      ? {
+          type: "miller",
+          profile: miller,
+        }
+      : null;
+  }
+
+  return null;
 };
 
-/**
- * Convert a negotiation into a small transaction item.
- */
+// ======================================================
+// PARTNER TYPE
+// ======================================================
+
+const getPartnerType = (
+  currentType
+) => {
+  return currentType ===
+    "farmer"
+    ? "miller"
+    : "farmer";
+};
+
+// ======================================================
+// SAFE PROFILE
+// ======================================================
+
+const buildSafePartnerProfile = (
+  partnerType,
+  partner,
+  partnerUser = null
+) => {
+  if (
+    partnerType ===
+    "farmer"
+  ) {
+    return {
+      id:
+        partner._id,
+
+      type:
+        "farmer",
+
+      name:
+        partner.farmerName,
+
+      farmerName:
+        partner.farmerName,
+
+      district:
+        partner.district,
+
+      location:
+        partner.location,
+
+      farmName:
+        partner.farmName,
+
+      farmSizeAcres:
+        partner.farmSizeAcres,
+
+      mainPaddyVariety:
+        partner.mainPaddyVariety,
+
+      isVerified:
+        Boolean(
+          partnerUser?.isVerified
+        ),
+
+      verificationSource:
+        partnerUser
+          ?.verificationSource ||
+        "NONE",
+    };
+  }
+
+  return {
+    id:
+      partner._id,
+
+    type:
+      "miller",
+
+    name:
+      partner.millName ||
+      partner.name,
+
+    personName:
+      partner.name,
+
+    millName:
+      partner.millName,
+
+    district:
+      partner.district,
+
+    location:
+      partner.location,
+
+    businessRegistrationNumber:
+      partner
+        .businessRegistrationNumber,
+
+    purchasingCapacityKg:
+      partner
+        .purchasingCapacityKg,
+
+    isVerified:
+      Boolean(
+        partnerUser?.isVerified
+      ),
+
+    verificationSource:
+      partnerUser
+        ?.verificationSource ||
+      "NONE",
+  };
+};
+
+// ======================================================
+// TRANSACTION ITEM
+// ======================================================
+
 const buildTransactionItem = (
   negotiation
 ) => {
@@ -73,7 +202,8 @@ const buildTransactionItem = (
 
   const agreedPrice =
     Number(
-      negotiation.agreedPrice || 0
+      negotiation.agreedPrice ||
+        0
     );
 
   return {
@@ -90,8 +220,7 @@ const buildTransactionItem = (
     quantityKg:
       quantity,
 
-    agreedPrice:
-      agreedPrice,
+    agreedPrice,
 
     totalValue:
       Number(
@@ -125,140 +254,447 @@ const buildTransactionItem = (
   };
 };
 
-/**
- * Return the public/safe partner profile.
- *
- * Phone is deliberately excluded here.
- */
-const buildSafePartnerProfile = (
-  partnerType,
-  partner
+// ======================================================
+// TRADE SUMMARY
+// ======================================================
+
+const buildTradeSummary = (
+  negotiations
 ) => {
   if (
-    partnerType === "farmer"
+    negotiations.length === 0
   ) {
     return {
-      id: partner._id,
+      totalAgreements: 0,
 
-      type: "farmer",
+      totalQuantityKg: 0,
 
-      name:
-        partner.farmerName,
+      averageAgreedPrice: 0,
 
-      farmerName:
-        partner.farmerName,
+      latestAgreedPrice: 0,
 
-      district:
-        partner.district,
+      totalTradeValue: 0,
 
-      location:
-        partner.location,
+      lastTransactionAt:
+        null,
 
-      farmName:
-        partner.farmName,
-
-      farmSizeAcres:
-        partner.farmSizeAcres,
-
-      mainPaddyVariety:
-        partner.mainPaddyVariety,
+      paddyTypes: [],
     };
   }
 
-  return {
-    id: partner._id,
-
-    type: "miller",
-
-    name:
-      partner.millName ||
-      partner.name,
-
-    personName:
-      partner.name,
-
-    millName:
-      partner.millName,
-
-    district:
-      partner.district,
-
-    location:
-      partner.location,
-
-    businessRegistrationNumber:
-      partner
-        .businessRegistrationNumber,
-
-    purchasingCapacityKg:
-      partner
-        .purchasingCapacityKg,
-  };
-};
-
-/**
- * Check whether contact details have ever been
- * unlocked between this Farmer/Miller pair.
- *
- * We only consider contact requests linked to
- * successful negotiations between the same pair.
- */
-const getUnlockedContact = async ({
-  farmerId,
-  millerId,
-}) => {
-  const agreedNegotiations =
-    await Negotiation.find({
-      farmerId,
-      millerId,
-      status: "agreed",
-    }).select("_id");
-
-  if (
-    agreedNegotiations.length ===
-    0
-  ) {
-    return {
-      unlocked: false,
-      request: null,
-    };
-  }
-
-  const negotiationIds =
-    agreedNegotiations.map(
-      (item) => item._id
+  const totalQuantityKg =
+    negotiations.reduce(
+      (
+        total,
+        negotiation
+      ) =>
+        total +
+        Number(
+          negotiation.requestData
+            ?.quantity_kg || 0
+        ),
+      0
     );
 
-  const acceptedRequest =
-    await ContactRequest.findOne({
-      farmerId,
-      millerId,
-      negotiationId: {
-        $in: negotiationIds,
+  const totalAgreedPrice =
+    negotiations.reduce(
+      (
+        total,
+        negotiation
+      ) =>
+        total +
+        Number(
+          negotiation.agreedPrice ||
+            0
+        ),
+      0
+    );
+
+  const totalTradeValue =
+    negotiations.reduce(
+      (
+        total,
+        negotiation
+      ) => {
+        const quantity =
+          Number(
+            negotiation.requestData
+              ?.quantity_kg || 0
+          );
+
+        const price =
+          Number(
+            negotiation.agreedPrice ||
+              0
+          );
+
+        return (
+          total +
+          quantity * price
+        );
       },
-      status: "accepted",
-    }).sort({
-      respondedAt: -1,
-      updatedAt: -1,
-    });
+      0
+    );
+
+  const paddyTypes =
+    Array.from(
+      new Set(
+        negotiations
+          .map(
+            (negotiation) =>
+              negotiation.requestData
+                ?.paddy_type
+          )
+          .filter(Boolean)
+      )
+    );
+
+  const latest =
+    negotiations[0];
 
   return {
-    unlocked:
-      Boolean(
-        acceptedRequest
+    totalAgreements:
+      negotiations.length,
+
+    totalQuantityKg:
+      Number(
+        totalQuantityKg.toFixed(
+          2
+        )
       ),
 
-    request:
-      acceptedRequest,
+    averageAgreedPrice:
+      Number(
+        (
+          totalAgreedPrice /
+          negotiations.length
+        ).toFixed(2)
+      ),
+
+    latestAgreedPrice:
+      Number(
+        latest.agreedPrice ||
+          0
+      ),
+
+    totalTradeValue:
+      Number(
+        totalTradeValue.toFixed(
+          2
+        )
+      ),
+
+    lastTransactionAt:
+      latest.createdAt,
+
+    paddyTypes,
   };
 };
 
-/**
- * GET /api/partners
- *
- * Returns all successful trading partners
- * for the logged-in Farmer/Miller.
- */
+// ======================================================
+// OLD NEGOTIATION CONTACT ACCESS
+// ======================================================
+
+const getNegotiationContactState =
+  async ({
+    farmerId,
+    millerId,
+  }) => {
+    const agreedNegotiations =
+      await Negotiation.find({
+        farmerId,
+        millerId,
+
+        status:
+          "agreed",
+      }).select("_id");
+
+    if (
+      agreedNegotiations.length ===
+      0
+    ) {
+      return {
+        unlocked: false,
+        request: null,
+      };
+    }
+
+    const negotiationIds =
+      agreedNegotiations.map(
+        (item) =>
+          item._id
+      );
+
+    const acceptedRequest =
+      await ContactRequest.findOne({
+        farmerId,
+        millerId,
+
+        negotiationId: {
+          $in:
+            negotiationIds,
+        },
+
+        status:
+          "accepted",
+      }).sort({
+        respondedAt: -1,
+        updatedAt: -1,
+      });
+
+    return {
+      unlocked:
+        Boolean(
+          acceptedRequest
+        ),
+
+      request:
+        acceptedRequest,
+    };
+  };
+
+// ======================================================
+// RELATIONSHIP STATE
+// ======================================================
+
+const getRelationshipState =
+  async ({
+    farmerId,
+    millerId,
+  }) => {
+    const [
+      connection,
+      negotiationExists,
+    ] =
+      await Promise.all([
+        Connection.findOne({
+          farmerId,
+          millerId,
+        }),
+
+        Negotiation.exists({
+          farmerId,
+          millerId,
+          status:
+            "agreed",
+        }),
+      ]);
+
+    const connected =
+      connection?.status ===
+      "accepted";
+
+    const hasTraded =
+      Boolean(
+        negotiationExists
+      );
+
+    return {
+      connection,
+
+      connected,
+
+      hasTraded,
+
+      isPartner:
+        connected ||
+        hasTraded,
+    };
+  };
+
+// ======================================================
+// CONTACT ACCESS
+// ======================================================
+
+const getContactAccess =
+  async ({
+    farmerId,
+    millerId,
+    relationship,
+  }) => {
+    /*
+     * New connection system:
+     *
+     * Accepted Connection immediately
+     * unlocks approved contact details.
+     */
+    if (
+      relationship.connected
+    ) {
+      return {
+        unlocked: true,
+
+        source:
+          "connection",
+      };
+    }
+
+    /*
+     * Keep old successful-negotiation
+     * contact request logic working.
+     */
+    const oldContactState =
+      await getNegotiationContactState({
+        farmerId,
+        millerId,
+      });
+
+    return {
+      unlocked:
+        oldContactState.unlocked,
+
+      source:
+        oldContactState.unlocked
+          ? "negotiation_request"
+          : null,
+    };
+  };
+
+// ======================================================
+// ACTIVE OPPORTUNITIES
+// ======================================================
+
+const getPartnerOpportunities =
+  async ({
+    currentType,
+    partner,
+    connected,
+  }) => {
+    /*
+     * Opportunities are private to
+     * accepted connections.
+     */
+    if (!connected) {
+      return {
+        harvests: [],
+        demands: [],
+      };
+    }
+
+    /*
+     * Miller viewing Farmer:
+     *
+     * Return Farmer's currently
+     * available harvests.
+     */
+    if (
+      currentType === "miller"
+    ) {
+      const harvests =
+        await Harvest.find({
+          farmerId:
+            partner._id,
+
+          status:
+            "available",
+        })
+          .select(
+            "-minimumAcceptablePrice"
+          )
+          .sort({
+            createdAt: -1,
+          })
+          .limit(20)
+          .lean();
+
+      return {
+        harvests:
+          harvests.map(
+            (harvest) => ({
+              _id:
+                harvest._id,
+
+              paddyType:
+                harvest.paddyType,
+
+              season:
+                harvest.season,
+
+              quantity:
+                harvest.quantity,
+
+              expectedPrice:
+                harvest.expectedPrice,
+
+              aiPredictedPrice:
+                harvest.aiPredictedPrice,
+
+              priceLevel:
+                harvest.priceLevel,
+
+              harvestScore:
+                harvest.harvestScore,
+
+              marketStatus:
+                harvest.marketStatus,
+
+              status:
+                harvest.status,
+
+              createdAt:
+                harvest.createdAt,
+            })
+          ),
+
+        demands: [],
+      };
+    }
+
+    /*
+     * Farmer viewing Miller:
+     *
+     * Return Miller's currently
+     * open demands.
+     */
+    const demands =
+      await MillerDemand.find({
+        millerId:
+          partner._id,
+
+        status:
+          "open",
+      })
+        .select(
+          "-maximumBuyingPrice"
+        )
+        .sort({
+          createdAt: -1,
+        })
+        .limit(20)
+        .lean();
+
+    return {
+      harvests: [],
+
+      demands:
+        demands.map(
+          (demand) => ({
+            _id:
+              demand._id,
+
+            paddyType:
+              demand.paddyType,
+
+            quantityNeeded:
+              demand.quantityNeeded,
+
+            offeredPrice:
+              demand.offeredPrice,
+
+            status:
+              demand.status,
+
+            createdAt:
+              demand.createdAt,
+          })
+        ),
+    };
+  };
+
+// ======================================================
+// GET TRADE PARTNERS
+// ======================================================
+
 const getMyPartners = async (
   req,
   res
@@ -273,7 +709,9 @@ const getMyPartners = async (
       return res
         .status(404)
         .json({
-          success: false,
+          success:
+            false,
+
           message:
             `${req.user.role} profile not found.`,
         });
@@ -285,17 +723,32 @@ const getMyPartners = async (
     const ownerId =
       current.profile._id;
 
+    const partnerType =
+      getPartnerType(
+        ownerType
+      );
+
+    /*
+     * This endpoint remains the
+     * TRADE PARTNER endpoint.
+     *
+     * Connected-only users come from
+     * /connections/mine.
+     */
     const negotiationFilter =
-      ownerType === "farmer"
+      ownerType ===
+      "farmer"
         ? {
             farmerId:
               ownerId,
+
             status:
               "agreed",
           }
         : {
             millerId:
               ownerId,
+
             status:
               "agreed",
           };
@@ -314,8 +767,11 @@ const getMyPartners = async (
       return res
         .status(200)
         .json({
-          success: true,
+          success:
+            true,
+
           count: 0,
+
           data: [],
         });
     }
@@ -328,7 +784,8 @@ const getMyPartners = async (
       of negotiations
     ) {
       const partnerId =
-        ownerType === "farmer"
+        ownerType ===
+        "farmer"
           ? String(
               negotiation.millerId
             )
@@ -358,16 +815,13 @@ const getMyPartners = async (
       }
 
       grouped
-        .get(partnerId)
+        .get(
+          partnerId
+        )
         .push(
           negotiation
         );
     }
-
-    const partnerType =
-      ownerType === "farmer"
-        ? "miller"
-        : "farmer";
 
     const partnerIds =
       Array.from(
@@ -391,18 +845,31 @@ const getMyPartners = async (
                 $in:
                   partnerIds,
               },
+            }).populate({
+              path:
+                "user",
+
+              select:
+                "isActive isVerified verificationSource",
             })
           : Farmer.find({
               _id: {
                 $in:
                   partnerIds,
               },
+            }).populate({
+              path:
+                "user",
+
+              select:
+                "isActive isVerified verificationSource",
             }),
 
         FavoritePartner.find({
           ownerType,
           ownerId,
           partnerType,
+
           partnerId: {
             $in:
               partnerIds,
@@ -424,7 +891,9 @@ const getMyPartners = async (
       new Map(
         partnerProfiles.map(
           (profile) => [
-            String(profile._id),
+            String(
+              profile._id
+            ),
             profile,
           ]
         )
@@ -436,124 +905,72 @@ const getMyPartners = async (
       const [
         partnerId,
         partnerNegotiations,
-      ] of grouped.entries()
+      ]
+      of grouped.entries()
     ) {
       const partner =
         profileMap.get(
           partnerId
         );
 
-      if (!partner) {
+      if (
+        !partner ||
+        !partner.user ||
+        !partner.user
+          .isActive
+      ) {
         continue;
       }
 
-      const totalQuantityKg =
-        partnerNegotiations.reduce(
-          (
-            total,
-            negotiation
-          ) =>
-            total +
-            Number(
-              negotiation
-                .requestData
-                ?.quantity_kg ||
-                0
-            ),
-          0
-        );
+      const farmerId =
+        ownerType ===
+        "farmer"
+          ? ownerId
+          : partner._id;
 
-      const totalPrice =
-        partnerNegotiations.reduce(
-          (
-            total,
-            negotiation
-          ) =>
-            total +
-            Number(
-              negotiation
-                .agreedPrice ||
-                0
-            ),
-          0
-        );
+      const millerId =
+        ownerType ===
+        "miller"
+          ? ownerId
+          : partner._id;
 
-      const averageAgreedPrice =
-        partnerNegotiations
-          .length > 0
-          ? Number(
-              (
-                totalPrice /
-                partnerNegotiations
-                  .length
-              ).toFixed(2)
-            )
-          : 0;
+      const relationship =
+        await getRelationshipState({
+          farmerId,
+          millerId,
+        });
 
-      const latestNegotiation =
-        partnerNegotiations[0];
-
-      const paddyTypes =
-        Array.from(
-          new Set(
-            partnerNegotiations
-              .map(
-                (negotiation) =>
-                  negotiation
-                    .requestData
-                    ?.paddy_type
-              )
-              .filter(Boolean)
-          )
-        );
-
-      const contactState =
-        await getUnlockedContact({
-          farmerId:
-            ownerType ===
-            "farmer"
-              ? ownerId
-              : partner._id,
-
-          millerId:
-            ownerType ===
-            "miller"
-              ? ownerId
-              : partner._id,
+      const contactAccess =
+        await getContactAccess({
+          farmerId,
+          millerId,
+          relationship,
         });
 
       result.push({
         partner:
           buildSafePartnerProfile(
             partnerType,
-            partner
+            partner,
+            partner.user
           ),
 
-        summary: {
-          totalAgreements:
-            partnerNegotiations.length,
+        summary:
+          buildTradeSummary(
+            partnerNegotiations
+          ),
 
-          totalQuantityKg:
-            Number(
-              totalQuantityKg.toFixed(
-                2
-              )
-            ),
+        relationship: {
+          connected:
+            relationship.connected,
 
-          averageAgreedPrice,
+          connectionId:
+            relationship
+              .connection?._id ||
+            null,
 
-          latestAgreedPrice:
-            Number(
-              latestNegotiation
-                .agreedPrice ||
-                0
-            ),
-
-          lastTransactionAt:
-            latestNegotiation
-              .createdAt,
-
-          paddyTypes,
+          hasTraded:
+            true,
         },
 
         isFavorite:
@@ -562,12 +979,15 @@ const getMyPartners = async (
           ),
 
         contactUnlocked:
-          contactState.unlocked,
+          contactAccess.unlocked,
       });
     }
 
     result.sort(
-      (first, second) => {
+      (
+        first,
+        second
+      ) => {
         if (
           first.isFavorite !==
           second.isFavorite
@@ -594,13 +1014,18 @@ const getMyPartners = async (
     return res
       .status(200)
       .json({
-        success: true,
+        success:
+          true,
+
         count:
           result.length,
+
         data:
           result,
       });
-  } catch (error) {
+  } catch (
+    error
+  ) {
     console.error(
       "GET PARTNERS ERROR:",
       error
@@ -609,7 +1034,9 @@ const getMyPartners = async (
     return res
       .status(500)
       .json({
-        success: false,
+        success:
+          false,
+
         message:
           error.message ||
           "Failed to retrieve trading partners.",
@@ -617,17 +1044,21 @@ const getMyPartners = async (
   }
 };
 
-/**
- * GET
- * /api/partners/:partnerType/:partnerId
- */
+// ======================================================
+// GET PARTNER DETAILS
+// ======================================================
+
 const getPartnerDetails =
-  async (req, res) => {
+  async (
+    req,
+    res
+  ) => {
     try {
       const {
         partnerType,
         partnerId,
-      } = req.params;
+      } =
+        req.params;
 
       if (
         ![
@@ -640,21 +1071,27 @@ const getPartnerDetails =
         return res
           .status(400)
           .json({
-            success: false,
+            success:
+              false,
+
             message:
               "Partner type must be farmer or miller.",
           });
       }
 
       if (
-        !mongoose.Types.ObjectId.isValid(
-          partnerId
-        )
+        !mongoose.Types
+          .ObjectId
+          .isValid(
+            partnerId
+          )
       ) {
         return res
           .status(400)
           .json({
-            success: false,
+            success:
+              false,
+
             message:
               "Invalid partner ID.",
           });
@@ -669,17 +1106,18 @@ const getPartnerDetails =
         return res
           .status(404)
           .json({
-            success: false,
+            success:
+              false,
+
             message:
               `${req.user.role} profile not found.`,
           });
       }
 
       const expectedPartnerType =
-        current.type ===
-        "farmer"
-          ? "miller"
-          : "farmer";
+        getPartnerType(
+          current.type
+        );
 
       if (
         partnerType !==
@@ -688,55 +1126,112 @@ const getPartnerDetails =
         return res
           .status(400)
           .json({
-            success: false,
+            success:
+              false,
+
             message:
-              `A ${current.type} can only view ${expectedPartnerType} trading partners.`,
+              `A ${current.type} can only view ${expectedPartnerType} partners.`,
           });
       }
 
+      /*
+       * Populate User here.
+       *
+       * This is important because contact
+       * MUST come from the PARTNER'S User.
+       */
       const partner =
         partnerType ===
         "miller"
-          ? await Miller.findById(
-              partnerId
-            )
-          : await Farmer.findById(
-              partnerId
-            );
+          ? await Miller
+              .findById(
+                partnerId
+              )
+              .populate({
+                path:
+                  "user",
 
-      if (!partner) {
+                select:
+                  "fullName phone isActive isVerified verificationSource",
+              })
+          : await Farmer
+              .findById(
+                partnerId
+              )
+              .populate({
+                path:
+                  "user",
+
+                select:
+                  "fullName phone isActive isVerified verificationSource",
+              });
+
+      if (
+        !partner ||
+        !partner.user ||
+        !partner.user
+          .isActive
+      ) {
         return res
           .status(404)
           .json({
-            success: false,
+            success:
+              false,
+
             message:
-              "Trading partner not found.",
+              "Partner not found.",
+          });
+      }
+
+      const farmerId =
+        current.type ===
+        "farmer"
+          ? current
+              .profile._id
+          : partner._id;
+
+      const millerId =
+        current.type ===
+        "miller"
+          ? current
+              .profile._id
+          : partner._id;
+
+      const relationship =
+        await getRelationshipState({
+          farmerId,
+          millerId,
+        });
+
+      /*
+       * A person can open Partner Details if:
+       *
+       * 1. They are connected
+       * OR
+       * 2. They have traded successfully
+       */
+      if (
+        !relationship.isPartner
+      ) {
+        return res
+          .status(403)
+          .json({
+            success:
+              false,
+
+            message:
+              "This marketplace user is not currently one of your partners.",
           });
       }
 
       const negotiationFilter =
-        current.type ===
-        "farmer"
-          ? {
-              farmerId:
-                current.profile._id,
+        {
+          farmerId,
+          millerId,
 
-              millerId:
-                partner._id,
-
-              status:
-                "agreed",
-            }
-          : {
-              millerId:
-                current.profile._id,
-
-              farmerId:
-                partner._id,
-
-              status:
-                "agreed",
-            };
+          status:
+            "agreed",
+        };
 
       const negotiations =
         await Negotiation.find(
@@ -745,100 +1240,9 @@ const getPartnerDetails =
           createdAt: -1,
         });
 
-      if (
-        negotiations.length ===
-        0
-      ) {
-        return res
-          .status(403)
-          .json({
-            success: false,
-            message:
-              "This user is not one of your successful trading partners.",
-          });
-      }
-
-      const totalQuantityKg =
-        negotiations.reduce(
-          (
-            total,
-            negotiation
-          ) =>
-            total +
-            Number(
-              negotiation
-                .requestData
-                ?.quantity_kg ||
-                0
-            ),
-          0
-        );
-
-      const totalAgreedPrice =
-        negotiations.reduce(
-          (
-            total,
-            negotiation
-          ) =>
-            total +
-            Number(
-              negotiation
-                .agreedPrice ||
-                0
-            ),
-          0
-        );
-
-      const averageAgreedPrice =
-        Number(
-          (
-            totalAgreedPrice /
-            negotiations.length
-          ).toFixed(2)
-        );
-
-      const totalTradeValue =
-        negotiations.reduce(
-          (
-            total,
-            negotiation
-          ) => {
-            const quantity =
-              Number(
-                negotiation
-                  .requestData
-                  ?.quantity_kg ||
-                  0
-              );
-
-            const price =
-              Number(
-                negotiation
-                  .agreedPrice ||
-                  0
-              );
-
-            return (
-              total +
-              quantity *
-                price
-            );
-          },
-          0
-        );
-
-      const paddyTypes =
-        Array.from(
-          new Set(
-            negotiations
-              .map(
-                (negotiation) =>
-                  negotiation
-                    .requestData
-                    ?.paddy_type
-              )
-              .filter(Boolean)
-          )
+      const summary =
+        buildTradeSummary(
+          negotiations
         );
 
       const favorite =
@@ -855,98 +1259,87 @@ const getPartnerDetails =
             partner._id,
         });
 
-      const farmerId =
-        current.type ===
-        "farmer"
-          ? current.profile._id
-          : partner._id;
-
-      const millerId =
-        current.type ===
-        "miller"
-          ? current.profile._id
-          : partner._id;
-
-      const contactState =
-        await getUnlockedContact({
+      const contactAccess =
+        await getContactAccess({
           farmerId,
           millerId,
+          relationship,
         });
 
-      let contact = null;
+      let contact =
+        null;
 
+      /*
+       * IMPORTANT PHONE FIX
+       *
+       * partner.user is populated above,
+       * so this is always the OTHER person's
+       * User.phone.
+       */
       if (
-        contactState.unlocked
+        contactAccess.unlocked
       ) {
-        const partnerUser =
-          await User.findById(
+        contact = {
+          fullName:
             partner.user
-          ).select(
-            "fullName phone"
-          );
+              .fullName,
 
-        if (partnerUser) {
-          contact = {
-            fullName:
-              partnerUser.fullName,
-
-            phone:
-              partnerUser.phone,
-          };
-        }
+          phone:
+            partner.user
+              .phone,
+        };
       }
+
+      const opportunities =
+        await getPartnerOpportunities({
+          currentType:
+            current.type,
+
+          partner,
+
+          connected:
+            relationship.connected,
+        });
 
       const transactions =
         negotiations.map(
           buildTransactionItem
         );
 
-      const latest =
-        negotiations[0];
-
       return res
         .status(200)
         .json({
-          success: true,
+          success:
+            true,
 
           data: {
             partner:
               buildSafePartnerProfile(
                 partnerType,
-                partner
+                partner,
+                partner.user
               ),
 
-            summary: {
-              totalAgreements:
-                negotiations.length,
+            relationship: {
+              connected:
+                relationship.connected,
 
-              totalQuantityKg:
-                Number(
-                  totalQuantityKg.toFixed(
-                    2
-                  )
-                ),
+              connectionId:
+                relationship
+                  .connection?._id ||
+                null,
 
-              averageAgreedPrice,
+              connectionStatus:
+                relationship
+                  .connection
+                  ?.status ||
+                "none",
 
-              latestAgreedPrice:
-                Number(
-                  latest.agreedPrice ||
-                    0
-                ),
-
-              totalTradeValue:
-                Number(
-                  totalTradeValue.toFixed(
-                    2
-                  )
-                ),
-
-              lastTransactionAt:
-                latest.createdAt,
-
-              paddyTypes,
+              hasTraded:
+                relationship.hasTraded,
             },
+
+            summary,
 
             isFavorite:
               Boolean(
@@ -954,14 +1347,21 @@ const getPartnerDetails =
               ),
 
             contactUnlocked:
-              contactState.unlocked,
+              contactAccess.unlocked,
+
+            contactSource:
+              contactAccess.source,
 
             contact,
+
+            opportunities,
 
             transactions,
           },
         });
-    } catch (error) {
+    } catch (
+      error
+    ) {
       console.error(
         "GET PARTNER DETAILS ERROR:",
         error
@@ -970,7 +1370,9 @@ const getPartnerDetails =
       return res
         .status(500)
         .json({
-          success: false,
+          success:
+            false,
+
           message:
             error.message ||
             "Failed to retrieve partner details.",
@@ -978,17 +1380,21 @@ const getPartnerDetails =
     }
   };
 
-/**
- * POST
- * /api/partners/:partnerType/:partnerId/favorite
- */
+// ======================================================
+// ADD FAVORITE
+// ======================================================
+
 const addFavoritePartner =
-  async (req, res) => {
+  async (
+    req,
+    res
+  ) => {
     try {
       const {
         partnerType,
         partnerId,
-      } = req.params;
+      } =
+        req.params;
 
       if (
         ![
@@ -1001,21 +1407,27 @@ const addFavoritePartner =
         return res
           .status(400)
           .json({
-            success: false,
+            success:
+              false,
+
             message:
               "Partner type must be farmer or miller.",
           });
       }
 
       if (
-        !mongoose.Types.ObjectId.isValid(
-          partnerId
-        )
+        !mongoose.Types
+          .ObjectId
+          .isValid(
+            partnerId
+          )
       ) {
         return res
           .status(400)
           .json({
-            success: false,
+            success:
+              false,
+
             message:
               "Invalid partner ID.",
           });
@@ -1030,17 +1442,18 @@ const addFavoritePartner =
         return res
           .status(404)
           .json({
-            success: false,
+            success:
+              false,
+
             message:
               `${req.user.role} profile not found.`,
           });
       }
 
       const expectedPartnerType =
-        current.type ===
-        "farmer"
-          ? "miller"
-          : "farmer";
+        getPartnerType(
+          current.type
+        );
 
       if (
         partnerType !==
@@ -1049,7 +1462,9 @@ const addFavoritePartner =
         return res
           .status(400)
           .json({
-            success: false,
+            success:
+              false,
+
             message:
               "Invalid partner type for this account.",
           });
@@ -1069,92 +1484,106 @@ const addFavoritePartner =
         return res
           .status(404)
           .json({
-            success: false,
+            success:
+              false,
+
             message:
               "Partner not found.",
           });
       }
 
-      const negotiationExists =
-        await Negotiation.exists(
-          current.type ===
-          "farmer"
-            ? {
-                farmerId:
-                  current.profile._id,
+      const farmerId =
+        current.type ===
+        "farmer"
+          ? current
+              .profile._id
+          : partner._id;
 
-                millerId:
-                  partner._id,
+      const millerId =
+        current.type ===
+        "miller"
+          ? current
+              .profile._id
+          : partner._id;
 
-                status:
-                  "agreed",
-              }
-            : {
-                millerId:
-                  current.profile._id,
+      const relationship =
+        await getRelationshipState({
+          farmerId,
+          millerId,
+        });
 
-                farmerId:
-                  partner._id,
-
-                status:
-                  "agreed",
-              }
-        );
-
+      /*
+       * Favourites now work for:
+       *
+       * - connected partners
+       * - successful trade partners
+       */
       if (
-        !negotiationExists
+        !relationship.isPartner
       ) {
         return res
           .status(403)
           .json({
-            success: false,
+            success:
+              false,
+
             message:
-              "Only successful trading partners can be saved as favourites.",
+              "Only connected or successful trading partners can be saved as favourites.",
           });
       }
 
       const favorite =
-        await FavoritePartner.findOneAndUpdate(
-          {
-            ownerType:
-              current.type,
+        await FavoritePartner
+          .findOneAndUpdate(
+            {
+              ownerType:
+                current.type,
 
-            ownerId:
-              current.profile._id,
+              ownerId:
+                current
+                  .profile._id,
 
-            partnerType,
+              partnerType,
 
-            partnerId:
-              partner._id,
-          },
-          {
-            $setOnInsert: {
-              savedAt:
-                new Date(),
+              partnerId:
+                partner._id,
             },
-          },
-          {
-            new: true,
-            upsert: true,
-            runValidators: true,
-          }
-        );
+            {
+              $setOnInsert: {
+                savedAt:
+                  new Date(),
+              },
+            },
+            {
+              new: true,
+
+              upsert:
+                true,
+
+              runValidators:
+                true,
+            }
+          );
 
       return res
         .status(200)
         .json({
-          success: true,
+          success:
+            true,
 
           message:
             "Partner saved to favourites.",
 
           data: {
             favorite,
+
             isFavorite:
               true,
           },
         });
-    } catch (error) {
+    } catch (
+      error
+    ) {
       console.error(
         "ADD FAVORITE PARTNER ERROR:",
         error
@@ -1163,7 +1592,8 @@ const addFavoritePartner =
       return res
         .status(500)
         .json({
-          success: false,
+          success:
+            false,
 
           message:
             error.code ===
@@ -1175,17 +1605,21 @@ const addFavoritePartner =
     }
   };
 
-/**
- * DELETE
- * /api/partners/:partnerType/:partnerId/favorite
- */
+// ======================================================
+// REMOVE FAVORITE
+// ======================================================
+
 const removeFavoritePartner =
-  async (req, res) => {
+  async (
+    req,
+    res
+  ) => {
     try {
       const {
         partnerType,
         partnerId,
-      } = req.params;
+      } =
+        req.params;
 
       if (
         ![
@@ -1198,21 +1632,27 @@ const removeFavoritePartner =
         return res
           .status(400)
           .json({
-            success: false,
+            success:
+              false,
+
             message:
               "Partner type must be farmer or miller.",
           });
       }
 
       if (
-        !mongoose.Types.ObjectId.isValid(
-          partnerId
-        )
+        !mongoose.Types
+          .ObjectId
+          .isValid(
+            partnerId
+          )
       ) {
         return res
           .status(400)
           .json({
-            success: false,
+            success:
+              false,
+
             message:
               "Invalid partner ID.",
           });
@@ -1227,28 +1667,33 @@ const removeFavoritePartner =
         return res
           .status(404)
           .json({
-            success: false,
+            success:
+              false,
+
             message:
               `${req.user.role} profile not found.`,
           });
       }
 
-      await FavoritePartner.findOneAndDelete({
-        ownerType:
-          current.type,
+      await FavoritePartner
+        .findOneAndDelete({
+          ownerType:
+            current.type,
 
-        ownerId:
-          current.profile._id,
+          ownerId:
+            current
+              .profile._id,
 
-        partnerType,
+          partnerType,
 
-        partnerId,
-      });
+          partnerId,
+        });
 
       return res
         .status(200)
         .json({
-          success: true,
+          success:
+            true,
 
           message:
             "Partner removed from favourites.",
@@ -1258,7 +1703,9 @@ const removeFavoritePartner =
               false,
           },
         });
-    } catch (error) {
+    } catch (
+      error
+    ) {
       console.error(
         "REMOVE FAVORITE PARTNER ERROR:",
         error
@@ -1267,7 +1714,9 @@ const removeFavoritePartner =
       return res
         .status(500)
         .json({
-          success: false,
+          success:
+            false,
+
           message:
             error.message ||
             "Failed to remove favourite partner.",

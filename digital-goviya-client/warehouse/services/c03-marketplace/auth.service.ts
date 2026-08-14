@@ -3,6 +3,8 @@ import {
 } from "@/services/c03-marketplace/api-client";
 
 import type {
+  ChangePasswordRequest,
+  ChangePasswordResponse,
   CurrentUserResponse,
   LoginCredentials,
   LoginResponse,
@@ -10,28 +12,49 @@ import type {
 } from "@/types/c03-marketplace/auth.types";
 
 export async function loginMarketplaceUser(
-  credentials: LoginCredentials
+  credentials:
+    LoginCredentials
 ): Promise<MarketplaceSession> {
   const response =
     await marketplaceApiClient.post<LoginResponse>(
       "/auth/login",
       {
-        email: credentials.email
-          .trim()
-          .toLowerCase(),
+        identifier:
+          credentials.username
+            .trim()
+            .toLowerCase(),
 
-        password: credentials.password,
+        password:
+          credentials.password,
 
-        role: credentials.role,
+        role:
+          credentials.role,
       }
     );
 
   return response.data.data;
 }
 
-export async function getCurrentMarketplaceUser(): Promise<
-  Omit<MarketplaceSession, "token">
-> {
+export async function changeMarketplacePassword(
+  payload:
+    ChangePasswordRequest
+): Promise<MarketplaceSession> {
+  const response =
+    await marketplaceApiClient.patch<ChangePasswordResponse>(
+      "/auth/change-password",
+      payload
+    );
+
+  return response.data.data;
+}
+
+export async function getCurrentMarketplaceUser():
+  Promise<
+    Omit<
+      MarketplaceSession,
+      "token"
+    >
+  > {
   const response =
     await marketplaceApiClient.get<CurrentUserResponse>(
       "/auth/me"

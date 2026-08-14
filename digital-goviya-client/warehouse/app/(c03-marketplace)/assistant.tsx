@@ -244,10 +244,10 @@ export default function MarketplaceAssistantScreen() {
         behavior={
           Platform.OS === "ios"
             ? "padding"
-            : undefined
+            : "height"
         }
         keyboardVerticalOffset={
-          Platform.OS === "ios" ? 8 : 0
+          Platform.OS === "ios" ? 8 : 20
         }
       >
         <LinearGradient
@@ -1123,7 +1123,7 @@ const styles = StyleSheet.create({
 
   messageList: {
     paddingHorizontal: 16,
-    paddingBottom: 18,
+    paddingBottom: 24,
   },
 
   listHeader: {
@@ -1430,7 +1430,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingTop: 10,
     paddingBottom:
-      Platform.OS === "ios" ? 8 : 12,
+    Platform.OS === "ios" ? 100 : 96,
     backgroundColor: "#FFFFFF",
     borderTopWidth: 1,
     borderTopColor: "#E5E7EB",

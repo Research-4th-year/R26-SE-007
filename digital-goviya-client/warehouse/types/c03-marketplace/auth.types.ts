@@ -1,4 +1,6 @@
-export type MarketplaceUserRole = "farmer" | "miller";
+export type MarketplaceUserRole =
+  | "farmer"
+  | "miller";
 
 export interface FarmerProfile {
   _id: string;
@@ -30,42 +32,92 @@ export type MarketplaceRoleProfile =
   | FarmerProfile
   | MillerProfile;
 
+export type VerificationSource =
+  | "PMB"
+  | "SELF_REGISTERED"
+  | "RESEARCH_SYNTHETIC"
+  | "NONE";
+
 export interface MarketplaceUser {
   _id: string;
+
+  username: string;
+
   fullName: string;
-  email: string;
-  role: MarketplaceUserRole;
+
+  email?: string;
+
+  role:
+    MarketplaceUserRole;
+
   phone: string;
   district: string;
+
+  mustChangePassword: boolean;
+
+  lastPasswordChangeAt?:
+    | string
+    | null;
+
   isActive: boolean;
   isVerified: boolean;
-  lastLoginAt?: string | null;
+
+  verificationSource:
+    VerificationSource;
+
+  lastLoginAt?:
+    | string
+    | null;
+
   createdAt: string;
   updatedAt: string;
 }
 
 export interface MarketplaceSession {
   token: string;
-  user: MarketplaceUser;
-  profile: MarketplaceRoleProfile;
+
+  user:
+    MarketplaceUser;
+
+  profile:
+    MarketplaceRoleProfile;
 }
 
 export interface LoginCredentials {
-  email: string;
+  username: string;
   password: string;
-  role: MarketplaceUserRole;
+  role:
+    MarketplaceUserRole;
 }
 
 export interface LoginResponse {
   success: boolean;
   message: string;
-  data: MarketplaceSession;
+  data:
+    MarketplaceSession;
+}
+
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
+export interface ChangePasswordResponse {
+  success: boolean;
+  message: string;
+  data:
+    MarketplaceSession;
 }
 
 export interface CurrentUserResponse {
   success: boolean;
+
   data: {
-    user: MarketplaceUser;
-    profile: MarketplaceRoleProfile;
+    user:
+      MarketplaceUser;
+
+    profile:
+      MarketplaceRoleProfile;
   };
 }

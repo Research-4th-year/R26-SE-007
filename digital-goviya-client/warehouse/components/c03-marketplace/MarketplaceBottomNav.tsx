@@ -1,4 +1,7 @@
-import { Ionicons } from "@expo/vector-icons";
+import {
+  Ionicons,
+} from "@expo/vector-icons";
+
 import {
   router,
   usePathname,
@@ -22,8 +25,8 @@ import {
 interface NavigationItem {
   key:
     | "home"
+    | "search"
     | "marketplace"
-    | "notifications"
     | "partners"
     | "profile";
 
@@ -37,7 +40,8 @@ interface NavigationItem {
 
   route: string;
 
-  activeWhen: string[];
+  activeWhen:
+    string[];
 }
 
 export function MarketplaceBottomNav() {
@@ -45,7 +49,8 @@ export function MarketplaceBottomNav() {
     user,
     isAuthenticated,
     isLoading,
-  } = useMarketplaceAuth();
+  } =
+    useMarketplaceAuth();
 
   const pathname =
     usePathname();
@@ -61,20 +66,17 @@ export function MarketplaceBottomNav() {
     return null;
   }
 
-  /**
-   * Never display marketplace navigation
-   * on authentication pages.
-   */
   if (
-    pathname.includes(
-      "/(auth)"
-    ) ||
     pathname.includes(
       "/login"
     ) ||
     pathname.includes(
       "/register"
-    )
+    ) ||
+    pathname.includes(
+      "/change-password"
+    ) ||
+    user.mustChangePassword
   ) {
     return null;
   }
@@ -100,9 +102,11 @@ export function MarketplaceBottomNav() {
   const items:
     NavigationItem[] = [
       {
-        key: "home",
+        key:
+          "home",
 
-        label: "Home",
+        label:
+          "Home",
 
         icon:
           "home-outline",
@@ -110,9 +114,10 @@ export function MarketplaceBottomNav() {
         activeIcon:
           "home",
 
-        route: isFarmer
-          ? "/(c03-marketplace)/(farmer)/home"
-          : "/(c03-marketplace)/(miller)/home",
+        route:
+          isFarmer
+            ? "/(c03-marketplace)/(farmer)/home"
+            : "/(c03-marketplace)/(miller)/home",
 
         activeWhen: [
           isFarmer
@@ -122,60 +127,70 @@ export function MarketplaceBottomNav() {
       },
 
       {
-        key: "marketplace",
-
-        label: isFarmer
-          ? "Harvests"
-          : "Demands",
-
-        icon:
-          "storefront-outline",
-
-        activeIcon:
-          "storefront",
-
-        route: isFarmer
-          ? "/(c03-marketplace)/(farmer)/my-harvests"
-          : "/(c03-marketplace)/(miller)/my-demands",
-
-        activeWhen: isFarmer
-          ? [
-              "/(farmer)/my-harvests",
-              "/(farmer)/add-harvest",
-              "/(farmer)/harvest-result",
-              "/(farmer)/matched-millers",
-            ]
-          : [
-              "/(miller)/my-demands",
-              "/(miller)/create-demand",
-              "/(miller)/demand-result",
-              "/(miller)/matched-farmers",
-            ],
-      },
-
-      {
         key:
-          "notifications",
+          "search",
 
         label:
-          "Inbox",
+          "Search",
 
         icon:
-          "notifications-outline",
+          "search-outline",
 
         activeIcon:
-          "notifications",
+          "search",
 
         route:
-          "/(c03-marketplace)/notifications",
+          "/(c03-marketplace)/search",
 
         activeWhen: [
-          "/notifications",
+          "/search",
+          "/public-profile",
         ],
       },
 
       {
-        key: "partners",
+        key:
+          "marketplace",
+
+        label:
+          isFarmer
+            ? "Harvests"
+            : "Demands",
+
+        icon:
+          isFarmer
+            ? "leaf-outline"
+            : "storefront-outline",
+
+        activeIcon:
+          isFarmer
+            ? "leaf"
+            : "storefront",
+
+        route:
+          isFarmer
+            ? "/(c03-marketplace)/(farmer)/my-harvests"
+            : "/(c03-marketplace)/(miller)/my-demands",
+
+        activeWhen:
+          isFarmer
+            ? [
+                "/(farmer)/my-harvests",
+                "/(farmer)/add-harvest",
+                "/(farmer)/harvest-result",
+                "/(farmer)/matched-millers",
+              ]
+            : [
+                "/(miller)/my-demands",
+                "/(miller)/create-demand",
+                "/(miller)/demand-result",
+                "/(miller)/matched-farmers",
+              ],
+      },
+
+      {
+        key:
+          "partners",
 
         label:
           "Partners",
@@ -196,7 +211,8 @@ export function MarketplaceBottomNav() {
       },
 
       {
-        key: "profile",
+        key:
+          "profile",
 
         label:
           "Profile",
@@ -207,9 +223,10 @@ export function MarketplaceBottomNav() {
         activeIcon:
           "person",
 
-        route: isFarmer
-          ? "/(c03-marketplace)/(farmer)/profile"
-          : "/(c03-marketplace)/(miller)/profile",
+        route:
+          isFarmer
+            ? "/(c03-marketplace)/(farmer)/profile"
+            : "/(c03-marketplace)/(miller)/profile",
 
         activeWhen: [
           isFarmer
@@ -219,22 +236,24 @@ export function MarketplaceBottomNav() {
       },
     ];
 
-  const isActive = (
-    item: NavigationItem
-  ): boolean => {
+  function isActive(
+    item:
+      NavigationItem
+  ) {
     return item.activeWhen.some(
-      (routePart) =>
+      (part) =>
         pathname.includes(
-          routePart
+          part
         )
     );
-  };
+  }
 
   return (
     <View
       pointerEvents="box-none"
       style={[
         styles.wrapper,
+
         {
           paddingBottom:
             Math.max(
@@ -252,11 +271,15 @@ export function MarketplaceBottomNav() {
         {items.map(
           (item) => {
             const active =
-              isActive(item);
+              isActive(
+                item
+              );
 
             return (
               <Pressable
-                key={item.key}
+                key={
+                  item.key
+                }
                 accessibilityRole="button"
                 accessibilityLabel={
                   item.label
@@ -302,19 +325,12 @@ export function MarketplaceBottomNav() {
                         : "#8A9490"
                     }
                   />
-
-                  {item.key ===
-                    "notifications" ? (
-                    <View
-                      style={
-                        styles.notificationDot
-                      }
-                    />
-                  ) : null}
                 </View>
 
                 <Text
-                  numberOfLines={1}
+                  numberOfLines={
+                    1
+                  }
                   style={[
                     styles.navigationLabel,
 
@@ -413,17 +429,13 @@ const styles =
 
       height: 32,
 
-      borderRadius:
-        12,
+      borderRadius: 12,
 
       alignItems:
         "center",
 
       justifyContent:
         "center",
-
-      position:
-        "relative",
     },
 
     navigationLabel: {
@@ -436,27 +448,6 @@ const styles =
         "700",
 
       marginTop: 2,
-    },
-
-    notificationDot: {
-      position:
-        "absolute",
-
-      right: 6,
-      top: 5,
-
-      width: 6,
-      height: 6,
-
-      borderRadius: 3,
-
-      backgroundColor:
-        "#DC2626",
-
-      borderWidth: 1,
-
-      borderColor:
-        "#FFFFFF",
     },
 
     pressed: {

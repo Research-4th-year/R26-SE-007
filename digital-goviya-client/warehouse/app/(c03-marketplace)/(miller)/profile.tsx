@@ -20,9 +20,7 @@ import {
   Poppins_500Medium,
 } from "@expo-google-fonts/poppins";
 
-import type {
-  MillerProfile,
-} from "@/types/c03-marketplace/auth.types";
+import type { MillerProfile } from "@/types/c03-marketplace/auth.types";
 
 import { useMarketplaceAuth } from "@/hooks/c03-marketplace/useMarketplaceAuth";
 
@@ -61,8 +59,16 @@ export default function MillerProfileScreen() {
   useEffect(() => {
     if (!fontsLoaded) return;
     Animated.parallel([
-      Animated.timing(fade, { toValue: 1, duration: 400, useNativeDriver: true }),
-      Animated.timing(rise, { toValue: 0, duration: 400, useNativeDriver: true }),
+      Animated.timing(fade, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+      Animated.timing(rise, {
+        toValue: 0,
+        duration: 400,
+        useNativeDriver: true,
+      }),
     ]).start();
   }, [fontsLoaded]);
 
@@ -111,7 +117,7 @@ export default function MillerProfileScreen() {
               <Text style={styles.roleText}>VERIFIED MILLER</Text>
             </View>
 
-            <Text style={styles.email}>{user?.email}</Text>
+            <Text style={styles.email}>{user?.username}</Text>
           </LinearGradient>
         </View>
 
@@ -159,6 +165,44 @@ export default function MillerProfileScreen() {
             value={`${millerProfile?.purchasingCapacityKg ?? 0} kg`}
             isLast
           />
+        </View>
+
+        <View style={styles.securityHeaderRow}>
+          <View style={styles.securitySectionIcon}>
+            <Ionicons
+              name="shield-checkmark-outline"
+              size={16}
+              color="#92400E"
+            />
+          </View>
+
+          <Text style={styles.sectionTitle}>Account & security</Text>
+        </View>
+
+        <View style={styles.securityCard}>
+          <Pressable
+            style={({ pressed }) => [
+              styles.securityAction,
+              pressed && styles.pressed,
+            ]}
+            onPress={() =>
+              router.push("/(c03-marketplace)/(auth)/change-password")
+            }
+          >
+            <View style={styles.securityActionIcon}>
+              <Ionicons name="key-outline" size={20} color="#92400E" />
+            </View>
+
+            <View style={styles.securityActionText}>
+              <Text style={styles.securityActionTitle}>Change password</Text>
+
+              <Text style={styles.securityActionSubtitle}>
+                Update your marketplace account password
+              </Text>
+            </View>
+
+            <Ionicons name="chevron-forward" size={19} color="#A89F8B" />
+          </Pressable>
         </View>
 
         <Pressable
@@ -414,4 +458,70 @@ const styles = StyleSheet.create({
     opacity: 0.84,
     transform: [{ scale: 0.97 }],
   },
+
+  securityHeaderRow: {
+  flexDirection: "row",
+  alignItems: "center",
+  gap: 8,
+  marginTop: 25,
+  marginBottom: 12,
+},
+
+securitySectionIcon: {
+  width: 28,
+  height: 28,
+  borderRadius: 9,
+  alignItems: "center",
+  justifyContent: "center",
+  backgroundColor: "#FEF3C7",
+},
+
+securityCard: {
+  borderRadius: 20,
+  backgroundColor: "#FFFFFF",
+  borderWidth: 1,
+  borderColor: CARD_BORDER,
+  shadowColor: "#5C4A24",
+  shadowOpacity: 0.05,
+  shadowRadius: 12,
+  shadowOffset: {
+    width: 0,
+    height: 4,
+  },
+  elevation: 2,
+},
+
+securityAction: {
+  minHeight: 76,
+  flexDirection: "row",
+  alignItems: "center",
+  gap: 12,
+  paddingHorizontal: 15,
+},
+
+securityActionIcon: {
+  width: 43,
+  height: 43,
+  borderRadius: 14,
+  alignItems: "center",
+  justifyContent: "center",
+  backgroundColor: "#FEF3C7",
+},
+
+securityActionText: {
+  flex: 1,
+},
+
+securityActionTitle: {
+  color: INK,
+  fontSize: 13,
+  fontFamily: "Poppins_700Bold",
+},
+
+securityActionSubtitle: {
+  color: INK_MUTED,
+  fontSize: 9,
+  fontFamily: "Poppins_500Medium",
+  marginTop: 3,
+},
 });

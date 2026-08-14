@@ -1,0 +1,121 @@
+farmer_id,full_name,phone,district,location,farm_name,farm_size_acres,main_paddy_variety
+SYN-F-0001,Asanka Wijesinghe,0000000001,Kandy,Yatinuwara,Wijesinghe Paddy Farm,6.4,keeri samba
+SYN-F-0002,Ruwan Fernando,0000000002,Ampara,Uhana,Fernando Paddy Farm,3.5,nadu
+SYN-F-0003,Roshan Dissanayake,0000000003,Ampara,Dehiattakandiya,Dissanayake Paddy Farm,9.4,keeri samba
+SYN-F-0004,Kasun Bandara,0000000004,Monaragala,Bibile,Bandara Paddy Farm,7.6,keeri samba
+SYN-F-0005,Ajith Bandara,0000000005,Badulla,Welimada,Bandara Paddy Farm,4.7,nadu
+SYN-F-0006,Ajith Gunawardena,0000000006,Ampara,Lahugala,Gunawardena Paddy Farm,2,nadu
+SYN-F-0007,Sunil Rathnayake,0000000007,Monaragala,Siyambalanduwa,Rathnayake Paddy Farm,6.7,nadu
+SYN-F-0008,Roshan Silva,0000000008,Monaragala,Bibile,Silva Paddy Farm,9.9,nadu
+SYN-F-0009,Janaka Gunawardena,0000000009,Ampara,Namal Oya,Gunawardena Paddy Farm,5.7,keeri samba
+SYN-F-0010,Ajith Fernando,0000000010,Badulla,Welimada,Fernando Paddy Farm,3.2,keeri samba
+SYN-F-0011,Indika Fernando,0000000011,Kandy,Udunuwara,Fernando Paddy Farm,8.2,keeri samba
+SYN-F-0012,Pradeep Karunaratne,0000000012,Badulla,Hali Ela,Karunaratne Paddy Farm,1.9,nadu
+SYN-F-0013,Priyantha Herath,0000000013,Badulla,Ella,Herath Paddy Farm,3.9,samba
+SYN-F-0014,Kamal Gunawardena,0000000014,Kandy,Kundasale,Gunawardena Paddy Farm,3.3,nadu
+SYN-F-0015,Indika Karunaratne,0000000015,Badulla,Ella,Karunaratne Paddy Farm,5.8,samba
+SYN-F-0016,Saman Wijesinghe,0000000016,Ampara,Namal Oya,Wijesinghe Paddy Farm,3.7,keeri samba
+SYN-F-0017,Indika Senanayake,0000000017,Kandy,Harispattuwa,Senanayake Paddy Farm,2.9,keeri samba
+SYN-F-0018,Chamara Fernando,0000000018,Kandy,Akurana,Fernando Paddy Farm,6.1,keeri samba
+SYN-F-0019,Sunil Perera,0000000019,Monaragala,Buttala,Perera Paddy Farm,2.5,samba
+SYN-F-0020,Indika Silva,0000000020,Kandy,Teldeniya,Silva Paddy Farm,9.7,samba
+SYN-F-0021,Kasun Karunaratne,0000000021,Ampara,Namal Oya,Karunaratne Paddy Farm,6.2,nadu
+SYN-F-0022,Mahesh Gunawardena,0000000022,Ampara,Dehiattakandiya,Gunawardena Paddy Farm,3.8,keeri samba
+SYN-F-0023,Kasun Silva,0000000023,Badulla,Hali Ela,Silva Paddy Farm,10,keeri samba
+SYN-F-0024,Upul Fernando,0000000024,Badulla,Hali Ela,Fernando Paddy Farm,4.1,samba
+SYN-F-0025,Asanka Kumara,0000000025,Ampara,Damana,Kumara Paddy Farm,3.8,keeri samba
+SYN-F-0026,Ajith Ekanayake,0000000026,Ampara,Namal Oya,Ekanayake Paddy Farm,6.9,samba
+SYN-F-0027,Gayan Jayasinghe,0000000027,Ampara,Ampara,Jayasinghe Paddy Farm,2.3,nadu
+SYN-F-0028,Sunil Karunaratne,0000000028,Ampara,Lahugala,Karunaratne Paddy Farm,3.3,nadu
+SYN-F-0029,Indika Perera,0000000029,Badulla,Rideemaliyadda,Perera Paddy Farm,2.4,keeri samba
+SYN-F-0030,Mahesh Wijesinghe,0000000030,Monaragala,Bibile,Wijesinghe Paddy Farm,9.4,nadu
+SYN-F-0031,Tharindu Bandara,0000000031,Kandy,Harispattuwa,Bandara Paddy Farm,3.8,nadu
+SYN-F-0032,Dinesh Fernando,0000000032,Monaragala,Monaragala,Fernando Paddy Farm,2.6,nadu
+SYN-F-0033,Asanka Fernando,0000000033,Kandy,Akurana,Fernando Paddy Farm,4.5,samba
+SYN-F-0034,Sunil Herath,0000000034,Ampara,Ampara,Herath Paddy Farm,9.2,keeri samba
+SYN-F-0035,Saman Dissanayake,0000000035,Monaragala,Monaragala,Dissanayake Paddy Farm,6.6,nadu
+SYN-F-0036,Kasun Silva,0000000036,Ampara,Namal Oya,Silva Paddy Farm,9.4,samba
+SYN-F-0037,Kasun Bandara,0000000037,Badulla,Badulla,Bandara Paddy Farm,5.5,samba
+SYN-F-0038,Roshan Fernando,0000000038,Monaragala,Madulla,Fernando Paddy Farm,2.3,nadu
+SYN-F-0039,Asanka Perera,0000000039,Kandy,Teldeniya,Perera Paddy Farm,6.4,samba
+SYN-F-0040,Saman Herath,0000000040,Badulla,Rideemaliyadda,Herath Paddy Farm,3.6,keeri samba
+SYN-F-0041,Kamal Herath,0000000041,Ampara,Namal Oya,Herath Paddy Farm,7.5,keeri samba
+SYN-F-0042,Upul Wijesinghe,0000000042,Ampara,Lahugala,Wijesinghe Paddy Farm,3.4,samba
+SYN-F-0043,Indika Rathnayake,0000000043,Monaragala,Wellawaya,Rathnayake Paddy Farm,9.2,samba
+SYN-F-0044,Ruwan Karunaratne,0000000044,Ampara,Damana,Karunaratne Paddy Farm,5.4,samba
+SYN-F-0045,Saman Bandara,0000000045,Ampara,Uhana,Bandara Paddy Farm,3.9,keeri samba
+SYN-F-0046,Janaka Gunawardena,0000000046,Ampara,Namal Oya,Gunawardena Paddy Farm,1.4,keeri samba
+SYN-F-0047,Kasun Bandara,0000000047,Badulla,Hali Ela,Bandara Paddy Farm,8.9,keeri samba
+SYN-F-0048,Roshan Kumara,0000000048,Monaragala,Bibile,Kumara Paddy Farm,3.1,samba
+SYN-F-0049,Ruwan Jayasinghe,0000000049,Ampara,Maha Oya,Jayasinghe Paddy Farm,8.3,keeri samba
+SYN-F-0050,Upul Gunawardena,0000000050,Monaragala,Thanamalwila,Gunawardena Paddy Farm,7.1,samba
+SYN-F-0051,Pradeep Kumara,0000000051,Monaragala,Medagama,Kumara Paddy Farm,3.7,keeri samba
+SYN-F-0052,Chamara Gunawardena,0000000052,Ampara,Ampara,Gunawardena Paddy Farm,9.4,nadu
+SYN-F-0053,Lalith Silva,0000000053,Kandy,Teldeniya,Silva Paddy Farm,7.4,nadu
+SYN-F-0054,Gayan Dissanayake,0000000054,Monaragala,Medagama,Dissanayake Paddy Farm,8.7,nadu
+SYN-F-0055,Gayan Ekanayake,0000000055,Monaragala,Medagama,Ekanayake Paddy Farm,7,nadu
+SYN-F-0056,Lalith Jayasinghe,0000000056,Badulla,Welimada,Jayasinghe Paddy Farm,5.4,keeri samba
+SYN-F-0057,Upul Herath,0000000057,Kandy,Akurana,Herath Paddy Farm,8.7,samba
+SYN-F-0058,Roshan Kumara,0000000058,Ampara,Damana,Kumara Paddy Farm,3.8,samba
+SYN-F-0059,Asanka Silva,0000000059,Ampara,Dehiattakandiya,Silva Paddy Farm,2.5,samba
+SYN-F-0060,Ajith Ekanayake,0000000060,Kandy,Akurana,Ekanayake Paddy Farm,2,nadu
+SYN-F-0061,Ruwan Perera,0000000061,Monaragala,Medagama,Perera Paddy Farm,7.9,keeri samba
+SYN-F-0062,Priyantha Kumara,0000000062,Monaragala,Siyambalanduwa,Kumara Paddy Farm,6.7,keeri samba
+SYN-F-0063,Gayan Gunawardena,0000000063,Ampara,Lahugala,Gunawardena Paddy Farm,9.2,keeri samba
+SYN-F-0064,Roshan Fernando,0000000064,Ampara,Damana,Fernando Paddy Farm,5.1,nadu
+SYN-F-0065,Lalith Karunaratne,0000000065,Kandy,Kundasale,Karunaratne Paddy Farm,4.2,samba
+SYN-F-0066,Kamal Wijesinghe,0000000066,Monaragala,Thanamalwila,Wijesinghe Paddy Farm,5.2,keeri samba
+SYN-F-0067,Priyantha Wijesinghe,0000000067,Kandy,Harispattuwa,Wijesinghe Paddy Farm,7.9,nadu
+SYN-F-0068,Roshan Fernando,0000000068,Badulla,Badulla,Fernando Paddy Farm,6.4,nadu
+SYN-F-0069,Indika Herath,0000000069,Ampara,Ampara,Herath Paddy Farm,3.1,keeri samba
+SYN-F-0070,Ajith Perera,0000000070,Badulla,Welimada,Perera Paddy Farm,9.5,samba
+SYN-F-0071,Saman Dissanayake,0000000071,Ampara,Ampara,Dissanayake Paddy Farm,7.4,keeri samba
+SYN-F-0072,Lalith Silva,0000000072,Monaragala,Buttala,Silva Paddy Farm,8.4,samba
+SYN-F-0073,Ruwan Dissanayake,0000000073,Monaragala,Medagama,Dissanayake Paddy Farm,9.4,samba
+SYN-F-0074,Ruwan Jayasinghe,0000000074,Monaragala,Thanamalwila,Jayasinghe Paddy Farm,4.6,nadu
+SYN-F-0075,Lalith Bandara,0000000075,Kandy,Akurana,Bandara Paddy Farm,3.5,keeri samba
+SYN-F-0076,Indika Herath,0000000076,Badulla,Rideemaliyadda,Herath Paddy Farm,2.1,samba
+SYN-F-0077,Tharindu Herath,0000000077,Kandy,Teldeniya,Herath Paddy Farm,4.3,nadu
+SYN-F-0078,Saman Ekanayake,0000000078,Badulla,Bandarawela,Ekanayake Paddy Farm,5.4,keeri samba
+SYN-F-0079,Janaka Wijesinghe,0000000079,Badulla,Bandarawela,Wijesinghe Paddy Farm,4.9,samba
+SYN-F-0080,Kamal Jayasinghe,0000000080,Ampara,Damana,Jayasinghe Paddy Farm,8.2,nadu
+SYN-F-0081,Ajith Karunaratne,0000000081,Kandy,Harispattuwa,Karunaratne Paddy Farm,6.6,keeri samba
+SYN-F-0082,Janaka Wijesinghe,0000000082,Kandy,Yatinuwara,Wijesinghe Paddy Farm,6.4,nadu
+SYN-F-0083,Pradeep Herath,0000000083,Monaragala,Thanamalwila,Herath Paddy Farm,2,samba
+SYN-F-0084,Kasun Wijesinghe,0000000084,Badulla,Welimada,Wijesinghe Paddy Farm,7.4,samba
+SYN-F-0085,Ajith Bandara,0000000085,Ampara,Dehiattakandiya,Bandara Paddy Farm,4,samba
+SYN-F-0086,Saman Silva,0000000086,Badulla,Hali Ela,Silva Paddy Farm,6.3,keeri samba
+SYN-F-0087,Upul Rathnayake,0000000087,Monaragala,Madulla,Rathnayake Paddy Farm,6.9,samba
+SYN-F-0088,Lalith Rathnayake,0000000088,Badulla,Rideemaliyadda,Rathnayake Paddy Farm,9.5,nadu
+SYN-F-0089,Nimal Kumara,0000000089,Badulla,Rideemaliyadda,Kumara Paddy Farm,2.9,nadu
+SYN-F-0090,Nimal Fernando,0000000090,Ampara,Namal Oya,Fernando Paddy Farm,2.9,samba
+SYN-F-0091,Gayan Kumara,0000000091,Badulla,Ella,Kumara Paddy Farm,5.3,samba
+SYN-F-0092,Ajith Fernando,0000000092,Monaragala,Siyambalanduwa,Fernando Paddy Farm,2.7,keeri samba
+SYN-F-0093,Janaka Ekanayake,0000000093,Monaragala,Bibile,Ekanayake Paddy Farm,4.7,keeri samba
+SYN-F-0094,Nimal Bandara,0000000094,Ampara,Maha Oya,Bandara Paddy Farm,7.5,samba
+SYN-F-0095,Priyantha Karunaratne,0000000095,Kandy,Kandy,Karunaratne Paddy Farm,2.3,keeri samba
+SYN-F-0096,Kamal Dissanayake,0000000096,Ampara,Lahugala,Dissanayake Paddy Farm,1.4,nadu
+SYN-F-0097,Kamal Dissanayake,0000000097,Ampara,Namal Oya,Dissanayake Paddy Farm,7,samba
+SYN-F-0098,Gayan Herath,0000000098,Monaragala,Bibile,Herath Paddy Farm,7.2,nadu
+SYN-F-0099,Kasun Senanayake,0000000099,Badulla,Rideemaliyadda,Senanayake Paddy Farm,4.7,samba
+SYN-F-0100,Kasun Fernando,0000000100,Kandy,Kandy,Fernando Paddy Farm,7.7,nadu
+SYN-F-0101,Roshan Dissanayake,0000000101,Kandy,Yatinuwara,Dissanayake Paddy Farm,3.9,nadu
+SYN-F-0102,Janaka Rathnayake,0000000102,Ampara,Dehiattakandiya,Rathnayake Paddy Farm,7.6,samba
+SYN-F-0103,Saman Bandara,0000000103,Ampara,Ampara,Bandara Paddy Farm,3.8,samba
+SYN-F-0104,Tharindu Rathnayake,0000000104,Badulla,Badulla,Rathnayake Paddy Farm,7.2,keeri samba
+SYN-F-0105,Kamal Samarasinghe,0000000105,Monaragala,Madulla,Samarasinghe Paddy Farm,7.7,nadu
+SYN-F-0106,Gayan Rathnayake,0000000106,Ampara,Maha Oya,Rathnayake Paddy Farm,3.4,samba
+SYN-F-0107,Tharindu Ekanayake,0000000107,Ampara,Dehiattakandiya,Ekanayake Paddy Farm,9.9,samba
+SYN-F-0108,Indika Bandara,0000000108,Ampara,Namal Oya,Bandara Paddy Farm,3.8,nadu
+SYN-F-0109,Roshan Silva,0000000109,Badulla,Passara,Silva Paddy Farm,1.8,samba
+SYN-F-0110,Tharindu Karunaratne,0000000110,Monaragala,Buttala,Karunaratne Paddy Farm,4.6,keeri samba
+SYN-F-0111,Priyantha Kumara,0000000111,Badulla,Welimada,Kumara Paddy Farm,2,samba
+SYN-F-0112,Ruwan Silva,0000000112,Badulla,Bandarawela,Silva Paddy Farm,6.8,nadu
+SYN-F-0113,Lalith Karunaratne,0000000113,Monaragala,Siyambalanduwa,Karunaratne Paddy Farm,2.8,keeri samba
+SYN-F-0114,Lalith Gunawardena,0000000114,Badulla,Rideemaliyadda,Gunawardena Paddy Farm,3,nadu
+SYN-F-0115,Saman Senanayake,0000000115,Ampara,Uhana,Senanayake Paddy Farm,7.5,nadu
+SYN-F-0116,Pradeep Jayasinghe,0000000116,Monaragala,Buttala,Jayasinghe Paddy Farm,7.2,nadu
+SYN-F-0117,Ajith Senanayake,0000000117,Kandy,Kandy,Senanayake Paddy Farm,9.1,nadu
+SYN-F-0118,Asanka Jayasinghe,0000000118,Ampara,Namal Oya,Jayasinghe Paddy Farm,3.4,nadu
+SYN-F-0119,Priyantha Fernando,0000000119,Kandy,Udunuwara,Fernando Paddy Farm,9.3,keeri samba
+SYN-F-0120,Upul Herath,0000000120,Badulla,Welimada,Herath Paddy Farm,2.4,nadu

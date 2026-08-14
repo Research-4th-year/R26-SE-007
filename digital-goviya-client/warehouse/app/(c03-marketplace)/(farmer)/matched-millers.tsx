@@ -374,7 +374,8 @@ export default function MatchedMillersScreen() {
         )}
       </ScrollView>
 
-      {matches.length > 0 ? (
+      {matches.length > 0 &&
+      selectedDemandIds.length > 0 ? (
         <View style={styles.bottomBar}>
           <View style={styles.selectionText}>
             <Text
@@ -918,7 +919,7 @@ const styles = StyleSheet.create({
 
   content: {
     padding: 17,
-    paddingBottom: 120,
+    paddingBottom: 205,
   },
 
   harvestCard: {
@@ -1266,20 +1267,41 @@ const styles = StyleSheet.create({
   },
 
   bottomBar: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 0,
-    minHeight: 86,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 15,
-    paddingHorizontal: 17,
-    paddingVertical: 13,
-    backgroundColor: "#FFFFFF",
-    borderTopWidth: 1,
-    borderTopColor: "#E5E7EB",
+  position: "absolute",
+  left: 13,
+  right: 13,
+
+  // Leave space for global bottom navigation.
+  bottom: 92,
+
+  minHeight: 78,
+
+  flexDirection: "row",
+  alignItems: "center",
+  gap: 15,
+
+  paddingHorizontal: 15,
+  paddingVertical: 11,
+
+  backgroundColor: "#FFFFFF",
+
+  borderRadius: 20,
+
+  borderWidth: 1,
+  borderColor: "#E5E7EB",
+
+  shadowColor: "#000000",
+  shadowOpacity: 0.12,
+  shadowRadius: 14,
+  shadowOffset: {
+    width: 0,
+    height: 5,
   },
+
+  elevation: 8,
+
+  zIndex: 50,
+},
 
   selectionText: {
     minWidth: 65,

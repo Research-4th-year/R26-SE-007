@@ -20,9 +20,7 @@ import {
   Poppins_500Medium,
 } from "@expo-google-fonts/poppins";
 
-import type {
-  FarmerProfile,
-} from "@/types/c03-marketplace/auth.types";
+import type { FarmerProfile } from "@/types/c03-marketplace/auth.types";
 
 import { useMarketplaceAuth } from "@/hooks/c03-marketplace/useMarketplaceAuth";
 
@@ -30,9 +28,7 @@ export default function FarmerProfileScreen() {
   const { user, profile, signOut } = useMarketplaceAuth();
 
   const farmerProfile =
-  user?.role === "farmer"
-    ? (profile as FarmerProfile)
-    : null;
+    user?.role === "farmer" ? (profile as FarmerProfile) : null;
 
   async function handleLogout(): Promise<void> {
     try {
@@ -63,8 +59,16 @@ export default function FarmerProfileScreen() {
   useEffect(() => {
     if (!fontsLoaded) return;
     Animated.parallel([
-      Animated.timing(fade, { toValue: 1, duration: 400, useNativeDriver: true }),
-      Animated.timing(rise, { toValue: 0, duration: 400, useNativeDriver: true }),
+      Animated.timing(fade, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+      Animated.timing(rise, {
+        toValue: 0,
+        duration: 400,
+        useNativeDriver: true,
+      }),
     ]).start();
   }, [fontsLoaded]);
 
@@ -113,7 +117,7 @@ export default function FarmerProfileScreen() {
               <Text style={styles.roleText}>VERIFIED FARMER</Text>
             </View>
 
-            <Text style={styles.email}>{user?.email}</Text>
+            <Text style={styles.email}>{user?.username}</Text>
           </LinearGradient>
         </View>
 
@@ -161,6 +165,44 @@ export default function FarmerProfileScreen() {
             value={farmerProfile?.mainPaddyVariety ?? "Not provided"}
             isLast
           />
+        </View>
+
+        <View style={styles.securityHeaderRow}>
+          <View style={styles.securitySectionIcon}>
+            <Ionicons
+              name="shield-checkmark-outline"
+              size={16}
+              color="#15803D"
+            />
+          </View>
+
+          <Text style={styles.sectionTitle}>Account & security</Text>
+        </View>
+
+        <View style={styles.securityCard}>
+          <Pressable
+            style={({ pressed }) => [
+              styles.securityAction,
+              pressed && styles.pressed,
+            ]}
+            onPress={() =>
+              router.push("/(c03-marketplace)/(auth)/change-password")
+            }
+          >
+            <View style={styles.securityActionIcon}>
+              <Ionicons name="key-outline" size={20} color="#15803D" />
+            </View>
+
+            <View style={styles.securityActionText}>
+              <Text style={styles.securityActionTitle}>Change password</Text>
+
+              <Text style={styles.securityActionSubtitle}>
+                Update your marketplace account password
+              </Text>
+            </View>
+
+            <Ionicons name="chevron-forward" size={19} color="#94A3B8" />
+          </Pressable>
         </View>
 
         <Pressable
@@ -408,5 +450,71 @@ const styles = StyleSheet.create({
   pressed: {
     opacity: 0.84,
     transform: [{ scale: 0.97 }],
+  },
+
+  securityHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginTop: 25,
+    marginBottom: 12,
+  },
+
+  securitySectionIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 9,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#DCFCE7",
+  },
+
+  securityCard: {
+    borderRadius: 20,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#EEF0ED",
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    elevation: 2,
+  },
+
+  securityAction: {
+    minHeight: 76,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingHorizontal: 15,
+  },
+
+  securityActionIcon: {
+    width: 43,
+    height: 43,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#DCFCE7",
+  },
+
+  securityActionText: {
+    flex: 1,
+  },
+
+  securityActionTitle: {
+    color: "#1F2937",
+    fontSize: 13,
+    fontFamily: "Poppins_700Bold",
+  },
+
+  securityActionSubtitle: {
+    color: "#6B7280",
+    fontSize: 9,
+    fontFamily: "Poppins_500Medium",
+    marginTop: 3,
   },
 });

@@ -51,3 +51,5 @@ share/python-wheels/
 negotiation_agents/.venv/
 negotiation_agents/__pycache__/
 negotiation_agents/**/__pycache__/
+
+backend/scripts/output/

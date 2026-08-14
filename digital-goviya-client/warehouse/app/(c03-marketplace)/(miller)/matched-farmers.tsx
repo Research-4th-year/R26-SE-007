@@ -264,7 +264,8 @@ export default function MatchedFarmersScreen() {
         )}
       </ScrollView>
 
-      {matches.length > 0 ? (
+      {matches.length > 0 &&
+      selectedHarvestIds.length > 0 ? (
         <View style={styles.bottomBar}>
           <View style={styles.selectedCount}>
             <Text style={styles.selectedValue}>
@@ -794,7 +795,7 @@ const styles = StyleSheet.create({
 
   content: {
     padding: 17,
-    paddingBottom: 125,
+    paddingBottom: 205,
   },
 
   demandBanner: {
@@ -1184,21 +1185,42 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
   },
 
-  bottomBar: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 0,
-    minHeight: 88,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 13,
-    paddingHorizontal: 17,
-    paddingVertical: 13,
-    backgroundColor: "#FFFFFF",
-    borderTopWidth: 1,
-    borderTopColor: "#EEE7D8",
+ bottomBar: {
+  position: "absolute",
+  left: 13,
+  right: 13,
+
+  // Keep it above the global navigation.
+  bottom: 92,
+
+  minHeight: 78,
+
+  flexDirection: "row",
+  alignItems: "center",
+  gap: 13,
+
+  paddingHorizontal: 15,
+  paddingVertical: 11,
+
+  backgroundColor: "#FFFFFF",
+
+  borderRadius: 20,
+
+  borderWidth: 1,
+  borderColor: "#EEE7D8",
+
+  shadowColor: "#5C4A24",
+  shadowOpacity: 0.12,
+  shadowRadius: 14,
+  shadowOffset: {
+    width: 0,
+    height: 5,
   },
+
+  elevation: 8,
+
+  zIndex: 50,
+},
 
   selectedCount: {
     minWidth: 57,

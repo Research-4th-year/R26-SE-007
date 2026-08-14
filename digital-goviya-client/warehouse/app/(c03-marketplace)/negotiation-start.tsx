@@ -291,9 +291,17 @@ export default function NegotiationStartScreen() {
         </AnimatedPressable>
 
         <View style={styles.headerText}>
-          <Text style={styles.headerTitle}>
-            AI Negotiation
-          </Text>
+          <View style={styles.headerTitleRow}>
+            <View
+              style={[
+                styles.headerAccentDot,
+                { backgroundColor: theme.primary },
+              ]}
+            />
+            <Text style={styles.headerTitle}>
+              AI Negotiation
+            </Text>
+          </View>
 
           <Text
             style={styles.headerSubtitle}
@@ -308,6 +316,7 @@ export default function NegotiationStartScreen() {
             {
               backgroundColor:
                 theme.soft,
+              shadowColor: theme.primary,
             },
           ]}
         >
@@ -340,11 +349,19 @@ export default function NegotiationStartScreen() {
       >
         <IdleHero theme={theme} />
 
-        <Text style={styles.sectionTitle}>
-          Negotiation summary
-        </Text>
+        <View style={styles.sectionHeaderRow}>
+          <Text style={styles.sectionTitle}>
+            Negotiation summary
+          </Text>
+          <View
+            style={[
+              styles.sectionRule,
+              { backgroundColor: theme.border },
+            ]}
+          />
+        </View>
 
-        <View style={styles.summaryCard}>
+        <View style={[styles.summaryCard, CARD_SHADOW]}>
           <SummaryRow
             index={0}
             icon="leaf-outline"
@@ -415,7 +432,7 @@ export default function NegotiationStartScreen() {
 
         <PrivacyCard theme={theme} />
 
-        <View style={styles.processCard}>
+        <View style={[styles.processCard, CARD_SHADOW]}>
           <Text style={styles.processTitle}>
             What happens next?
           </Text>
@@ -526,6 +543,24 @@ function IdleHero({ theme }: { theme: LiveTheme }) {
         entrance,
       ]}
     >
+      {/* Ambient decorative glows — purely visual, no effect on layout logic */}
+      <View
+        pointerEvents="none"
+        style={[
+          styles.heroGlow,
+          styles.heroGlowTopRight,
+          { backgroundColor: theme.primary },
+        ]}
+      />
+      <View
+        pointerEvents="none"
+        style={[
+          styles.heroGlow,
+          styles.heroGlowBottomLeft,
+          { backgroundColor: theme.border },
+        ]}
+      />
+
       <View style={styles.agentRow}>
         <Animated.View
           style={{ transform: [{ scale: breathe }] }}
@@ -678,7 +713,10 @@ function StartButton({
         onPressOut={press.onPressOut}
         style={[
           styles.startButton,
-          { backgroundColor: theme.primary },
+          {
+            backgroundColor: theme.primary,
+            shadowColor: theme.primary,
+          },
           {
             transform: [
               { scale: press.scale },
@@ -697,7 +735,9 @@ function StartButton({
           </>
         ) : (
           <>
-            <Ionicons name="sparkles" size={19} color="#FFFFFF" />
+            <View style={styles.startButtonIconWrap}>
+              <Ionicons name="sparkles" size={17} color="#FFFFFF" />
+            </View>
             <Text style={styles.startButtonText}>
               Start AI Negotiation
             </Text>
@@ -897,6 +937,23 @@ function NegotiationLiveView({
           { backgroundColor: theme.dark },
         ]}
       >
+        <View
+          pointerEvents="none"
+          style={[
+            styles.heroGlow,
+            styles.heroGlowTopRight,
+            { backgroundColor: theme.primary },
+          ]}
+        />
+        <View
+          pointerEvents="none"
+          style={[
+            styles.heroGlow,
+            styles.heroGlowBottomLeft,
+            { backgroundColor: theme.border },
+          ]}
+        />
+
         <View style={styles.liveAgentsRow}>
           <Animated.View
             style={[
@@ -951,11 +1008,32 @@ function NegotiationLiveView({
           </Animated.View>
         </View>
 
-        <Text style={styles.liveEyebrow}>
-          {completed
-            ? "NEGOTIATION COMPLETE"
-            : "LIVE AI NEGOTIATION"}
-        </Text>
+        <View
+          style={[
+            styles.liveStatusPill,
+            {
+              backgroundColor: completed
+                ? "rgba(255,255,255,0.16)"
+                : "rgba(253,230,138,0.16)",
+            },
+          ]}
+        >
+          <View
+            style={[
+              styles.liveStatusDot,
+              {
+                backgroundColor: completed
+                  ? "#86EFAC"
+                  : "#FDE68A",
+              },
+            ]}
+          />
+          <Text style={styles.liveEyebrow}>
+            {completed
+              ? "NEGOTIATION COMPLETE"
+              : "LIVE AI NEGOTIATION"}
+          </Text>
+        </View>
 
         <Text style={styles.liveHeroTitle}>
           {completed
@@ -970,7 +1048,7 @@ function NegotiationLiveView({
         </Text>
       </View>
 
-      <View style={styles.liveProgressCard}>
+      <View style={[styles.liveProgressCard, CARD_SHADOW]}>
         <View style={styles.progressHeader}>
           <View>
             <Text style={styles.progressLabel}>
@@ -1014,7 +1092,12 @@ function NegotiationLiveView({
             },
           ]}
         >
-          <View style={styles.currentThoughtIcon}>
+          <View
+            style={[
+              styles.currentThoughtIcon,
+              CARD_SHADOW_SOFT,
+            ]}
+          >
             <Ionicons
               name={
                 completed
@@ -1054,7 +1137,7 @@ function NegotiationLiveView({
         </Animated.View>
       </View>
 
-      <View style={styles.liveSnapshotCard}>
+      <View style={[styles.liveSnapshotCard, CARD_SHADOW]}>
         <View style={styles.snapshotHeader}>
           <Text style={styles.snapshotTitle}>
             Market context loaded
@@ -1117,7 +1200,7 @@ function NegotiationLiveView({
         </View>
       </View>
 
-      <View style={styles.liveTimelineCard}>
+      <View style={[styles.liveTimelineCard, CARD_SHADOW]}>
         <Text style={styles.liveTimelineTitle}>
           AI analysis timeline
         </Text>
@@ -1493,7 +1576,10 @@ function ProcessStep({
 
         {!last ? (
           <View
-            style={styles.processLine}
+            style={[
+              styles.processLine,
+              { backgroundColor: soft },
+            ]}
           />
         ) : null}
       </View>
@@ -1564,6 +1650,26 @@ function formatLabel(
     .join(" ");
 }
 
+/* ------------------------------------------------------------------ */
+/*  Shared shadow tokens — same neutral shadow color across cards      */
+/* ------------------------------------------------------------------ */
+
+const CARD_SHADOW = {
+  shadowColor: "#0F172A",
+  shadowOffset: { width: 0, height: 6 },
+  shadowOpacity: 0.06,
+  shadowRadius: 16,
+  elevation: 3,
+};
+
+const CARD_SHADOW_SOFT = {
+  shadowColor: "#0F172A",
+  shadowOffset: { width: 0, height: 3 },
+  shadowOpacity: 0.08,
+  shadowRadius: 8,
+  elevation: 2,
+};
+
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
@@ -1593,16 +1699,30 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 
+  headerTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+
+  headerAccentDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+
   headerTitle: {
     color: "#1F2937",
     fontSize: 18,
     fontWeight: "800",
+    letterSpacing: -0.2,
   },
 
   headerSubtitle: {
     color: "#6B7280",
     fontSize: 9.5,
-    marginTop: 2,
+    marginTop: 3,
+    marginLeft: 12,
   },
 
   headerIcon: {
@@ -1611,18 +1731,42 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.18,
+    shadowRadius: 8,
+    elevation: 2,
   },
 
   content: {
     padding: 17,
-    paddingBottom: 120,
+    paddingBottom: 205,
   },
 
   heroCard: {
-    borderRadius: 25,
+    borderRadius: 26,
     padding: 20,
     alignItems: "center",
     marginBottom: 24,
+    overflow: "hidden",
+  },
+
+  heroGlow: {
+    position: "absolute",
+    width: 160,
+    height: 160,
+    borderRadius: 80,
+    opacity: 0.16,
+  },
+
+  heroGlowTopRight: {
+    top: -60,
+    right: -50,
+  },
+
+  heroGlowBottomLeft: {
+    bottom: -70,
+    left: -60,
+    opacity: 0.1,
   },
 
   agentRow: {
@@ -1643,6 +1787,11 @@ const styles = StyleSheet.create({
     borderRadius: 19,
     alignItems: "center",
     justifyContent: "center",
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.14,
+    shadowRadius: 8,
+    elevation: 3,
   },
 
   agentLabel: {
@@ -1650,6 +1799,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: "800",
     marginTop: 7,
+    letterSpacing: 0.2,
   },
 
   connectionArea: {
@@ -1671,29 +1821,45 @@ const styles = StyleSheet.create({
     fontWeight: "900",
     textAlign: "center",
     marginTop: 19,
+    letterSpacing: -0.3,
   },
 
   heroDescription: {
-    color: "rgba(255,255,255,0.7)",
+    color: "rgba(255,255,255,0.72)",
     fontSize: 10.5,
     lineHeight: 17,
     textAlign: "center",
     marginTop: 7,
+    paddingHorizontal: 4,
+  },
+
+  sectionHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginBottom: 12,
   },
 
   sectionTitle: {
     color: "#1F2937",
     fontSize: 15,
     fontWeight: "800",
-    marginBottom: 12,
+    letterSpacing: -0.2,
+  },
+
+  sectionRule: {
+    flex: 1,
+    height: 1,
+    borderRadius: 1,
+    opacity: 0.7,
   },
 
   summaryCard: {
-    borderRadius: 20,
+    borderRadius: 22,
     paddingHorizontal: 15,
     backgroundColor: "#FFFFFF",
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: "#EEF2F1",
   },
 
   summaryRow: {
@@ -1724,6 +1890,7 @@ const styles = StyleSheet.create({
   summaryLabel: {
     color: "#94A3B8",
     fontSize: 8.5,
+    letterSpacing: 0.2,
   },
 
   summaryValue: {
@@ -1737,7 +1904,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "flex-start",
     gap: 11,
-    borderRadius: 19,
+    borderRadius: 20,
     padding: 14,
     borderWidth: 1,
     marginTop: 18,
@@ -1768,11 +1935,11 @@ const styles = StyleSheet.create({
   },
 
   processCard: {
-    borderRadius: 20,
+    borderRadius: 22,
     padding: 16,
     backgroundColor: "#FFFFFF",
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: "#EEF2F1",
     marginTop: 18,
   },
 
@@ -1781,6 +1948,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "800",
     marginBottom: 14,
+    letterSpacing: -0.1,
   },
 
   processRow: {
@@ -1809,7 +1977,6 @@ const styles = StyleSheet.create({
   processLine: {
     flex: 1,
     width: 2,
-    backgroundColor: "#E5E7EB",
     marginVertical: 4,
   },
 
@@ -1833,20 +2000,34 @@ const styles = StyleSheet.create({
   },
 
   startButton: {
-    minHeight: 54,
-    borderRadius: 17,
+    minHeight: 56,
+    borderRadius: 18,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 9,
     paddingHorizontal: 16,
     marginTop: 21,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.28,
+    shadowRadius: 18,
+    elevation: 6,
+  },
+
+  startButtonIconWrap: {
+    width: 24,
+    height: 24,
+    borderRadius: 8,
+    backgroundColor: "rgba(255,255,255,0.18)",
+    alignItems: "center",
+    justifyContent: "center",
   },
 
   startButtonText: {
     color: "#FFFFFF",
     fontSize: 12,
     fontWeight: "900",
+    letterSpacing: 0.1,
   },
 
   waitingNote: {
@@ -1865,7 +2046,7 @@ const styles = StyleSheet.create({
   },
 
   liveHero: {
-    borderRadius: 26,
+    borderRadius: 27,
     padding: 22,
     alignItems: "center",
     overflow: "hidden",
@@ -1886,6 +2067,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     borderWidth: 2,
     borderColor: "rgba(255,255,255,0.55)",
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.16,
+    shadowRadius: 10,
+    elevation: 3,
   },
 
   farmerAgentOrb: {
@@ -1915,12 +2101,27 @@ const styles = StyleSheet.create({
     backgroundColor: "#FDE68A",
   },
 
+  liveStatusPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    marginTop: 18,
+  },
+
+  liveStatusDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 3,
+  },
+
   liveEyebrow: {
     color: "#FDE68A",
     fontSize: 9,
     fontWeight: "900",
     letterSpacing: 1.2,
-    marginTop: 18,
   },
 
   liveHeroTitle: {
@@ -1929,7 +2130,8 @@ const styles = StyleSheet.create({
     lineHeight: 25,
     fontWeight: "900",
     textAlign: "center",
-    marginTop: 7,
+    marginTop: 10,
+    letterSpacing: -0.3,
   },
 
   liveHeroDescription: {
@@ -1942,11 +2144,11 @@ const styles = StyleSheet.create({
   },
 
   liveProgressCard: {
-    borderRadius: 21,
+    borderRadius: 22,
     padding: 16,
     backgroundColor: "#FFFFFF",
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: "#EEF2F1",
   },
 
   progressHeader: {
@@ -1959,6 +2161,7 @@ const styles = StyleSheet.create({
     color: "#1F2937",
     fontSize: 13,
     fontWeight: "900",
+    letterSpacing: -0.1,
   },
 
   progressSubLabel: {
@@ -1968,15 +2171,16 @@ const styles = StyleSheet.create({
   },
 
   progressPercent: {
-    fontSize: 19,
+    fontSize: 20,
     fontWeight: "900",
+    letterSpacing: -0.4,
   },
 
   liveProgressTrack: {
     height: 9,
     borderRadius: 999,
     overflow: "hidden",
-    backgroundColor: "#E5E7EB",
+    backgroundColor: "#EEF1F0",
     marginTop: 14,
   },
 
@@ -1989,7 +2193,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    borderRadius: 16,
+    borderRadius: 17,
     padding: 13,
     borderWidth: 1,
     marginTop: 15,
@@ -2021,11 +2225,11 @@ const styles = StyleSheet.create({
   },
 
   liveSnapshotCard: {
-    borderRadius: 21,
+    borderRadius: 22,
     padding: 16,
     backgroundColor: "#FFFFFF",
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: "#EEF2F1",
   },
 
   snapshotHeader: {
@@ -2039,6 +2243,7 @@ const styles = StyleSheet.create({
     color: "#1F2937",
     fontSize: 13,
     fontWeight: "900",
+    letterSpacing: -0.1,
   },
 
   secureBadge: {
@@ -2065,7 +2270,7 @@ const styles = StyleSheet.create({
   liveMetric: {
     width: "48%",
     minHeight: 94,
-    borderRadius: 16,
+    borderRadius: 17,
     padding: 12,
     backgroundColor: "#F8FAFC",
   },
@@ -2082,6 +2287,7 @@ const styles = StyleSheet.create({
     color: "#94A3B8",
     fontSize: 8,
     marginTop: 8,
+    letterSpacing: 0.2,
   },
 
   liveMetricValue: {
@@ -2092,11 +2298,11 @@ const styles = StyleSheet.create({
   },
 
   liveTimelineCard: {
-    borderRadius: 21,
+    borderRadius: 22,
     padding: 16,
     backgroundColor: "#FFFFFF",
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: "#EEF2F1",
   },
 
   liveTimelineTitle: {
@@ -2104,6 +2310,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "900",
     marginBottom: 15,
+    letterSpacing: -0.1,
   },
 
   liveTimelineRow: {
@@ -2181,7 +2388,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "flex-start",
     gap: 10,
-    borderRadius: 17,
+    borderRadius: 18,
     padding: 13,
     borderWidth: 1,
   },

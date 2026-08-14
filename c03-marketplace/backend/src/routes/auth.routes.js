@@ -3,31 +3,53 @@ const express = require("express");
 const {
   register,
   login,
+  updatePassword,
   getMe,
-} = require("../controllers/auth.controller");
+} = require(
+  "../controllers/auth.controller"
+);
 
 const {
   authenticate,
-} = require("../middlewares/auth.middleware");
+} = require(
+  "../middlewares/auth.middleware"
+);
 
 const {
   registerSchema,
   loginSchema,
+  changePasswordSchema,
   validateBody,
-} = require("../validations/auth.validation");
+} = require(
+  "../validations/auth.validation"
+);
 
-const router = express.Router();
+const router =
+  express.Router();
 
 router.post(
   "/register",
-  validateBody(registerSchema),
+  validateBody(
+    registerSchema
+  ),
   register
 );
 
 router.post(
   "/login",
-  validateBody(loginSchema),
+  validateBody(
+    loginSchema
+  ),
   login
+);
+
+router.patch(
+  "/change-password",
+  authenticate,
+  validateBody(
+    changePasswordSchema
+  ),
+  updatePassword
 );
 
 router.get(
@@ -36,4 +58,5 @@ router.get(
   getMe
 );
 
-module.exports = router;
+module.exports =
+  router;
