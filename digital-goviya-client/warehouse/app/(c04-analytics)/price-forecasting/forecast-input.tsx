@@ -26,7 +26,7 @@ import {
 
 const RESULT_ROUTE = "/(c04-analytics)/price-forecasting/forecast-result";
 
-const DISTRICTS = ["Ampara", "Anuradhapura", "Polonnaruwa", "Kurunegala"];
+const DISTRICTS = ["Ampara", "Anuradhapura", "Polonnaruwa", "Kurunagala"];
 const WEEK_OPTIONS = [1, 2, 3, 4, 5, 6];
 const MAX_FORECAST_DAYS = 30;
 
