@@ -8,6 +8,7 @@ import {
   Animated,
   Modal,
   FlatList,
+  ScrollView,
   Platform,
 } from "react-native";
 import { router } from "expo-router";
@@ -25,7 +26,7 @@ import {
 
 const RESULT_ROUTE = "/(c04-analytics)/price-forecasting/forecast-result";
 
-const DISTRICTS = ["Ampara", "Anuradhapura", "Polonnaruwa", "Kurunegala"];
+const DISTRICTS = ["Ampara", "Anuradhapura", "Polonnaruwa", "Kurunagala"];
 const WEEK_OPTIONS = [1, 2, 3, 4, 5, 6];
 const MAX_FORECAST_DAYS = 30;
 
@@ -145,100 +146,105 @@ export default function ForecastInputScreen() {
         >
           <View style={styles.sheetHandle} />
 
-          <Text style={styles.fieldLabel}>District</Text>
-          <TouchableOpacity
-            style={styles.selectField}
-            activeOpacity={0.8}
-            onPress={() => setDistrictModalOpen(true)}
+          <ScrollView
+            style={styles.sheetScroll}
+            contentContainerStyle={styles.sheetScrollContent}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
           >
-            <View style={styles.selectFieldLeft}>
-              <Ionicons name="location-outline" size={18} color="#15803D" />
-              <Text style={[styles.selectFieldText, !district && styles.placeholderText]}>
-                {district ?? "Select district"}
-              </Text>
-            </View>
-            <Ionicons name="chevron-down" size={18} color="#9CA3AF" />
-          </TouchableOpacity>
+            <Text style={styles.fieldLabel}>District</Text>
+            <TouchableOpacity
+              style={styles.selectField}
+              activeOpacity={0.8}
+              onPress={() => setDistrictModalOpen(true)}
+            >
+              <View style={styles.selectFieldLeft}>
+                <Ionicons name="location-outline" size={18} color="#15803D" />
+                <Text style={[styles.selectFieldText, !district && styles.placeholderText]}>
+                  {district ?? "Select district"}
+                </Text>
+              </View>
+              <Ionicons name="chevron-down" size={18} color="#9CA3AF" />
+            </TouchableOpacity>
 
-          <Text style={[styles.fieldLabel, { marginTop: 18 }]}>Start Date</Text>
-          <TouchableOpacity
-            style={styles.selectField}
-            activeOpacity={0.8}
-            onPress={() => setShowDatePicker(true)}
-          >
-            <View style={styles.selectFieldLeft}>
-              <Ionicons name="calendar-outline" size={18} color="#15803D" />
-              <Text style={[styles.selectFieldText, !date && styles.placeholderText]}>
-                {date ? formatDate(date) : "Select date"}
-              </Text>
-            </View>
-            <Ionicons name="chevron-down" size={18} color="#9CA3AF" />
-          </TouchableOpacity>
-          <Text style={styles.helperText}>
-            Today up to {MAX_FORECAST_DAYS} days ahead ({formatDate(maxDate)})
-          </Text>
+            <Text style={[styles.fieldLabel, { marginTop: 18 }]}>Start Date</Text>
+            <TouchableOpacity
+              style={styles.selectField}
+              activeOpacity={0.8}
+              onPress={() => setShowDatePicker(true)}
+            >
+              <View style={styles.selectFieldLeft}>
+                <Ionicons name="calendar-outline" size={18} color="#15803D" />
+                <Text style={[styles.selectFieldText, !date && styles.placeholderText]}>
+                  {date ? formatDate(date) : "Select date"}
+                </Text>
+              </View>
+              <Ionicons name="chevron-down" size={18} color="#9CA3AF" />
+            </TouchableOpacity>
+            <Text style={styles.helperText}>
+              Today up to {MAX_FORECAST_DAYS} days ahead ({formatDate(maxDate)})
+            </Text>
 
-          {showDatePicker && isWeb ? (
-            <View style={styles.webPickerWrap}>
-              <Text style={styles.webPickerLabel}>Choose a date</Text>
-              <input
-                type="date"
-                value={date ? toApiDate(date) : ""}
-                min={toApiDate(today)}
-                max={toApiDate(maxDate)}
-                onChange={handleWebDateChange}
-                style={{
-                  width: "100%",
-                  padding: "10px 12px",
-                  borderRadius: 10,
-                  border: "1px solid #D1D5DB",
-                  fontSize: 14,
-                  fontFamily: "Poppins, sans-serif",
-                  color: "#111827",
-                  backgroundColor: "#fff",
-                }}
+            {showDatePicker && isWeb ? (
+              <View style={styles.webPickerWrap}>
+                <Text style={styles.webPickerLabel}>Choose a date</Text>
+                <input
+                  type="date"
+                  value={date ? toApiDate(date) : ""}
+                  min={toApiDate(today)}
+                  max={toApiDate(maxDate)}
+                  onChange={handleWebDateChange}
+                  style={{
+                    width: "100%",
+                    padding: "10px 12px",
+                    borderRadius: 10,
+                    border: "1px solid #D1D5DB",
+                    fontSize: 14,
+                    fontFamily: "Poppins, sans-serif",
+                    color: "#111827",
+                    backgroundColor: "#fff",
+                  }}
+                />
+              </View>
+            ) : showDatePicker ? (
+              <DateTimePicker
+                value={date ?? today}
+                mode="date"
+                display={Platform.OS === "ios" ? "inline" : "default"}
+                minimumDate={today}
+                maximumDate={maxDate}
+                onChange={handleDateChange}
+                {...(Platform.OS === "ios" ? { themeVariant: "light" } : {})}
               />
+            ) : null}
+
+            <Text style={[styles.fieldLabel, { marginTop: 18 }]}>Forecast Length</Text>
+            <View style={styles.weeksGrid}>
+              {WEEK_OPTIONS.map((w) => {
+                const active = weeks === w;
+                return (
+                  <TouchableOpacity
+                    key={w}
+                    style={[styles.weekChip, active && styles.weekChipActive]}
+                    onPress={() => setWeeks(w)}
+                    activeOpacity={0.85}
+                  >
+                    <Text style={[styles.weekChipNumber, active && styles.weekChipNumberActive]}>
+                      {w}
+                    </Text>
+                    <Text style={[styles.weekChipLabel, active && styles.weekChipLabelActive]}>
+                      {w === 1 ? "Week" : "Weeks"}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
-          ) : showDatePicker ? (
-            <DateTimePicker
-              value={date ?? today}
-              mode="date"
-              display={Platform.OS === "ios" ? "inline" : "default"}
-              minimumDate={today}
-              maximumDate={maxDate}
-              onChange={handleDateChange}
-              {...(Platform.OS === "ios" ? { themeVariant: "light" } : {})}
-            />
-          ) : null}
 
-          <Text style={[styles.fieldLabel, { marginTop: 18 }]}>Forecast Length</Text>
-          <View style={styles.weeksGrid}>
-            {WEEK_OPTIONS.map((w) => {
-              const active = weeks === w;
-              return (
-                <TouchableOpacity
-                  key={w}
-                  style={[styles.weekChip, active && styles.weekChipActive]}
-                  onPress={() => setWeeks(w)}
-                  activeOpacity={0.85}
-                >
-                  <Text style={[styles.weekChipNumber, active && styles.weekChipNumberActive]}>
-                    {w}
-                  </Text>
-                  <Text style={[styles.weekChipLabel, active && styles.weekChipLabelActive]}>
-                    {w === 1 ? "Week" : "Weeks"}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-
-          <View style={styles.noteBanner}>
-            <Ionicons name="leaf" size={16} color="#B45309" />
-            <Text style={styles.noteText}>Long Grain White Paddy</Text>
-          </View>
-
-          <View style={{ flex: 1 }} />
+            <View style={styles.noteBanner}>
+              <Ionicons name="leaf" size={16} color="#B45309" />
+              <Text style={styles.noteText}>Long Grain White Paddy</Text>
+            </View>
+          </ScrollView>
 
           <TouchableOpacity
             style={[styles.primaryBtnShadow, !isValid && styles.disabledShadow]}
@@ -277,7 +283,7 @@ export default function ForecastInputScreen() {
           activeOpacity={1}
           onPress={() => setDistrictModalOpen(false)}
         >
-          <View style={styles.modalCard} onStartShouldSetResponder={() => true}>
+          <TouchableOpacity activeOpacity={1} style={styles.modalCard}>
             <View style={styles.sheetHandle} />
             <Text style={styles.modalTitle}>Select District</Text>
             <FlatList
@@ -301,7 +307,7 @@ export default function ForecastInputScreen() {
                 );
               }}
             />
-          </View>
+          </TouchableOpacity>
         </TouchableOpacity>
       </Modal>
     </View>
@@ -383,6 +389,13 @@ const styles = StyleSheet.create({
     backgroundColor: "#E5E7EB",
     alignSelf: "center",
     marginBottom: 16,
+  },
+  sheetScroll: {
+    flex: 1,
+  },
+  sheetScrollContent: {
+    flexGrow: 1,
+    paddingBottom: 8,
   },
 
   fieldLabel: {
