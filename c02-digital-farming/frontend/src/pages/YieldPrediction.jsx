@@ -33,7 +33,7 @@ const findClosestLocation = (lat, lon) => {
 function YieldPrediction() {
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
-    // googleMapsApiKey: "AIzaSyCfNslBQ-Q_czbhuPrr0oqmbMPbGZmoARc"
+    googleMapsApiKey: "AIzaSyCfNslBQ-Q_czbhuPrr0oqmbMPbGZmoARc"
   });
 
   const [loading, setLoading] = useState(false);

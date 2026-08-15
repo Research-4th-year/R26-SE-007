@@ -26,6 +26,12 @@ def train_and_save_model():
     X = df[features]
     y = df[target]
 
+    # Save preprocessed data to 'cleaned' folder
+    cleaned_dir = os.path.join(os.path.dirname(__file__), '..', 'dataset', 'cleaned')
+    os.makedirs(cleaned_dir, exist_ok=True)
+    cleaned_file_path = os.path.join(cleaned_dir, 'preprocessed_variety_data.csv')
+    df[features + [target]].to_csv(cleaned_file_path, index=False)
+    print(f"Preprocessed data saved to {cleaned_file_path}")
     print("Preprocessing and Training model...")
     
     # Create preprocessing and training pipeline

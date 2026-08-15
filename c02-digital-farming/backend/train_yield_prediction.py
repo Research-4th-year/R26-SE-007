@@ -116,6 +116,13 @@ def load_and_preprocess_data():
     scaler = StandardScaler()
     X_scaled = scaler.fit_transform(X)
 
+    # Save preprocessed data to 'cleaned' folder
+    cleaned_dir = os.path.join(BASE_DIR, '..', 'dataset', 'cleaned')
+    os.makedirs(cleaned_dir, exist_ok=True)
+    cleaned_file_path = os.path.join(cleaned_dir, 'preprocessed_yield_data.csv')
+    combined_df.to_csv(cleaned_file_path, index=False)
+    print(f"Preprocessed data saved to {cleaned_file_path}")
+
     return X_scaled, y, encoders, scaler, features
 
 def train_and_evaluate():
