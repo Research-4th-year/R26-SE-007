@@ -3,7 +3,7 @@ import pandas as pd
 import joblib
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.preprocessing import OneHotEncoder
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 import os
@@ -16,7 +16,7 @@ from sklearn.tree import DecisionTreeClassifier
 def train_and_save_model():
     print("Loading dataset...")
     # Go up one level to access the dataset folder
-    dataset_path = os.path.join(os.path.dirname(__file__), '..', 'dataset', 'Rice-Variety', 'RiceDistrictVariety.csv')
+    dataset_path = os.path.join(os.path.dirname(__file__), '..', 'dataset', 'SL_Rice_Varietal_District_Dataset.csv')
     
     try:
         df = pd.read_csv(dataset_path)
@@ -25,24 +25,11 @@ def train_and_save_model():
         return
 
     # Select features and target
-    categorical_features = ['District', 'Zone', 'Season', 'Salinity_Prone', 'Iron_Toxicity_Prone']
-    numeric_features = ['Temperature', 'Humidity', 'Soil_Moisture']
-    features = categorical_features + numeric_features
+    features = ['District', 'Zone', 'Season', 'Salinity_Prone', 'Iron_Toxicity_Prone']
     target = 'Variety_Code'
     
     X = df[features]
     y = df[target]
-
-    # Manually oversample to perfectly balance the 14 classes (fixes the tiny dataset problem)
-    max_size = y.value_counts().max()
-    lst = [df]
-    for class_index, group in df.groupby(target):
-        if len(group) < max_size:
-            lst.append(group.sample(max_size - len(group), replace=True, random_state=42))
-    df_oversampled = pd.concat(lst)
-    
-    X = df_oversampled[features]
-    y = df_oversampled[target]
 
     # Save preprocessed data to 'cleaned' folder
     cleaned_dir = os.path.join(os.path.dirname(__file__), '..', 'dataset', 'cleaned')
@@ -56,18 +43,16 @@ def train_and_save_model():
     
     # Create preprocessing and training pipeline
     categorical_transformer = OneHotEncoder(handle_unknown='ignore')
-    numeric_transformer = StandardScaler()
     
     preprocessor = ColumnTransformer(
         transformers=[
-            ('cat', categorical_transformer, categorical_features),
-            ('num', numeric_transformer, numeric_features)
+            ('cat', categorical_transformer, features)
         ])
         
     classifiers = {
-        "Random Forest": RandomForestClassifier(n_estimators=100, random_state=42, class_weight='balanced'),
-        "Decision Tree": DecisionTreeClassifier(random_state=42, class_weight='balanced'),
-        "Logistic Regression": LogisticRegression(max_iter=1000, random_state=42, class_weight='balanced')
+        "Random Forest": RandomForestClassifier(n_estimators=100, random_state=42),
+        "Decision Tree": DecisionTreeClassifier(random_state=42),
+        "Logistic Regression": LogisticRegression(max_iter=1000, random_state=42)
     }
     
     results = []
