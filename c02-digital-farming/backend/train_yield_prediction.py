@@ -125,39 +125,70 @@ def load_and_preprocess_data():
 
     return X_scaled, y, encoders, scaler, features
 
+import json
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.linear_model import LinearRegression
+
 def train_and_evaluate():
     print("Loading and preprocessing data...")
     X, y, encoders, scaler, feature_names = load_and_preprocess_data()
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-    print("Training XGBoost Regressor...")
-    model = xgb.XGBRegressor(n_estimators=200, learning_rate=0.05, max_depth=5, random_state=42)
-    model.fit(X_train, y_train)
+    models_dict = {
+        "XGBoost": xgb.XGBRegressor(n_estimators=200, learning_rate=0.05, max_depth=5, random_state=42),
+        "Random Forest Regressor": RandomForestRegressor(n_estimators=100, random_state=42),
+        "Linear Regression": LinearRegression()
+    }
 
-    print("Evaluating Model...")
-    y_pred = model.predict(X_test)
-    mae = mean_absolute_error(y_test, y_pred)
-    rmse = np.sqrt(mean_squared_error(y_test, y_pred))
-    r2 = r2_score(y_test, y_pred)
+    results = []
+    best_model = None
+    best_r2 = -float('inf')
+    best_name = ""
+    best_metrics = {}
 
-    print(f"MAE: {mae:.2f} kg/ha")
-    print(f"RMSE: {rmse:.2f} kg/ha")
-    print(f"R2 Score: {r2:.4f}")
+    for name, model_instance in models_dict.items():
+        print(f"\nTraining {name}...")
+        model_instance.fit(X_train, y_train)
+
+        print(f"Evaluating {name}...")
+        y_pred = model_instance.predict(X_test)
+        mae = mean_absolute_error(y_test, y_pred)
+        rmse = np.sqrt(mean_squared_error(y_test, y_pred))
+        r2 = r2_score(y_test, y_pred)
+
+        metrics = {'mae': float(mae), 'rmse': float(rmse), 'r2': float(r2)}
+        results.append({"name": name, "metrics": metrics})
+        
+        print(f"{name} -> MAE: {mae:.2f} kg/ha, RMSE: {rmse:.2f} kg/ha, R2 Score: {r2:.4f}")
+
+        if r2 > best_r2:
+            best_r2 = r2
+            best_model = model_instance
+            best_name = name
+            best_metrics = metrics
+
+    print(f"\nBest Model selected: {best_name} with R2 Score: {best_r2:.4f}")
 
     os.makedirs(MODEL_DIR, exist_ok=True)
     model_path = os.path.join(MODEL_DIR, 'yield_prediction_pipeline.pkl')
     
     pipeline_data = {
-        'model': model,
+        'model': best_model,
         'encoders': encoders,
         'scaler': scaler,
         'feature_names': feature_names,
-        'metrics': {'mae': mae, 'rmse': rmse, 'r2': r2}
+        'metrics': best_metrics
     }
     
     joblib.dump(pipeline_data, model_path)
     print(f"Model saved successfully to {model_path}")
+    
+    # Save comparison to json
+    comparison_path = os.path.join(MODEL_DIR, 'yield_model_comparison.json')
+    with open(comparison_path, 'w') as f:
+        json.dump({"models": results, "best_model": best_name}, f, indent=4)
+    print(f"Comparison saved to {comparison_path}")
 
 if __name__ == "__main__":
     train_and_evaluate()

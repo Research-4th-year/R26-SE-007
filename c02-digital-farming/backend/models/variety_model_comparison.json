@@ -1,0 +1,17 @@
+{
+    "models": [
+        {
+            "name": "Random Forest",
+            "accuracy": 0.6944444444444444
+        },
+        {
+            "name": "Decision Tree",
+            "accuracy": 0.6944444444444444
+        },
+        {
+            "name": "Logistic Regression",
+            "accuracy": 0.7083333333333334
+        }
+    ],
+    "best_model": "Logistic Regression"
+}

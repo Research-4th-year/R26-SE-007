@@ -3,15 +3,20 @@ import pandas as pd
 import joblib
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.preprocessing import OneHotEncoder
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 import os
 
+import json
+from sklearn.metrics import accuracy_score
+from sklearn.linear_model import LogisticRegression
+from sklearn.tree import DecisionTreeClassifier
+
 def train_and_save_model():
     print("Loading dataset...")
     # Go up one level to access the dataset folder
-    dataset_path = os.path.join(os.path.dirname(__file__), '..', 'dataset', 'SL_Rice_Varietal_District_Dataset.csv')
+    dataset_path = os.path.join(os.path.dirname(__file__), '..', 'dataset', 'Rice-Variety', 'RiceDistrictVariety.csv')
     
     try:
         df = pd.read_csv(dataset_path)
@@ -20,11 +25,24 @@ def train_and_save_model():
         return
 
     # Select features and target
-    features = ['District', 'Zone', 'Season', 'Salinity_Prone', 'Iron_Toxicity_Prone']
+    categorical_features = ['District', 'Zone', 'Season', 'Salinity_Prone', 'Iron_Toxicity_Prone']
+    numeric_features = ['Temperature', 'Humidity', 'Soil_Moisture']
+    features = categorical_features + numeric_features
     target = 'Variety_Code'
     
     X = df[features]
     y = df[target]
+
+    # Manually oversample to perfectly balance the 14 classes (fixes the tiny dataset problem)
+    max_size = y.value_counts().max()
+    lst = [df]
+    for class_index, group in df.groupby(target):
+        if len(group) < max_size:
+            lst.append(group.sample(max_size - len(group), replace=True, random_state=42))
+    df_oversampled = pd.concat(lst)
+    
+    X = df_oversampled[features]
+    y = df_oversampled[target]
 
     # Save preprocessed data to 'cleaned' folder
     cleaned_dir = os.path.join(os.path.dirname(__file__), '..', 'dataset', 'cleaned')
@@ -34,32 +52,62 @@ def train_and_save_model():
     print(f"Preprocessed data saved to {cleaned_file_path}")
     print("Preprocessing and Training model...")
     
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    
     # Create preprocessing and training pipeline
     categorical_transformer = OneHotEncoder(handle_unknown='ignore')
+    numeric_transformer = StandardScaler()
     
     preprocessor = ColumnTransformer(
         transformers=[
-            ('cat', categorical_transformer, features)
+            ('cat', categorical_transformer, categorical_features),
+            ('num', numeric_transformer, numeric_features)
         ])
         
-    model = Pipeline(steps=[
-        ('preprocessor', preprocessor),
-        ('classifier', RandomForestClassifier(n_estimators=100, random_state=42))
-    ])
-
-    # Train the model
-    model.fit(X, y)
+    classifiers = {
+        "Random Forest": RandomForestClassifier(n_estimators=100, random_state=42, class_weight='balanced'),
+        "Decision Tree": DecisionTreeClassifier(random_state=42, class_weight='balanced'),
+        "Logistic Regression": LogisticRegression(max_iter=1000, random_state=42, class_weight='balanced')
+    }
     
-    print("Model trained successfully.")
+    results = []
+    best_model = None
+    best_acc = 0
+    best_name = ""
+    
+    for name, clf in classifiers.items():
+        print(f"Training {name}...")
+        model = Pipeline(steps=[
+            ('preprocessor', preprocessor),
+            ('classifier', clf)
+        ])
+        model.fit(X_train, y_train)
+        y_pred = model.predict(X_test)
+        acc = accuracy_score(y_test, y_pred)
+        
+        results.append({"name": name, "accuracy": float(acc)})
+        print(f"{name} Accuracy: {acc:.4f}")
+        
+        if acc > best_acc:
+            best_acc = acc
+            best_model = model
+            best_name = name
+
+    print(f"\nBest Model selected: {best_name} with Accuracy: {best_acc:.4f}")
     
     # Save the model
     model_dir = os.path.join(os.path.dirname(__file__), 'models')
     os.makedirs(model_dir, exist_ok=True)
     
     model_path = os.path.join(model_dir, 'rice_variety_predictor.pkl')
-    joblib.dump(model, model_path)
-    
+    joblib.dump(best_model, model_path)
     print(f"Model saved to {model_path}")
+    
+    # Save comparison to json
+    comparison_path = os.path.join(model_dir, 'variety_model_comparison.json')
+    with open(comparison_path, 'w') as f:
+        json.dump({"models": results, "best_model": best_name}, f, indent=4)
+    print(f"Comparison saved to {comparison_path}")
 
 if __name__ == "__main__":
     train_and_save_model()

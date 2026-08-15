@@ -164,6 +164,26 @@ def build_and_train_model():
     best_model = max(results, key=lambda x: x["val_accuracy"])
     print(f"Best model based on validation accuracy:\n{best_model['name']}")
 
+    import shutil
+    best_name_lower = best_model['name'].lower()
+    source_model_path = os.path.join(MODELS_DIR, f"{best_name_lower}_disease_prediction_model.h5")
+    dest_model_path = os.path.join(MODELS_DIR, 'disease_prediction_model.keras')
+    
+    try:
+        shutil.copy2(source_model_path, dest_model_path)
+        print(f"Copied best model to {dest_model_path} for API usage.")
+    except Exception as e:
+        print(f"Error copying best model: {e}")
+        
+    # Save comparison to json
+    comparison_path = os.path.join(MODELS_DIR, 'disease_model_comparison.json')
+    try:
+        with open(comparison_path, 'w') as f:
+            json.dump({"models": results, "best_model": best_model['name']}, f, indent=4)
+        print(f"Comparison saved to {comparison_path}")
+    except Exception as e:
+        print(f"Error saving comparison JSON: {e}")
+
 if __name__ == "__main__":
     # pyright: reportMissingImports=false
     build_and_train_model()
