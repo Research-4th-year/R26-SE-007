@@ -24,16 +24,22 @@ const FertilizerSummary = ({ zone, ageGroup }) => {
 
   return (
     <div className="fertilizer-summary-card" style={{ 
-      background: '#ffffff', 
-      borderRadius: '12px', 
-      padding: '20px', 
+      background: 'linear-gradient(145deg, #fffbeb 0%, #ffffff 100%)', 
+      borderRadius: '16px', 
+      padding: '25px', 
       marginTop: '20px',
-      border: '1px solid #e2e8f0',
-      boxShadow: '0 4px 6px rgba(0,0,0,0.05)'
+      border: '1px solid #fde68a',
+      boxShadow: '0 4px 6px -1px rgba(217, 119, 6, 0.1)'
     }}>
-      <h3 style={{ margin: '0 0 15px 0', color: '#1e293b', display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <span>🧪</span> RRDI Fertilizer Summary ({summaryData.crop_duration})
-      </h3>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '20px', borderBottom: '1px solid rgba(217, 119, 6, 0.2)', paddingBottom: '15px' }}>
+        <div style={{ background: '#fef3c7', padding: '12px', borderRadius: '12px', fontSize: '1.8rem' }}>
+          🧪
+        </div>
+        <div>
+          <h2 style={{ margin: 0, color: '#92400e', fontSize: '1.5rem' }}>RRDI Fertilizer Summary</h2>
+          <span style={{ color: '#b45309', fontSize: '0.9rem', fontWeight: '500' }}>Duration: {summaryData.crop_duration}</span>
+        </div>
+      </div>
       
       <div style={{ overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'center', fontSize: '0.9rem' }}>

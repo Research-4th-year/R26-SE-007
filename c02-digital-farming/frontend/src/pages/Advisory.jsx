@@ -3,6 +3,8 @@ import { GoogleMap, useJsApiLoader, Marker } from '@react-google-maps/api';
 import { districtData, districtToZoneMap } from '../data/constants';
 import FarmerGuidance from '../components/FarmerGuidance';
 import FertilizerSummary from '../components/FertilizerSummary';
+import wheatIcon from '../assets/icons/wheat.png';
+import iotIcon from '../assets/icons/paddy iot.png';
 
 const mapContainerStyle = {
   width: '100%',
@@ -248,6 +250,46 @@ function Advisory() {
     }
   };
 
+
+  const getMetricStatus = (type, value) => {
+    let status = 'Optimal';
+    let color = '#10b981'; // Green
+    
+    if (type === 'temp') {
+      if (value < 22 || value > 32) {
+        if (value < 18 || value > 35) { status = 'Bad'; color = '#ef4444'; }
+        else { status = 'Medium'; color = '#f59e0b'; }
+      }
+    } else if (type === 'hum') {
+      if (value < 60 || value > 80) {
+        if (value < 50 || value > 90) { status = 'Bad'; color = '#ef4444'; }
+        else { status = 'Medium'; color = '#f59e0b'; }
+      }
+    } else if (type === 'moist') {
+      if (value < 0.3 || value > 0.6) {
+        if (value < 0.2 || value > 0.7) { status = 'Bad'; color = '#ef4444'; }
+        else { status = 'Medium'; color = '#f59e0b'; }
+      }
+    }
+    
+    return (
+      <div style={{ marginTop: '8px', fontSize: '0.75rem', fontWeight: '600', color: color, background: `${color}20`, padding: '3px 8px', borderRadius: '12px', display: 'inline-block' }}>
+        {status}
+      </div>
+    );
+  };
+
+  const getSuitabilityDetails = (score) => {
+    switch (score) {
+      case 1: return { text: 'Excellent', color: '#10b981', icon: '🌟' };
+      case 2: return { text: 'Good', color: '#34d399', icon: '🟢' };
+      case 3: return { text: 'Fair', color: '#fbbf24', icon: '🟡' };
+      case 4: return { text: 'Poor', color: '#f97316', icon: '🟠' };
+      case 5: return { text: 'Critical', color: '#ef4444', icon: '🔴' };
+      default: return { text: 'Unknown', color: '#64748b', icon: '❓' };
+    }
+  };
+
   return (
     <div className="page-container fade-in">
       <header className="page-header">
@@ -257,16 +299,18 @@ function Advisory() {
 
       {error && <div className="error-message">{error}</div>}
 
-      <form onSubmit={handleAdvisorySubmit} className="prediction-form glass-panel">
+      <form onSubmit={handleAdvisorySubmit} className="prediction-form glass-panel" style={{ background: 'linear-gradient(145deg, #ffffff 0%, #f8fafc 100%)', borderRadius: '20px', padding: '30px', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)', border: '1px solid #e2e8f0' }}>
         
         {/* 1. Map Section */}
-        <div className="form-group">
-          <label>Select Location via Map</label>
+        <div className="form-group" style={{ marginBottom: '25px' }}>
+          <label style={{ fontSize: '1.1rem', color: '#1e293b', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '15px' }}>
+            📍 Select Location via Map
+          </label>
           
           {isLoaded && (
-            <div style={{ borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(255, 255, 255, 0.1)', marginBottom: '15px' }}>
+            <div style={{ borderRadius: '16px', overflow: 'hidden', border: '2px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', marginBottom: '15px', transition: 'border-color 0.3s' }}>
               <GoogleMap
-                mapContainerStyle={mapContainerStyle}
+                mapContainerStyle={{ ...mapContainerStyle, marginBottom: 0 }}
                 center={{ lat: advisoryData.lat, lng: advisoryData.lon }}
                 zoom={9}
                 onClick={onMapClick}
@@ -277,38 +321,39 @@ function Advisory() {
           )}
           
           <div style={{ 
-            background: '#f8fafc', 
-            padding: '15px', 
-            borderRadius: '8px', 
-            border: '1px solid #e2e8f0',
+            background: 'linear-gradient(to right, #eff6ff, #ffffff)', 
+            padding: '15px 20px', 
+            borderRadius: '12px', 
+            border: '1px solid #bfdbfe',
             display: 'flex',
             justifyContent: 'space-between',
-            alignItems: 'center'
+            alignItems: 'center',
+            boxShadow: 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.02)'
           }}>
             <div>
-              <span style={{ color: '#64748b', fontSize: '0.85rem', display: 'block' }}>Nearest City (Auto-detected)</span>
-              <strong style={{ color: '#1e293b', fontSize: '1.1rem' }}>{advisoryData.City}, {advisoryData.District}</strong>
+              <span style={{ color: '#3b82f6', fontSize: '0.85rem', display: 'block', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Nearest City (Auto-detected)</span>
+              <strong style={{ color: '#1e3a8a', fontSize: '1.2rem' }}>{advisoryData.City}, {advisoryData.District}</strong>
             </div>
-            <div style={{ textAlign: 'right' }}>
-              <span style={{ color: '#64748b', fontSize: '0.75rem', display: 'block' }}>Coordinates</span>
-              <code style={{ color: '#3b82f6', fontSize: '0.85rem' }}>{advisoryData.lat.toFixed(4)}, {advisoryData.lon.toFixed(4)}</code>
+            <div style={{ textAlign: 'right', background: '#dbeafe', padding: '8px 15px', borderRadius: '8px' }}>
+              <span style={{ color: '#2563eb', fontSize: '0.75rem', display: 'block', fontWeight: 'bold' }}>COORDINATES</span>
+              <code style={{ color: '#1d4ed8', fontSize: '0.95rem', fontWeight: 'bold' }}>{advisoryData.lat.toFixed(4)}, {advisoryData.lon.toFixed(4)}</code>
             </div>
           </div>
         </div>
 
         {/* 2. Advisory Fields */}
-        <div className="form-row">
-          <div className="form-group">
-            <label>Climatic Zone (Auto-Detected)</label>
-            <select name="Zone" value={advisoryData.Zone} onChange={handleAdvisoryChange}>
+        <div className="form-row" style={{ gap: '20px', marginBottom: '20px' }}>
+          <div className="form-group" style={{ flex: 1 }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#475569', fontWeight: '600' }}>🌤️ Climatic Zone</label>
+            <select name="Zone" value={advisoryData.Zone} onChange={handleAdvisoryChange} style={{ width: '100%', padding: '12px 15px', borderRadius: '10px', border: '1px solid #cbd5e1', background: '#f8fafc', fontSize: '1rem', color: '#1e293b', outline: 'none', transition: 'all 0.2s', cursor: 'pointer' }} onFocus={(e) => e.target.style.borderColor = '#3b82f6'} onBlur={(e) => e.target.style.borderColor = '#cbd5e1'}>
               <option value="Dry Zone">Dry Zone</option>
               <option value="Wet Zone">Wet Zone</option>
               <option value="Intermediate Zone">Intermediate Zone</option>
             </select>
           </div>
-          <div className="form-group">
-            <label>Season (Auto-Detected)</label>
-            <select name="Season" value={advisoryData.Season} onChange={handleAdvisoryChange}>
+          <div className="form-group" style={{ flex: 1 }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#475569', fontWeight: '600' }}>📅 Season</label>
+            <select name="Season" value={advisoryData.Season} onChange={handleAdvisoryChange} style={{ width: '100%', padding: '12px 15px', borderRadius: '10px', border: '1px solid #cbd5e1', background: '#f8fafc', fontSize: '1rem', color: '#1e293b', outline: 'none', transition: 'all 0.2s', cursor: 'pointer' }} onFocus={(e) => e.target.style.borderColor = '#3b82f6'} onBlur={(e) => e.target.style.borderColor = '#cbd5e1'}>
               <option value="Maha">Maha (Sept - Mar)</option>
               <option value="Yala">Yala (Apr - Aug)</option>
               <option value="Annual">Annual</option>
@@ -316,28 +361,50 @@ function Advisory() {
           </div>
         </div>
 
-        <div className="form-row">
-          <div className="form-group">
-            <label>Irrigation Method</label>
-            <select name="Irrigation" value={advisoryData.Irrigation} onChange={handleAdvisoryChange}>
+        <div className="form-row" style={{ gap: '20px', marginBottom: '20px' }}>
+          <div className="form-group" style={{ flex: 1 }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#475569', fontWeight: '600' }}>💧 Irrigation Method</label>
+            <select name="Irrigation" value={advisoryData.Irrigation} onChange={handleAdvisoryChange} style={{ width: '100%', padding: '12px 15px', borderRadius: '10px', border: '1px solid #cbd5e1', background: '#f8fafc', fontSize: '1rem', color: '#1e293b', outline: 'none', transition: 'all 0.2s', cursor: 'pointer' }} onFocus={(e) => e.target.style.borderColor = '#3b82f6'} onBlur={(e) => e.target.style.borderColor = '#cbd5e1'}>
               <option value="Irrigated">Irrigated (වාරිමාර්ග)</option>
               <option value="Rainfed">Rainfed (වර්ෂාපෝෂිත)</option>
             </select>
           </div>
-          <div className="form-group">
-            <label>Cultivation Date (Optional)</label>
-            <input type="date" name="Cultivation_Date" value={advisoryData.Cultivation_Date} onChange={handleAdvisoryChange} />
+          <div className="form-group" style={{ flex: 1 }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#475569', fontWeight: '600' }}>🌱 Cultivation Date</label>
+            <input type="date" name="Cultivation_Date" value={advisoryData.Cultivation_Date} onChange={handleAdvisoryChange} style={{ width: '100%', padding: '12px 15px', borderRadius: '10px', border: '1px solid #cbd5e1', background: '#f8fafc', fontSize: '1rem', color: '#1e293b', outline: 'none', transition: 'all 0.2s', cursor: 'pointer' }} onFocus={(e) => e.target.style.borderColor = '#3b82f6'} onBlur={(e) => e.target.style.borderColor = '#cbd5e1'} />
           </div>
         </div>
 
         {/* 4. Field ID */}
-        <div className="form-group">
-          <label htmlFor="field_id">ESP32 Field ID (Firebase node)</label>
-          <input type="text" name="field_id" id="field_id" value={advisoryData.field_id} onChange={handleAdvisoryChange} />
+        <div className="form-group" style={{ marginBottom: '30px' }}>
+          <label htmlFor="field_id" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#475569', fontWeight: '600' }}>📡 ESP32 Field ID (IoT Node)</label>
+          <input type="text" name="field_id" id="field_id" value={advisoryData.field_id} onChange={handleAdvisoryChange} style={{ width: '100%', padding: '15px', borderRadius: '10px', border: '1px solid #cbd5e1', background: '#f8fafc', fontSize: '1.1rem', color: '#1e293b', outline: 'none', transition: 'all 0.2s' }} onFocus={(e) => { e.target.style.borderColor = '#3b82f6'; e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.2)'; }} onBlur={(e) => { e.target.style.borderColor = '#cbd5e1'; e.target.style.boxShadow = 'none'; }} />
         </div>
 
-        <button type="submit" className="submit-btn" disabled={loading}>
-          {loading ? 'Analyzing...' : 'Get Recommendation & Suitability'}
+        <button type="submit" className="submit-btn" disabled={loading} style={{ 
+          width: '100%', 
+          padding: '16px', 
+          fontSize: '1.2rem', 
+          fontWeight: 'bold', 
+          borderRadius: '12px', 
+          background: loading ? '#94a3b8' : 'linear-gradient(135deg, #10b981 0%, #059669 100%)', 
+          color: 'white', 
+          border: 'none', 
+          cursor: loading ? 'not-allowed' : 'pointer', 
+          boxShadow: loading ? 'none' : '0 10px 15px -3px rgba(16, 185, 129, 0.4)', 
+          transition: 'all 0.3s ease',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          gap: '10px'
+        }}
+        onMouseEnter={(e) => { if(!loading) e.currentTarget.style.transform = 'translateY(-2px)' }}
+        onMouseLeave={(e) => { if(!loading) e.currentTarget.style.transform = 'translateY(0)' }}>
+          {loading ? (
+            <>⏳ Analyzing Field Data...</>
+          ) : (
+            <>✨ Get Recommendation & Suitability</>
+          )}
         </button>
       </form>
 
@@ -345,24 +412,32 @@ function Advisory() {
       {(result || suitabilityResult) && (
         <div className="result-card fade-in merged-results-card">
           {result && (
-            <div className="merged-variety-section">
-              <h2>Optimal Variety</h2>
-              <div className="variety-highlight" style={{ fontSize: '2.5rem', marginBottom: '15px', color: '#10b981' }}>
+            <div className="merged-variety-section" style={{ background: 'linear-gradient(145deg, #f0fdf4 0%, #ffffff 100%)', padding: '25px', borderRadius: '16px', border: '1px solid #bbf7d0', boxShadow: '0 4px 6px -1px rgba(16, 185, 129, 0.1)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '20px' }}>
+                <div style={{ background: '#d1fae5', padding: '10px', borderRadius: '12px' }}>
+                  <img src={wheatIcon} alt="Variety" style={{ width: '48px', height: '48px', filter: 'drop-shadow(0 4px 6px rgba(16, 185, 129, 0.4))' }} />
+                </div>
+                <div>
+                  <h2 style={{ margin: 0, color: '#065f46', fontSize: '1.4rem' }}>Optimal Variety</h2>
+                  <span style={{ color: '#059669', fontSize: '0.85rem', fontWeight: '500' }}>AI Recommended</span>
+                </div>
+              </div>
+              <div style={{ background: '#10b981', color: 'white', display: 'inline-block', padding: '10px 20px', borderRadius: '30px', fontSize: '2rem', fontWeight: 'bold', marginBottom: '20px', boxShadow: '0 10px 15px -3px rgba(16, 185, 129, 0.3)' }}>
                 {result.predicted_variety_code}
               </div>
               {result.details && (
-                <div className="variety-details" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <div className="detail-item">
-                    <span className="label">Grain Type</span>
-                    <span className="value">{result.details.Grain_Type}</span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', background: 'rgba(255,255,255,0.7)', padding: '15px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #f1f5f9', paddingBottom: '8px' }}>
+                    <span style={{ color: '#64748b', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '8px' }}>🌾 Grain Type</span>
+                    <span style={{ color: '#0f172a', fontWeight: '600' }}>{result.details.Grain_Type}</span>
                   </div>
-                  <div className="detail-item">
-                    <span className="label">Age Group</span>
-                    <span className="value">{result.details.Age_Group}</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #f1f5f9', paddingBottom: '8px' }}>
+                    <span style={{ color: '#64748b', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '8px' }}>⏱️ Age Group</span>
+                    <span style={{ color: '#0f172a', fontWeight: '600' }}>{result.details.Age_Group}</span>
                   </div>
-                  <div className="detail-item">
-                    <span className="label">Category</span>
-                    <span className="value">{result.details.Category}</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ color: '#64748b', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '8px' }}>🏷️ Category</span>
+                    <span style={{ color: '#0f172a', fontWeight: '600' }}>{result.details.Category}</span>
                   </div>
                 </div>
               )}
@@ -370,36 +445,63 @@ function Advisory() {
           )}
 
           {suitabilityResult && (
-            <div className="merged-suitability-section">
-              <h2>IoT Field Suitability</h2>
-              <div className="suitability-score" style={{ 
-                fontSize: '2rem', 
-                fontWeight: 'bold', 
-                color: suitabilityResult.suitability_score <= 2 ? '#34d399' : (suitabilityResult.suitability_score <= 3 ? '#fbbf24' : '#ef4444'),
-                marginBottom: '5px'
-              }}>
-                {suitabilityResult.suitability_score} / 5
-              </div>
-              <p style={{ fontSize: '0.8rem', color: '#3c4047ff', marginBottom: '15px' }}>
-                (1 is Excellent, 5 is Poor)
-              </p>
-              
-              <div className="reasoning-box" style={{ background: 'rgba(0,0,0,0.2)', padding: '10px', borderRadius: '8px', fontSize: '0.9rem', marginBottom: '15px', color: '#000000ff' }}>
-                {suitabilityResult.reasoning}
+            <div className="merged-suitability-section" style={{ background: 'linear-gradient(145deg, #eff6ff 0%, #ffffff 100%)', padding: '25px', borderRadius: '16px', border: '1px solid #bfdbfe', boxShadow: '0 4px 6px -1px rgba(59, 130, 246, 0.1)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '20px' }}>
+                <div style={{ background: '#dbeafe', padding: '10px', borderRadius: '12px' }}>
+                  <img src={iotIcon} alt="IoT Suitability" style={{ width: '48px', height: '48px', filter: 'drop-shadow(0 4px 6px rgba(59, 130, 246, 0.4))' }} />
+                </div>
+                <div>
+                  <h2 style={{ margin: 0, color: '#1e3a8a', fontSize: '1.4rem' }}>Field Suitability</h2>
+                  <span style={{ color: '#2563eb', fontSize: '0.85rem', fontWeight: '500' }}>Real-time IoT Analysis</span>
+                </div>
               </div>
 
-              <div className="variety-details" style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '8px' }}>
-                <div className="detail-item">
-                  <span className="label">Temp</span>
-                  <span className="value">{suitabilityResult.metrics.temperature}°C</span>
+              {(() => {
+                const suit = getSuitabilityDetails(suitabilityResult.suitability_score);
+                return (
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px' }}>
+                      <span style={{ fontSize: '3rem' }}>{suit.icon}</span>
+                      <span style={{ fontSize: '2.5rem', fontWeight: 'bold', color: suit.color }}>{suit.text}</span>
+                    </div>
+                    <div style={{ marginTop: '10px', width: '100%', height: '8px', background: '#e2e8f0', borderRadius: '4px', overflow: 'hidden', display: 'flex' }}>
+                      {[1, 2, 3, 4, 5].map(level => (
+                        <div key={level} style={{ flex: 1, borderRight: level < 5 ? '1px solid white' : 'none', background: level <= suitabilityResult.suitability_score ? suit.color : 'transparent' }} />
+                      ))}
+                    </div>
+                    <span style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '8px' }}>Score: {suitabilityResult.suitability_score} / 5</span>
+                  </div>
+                );
+              })()}
+              
+              <div style={{ background: 'rgba(255,255,255,0.7)', padding: '15px', borderRadius: '12px', border: '1px solid #e2e8f0', marginBottom: '15px' }}>
+                <p style={{ margin: 0, fontSize: '0.95rem', color: '#334155', display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                  <span style={{ fontSize: '1.2rem' }}>💡</span>
+                  <span>{suitabilityResult.reasoning}</span>
+                </p>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
+                <div style={{ background: '#f8fafc', padding: '12px', borderRadius: '10px', textAlign: 'center', border: '1px solid #e2e8f0' }}>
+                  <span style={{ fontSize: '1.5rem', display: 'block', marginBottom: '5px' }}>🌡️</span>
+                  <span style={{ color: '#64748b', fontSize: '0.75rem', display: 'block' }}>Temp</span>
+                  <strong style={{ color: '#0f172a', fontSize: '1.1rem' }}>{suitabilityResult.metrics.temperature}°C</strong>
+                  <br/>
+                  {getMetricStatus('temp', suitabilityResult.metrics.temperature)}
                 </div>
-                <div className="detail-item">
-                  <span className="label">Humidity</span>
-                  <span className="value">{suitabilityResult.metrics.humidity}%</span>
+                <div style={{ background: '#f8fafc', padding: '12px', borderRadius: '10px', textAlign: 'center', border: '1px solid #e2e8f0' }}>
+                  <span style={{ fontSize: '1.5rem', display: 'block', marginBottom: '5px' }}>💧</span>
+                  <span style={{ color: '#64748b', fontSize: '0.75rem', display: 'block' }}>Humidity</span>
+                  <strong style={{ color: '#0f172a', fontSize: '1.1rem' }}>{suitabilityResult.metrics.humidity}%</strong>
+                  <br/>
+                  {getMetricStatus('hum', suitabilityResult.metrics.humidity)}
                 </div>
-                <div className="detail-item">
-                  <span className="label">Soil Moisture</span>
-                  <span className="value">{suitabilityResult.metrics.soil_moisture} m³/m³</span>
+                <div style={{ background: '#f8fafc', padding: '12px', borderRadius: '10px', textAlign: 'center', border: '1px solid #e2e8f0' }}>
+                  <span style={{ fontSize: '1.5rem', display: 'block', marginBottom: '5px' }}>🌱</span>
+                  <span style={{ color: '#64748b', fontSize: '0.75rem', display: 'block' }}>Moisture</span>
+                  <strong style={{ color: '#0f172a', fontSize: '1.1rem' }}>{suitabilityResult.metrics.soil_moisture}</strong>
+                  <br/>
+                  {getMetricStatus('moist', suitabilityResult.metrics.soil_moisture)}
                 </div>
               </div>
             </div>
