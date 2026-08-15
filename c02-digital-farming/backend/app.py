@@ -370,6 +370,7 @@ from database import get_db_connection
 from pydantic import BaseModel
 
 class AdvisoryHistoryItem(BaseModel):
+    user_id: str
     field_id: str
     district: str
     city: str
@@ -378,29 +379,37 @@ class AdvisoryHistoryItem(BaseModel):
     predicted_variety: str
     suitability_score: int
 
+class FarmerProfile(BaseModel):
+    user_id: str
+    name: str
+    phone: str
+    location: str
+    farm_size: float
+    farm_unit: str = "Acres"
+
 @app.post("/api/history")
 def save_history(item: AdvisoryHistoryItem):
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
         
-        cursor.execute('SELECT id FROM advisory_history WHERE field_id = ?', (item.field_id,))
+        cursor.execute('SELECT id FROM advisory_history WHERE field_id = ? AND user_id = ?', (item.field_id, item.user_id))
         existing_row = cursor.fetchone()
         
         if existing_row:
             cursor.execute('''
                 UPDATE advisory_history 
                 SET district = ?, city = ?, zone = ?, season = ?, predicted_variety = ?, suitability_score = ?, created_at = CURRENT_TIMESTAMP
-                WHERE field_id = ?
-            ''', (item.district, item.city, item.zone, item.season, item.predicted_variety, item.suitability_score, item.field_id))
+                WHERE field_id = ? AND user_id = ?
+            ''', (item.district, item.city, item.zone, item.season, item.predicted_variety, item.suitability_score, item.field_id, item.user_id))
             new_id = existing_row['id']
             msg = "Updated successfully"
         else:
             cursor.execute('''
                 INSERT INTO advisory_history 
-                (field_id, district, city, zone, season, predicted_variety, suitability_score) 
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-            ''', (item.field_id, item.district, item.city, item.zone, item.season, item.predicted_variety, item.suitability_score))
+                (user_id, field_id, district, city, zone, season, predicted_variety, suitability_score) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (item.user_id, item.field_id, item.district, item.city, item.zone, item.season, item.predicted_variety, item.suitability_score))
             new_id = cursor.lastrowid
             msg = "Saved successfully"
             
@@ -410,12 +419,12 @@ def save_history(item: AdvisoryHistoryItem):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/api/history")
-def get_history():
+@app.get("/api/history/{user_id}")
+def get_history(user_id: str):
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute('SELECT * FROM advisory_history ORDER BY id DESC')
+        cursor.execute('SELECT * FROM advisory_history WHERE user_id = ? ORDER BY id DESC', (user_id,))
         rows = cursor.fetchall()
         conn.close()
         return [dict(row) for row in rows]
@@ -444,5 +453,60 @@ def delete_history(id: int):
         conn.commit()
         conn.close()
         return {"message": "Deleted successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/profile/{user_id}")
+def get_profile(user_id: str):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('SELECT * FROM farmer_profiles WHERE user_id = ?', (user_id,))
+        row = cursor.fetchone()
+        conn.close()
+        if row:
+            return dict(row)
+        return {"message": "Profile not found"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/profile")
+def save_profile(profile: FarmerProfile):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('SELECT user_id FROM farmer_profiles WHERE user_id = ?', (profile.user_id,))
+        existing = cursor.fetchone()
+        
+        if existing:
+            cursor.execute('''
+                UPDATE farmer_profiles 
+                SET name = ?, phone = ?, location = ?, farm_size = ?, farm_unit = ?
+                WHERE user_id = ?
+            ''', (profile.name, profile.phone, profile.location, profile.farm_size, profile.farm_unit, profile.user_id))
+        else:
+            cursor.execute('''
+                INSERT INTO farmer_profiles (user_id, name, phone, location, farm_size, farm_unit)
+                VALUES (?, ?, ?, ?, ?, ?)
+            ''', (profile.user_id, profile.name, profile.phone, profile.location, profile.farm_size, profile.farm_unit))
+            
+        conn.commit()
+        conn.close()
+        return {"message": "Profile saved successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.delete("/api/profile/{user_id}")
+def delete_profile(user_id: str):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('DELETE FROM farmer_profiles WHERE user_id = ?', (user_id,))
+        # Also delete associated history
+        cursor.execute('DELETE FROM advisory_history WHERE user_id = ?', (user_id,))
+        conn.commit()
+        conn.close()
+        return {"message": "Profile and associated history deleted"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

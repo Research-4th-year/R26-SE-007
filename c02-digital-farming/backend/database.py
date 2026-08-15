@@ -15,6 +15,7 @@ def init_db():
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS advisory_history (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id TEXT NOT NULL DEFAULT 'legacy_user',
             field_id TEXT NOT NULL,
             district TEXT NOT NULL,
             city TEXT NOT NULL,
@@ -25,6 +26,32 @@ def init_db():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
+    
+    # Try to add user_id to existing advisory_history if it doesn't exist
+    try:
+        cursor.execute("ALTER TABLE advisory_history ADD COLUMN user_id TEXT NOT NULL DEFAULT 'legacy_user'")
+    except sqlite3.OperationalError:
+        # Column already exists
+        pass
+
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS farmer_profiles (
+            user_id TEXT PRIMARY KEY,
+            name TEXT,
+            phone TEXT,
+            location TEXT,
+            farm_size REAL,
+            farm_unit TEXT DEFAULT 'Acres',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    
+    # Try to add farm_unit to existing farmer_profiles if it doesn't exist
+    try:
+        cursor.execute("ALTER TABLE farmer_profiles ADD COLUMN farm_unit TEXT DEFAULT 'Acres'")
+    except sqlite3.OperationalError:
+        pass
+
     conn.commit()
     conn.close()
     print("\033[94m[SYSTEM]\033[0m SQLite Database Checked/Initialized!")

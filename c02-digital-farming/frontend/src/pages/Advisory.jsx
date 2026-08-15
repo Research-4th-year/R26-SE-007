@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 import { GoogleMap, useJsApiLoader, Marker } from '@react-google-maps/api';
 import { districtData, districtToZoneMap } from '../data/constants';
 import FarmerGuidance from '../components/FarmerGuidance';
@@ -72,14 +73,18 @@ function Advisory() {
   const [historyData, setHistoryData] = useState([]);
   const [saving, setSaving] = useState(false);
   const [selectedHistory, setSelectedHistory] = useState(null);
+  const { currentUser } = useAuth();
 
   useEffect(() => {
-    fetchHistory();
-  }, []);
+    if (currentUser) {
+      fetchHistory();
+    }
+  }, [currentUser]);
 
   const fetchHistory = async () => {
+    if (!currentUser) return;
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/history');
+      const response = await fetch(`http://127.0.0.1:8000/api/history/${currentUser.uid}`);
       if (response.ok) {
         const data = await response.json();
         setHistoryData(data);
@@ -94,6 +99,7 @@ function Advisory() {
     setSaving(true);
     try {
       const payload = {
+        user_id: currentUser?.uid || 'legacy_user',
         field_id: advisoryData.field_id,
         district: advisoryData.District,
         city: advisoryData.City,
