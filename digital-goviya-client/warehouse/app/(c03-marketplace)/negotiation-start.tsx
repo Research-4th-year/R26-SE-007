@@ -76,7 +76,8 @@ const NEGOTIATION_STAGES = [
 /*  Small animation helpers — purely presentational, no logic changes  */
 /* ------------------------------------------------------------------ */
 
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+const AnimatedPressable =
+  Animated.createAnimatedComponent(Pressable);
 
 function usePressScale(target = 0.96) {
   const scale = useRef(new Animated.Value(1)).current;
@@ -131,8 +132,7 @@ function useEntrance(delay = 0) {
 export default function NegotiationStartScreen() {
   const { user } = useMarketplaceAuth();
 
-  const rawParams =
-    useLocalSearchParams();
+  const rawParams = useLocalSearchParams();
 
   const selectionId =
     readString(rawParams.selectionId);
@@ -218,18 +218,17 @@ export default function NegotiationStartScreen() {
       setCompleted(false);
       setActiveStage(0);
 
-      await negotiationService
-        .checkHealth();
+      await negotiationService.checkHealth();
 
       const response =
-        await negotiationService
-          .startNegotiation({
-            selectionId,
-          });
+        await negotiationService.startNegotiation({
+          selectionId,
+        });
 
       setActiveStage(
         NEGOTIATION_STAGES.length - 1
       );
+
       setCompleted(true);
 
       await new Promise((resolve) =>
@@ -280,7 +279,11 @@ export default function NegotiationStartScreen() {
           onPressOut={headerPress.onPressOut}
           style={[
             styles.headerButton,
-            { transform: [{ scale: headerPress.scale }] },
+            {
+              transform: [
+                { scale: headerPress.scale },
+              ],
+            },
           ]}
         >
           <Ionicons
@@ -295,9 +298,13 @@ export default function NegotiationStartScreen() {
             <View
               style={[
                 styles.headerAccentDot,
-                { backgroundColor: theme.primary },
+                {
+                  backgroundColor:
+                    theme.primary,
+                },
               ]}
             />
+
             <Text style={styles.headerTitle}>
               AI Negotiation
             </Text>
@@ -316,7 +323,8 @@ export default function NegotiationStartScreen() {
             {
               backgroundColor:
                 theme.soft,
-              shadowColor: theme.primary,
+              shadowColor:
+                theme.primary,
             },
           ]}
         >
@@ -339,146 +347,164 @@ export default function NegotiationStartScreen() {
           matchingScore={matchingScore}
         />
       ) : (
-      <ScrollView
-        contentContainerStyle={
-          styles.content
-        }
-        showsVerticalScrollIndicator={
-          false
-        }
-      >
-        <IdleHero theme={theme} />
+        <ScrollView
+          contentContainerStyle={
+            styles.content
+          }
+          showsVerticalScrollIndicator={
+            false
+          }
+        >
+          <IdleHero theme={theme} />
 
-        <View style={styles.sectionHeaderRow}>
-          <Text style={styles.sectionTitle}>
-            Negotiation summary
-          </Text>
+          <View style={styles.sectionHeaderRow}>
+            <Text style={styles.sectionTitle}>
+              Negotiation summary
+            </Text>
+
+            <View
+              style={[
+                styles.sectionRule,
+                {
+                  backgroundColor:
+                    theme.border,
+                },
+              ]}
+            />
+          </View>
+
           <View
             style={[
-              styles.sectionRule,
-              { backgroundColor: theme.border },
+              styles.summaryCard,
+              CARD_SHADOW,
             ]}
+          >
+            <SummaryRow
+              index={0}
+              icon="leaf-outline"
+              label="Paddy variety"
+              value={formatLabel(
+                paddyType || "-"
+              )}
+              accent={theme.primary}
+              soft={theme.soft}
+            />
+
+            <SummaryRow
+              index={1}
+              icon="cube-outline"
+              label="Negotiation quantity"
+              value={`${formatNumber(
+                quantity
+              )} kg`}
+              accent={theme.primary}
+              soft={theme.soft}
+            />
+
+            <SummaryRow
+              index={2}
+              icon="person-outline"
+              label="Farmer asking price"
+              value={formatPrice(
+                farmerExpectedPrice
+              )}
+              accent={theme.primary}
+              soft={theme.soft}
+            />
+
+            <SummaryRow
+              index={3}
+              icon="business-outline"
+              label="Miller opening offer"
+              value={formatPrice(
+                millerOffer
+              )}
+              accent={theme.primary}
+              soft={theme.soft}
+            />
+
+            <SummaryRow
+              index={4}
+              icon="analytics-outline"
+              label="FL market reference"
+              value={formatPrice(
+                flReferencePrice
+              )}
+              accent={theme.primary}
+              soft={theme.soft}
+            />
+
+            <SummaryRow
+              index={5}
+              icon="git-compare-outline"
+              label="Matching score"
+              value={`${matchingScore.toFixed(
+                0
+              )}%`}
+              accent={theme.primary}
+              soft={theme.soft}
+              last
+            />
+          </View>
+
+          <PrivacyCard theme={theme} />
+
+          <View
+            style={[
+              styles.processCard,
+              CARD_SHADOW,
+            ]}
+          >
+            <Text style={styles.processTitle}>
+              What happens next?
+            </Text>
+
+            <ProcessStep
+              index={0}
+              number="1"
+              title="Agents review the market"
+              description="The FL reference price and match score guide the negotiation."
+              accent={theme.primary}
+              soft={theme.soft}
+            />
+
+            <ProcessStep
+              index={1}
+              number="2"
+              title="Agents exchange offers"
+              description="Each agent accepts, counters or rejects according to its private constraints."
+              accent={theme.primary}
+              soft={theme.soft}
+            />
+
+            <ProcessStep
+              index={2}
+              number="3"
+              title="Fairness is evaluated"
+              description="The result is compared with the FL market reference."
+              accent={theme.primary}
+              soft={theme.soft}
+              last
+            />
+          </View>
+
+          <StartButton
+            disabled={
+              starting || !selectionId
+            }
+            starting={starting}
+            theme={theme}
+            onPress={() =>
+              void handleStart()
+            }
           />
-        </View>
 
-        <View style={[styles.summaryCard, CARD_SHADOW]}>
-          <SummaryRow
-            index={0}
-            icon="leaf-outline"
-            label="Paddy variety"
-            value={formatLabel(
-              paddyType || "-"
-            )}
-            accent={theme.primary}
-            soft={theme.soft}
-          />
-
-          <SummaryRow
-            index={1}
-            icon="cube-outline"
-            label="Negotiation quantity"
-            value={`${formatNumber(
-              quantity
-            )} kg`}
-            accent={theme.primary}
-            soft={theme.soft}
-          />
-
-          <SummaryRow
-            index={2}
-            icon="person-outline"
-            label="Farmer asking price"
-            value={formatPrice(
-              farmerExpectedPrice
-            )}
-            accent={theme.primary}
-            soft={theme.soft}
-          />
-
-          <SummaryRow
-            index={3}
-            icon="business-outline"
-            label="Miller opening offer"
-            value={formatPrice(
-              millerOffer
-            )}
-            accent={theme.primary}
-            soft={theme.soft}
-          />
-
-          <SummaryRow
-            index={4}
-            icon="analytics-outline"
-            label="FL market reference"
-            value={formatPrice(
-              flReferencePrice
-            )}
-            accent={theme.primary}
-            soft={theme.soft}
-          />
-
-          <SummaryRow
-            index={5}
-            icon="git-compare-outline"
-            label="Matching score"
-            value={`${matchingScore.toFixed(
-              0
-            )}%`}
-            accent={theme.primary}
-            soft={theme.soft}
-            last
-          />
-        </View>
-
-        <PrivacyCard theme={theme} />
-
-        <View style={[styles.processCard, CARD_SHADOW]}>
-          <Text style={styles.processTitle}>
-            What happens next?
+          <Text style={styles.waitingNote}>
+            Negotiation may take a few moments
+            while the local AI agents generate
+            and validate their decisions.
           </Text>
-
-          <ProcessStep
-            index={0}
-            number="1"
-            title="Agents review the market"
-            description="The FL reference price and match score guide the negotiation."
-            accent={theme.primary}
-            soft={theme.soft}
-          />
-
-          <ProcessStep
-            index={1}
-            number="2"
-            title="Agents exchange offers"
-            description="Each agent accepts, counters or rejects according to its private constraints."
-            accent={theme.primary}
-            soft={theme.soft}
-          />
-
-          <ProcessStep
-            index={2}
-            number="3"
-            title="Fairness is evaluated"
-            description="The result is compared with the FL market reference."
-            accent={theme.primary}
-            soft={theme.soft}
-            last
-          />
-        </View>
-
-        <StartButton
-          disabled={starting || !selectionId}
-          starting={starting}
-          theme={theme}
-          onPress={() => void handleStart()}
-        />
-
-        <Text style={styles.waitingNote}>
-          Negotiation may take a few moments
-          while the local AI agents generate
-          and validate their decisions.
-        </Text>
-      </ScrollView>
+        </ScrollView>
       )}
     </SafeAreaView>
   );
@@ -488,11 +514,20 @@ export default function NegotiationStartScreen() {
 /*  Idle (pre-start) view pieces                                       */
 /* ------------------------------------------------------------------ */
 
-function IdleHero({ theme }: { theme: LiveTheme }) {
+function IdleHero({
+  theme,
+}: {
+  theme: LiveTheme;
+}) {
   const entrance = useEntrance(0);
 
-  const breathe = useRef(new Animated.Value(1)).current;
-  const spin = useRef(new Animated.Value(0)).current;
+  const breathe = useRef(
+    new Animated.Value(1)
+  ).current;
+
+  const spin = useRef(
+    new Animated.Value(0)
+  ).current;
 
   useEffect(() => {
     const breatheLoop = Animated.loop(
@@ -539,31 +574,43 @@ function IdleHero({ theme }: { theme: LiveTheme }) {
     <Animated.View
       style={[
         styles.heroCard,
-        { backgroundColor: theme.dark },
+        {
+          backgroundColor: theme.dark,
+        },
         entrance,
       ]}
     >
-      {/* Ambient decorative glows — purely visual, no effect on layout logic */}
       <View
         pointerEvents="none"
         style={[
           styles.heroGlow,
           styles.heroGlowTopRight,
-          { backgroundColor: theme.primary },
+          {
+            backgroundColor:
+              theme.primary,
+          },
         ]}
       />
+
       <View
         pointerEvents="none"
         style={[
           styles.heroGlow,
           styles.heroGlowBottomLeft,
-          { backgroundColor: theme.border },
+          {
+            backgroundColor:
+              theme.border,
+          },
         ]}
       />
 
       <View style={styles.agentRow}>
         <Animated.View
-          style={{ transform: [{ scale: breathe }] }}
+          style={{
+            transform: [
+              { scale: breathe },
+            ],
+          }}
         >
           <AgentAvatar
             icon="leaf"
@@ -575,7 +622,11 @@ function IdleHero({ theme }: { theme: LiveTheme }) {
 
         <View style={styles.connectionArea}>
           <Animated.View
-            style={{ transform: [{ rotate: spinDeg }] }}
+            style={{
+              transform: [
+                { rotate: spinDeg },
+              ],
+            }}
           >
             <Ionicons
               name="sync"
@@ -590,7 +641,11 @@ function IdleHero({ theme }: { theme: LiveTheme }) {
         </View>
 
         <Animated.View
-          style={{ transform: [{ scale: breathe }] }}
+          style={{
+            transform: [
+              { scale: breathe },
+            ],
+          }}
         >
           <AgentAvatar
             icon="business"
@@ -606,15 +661,19 @@ function IdleHero({ theme }: { theme: LiveTheme }) {
       </Text>
 
       <Text style={styles.heroDescription}>
-        Both autonomous agents will exchange offers
-        while protecting each participant’s private
-        price limit.
+        Both autonomous agents will exchange
+        offers while protecting each
+        participant’s private price limit.
       </Text>
     </Animated.View>
   );
 }
 
-function PrivacyCard({ theme }: { theme: LiveTheme }) {
+function PrivacyCard({
+  theme,
+}: {
+  theme: LiveTheme;
+}) {
   const entrance = useEntrance(260);
 
   return (
@@ -631,7 +690,9 @@ function PrivacyCard({ theme }: { theme: LiveTheme }) {
       <View
         style={[
           styles.privacyIcon,
-          { backgroundColor: "#FFFFFF" },
+          {
+            backgroundColor: "#FFFFFF",
+          },
         ]}
       >
         <Ionicons
@@ -645,7 +706,9 @@ function PrivacyCard({ theme }: { theme: LiveTheme }) {
         <Text
           style={[
             styles.privacyTitle,
-            { color: theme.dark },
+            {
+              color: theme.dark,
+            },
           ]}
         >
           Private constraints protected
@@ -675,7 +738,9 @@ function StartButton({
   const press = usePressScale(0.97);
   const entrance = useEntrance(420);
 
-  const glow = useRef(new Animated.Value(1)).current;
+  const glow = useRef(
+    new Animated.Value(1)
+  ).current;
 
   useEffect(() => {
     if (disabled) {
@@ -714,13 +779,19 @@ function StartButton({
         style={[
           styles.startButton,
           {
-            backgroundColor: theme.primary,
-            shadowColor: theme.primary,
+            backgroundColor:
+              theme.primary,
+            shadowColor:
+              theme.primary,
           },
           {
             transform: [
               { scale: press.scale },
-              { scale: disabled ? 1 : glow },
+              {
+                scale: disabled
+                  ? 1
+                  : glow,
+              },
             ],
           },
           disabled && styles.disabled,
@@ -728,20 +799,46 @@ function StartButton({
       >
         {starting ? (
           <>
-            <ActivityIndicator size="small" color="#FFFFFF" />
-            <Text style={styles.startButtonText}>
+            <ActivityIndicator
+              size="small"
+              color="#FFFFFF"
+            />
+
+            <Text
+              style={
+                styles.startButtonText
+              }
+            >
               AI agents are negotiating...
             </Text>
           </>
         ) : (
           <>
-            <View style={styles.startButtonIconWrap}>
-              <Ionicons name="sparkles" size={17} color="#FFFFFF" />
+            <View
+              style={
+                styles.startButtonIconWrap
+              }
+            >
+              <Ionicons
+                name="sparkles"
+                size={17}
+                color="#FFFFFF"
+              />
             </View>
-            <Text style={styles.startButtonText}>
+
+            <Text
+              style={
+                styles.startButtonText
+              }
+            >
               Start AI Negotiation
             </Text>
-            <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
+
+            <Ionicons
+              name="arrow-forward"
+              size={18}
+              color="#FFFFFF"
+            />
           </>
         )}
       </AnimatedPressable>
@@ -804,31 +901,37 @@ function NegotiationLiveView({
     useState(0);
 
   useEffect(() => {
-    const pulseAnimation = Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulse, {
-          toValue: 1.06,
-          duration: 850,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }),
-        Animated.timing(pulse, {
-          toValue: 1,
-          duration: 850,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }),
-      ])
-    );
+    const pulseAnimation =
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulse, {
+            toValue: 1.06,
+            duration: 850,
+            easing: Easing.inOut(
+              Easing.ease
+            ),
+            useNativeDriver: true,
+          }),
+          Animated.timing(pulse, {
+            toValue: 1,
+            duration: 850,
+            easing: Easing.inOut(
+              Easing.ease
+            ),
+            useNativeDriver: true,
+          }),
+        ])
+      );
 
-    const rotateAnimation = Animated.loop(
-      Animated.timing(rotate, {
-        toValue: 1,
-        duration: 2600,
-        easing: Easing.linear,
-        useNativeDriver: true,
-      })
-    );
+    const rotateAnimation =
+      Animated.loop(
+        Animated.timing(rotate, {
+          toValue: 1,
+          duration: 2600,
+          easing: Easing.linear,
+          useNativeDriver: true,
+        })
+      );
 
     const dotLoop = Animated.loop(
       Animated.stagger(
@@ -838,13 +941,17 @@ function NegotiationLiveView({
             Animated.timing(dot, {
               toValue: 1,
               duration: 380,
-              easing: Easing.inOut(Easing.ease),
+              easing: Easing.inOut(
+                Easing.ease
+              ),
               useNativeDriver: true,
             }),
             Animated.timing(dot, {
               toValue: 0.3,
               duration: 380,
-              easing: Easing.inOut(Easing.ease),
+              easing: Easing.inOut(
+                Easing.ease
+              ),
               useNativeDriver: true,
             }),
           ])
@@ -861,6 +968,7 @@ function NegotiationLiveView({
       rotateAnimation.stop();
       dotLoop.stop();
     };
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pulse, rotate]);
 
@@ -874,6 +982,7 @@ function NegotiationLiveView({
         duration: 350,
         useNativeDriver: true,
       }),
+
       Animated.spring(thoughtScale, {
         toValue: 1,
         useNativeDriver: true,
@@ -881,7 +990,11 @@ function NegotiationLiveView({
         bounciness: 6,
       }),
     ]).start();
-  }, [activeStage, thoughtFade, thoughtScale]);
+  }, [
+    activeStage,
+    thoughtFade,
+    thoughtScale,
+  ]);
 
   const progress = completed
     ? 100
@@ -895,20 +1008,29 @@ function NegotiationLiveView({
       );
 
   useEffect(() => {
-    const listenerId = progressAnim.addListener(
-      ({ value }) => {
-        setProgressDisplay(Math.round(value));
-      }
-    );
+    const listenerId =
+      progressAnim.addListener(
+        ({ value }) => {
+          setProgressDisplay(
+            Math.round(value)
+          );
+        }
+      );
 
     Animated.timing(progressAnim, {
       toValue: progress,
       duration: 550,
-      easing: Easing.out(Easing.cubic),
+      easing: Easing.out(
+        Easing.cubic
+      ),
       useNativeDriver: false,
     }).start();
 
-    return () => progressAnim.removeListener(listenerId);
+    return () =>
+      progressAnim.removeListener(
+        listenerId
+      );
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [progress]);
 
@@ -920,21 +1042,27 @@ function NegotiationLiveView({
     outputRange: ["0deg", "360deg"],
   });
 
-  const progressWidth = progressAnim.interpolate({
-    inputRange: [0, 100],
-    outputRange: ["0%", "100%"],
-    extrapolate: "clamp",
-  });
+  const progressWidth =
+    progressAnim.interpolate({
+      inputRange: [0, 100],
+      outputRange: ["0%", "100%"],
+      extrapolate: "clamp",
+    });
 
   return (
     <ScrollView
-      contentContainerStyle={styles.liveContent}
+      contentContainerStyle={
+        styles.liveContent
+      }
       showsVerticalScrollIndicator={false}
     >
       <View
         style={[
           styles.liveHero,
-          { backgroundColor: theme.dark },
+          {
+            backgroundColor:
+              theme.dark,
+          },
         ]}
       >
         <View
@@ -942,24 +1070,37 @@ function NegotiationLiveView({
           style={[
             styles.heroGlow,
             styles.heroGlowTopRight,
-            { backgroundColor: theme.primary },
+            {
+              backgroundColor:
+                theme.primary,
+            },
           ]}
         />
+
         <View
           pointerEvents="none"
           style={[
             styles.heroGlow,
             styles.heroGlowBottomLeft,
-            { backgroundColor: theme.border },
+            {
+              backgroundColor:
+                theme.border,
+            },
           ]}
         />
 
-        <View style={styles.liveAgentsRow}>
+        <View
+          style={styles.liveAgentsRow}
+        >
           <Animated.View
             style={[
               styles.liveAgentOrb,
               styles.farmerAgentOrb,
-              { transform: [{ scale: pulse }] },
+              {
+                transform: [
+                  { scale: pulse },
+                ],
+              },
             ]}
           >
             <Ionicons
@@ -969,9 +1110,17 @@ function NegotiationLiveView({
             />
           </Animated.View>
 
-          <View style={styles.liveConnection}>
+          <View
+            style={
+              styles.liveConnection
+            }
+          >
             <Animated.View
-              style={{ transform: [{ rotate: spin }] }}
+              style={{
+                transform: [
+                  { rotate: spin },
+                ],
+              }}
             >
               <Ionicons
                 name="sync"
@@ -980,16 +1129,22 @@ function NegotiationLiveView({
               />
             </Animated.View>
 
-            <View style={styles.signalDots}>
-              {dotAnims.map((dot, dotIndex) => (
-                <Animated.View
-                  key={dotIndex}
-                  style={[
-                    styles.signalDot,
-                    { opacity: dot },
-                  ]}
-                />
-              ))}
+            <View
+              style={styles.signalDots}
+            >
+              {dotAnims.map(
+                (dot, dotIndex) => (
+                  <Animated.View
+                    key={dotIndex}
+                    style={[
+                      styles.signalDot,
+                      {
+                        opacity: dot,
+                      },
+                    ]}
+                  />
+                )
+              )}
             </View>
           </View>
 
@@ -997,7 +1152,11 @@ function NegotiationLiveView({
             style={[
               styles.liveAgentOrb,
               styles.millerAgentOrb,
-              { transform: [{ scale: pulse }] },
+              {
+                transform: [
+                  { scale: pulse },
+                ],
+              },
             ]}
           >
             <Ionicons
@@ -1012,9 +1171,10 @@ function NegotiationLiveView({
           style={[
             styles.liveStatusPill,
             {
-              backgroundColor: completed
-                ? "rgba(255,255,255,0.16)"
-                : "rgba(253,230,138,0.16)",
+              backgroundColor:
+                completed
+                  ? "rgba(255,255,255,0.16)"
+                  : "rgba(253,230,138,0.16)",
             },
           ]}
         >
@@ -1022,39 +1182,63 @@ function NegotiationLiveView({
             style={[
               styles.liveStatusDot,
               {
-                backgroundColor: completed
-                  ? "#86EFAC"
-                  : "#FDE68A",
+                backgroundColor:
+                  completed
+                    ? "#86EFAC"
+                    : "#FDE68A",
               },
             ]}
           />
-          <Text style={styles.liveEyebrow}>
+
+          <Text
+            style={styles.liveEyebrow}
+          >
             {completed
               ? "NEGOTIATION COMPLETE"
               : "LIVE AI NEGOTIATION"}
           </Text>
         </View>
 
-        <Text style={styles.liveHeroTitle}>
+        <Text
+          style={styles.liveHeroTitle}
+        >
           {completed
             ? "Outcome prepared"
             : "Two agents are working for a fair deal"}
         </Text>
 
-        <Text style={styles.liveHeroDescription}>
+        <Text
+          style={
+            styles.liveHeroDescription
+          }
+        >
           {completed
             ? "The result has been validated and is ready to review."
             : "Private limits remain protected while both agents evaluate offers and market fairness."}
         </Text>
       </View>
 
-      <View style={[styles.liveProgressCard, CARD_SHADOW]}>
-        <View style={styles.progressHeader}>
+      <View
+        style={[
+          styles.liveProgressCard,
+          CARD_SHADOW,
+        ]}
+      >
+        <View
+          style={styles.progressHeader}
+        >
           <View>
-            <Text style={styles.progressLabel}>
+            <Text
+              style={styles.progressLabel}
+            >
               Negotiation progress
             </Text>
-            <Text style={styles.progressSubLabel}>
+
+            <Text
+              style={
+                styles.progressSubLabel
+              }
+            >
               Secure multi-agent processing
             </Text>
           </View>
@@ -1062,20 +1246,28 @@ function NegotiationLiveView({
           <Text
             style={[
               styles.progressPercent,
-              { color: theme.primary },
+              {
+                color: theme.primary,
+              },
             ]}
           >
             {progressDisplay}%
           </Text>
         </View>
 
-        <View style={styles.liveProgressTrack}>
+        <View
+          style={
+            styles.liveProgressTrack
+          }
+        >
           <Animated.View
             style={[
               styles.liveProgressFill,
               {
-                width: progressWidth,
-                backgroundColor: theme.primary,
+                width:
+                  progressWidth,
+                backgroundColor:
+                  theme.primary,
               },
             ]}
           />
@@ -1086,9 +1278,15 @@ function NegotiationLiveView({
             styles.currentThoughtCard,
             {
               opacity: thoughtFade,
-              borderColor: theme.border,
-              backgroundColor: theme.soft,
-              transform: [{ scale: thoughtScale }],
+              borderColor:
+                theme.border,
+              backgroundColor:
+                theme.soft,
+              transform: [
+                {
+                  scale: thoughtScale,
+                },
+              ],
             },
           ]}
         >
@@ -1109,11 +1307,17 @@ function NegotiationLiveView({
             />
           </View>
 
-          <View style={styles.currentThoughtText}>
+          <View
+            style={
+              styles.currentThoughtText
+            }
+          >
             <Text
               style={[
                 styles.currentThoughtTitle,
-                { color: theme.dark },
+                {
+                  color: theme.dark,
+                },
               ]}
             >
               {completed
@@ -1121,7 +1325,11 @@ function NegotiationLiveView({
                 : stage.title}
             </Text>
 
-            <Text style={styles.currentThoughtDescription}>
+            <Text
+              style={
+                styles.currentThoughtDescription
+              }
+            >
               {completed
                 ? "Opening the detailed agent conversation and fairness report."
                 : stage.detail}
@@ -1137,15 +1345,28 @@ function NegotiationLiveView({
         </Animated.View>
       </View>
 
-      <View style={[styles.liveSnapshotCard, CARD_SHADOW]}>
-        <View style={styles.snapshotHeader}>
-          <Text style={styles.snapshotTitle}>
+      <View
+        style={[
+          styles.liveSnapshotCard,
+          CARD_SHADOW,
+        ]}
+      >
+        <View
+          style={styles.snapshotHeader}
+        >
+          <Text
+            style={styles.snapshotTitle}
+          >
             Market context loaded
           </Text>
+
           <View
             style={[
               styles.secureBadge,
-              { backgroundColor: theme.soft },
+              {
+                backgroundColor:
+                  theme.soft,
+              },
             ]}
           >
             <Ionicons
@@ -1153,10 +1374,14 @@ function NegotiationLiveView({
               size={12}
               color={theme.primary}
             />
+
             <Text
               style={[
                 styles.secureBadgeText,
-                { color: theme.primary },
+                {
+                  color:
+                    theme.primary,
+                },
               ]}
             >
               PRIVATE
@@ -1164,58 +1389,91 @@ function NegotiationLiveView({
           </View>
         </View>
 
-        <View style={styles.snapshotGrid}>
+        <View
+          style={styles.snapshotGrid}
+        >
           <LiveMetric
             index={0}
             icon="leaf-outline"
             label="Paddy"
-            value={formatLabel(paddyType || "-")}
+            value={formatLabel(
+              paddyType || "-"
+            )}
             accent={theme.primary}
             soft={theme.soft}
           />
+
           <LiveMetric
             index={1}
             icon="cube-outline"
             label="Quantity"
-            value={`${formatNumber(quantity)} kg`}
+            value={`${formatNumber(
+              quantity
+            )} kg`}
             accent={theme.primary}
             soft={theme.soft}
           />
+
           <LiveMetric
             index={2}
             icon="analytics-outline"
             label="FL reference"
-            value={formatPrice(flReferencePrice)}
+            value={formatPrice(
+              flReferencePrice
+            )}
             accent={theme.primary}
             soft={theme.soft}
           />
+
           <LiveMetric
             index={3}
             icon="git-compare-outline"
             label="Match score"
-            value={`${matchingScore.toFixed(0)}%`}
+            value={`${matchingScore.toFixed(
+              0
+            )}%`}
             accent={theme.primary}
             soft={theme.soft}
           />
         </View>
       </View>
 
-      <View style={[styles.liveTimelineCard, CARD_SHADOW]}>
-        <Text style={styles.liveTimelineTitle}>
+      <View
+        style={[
+          styles.liveTimelineCard,
+          CARD_SHADOW,
+        ]}
+      >
+        <Text
+          style={
+            styles.liveTimelineTitle
+          }
+        >
           AI analysis timeline
         </Text>
 
-        {NEGOTIATION_STAGES.map((item, index) => (
-          <TimelineRow
-            key={item.title}
-            item={item}
-            index={index}
-            isLast={index === NEGOTIATION_STAGES.length - 1}
-            finished={completed || index < activeStage}
-            active={!completed && index === activeStage}
-            theme={theme}
-          />
-        ))}
+        {NEGOTIATION_STAGES.map(
+          (item, index) => (
+            <TimelineRow
+              key={item.title}
+              item={item}
+              index={index}
+              isLast={
+                index ===
+                NEGOTIATION_STAGES.length - 1
+              }
+              finished={
+                completed ||
+                index < activeStage
+              }
+              active={
+                !completed &&
+                index === activeStage
+              }
+              theme={theme}
+            />
+          )
+        )}
       </View>
 
       <LiveNotice theme={theme} />
@@ -1238,14 +1496,25 @@ function TimelineRow({
   active: boolean;
   theme: LiveTheme;
 }) {
-  const entrance = useEntrance(index * 60);
+  const entrance =
+    useEntrance(index * 60);
 
-  const nodeScale = useRef(new Animated.Value(1)).current;
-  const ring = useRef(new Animated.Value(0)).current;
-  const wasFinished = useRef(finished);
+  const nodeScale = useRef(
+    new Animated.Value(1)
+  ).current;
+
+  const ring = useRef(
+    new Animated.Value(0)
+  ).current;
+
+  const wasFinished =
+    useRef(finished);
 
   useEffect(() => {
-    if (finished && !wasFinished.current) {
+    if (
+      finished &&
+      !wasFinished.current
+    ) {
       Animated.sequence([
         Animated.spring(nodeScale, {
           toValue: 1.35,
@@ -1253,6 +1522,7 @@ function TimelineRow({
           speed: 30,
           bounciness: 12,
         }),
+
         Animated.spring(nodeScale, {
           toValue: 1,
           useNativeDriver: true,
@@ -1275,7 +1545,9 @@ function TimelineRow({
       Animated.timing(ring, {
         toValue: 1,
         duration: 1300,
-        easing: Easing.out(Easing.ease),
+        easing: Easing.out(
+          Easing.ease
+        ),
         useNativeDriver: true,
       })
     );
@@ -1285,30 +1557,48 @@ function TimelineRow({
     return () => loop.stop();
   }, [active, ring]);
 
-  const ringScale = ring.interpolate({
-    inputRange: [0, 1],
-    outputRange: [1, 1.9],
-  });
+  const ringScale =
+    ring.interpolate({
+      inputRange: [0, 1],
+      outputRange: [1, 1.9],
+    });
 
-  const ringOpacity = ring.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0.35, 0],
-  });
+  const ringOpacity =
+    ring.interpolate({
+      inputRange: [0, 1],
+      outputRange: [0.35, 0],
+    });
 
   return (
     <Animated.View
-      style={[styles.liveTimelineRow, entrance]}
+      style={[
+        styles.liveTimelineRow,
+        entrance,
+      ]}
     >
-      <View style={styles.liveTimelineRail}>
-        <View style={styles.liveTimelineNodeWrap}>
+      <View
+        style={styles.liveTimelineRail}
+      >
+        <View
+          style={
+            styles.liveTimelineNodeWrap
+          }
+        >
           {active ? (
             <Animated.View
               style={[
                 styles.liveTimelineRing,
                 {
-                  borderColor: theme.primary,
-                  opacity: ringOpacity,
-                  transform: [{ scale: ringScale }],
+                  borderColor:
+                    theme.primary,
+                  opacity:
+                    ringOpacity,
+                  transform: [
+                    {
+                      scale:
+                        ringScale,
+                    },
+                  ],
                 },
               ]}
             />
@@ -1317,11 +1607,21 @@ function TimelineRow({
           <Animated.View
             style={[
               styles.liveTimelineNode,
-              (finished || active) && {
-                backgroundColor: theme.primary,
-                borderColor: theme.primary,
+              (finished ||
+                active) && {
+                backgroundColor:
+                  theme.primary,
+                borderColor:
+                  theme.primary,
               },
-              { transform: [{ scale: nodeScale }] },
+              {
+                transform: [
+                  {
+                    scale:
+                      nodeScale,
+                  },
+                ],
+              },
             ]}
           >
             {finished ? (
@@ -1331,7 +1631,11 @@ function TimelineRow({
                 color="#FFFFFF"
               />
             ) : active ? (
-              <View style={styles.activeNodeDot} />
+              <View
+                style={
+                  styles.activeNodeDot
+                }
+              />
             ) : null}
           </Animated.View>
         </View>
@@ -1341,25 +1645,37 @@ function TimelineRow({
             style={[
               styles.liveTimelineLine,
               finished && {
-                backgroundColor: theme.primary,
+                backgroundColor:
+                  theme.primary,
               },
             ]}
           />
         ) : null}
       </View>
 
-      <View style={styles.liveTimelineText}>
+      <View
+        style={styles.liveTimelineText}
+      >
         <Text
           style={[
             styles.liveTimelineItemTitle,
-            active && { color: theme.primary },
-            !finished && !active &&
+            active && {
+              color:
+                theme.primary,
+            },
+            !finished &&
+              !active &&
               styles.pendingTimelineText,
           ]}
         >
           {item.title}
         </Text>
-        <Text style={styles.liveTimelineItemDetail}>
+
+        <Text
+          style={
+            styles.liveTimelineItemDetail
+          }
+        >
           {finished
             ? "Completed securely"
             : active
@@ -1371,7 +1687,11 @@ function TimelineRow({
   );
 }
 
-function LiveNotice({ theme }: { theme: LiveTheme }) {
+function LiveNotice({
+  theme,
+}: {
+  theme: LiveTheme;
+}) {
   const entrance = useEntrance(120);
 
   return (
@@ -1379,8 +1699,10 @@ function LiveNotice({ theme }: { theme: LiveTheme }) {
       style={[
         styles.liveNotice,
         {
-          borderColor: theme.border,
-          backgroundColor: theme.soft,
+          borderColor:
+            theme.border,
+          backgroundColor:
+            theme.soft,
         },
         entrance,
       ]}
@@ -1390,10 +1712,14 @@ function LiveNotice({ theme }: { theme: LiveTheme }) {
         size={21}
         color={theme.primary}
       />
-      <Text style={styles.liveNoticeText}>
-        Stay on this screen while the local AI agents finish.
-        Your private reservation prices are never shown to the
-        other participant.
+
+      <Text
+        style={styles.liveNoticeText}
+      >
+        Stay on this screen while the local AI
+        agents finish. Your private reservation
+        prices are never shown to the other
+        participant.
       </Text>
     </Animated.View>
   );
@@ -1414,14 +1740,23 @@ function LiveMetric({
   accent: string;
   soft: string;
 }) {
-  const entrance = useEntrance(index * 70);
+  const entrance =
+    useEntrance(index * 70);
 
   return (
-    <Animated.View style={[styles.liveMetric, entrance]}>
+    <Animated.View
+      style={[
+        styles.liveMetric,
+        entrance,
+      ]}
+    >
       <View
         style={[
           styles.liveMetricIcon,
-          { backgroundColor: soft },
+          {
+            backgroundColor:
+              soft,
+          },
         ]}
       >
         <Ionicons
@@ -1430,7 +1765,13 @@ function LiveMetric({
           color={accent}
         />
       </View>
-      <Text style={styles.liveMetricLabel}>{label}</Text>
+
+      <Text
+        style={styles.liveMetricLabel}
+      >
+        {label}
+      </Text>
+
       <Text
         style={styles.liveMetricValue}
         numberOfLines={1}
@@ -1470,7 +1811,9 @@ function AgentAvatar({
         />
       </View>
 
-      <Text style={styles.agentLabel}>
+      <Text
+        style={styles.agentLabel}
+      >
         {label}
       </Text>
     </View>
@@ -1494,13 +1837,15 @@ function SummaryRow({
   soft: string;
   last?: boolean;
 }) {
-  const entrance = useEntrance(index * 60);
+  const entrance =
+    useEntrance(index * 60);
 
   return (
     <Animated.View
       style={[
         styles.summaryRow,
-        last && styles.summaryRowLast,
+        last &&
+          styles.summaryRowLast,
         entrance,
       ]}
     >
@@ -1508,7 +1853,8 @@ function SummaryRow({
         style={[
           styles.summaryIcon,
           {
-            backgroundColor: soft,
+            backgroundColor:
+              soft,
           },
         ]}
       >
@@ -1519,12 +1865,18 @@ function SummaryRow({
         />
       </View>
 
-      <View style={styles.summaryText}>
-        <Text style={styles.summaryLabel}>
+      <View
+        style={styles.summaryText}
+      >
+        <Text
+          style={styles.summaryLabel}
+        >
           {label}
         </Text>
 
-        <Text style={styles.summaryValue}>
+        <Text
+          style={styles.summaryValue}
+        >
           {value}
         </Text>
       </View>
@@ -1549,16 +1901,25 @@ function ProcessStep({
   soft: string;
   last?: boolean;
 }) {
-  const entrance = useEntrance(300 + index * 90);
+  const entrance =
+    useEntrance(300 + index * 90);
 
   return (
-    <Animated.View style={[styles.processRow, entrance]}>
-      <View style={styles.processLineArea}>
+    <Animated.View
+      style={[
+        styles.processRow,
+        entrance,
+      ]}
+    >
+      <View
+        style={styles.processLineArea}
+      >
         <View
           style={[
             styles.processNumber,
             {
-              backgroundColor: soft,
+              backgroundColor:
+                soft,
             },
           ]}
         >
@@ -1578,14 +1939,21 @@ function ProcessStep({
           <View
             style={[
               styles.processLine,
-              { backgroundColor: soft },
+              {
+                backgroundColor:
+                  soft,
+              },
             ]}
           />
         ) : null}
       </View>
 
-      <View style={styles.processText}>
-        <Text style={styles.processStepTitle}>
+      <View
+        style={styles.processText}
+      >
+        <Text
+          style={styles.processStepTitle}
+        >
           {title}
         </Text>
 
@@ -1656,7 +2024,10 @@ function formatLabel(
 
 const CARD_SHADOW = {
   shadowColor: "#0F172A",
-  shadowOffset: { width: 0, height: 6 },
+  shadowOffset: {
+    width: 0,
+    height: 6,
+  },
   shadowOpacity: 0.06,
   shadowRadius: 16,
   elevation: 3,
@@ -1664,7 +2035,10 @@ const CARD_SHADOW = {
 
 const CARD_SHADOW_SOFT = {
   shadowColor: "#0F172A",
-  shadowOffset: { width: 0, height: 3 },
+  shadowOffset: {
+    width: 0,
+    height: 3,
+  },
   shadowOpacity: 0.08,
   shadowRadius: 8,
   elevation: 2,
@@ -1712,6 +2086,7 @@ const styles = StyleSheet.create({
   },
 
   headerTitle: {
+    fontFamily: "Poppins_800ExtraBold",
     color: "#1F2937",
     fontSize: 18,
     fontWeight: "800",
@@ -1719,6 +2094,7 @@ const styles = StyleSheet.create({
   },
 
   headerSubtitle: {
+    fontFamily: "Poppins_400Regular",
     color: "#6B7280",
     fontSize: 9.5,
     marginTop: 3,
@@ -1731,7 +2107,10 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
     shadowOpacity: 0.18,
     shadowRadius: 8,
     elevation: 2,
@@ -1788,13 +2167,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     shadowColor: "#000000",
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
     shadowOpacity: 0.14,
     shadowRadius: 8,
     elevation: 3,
   },
 
   agentLabel: {
+    fontFamily: "Poppins_800ExtraBold",
     color: "#FFFFFF",
     fontSize: 10,
     fontWeight: "800",
@@ -1808,6 +2191,7 @@ const styles = StyleSheet.create({
   },
 
   connectionText: {
+    fontFamily: "Poppins_900Black",
     color: "#FDE68A",
     fontSize: 7,
     fontWeight: "900",
@@ -1816,7 +2200,8 @@ const styles = StyleSheet.create({
   },
 
   heroTitle: {
-    color: "#FFFFFF",
+    fontFamily: "Poppins_800ExtraBold",
+    color: "#DCFCE7",
     fontSize: 19,
     fontWeight: "900",
     textAlign: "center",
@@ -1825,6 +2210,7 @@ const styles = StyleSheet.create({
   },
 
   heroDescription: {
+    fontFamily: "Poppins_400Regular",
     color: "rgba(255,255,255,0.72)",
     fontSize: 10.5,
     lineHeight: 17,
@@ -1841,6 +2227,7 @@ const styles = StyleSheet.create({
   },
 
   sectionTitle: {
+    fontFamily: "Poppins_800ExtraBold",
     color: "#1F2937",
     fontSize: 15,
     fontWeight: "800",
@@ -1888,12 +2275,14 @@ const styles = StyleSheet.create({
   },
 
   summaryLabel: {
+    fontFamily: "Poppins_400Regular",
     color: "#94A3B8",
     fontSize: 8.5,
     letterSpacing: 0.2,
   },
 
   summaryValue: {
+    fontFamily: "Poppins_800ExtraBold",
     color: "#1F2937",
     fontSize: 12,
     fontWeight: "800",
@@ -1923,11 +2312,13 @@ const styles = StyleSheet.create({
   },
 
   privacyTitle: {
+    fontFamily: "Poppins_800ExtraBold",
     fontSize: 11,
     fontWeight: "800",
   },
 
   privacyDescription: {
+    fontFamily: "Poppins_400Regular",
     color: "#64748B",
     fontSize: 9,
     lineHeight: 15,
@@ -1944,6 +2335,7 @@ const styles = StyleSheet.create({
   },
 
   processTitle: {
+    fontFamily: "Poppins_800ExtraBold",
     color: "#1F2937",
     fontSize: 13,
     fontWeight: "800",
@@ -1970,6 +2362,7 @@ const styles = StyleSheet.create({
   },
 
   processNumberText: {
+    fontFamily: "Poppins_900Black",
     fontSize: 10,
     fontWeight: "900",
   },
@@ -1987,12 +2380,14 @@ const styles = StyleSheet.create({
   },
 
   processStepTitle: {
+    fontFamily: "Poppins_800ExtraBold",
     color: "#334155",
     fontSize: 10.5,
     fontWeight: "800",
   },
 
   processDescription: {
+    fontFamily: "Poppins_400Regular",
     color: "#64748B",
     fontSize: 8.5,
     lineHeight: 14,
@@ -2008,7 +2403,10 @@ const styles = StyleSheet.create({
     gap: 9,
     paddingHorizontal: 16,
     marginTop: 21,
-    shadowOffset: { width: 0, height: 10 },
+    shadowOffset: {
+      width: 0,
+      height: 10,
+    },
     shadowOpacity: 0.28,
     shadowRadius: 18,
     elevation: 6,
@@ -2018,12 +2416,14 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 8,
-    backgroundColor: "rgba(255,255,255,0.18)",
+    backgroundColor:
+      "rgba(255,255,255,0.18)",
     alignItems: "center",
     justifyContent: "center",
   },
 
   startButtonText: {
+    fontFamily: "Poppins_800ExtraBold",
     color: "#FFFFFF",
     fontSize: 12,
     fontWeight: "900",
@@ -2031,6 +2431,7 @@ const styles = StyleSheet.create({
   },
 
   waitingNote: {
+    fontFamily: "Poppins_400Regular",
     color: "#94A3B8",
     fontSize: 8.5,
     lineHeight: 14,
@@ -2066,9 +2467,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 2,
-    borderColor: "rgba(255,255,255,0.55)",
+    borderColor:
+      "rgba(255,255,255,0.55)",
     shadowColor: "#000000",
-    shadowOffset: { width: 0, height: 5 },
+    shadowOffset: {
+      width: 0,
+      height: 5,
+    },
     shadowOpacity: 0.16,
     shadowRadius: 10,
     elevation: 3,
@@ -2118,6 +2523,7 @@ const styles = StyleSheet.create({
   },
 
   liveEyebrow: {
+    fontFamily: "Poppins_900Black",
     color: "#FDE68A",
     fontSize: 9,
     fontWeight: "900",
@@ -2125,6 +2531,7 @@ const styles = StyleSheet.create({
   },
 
   liveHeroTitle: {
+    fontFamily: "Poppins_800ExtraBold",
     color: "#FFFFFF",
     fontSize: 19,
     lineHeight: 25,
@@ -2135,6 +2542,7 @@ const styles = StyleSheet.create({
   },
 
   liveHeroDescription: {
+    fontFamily: "Poppins_400Regular",
     color: "rgba(255,255,255,0.72)",
     fontSize: 10,
     lineHeight: 16,
@@ -2158,6 +2566,7 @@ const styles = StyleSheet.create({
   },
 
   progressLabel: {
+    fontFamily: "Poppins_900Black",
     color: "#1F2937",
     fontSize: 13,
     fontWeight: "900",
@@ -2165,12 +2574,14 @@ const styles = StyleSheet.create({
   },
 
   progressSubLabel: {
+    fontFamily: "Poppins_400Regular",
     color: "#94A3B8",
     fontSize: 8.5,
     marginTop: 2,
   },
 
   progressPercent: {
+    fontFamily: "Poppins_900Black",
     fontSize: 20,
     fontWeight: "900",
     letterSpacing: -0.4,
@@ -2213,11 +2624,13 @@ const styles = StyleSheet.create({
   },
 
   currentThoughtTitle: {
+    fontFamily: "Poppins_900Black",
     fontSize: 10.5,
     fontWeight: "900",
   },
 
   currentThoughtDescription: {
+    fontFamily: "Poppins_400Regular",
     color: "#64748B",
     fontSize: 8.5,
     lineHeight: 14,
@@ -2240,6 +2653,7 @@ const styles = StyleSheet.create({
   },
 
   snapshotTitle: {
+    fontFamily: "Poppins_900Black",
     color: "#1F2937",
     fontSize: 13,
     fontWeight: "900",
@@ -2256,6 +2670,7 @@ const styles = StyleSheet.create({
   },
 
   secureBadgeText: {
+    fontFamily: "Poppins_900Black",
     fontSize: 7,
     fontWeight: "900",
     letterSpacing: 0.6,
@@ -2284,6 +2699,7 @@ const styles = StyleSheet.create({
   },
 
   liveMetricLabel: {
+    fontFamily: "Poppins_400Regular",
     color: "#94A3B8",
     fontSize: 8,
     marginTop: 8,
@@ -2291,6 +2707,7 @@ const styles = StyleSheet.create({
   },
 
   liveMetricValue: {
+    fontFamily: "Poppins_900Black",
     color: "#1F2937",
     fontSize: 10.5,
     fontWeight: "900",
@@ -2306,6 +2723,7 @@ const styles = StyleSheet.create({
   },
 
   liveTimelineTitle: {
+    fontFamily: "Poppins_900Black",
     color: "#1F2937",
     fontSize: 13,
     fontWeight: "900",
@@ -2368,6 +2786,7 @@ const styles = StyleSheet.create({
   },
 
   liveTimelineItemTitle: {
+    fontFamily: "Poppins_800ExtraBold",
     color: "#334155",
     fontSize: 10.5,
     fontWeight: "800",
@@ -2378,6 +2797,7 @@ const styles = StyleSheet.create({
   },
 
   liveTimelineItemDetail: {
+    fontFamily: "Poppins_400Regular",
     color: "#64748B",
     fontSize: 8.5,
     lineHeight: 14,
@@ -2394,6 +2814,7 @@ const styles = StyleSheet.create({
   },
 
   liveNoticeText: {
+    fontFamily: "Poppins_400Regular",
     flex: 1,
     color: "#64748B",
     fontSize: 8.5,
@@ -2402,7 +2823,9 @@ const styles = StyleSheet.create({
 
   pressed: {
     opacity: 0.84,
-    transform: [{ scale: 0.98 }],
+    transform: [
+      { scale: 0.98 },
+    ],
   },
 
   disabled: {

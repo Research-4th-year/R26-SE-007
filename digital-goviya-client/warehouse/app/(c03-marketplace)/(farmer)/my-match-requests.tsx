@@ -1,13 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
-import {
-  router,
-  useFocusEffect,
-} from "expo-router";
-import {
-  useCallback,
-  useMemo,
-  useState,
-} from "react";
+import { router, useFocusEffect } from "expo-router";
+import { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -19,6 +12,16 @@ import {
   Text,
   View,
 } from "react-native";
+
+import {
+  Poppins_300Light,
+  Poppins_400Regular,
+  Poppins_500Medium,
+  Poppins_600SemiBold,
+  Poppins_700Bold,
+  Poppins_800ExtraBold,
+  useFonts,
+} from "@expo-google-fonts/poppins";
 
 import {
   matchingService,
@@ -42,6 +45,15 @@ import type {
 } from "@/types/c03-marketplace/demand.types";
 
 export default function MyMatchRequestsScreen() {
+  const [fontsLoaded] = useFonts({
+    Poppins_300Light,
+    Poppins_400Regular,
+    Poppins_500Medium,
+    Poppins_600SemiBold,
+    Poppins_700Bold,
+    Poppins_800ExtraBold,
+  });
+
   const [selections, setSelections] =
     useState<MatchSelection[]>([]);
 
@@ -71,8 +83,7 @@ export default function MyMatchRequestsScreen() {
         }
 
         const response =
-          await matchingService
-            .getFarmerSelections();
+          await matchingService.getFarmerSelections();
 
         setSelections(
           Array.isArray(response.data)
@@ -101,12 +112,8 @@ export default function MyMatchRequestsScreen() {
     () =>
       [...selections].sort(
         (first, second) =>
-          new Date(
-            second.createdAt
-          ).getTime() -
-          new Date(
-            first.createdAt
-          ).getTime()
+          new Date(second.createdAt).getTime() -
+          new Date(first.createdAt).getTime()
       ),
     [selections]
   );
@@ -120,57 +127,22 @@ export default function MyMatchRequestsScreen() {
   const readyCount =
     sortedSelections.filter(
       (selection) =>
-        selection.status ===
-        "negotiation_ready"
+        selection.status === "negotiation_ready"
     ).length;
 
-  const respondToMatch = async (
-    selectionId: string,
-    decision: "accepted" | "rejected",
-  ): Promise<void> => {
-    if (processingId) {
-      return;
-    }
+  const acceptedCount =
+    sortedSelections.filter(
+      (selection) =>
+        selection.status === "negotiation_ready"
+    ).length;
 
-    try {
-      setProcessingId(selectionId);
-
-      const response =
-        await matchingService.respondToSelection(
-          selectionId,
-          decision,
-        );
-
-      setSelections((current) =>
-        current.map((selection) =>
-          selection._id === selectionId
-            ? response.data.selection
-            : selection,
-        ),
-      );
-
-      Alert.alert(
-        decision === "accepted"
-          ? "Match accepted"
-          : "Match rejected",
-        response.message,
-      );
-    } catch (error) {
-      Alert.alert(
-        "Unable to update request",
-        getApiErrorMessage(error),
-      );
-    } finally {
-      setProcessingId(null);
-    }
-  };
-
-  if (loading) {
+  if (!fontsLoaded || loading) {
     return <LoadingState />;
   }
 
   return (
     <SafeAreaView style={styles.screen}>
+      {/* ================= HEADER ================= */}
       <View style={styles.header}>
         <Pressable
           onPress={() => router.back()}
@@ -192,14 +164,14 @@ export default function MyMatchRequestsScreen() {
           </Text>
 
           <Text style={styles.headerSubtitle}>
-            Track requests sent to millers
+            Track your farmer–miller matching activity
           </Text>
         </View>
 
         <View style={styles.headerIcon}>
           <Ionicons
             name="git-compare-outline"
-            size={20}
+            size={21}
             color="#15803D"
           />
         </View>
@@ -223,6 +195,7 @@ export default function MyMatchRequestsScreen() {
         }
         showsVerticalScrollIndicator={false}
       >
+        {/* ================= ERROR ================= */}
         {errorMessage ? (
           <ErrorState
             message={errorMessage}
@@ -234,6 +207,29 @@ export default function MyMatchRequestsScreen() {
           <EmptyState />
         ) : (
           <>
+            {/* ================= WELCOME / OVERVIEW ================= */}
+            <View style={styles.overviewCard}>
+              <View style={styles.overviewIcon}>
+                <Ionicons
+                  name="analytics-outline"
+                  size={23}
+                  color="#FFFFFF"
+                />
+              </View>
+
+              <View style={styles.overviewText}>
+                <Text style={styles.overviewTitle}>
+                  Matching Overview
+                </Text>
+
+                <Text style={styles.overviewSubtitle}>
+                  Keep track of your latest miller
+                  connections and negotiations.
+                </Text>
+              </View>
+            </View>
+
+            {/* ================= SUMMARY ================= */}
             <View style={styles.summaryCard}>
               <SummaryMetric
                 icon="time-outline"
@@ -244,8 +240,8 @@ export default function MyMatchRequestsScreen() {
               <View style={styles.summaryDivider} />
 
               <SummaryMetric
-                icon="checkmark-circle-outline"
-                label="Negotiation ready"
+                icon="sparkles-outline"
+                label="Ready"
                 value={readyCount}
               />
 
@@ -254,22 +250,36 @@ export default function MyMatchRequestsScreen() {
               <SummaryMetric
                 icon="documents-outline"
                 label="Total"
-                value={
-                  sortedSelections.length
-                }
+                value={sortedSelections.length}
               />
             </View>
 
+            {/* ================= SECTION HEADER ================= */}
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>
-                Matching activity
-              </Text>
+              <View>
+                <Text style={styles.sectionTitle}>
+                  Matching Activity
+                </Text>
 
-              <Text style={styles.refreshHint}>
-                Pull to refresh
-              </Text>
+                <Text style={styles.sectionSubtitle}>
+                  Your latest requests
+                </Text>
+              </View>
+
+              <View style={styles.refreshBadge}>
+                <Ionicons
+                  name="refresh-outline"
+                  size={13}
+                  color="#64748B"
+                />
+
+                <Text style={styles.refreshHint}>
+                  Pull to refresh
+                </Text>
+              </View>
             </View>
 
+            {/* ================= REQUEST LIST ================= */}
             <View style={styles.requestList}>
               {sortedSelections.map(
                 (selection) => (
@@ -277,18 +287,23 @@ export default function MyMatchRequestsScreen() {
                     key={selection._id}
                     selection={selection}
                     processing={
-                      processingId === selection._id
+                      processingId ===
+                      selection._id
                     }
                     onAccept={() =>
                       void respondToMatch(
                         selection._id,
                         "accepted",
+                        setProcessingId,
+                        setSelections
                       )
                     }
                     onReject={() =>
                       void respondToMatch(
                         selection._id,
                         "rejected",
+                        setProcessingId,
+                        setSelections
                       )
                     }
                   />
@@ -301,6 +316,10 @@ export default function MyMatchRequestsScreen() {
     </SafeAreaView>
   );
 }
+
+/* =========================================================
+   REQUEST CARD
+========================================================= */
 
 function FarmerRequestCard({
   selection,
@@ -337,63 +356,66 @@ function FarmerRequestCard({
 
   return (
     <View style={styles.requestCard}>
-      <View
-        style={[
-          styles.directionBadge,
-          isIncoming
-            ? styles.incomingBadge
-            : styles.outgoingBadge,
-        ]}
-      >
-        <Ionicons
-          name={
-            isIncoming
-              ? "arrow-down-outline"
-              : "arrow-up-outline"
-          }
-          size={12}
-          color={
-            isIncoming
-              ? "#15803D"
-              : "#64748B"
-          }
-        />
-
-        <Text
+      {/* ================= REQUEST TYPE ================= */}
+      <View style={styles.cardTopRow}>
+        <View
           style={[
-            styles.directionText,
-            {
-              color: isIncoming
-                ? "#15803D"
-                : "#64748B",
-            },
+            styles.directionBadge,
+            isIncoming
+              ? styles.incomingBadge
+              : styles.outgoingBadge,
           ]}
         >
-          {isIncoming
-            ? "MILLER REQUEST"
-            : "SENT REQUEST"}
-        </Text>
-      </View>
+          <Ionicons
+            name={
+              isIncoming
+                ? "arrow-down-outline"
+                : "arrow-up-outline"
+            }
+            size={12}
+            color={
+              isIncoming
+                ? "#15803D"
+                : "#64748B"
+            }
+          />
 
-      <View style={styles.requestTopRow}>
-        <View style={styles.millerIcon}>
-          <Ionicons name="business-outline" size={22} color="#15803D" />
+          <Text
+            style={[
+              styles.directionText,
+              {
+                color: isIncoming
+                  ? "#15803D"
+                  : "#64748B",
+              },
+            ]}
+          >
+            {isIncoming
+              ? "MILLER REQUEST"
+              : "SENT REQUEST"}
+          </Text>
         </View>
 
-        <View style={styles.requestTitleArea}>
-          <Text style={styles.millerName}>{miller?.name ?? "Miller"}</Text>
-
-          <Text style={styles.millName}>{miller?.millName ?? "Rice Mill"}</Text>
-        </View>
-
+        {/* STATUS */}
         <View
           style={[
             styles.statusBadge,
             {
-              backgroundColor: status.background,
+              backgroundColor:
+                status.background,
             },
           ]}
         >
+          <View
+            style={[
+              styles.statusDot,
+              {
+                backgroundColor:
+                  status.color,
+              },
+            ]}
+          />
+
           <Text
             style={[
               styles.statusText,
@@ -407,13 +429,62 @@ function FarmerRequestCard({
         </View>
       </View>
 
-      <View style={styles.scoreCard}>
-        <View>
-          <Text style={styles.scoreLabel}>Matching score</Text>
+      {/* ================= MILLER INFO ================= */}
+      <View style={styles.requestTopRow}>
+        <View style={styles.millerIcon}>
+          <Ionicons
+            name="business-outline"
+            size={23}
+            color="#15803D"
+          />
+        </View>
 
-          <Text style={styles.scoreDescription}>
-            AI-calculated compatibility
+        <View style={styles.requestTitleArea}>
+          <Text
+            style={styles.millerName}
+            numberOfLines={1}
+          >
+            {miller?.name ?? "Miller"}
           </Text>
+
+          <View style={styles.millLocationRow}>
+            <Ionicons
+              name="business-outline"
+              size={11}
+              color="#94A3B8"
+            />
+
+            <Text
+              style={styles.millName}
+              numberOfLines={1}
+            >
+              {miller?.millName ?? "Rice Mill"}
+            </Text>
+          </View>
+        </View>
+      </View>
+
+      {/* ================= MATCH SCORE ================= */}
+      <View style={styles.scoreCard}>
+        <View style={styles.scoreLeft}>
+          <View style={styles.scoreIcon}>
+            <Ionicons
+              name="sparkles"
+              size={16}
+              color="#15803D"
+            />
+          </View>
+
+          <View>
+            <Text style={styles.scoreLabel}>
+              AI Matching Score
+            </Text>
+
+            <Text style={styles.scoreDescription}>
+              Compatibility based on your
+              requirements
+            </Text>
+          </View>
         </View>
 
         <View style={styles.scoreCircle}>
@@ -421,45 +492,88 @@ function FarmerRequestCard({
             {selection.matchingScore.toFixed(0)}
           </Text>
 
-          <Text style={styles.scoreTotal}>%</Text>
+          <Text style={styles.scoreTotal}>
+            %
+          </Text>
         </View>
       </View>
 
-      <View style={styles.detailsGrid}>
-        <DetailItem
-          icon="leaf-outline"
-          label="Paddy"
-          value={formatLabel(harvest?.paddyType ?? "-")}
-        />
-
-        <DetailItem
-          icon="cube-outline"
-          label="Quantity"
-          value={harvest ? `${formatNumber(harvest.quantity)} kg` : "-"}
-        />
-
-        <DetailItem
-          icon="cash-outline"
-          label="Miller offer"
-          value={demand ? `Rs.${demand.offeredPrice.toFixed(2)}` : "-"}
-        />
-
-        <DetailItem
-          icon="location-outline"
-          label="District"
-          value={miller?.district ?? "-"}
-        />
-      </View>
-
-      <View style={styles.timelineRow}>
-        <Ionicons name="calendar-outline" size={15} color="#64748B" />
-
-        <Text style={styles.timelineText}>
-          {isIncoming ? "Received" : "Sent"}{" "}
-          {formatDate(selection.createdAt)}
+      {/* ================= DETAILS ================= */}
+      <View style={styles.detailsContainer}>
+        <Text style={styles.detailsTitle}>
+          Match Details
         </Text>
+
+        <View style={styles.detailsGrid}>
+          <DetailItem
+            icon="leaf-outline"
+            label="Paddy"
+            value={formatLabel(
+              harvest?.paddyType ?? "-"
+            )}
+          />
+
+          <DetailItem
+            icon="cube-outline"
+            label="Quantity"
+            value={
+              harvest
+                ? `${formatNumber(
+                    harvest.quantity
+                  )} kg`
+                : "-"
+            }
+          />
+
+          <DetailItem
+            icon="cash-outline"
+            label="Miller Offer"
+            value={
+              demand
+                ? `Rs. ${demand.offeredPrice.toFixed(
+                    2
+                  )}`
+                : "-"
+            }
+          />
+
+          <DetailItem
+            icon="location-outline"
+            label="District"
+            value={
+              miller?.district ?? "-"
+            }
+          />
+        </View>
       </View>
 
+      {/* ================= TIMELINE ================= */}
+      <View style={styles.timelineRow}>
+        <View style={styles.timelineIcon}>
+          <Ionicons
+            name="calendar-outline"
+            size={14}
+            color="#64748B"
+          />
+        </View>
+
+        <View>
+          <Text style={styles.timelineLabel}>
+            Request Activity
+          </Text>
+
+          <Text style={styles.timelineText}>
+            {isIncoming
+              ? "Received"
+              : "Sent"}{" "}
+            {formatDate(
+              selection.createdAt
+            )}
+          </Text>
+        </View>
+      </View>
+
+      {/* ================= ACCEPT / REJECT ================= */}
       {isPendingIncoming ? (
         <View style={styles.responseActions}>
           <Pressable
@@ -513,7 +627,9 @@ function FarmerRequestCard({
         </View>
       ) : null}
 
-      {selection.status === "negotiation_ready" ? (
+      {/* ================= NEGOTIATION ================= */}
+      {selection.status ===
+      "negotiation_ready" ? (
         <Pressable
           onPress={() => {
             if (!harvest || !demand) {
@@ -521,24 +637,42 @@ function FarmerRequestCard({
             }
 
             router.push({
-              pathname: "/(c03-marketplace)/negotiation-start",
+              pathname:
+                "/(c03-marketplace)/negotiation-start",
 
               params: {
-                selectionId: selection._id,
+                selectionId:
+                  selection._id,
 
-                paddyType: harvest.paddyType,
+                paddyType:
+                  harvest.paddyType,
 
                 quantity: String(
-                  Math.min(harvest.quantity, demand.quantityNeeded),
+                  Math.min(
+                    harvest.quantity,
+                    demand.quantityNeeded
+                  )
                 ),
 
-                farmerExpectedPrice: String(harvest.expectedPrice),
+                farmerExpectedPrice:
+                  String(
+                    harvest.expectedPrice
+                  ),
 
-                millerOffer: String(demand.offeredPrice),
+                millerOffer:
+                  String(
+                    demand.offeredPrice
+                  ),
 
-                flReferencePrice: String(harvest.aiPredictedPrice),
+                flReferencePrice:
+                  String(
+                    harvest.aiPredictedPrice
+                  ),
 
-                matchingScore: String(selection.matchingScore),
+                matchingScore:
+                  String(
+                    selection.matchingScore
+                  ),
               },
             });
           }}
@@ -547,14 +681,44 @@ function FarmerRequestCard({
             pressed && styles.pressed,
           ]}
         >
-          <Ionicons name="sparkles" size={18} color="#FFFFFF" />
+          <View style={styles.negotiationIcon}>
+            <Ionicons
+              name="sparkles"
+              size={16}
+              color="#FFFFFF"
+            />
+          </View>
 
-          <Text style={styles.negotiationButtonText}>Start AI Negotiation</Text>
+          <View style={styles.negotiationTextContainer}>
+            <Text
+              style={
+                styles.negotiationButtonText
+              }
+            >
+              Start AI Negotiation
+            </Text>
+
+            <Text
+              style={styles.negotiationSubtext}
+            >
+              Find a fair price with AI assistance
+            </Text>
+          </View>
+
+          <Ionicons
+            name="chevron-forward"
+            size={19}
+            color="#FFFFFF"
+          />
         </Pressable>
       ) : null}
     </View>
   );
 }
+
+/* =========================================================
+   SUMMARY METRIC
+========================================================= */
 
 function SummaryMetric({
   icon,
@@ -567,11 +731,13 @@ function SummaryMetric({
 }) {
   return (
     <View style={styles.summaryMetric}>
-      <Ionicons
-        name={icon}
-        size={20}
-        color="#15803D"
-      />
+      <View style={styles.summaryIcon}>
+        <Ionicons
+          name={icon}
+          size={17}
+          color="#15803D"
+        />
+      </View>
 
       <Text style={styles.summaryValue}>
         {value}
@@ -583,6 +749,10 @@ function SummaryMetric({
     </View>
   );
 }
+
+/* =========================================================
+   DETAIL ITEM
+========================================================= */
 
 function DetailItem({
   icon,
@@ -619,10 +789,14 @@ function DetailItem({
   );
 }
 
+/* =========================================================
+   LOADING STATE
+========================================================= */
+
 function LoadingState() {
   return (
     <SafeAreaView style={styles.screen}>
-      <View style={styles.centerState}>
+      <View style={styles.loadingScreen}>
         <View style={styles.loadingIcon}>
           <ActivityIndicator
             size="large"
@@ -636,12 +810,16 @@ function LoadingState() {
 
         <Text style={styles.stateText}>
           Retrieving your latest matching
-          activity.
+          activity...
         </Text>
       </View>
     </SafeAreaView>
   );
 }
+
+/* =========================================================
+   EMPTY STATE
+========================================================= */
 
 function EmptyState() {
   return (
@@ -649,19 +827,19 @@ function EmptyState() {
       <View style={styles.emptyIcon}>
         <Ionicons
           name="git-compare-outline"
-          size={39}
+          size={40}
           color="#15803D"
         />
       </View>
 
       <Text style={styles.stateTitle}>
-        No match requests yet
+        No Match Requests Yet
       </Text>
 
       <Text style={styles.stateText}>
-        Select an available harvest and find
-        matching millers to send your first
-        request.
+        Select one of your available harvests
+        and find suitable millers to send your
+        first matching request.
       </Text>
 
       <Pressable
@@ -682,10 +860,20 @@ function EmptyState() {
         <Text style={styles.emptyButtonText}>
           View My Harvests
         </Text>
+
+        <Ionicons
+          name="arrow-forward"
+          size={17}
+          color="#FFFFFF"
+        />
       </Pressable>
     </View>
   );
 }
+
+/* =========================================================
+   ERROR STATE
+========================================================= */
 
 function ErrorState({
   message,
@@ -705,7 +893,7 @@ function ErrorState({
       </View>
 
       <Text style={styles.stateTitle}>
-        Unable to load requests
+        Unable to Load Requests
       </Text>
 
       <Text style={styles.stateText}>
@@ -732,6 +920,10 @@ function ErrorState({
     </View>
   );
 }
+
+/* =========================================================
+   HELPERS
+========================================================= */
 
 function getHarvest(
   value: MatchSelection["harvestId"]
@@ -803,6 +995,13 @@ function getStatusDisplay(
         color: "#475569",
         background: "#E2E8F0",
       };
+
+    default:
+      return {
+        label: "Unknown",
+        color: "#475569",
+        background: "#E2E8F0",
+      };
   }
 }
 
@@ -844,59 +1043,116 @@ function formatDate(
   ).format(date);
 }
 
+/* =========================================================
+   RESPOND TO MATCH
+========================================================= */
+
+async function respondToMatch(
+  selectionId: string,
+  decision: "accepted" | "rejected",
+  setProcessingId: (
+    value: string | null
+  ) => void,
+  setSelections: React.Dispatch<
+    React.SetStateAction<MatchSelection[]>
+  >
+): Promise<void> {
+  try {
+    setProcessingId(selectionId);
+
+    const response =
+      await matchingService.respondToSelection(
+        selectionId,
+        decision
+      );
+
+    setSelections((current) =>
+      current.map((selection) =>
+        selection._id === selectionId
+          ? response.data.selection
+          : selection
+      )
+    );
+
+    Alert.alert(
+      decision === "accepted"
+        ? "Match Accepted"
+        : "Match Rejected",
+      response.message
+    );
+  } catch (error) {
+    Alert.alert(
+      "Unable to Update Request",
+      getApiErrorMessage(error)
+    );
+  } finally {
+    setProcessingId(null);
+  }
+}
+
+/* =========================================================
+   STYLES
+========================================================= */
+
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: "#F8FAF8",
+    backgroundColor: "#F7FAF8",
   },
 
+  /* ================= HEADER ================= */
+
   header: {
-    minHeight: 72,
+    minHeight: 76,
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
     paddingHorizontal: 17,
     backgroundColor: "#FFFFFF",
     borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
+    borderBottomColor: "#E8EEE9",
   },
 
   headerButton: {
-    width: 41,
-    height: 41,
+    width: 42,
+    height: 42,
     borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#F3F4F6",
+    backgroundColor: "#F4F7F5",
   },
 
   headerText: {
     flex: 1,
+    marginLeft: 12,
   },
 
   headerTitle: {
-    color: "#1F2937",
-    fontSize: 18,
-    fontWeight: "800",
+    color: "#17221A",
+    fontSize: 17,
+    fontFamily: "Poppins_700Bold",
   },
 
   headerSubtitle: {
-    color: "#6B7280",
-    fontSize: 10,
+    color: "#7A867D",
+    fontSize: 9,
+    fontFamily: "Poppins_400Regular",
     marginTop: 2,
   },
 
   headerIcon: {
-    width: 40,
-    height: 40,
+    width: 42,
+    height: 42,
     borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#DCFCE7",
+    backgroundColor: "#E8F7ED",
   },
 
+  /* ================= CONTENT ================= */
+
   content: {
-    padding: 17,
+    paddingHorizontal: 16,
+    paddingTop: 17,
     paddingBottom: 120,
   },
 
@@ -905,15 +1161,72 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
 
+  /* ================= OVERVIEW ================= */
+
+  overviewCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 16,
+    borderRadius: 20,
+    backgroundColor: "#14532D",
+    marginBottom: 13,
+    shadowColor: "#14532D",
+    shadowOffset: {
+      width: 0,
+      height: 5,
+    },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+
+  overviewIcon: {
+    width: 46,
+    height: 46,
+    borderRadius: 15,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255,255,255,0.15)",
+  },
+
+  overviewText: {
+    flex: 1,
+    marginLeft: 12,
+  },
+
+  overviewTitle: {
+    color: "#FFFFFF",
+    fontSize: 13,
+    fontFamily: "Poppins_700Bold",
+  },
+
+  overviewSubtitle: {
+    color: "#D1FAE5",
+    fontSize: 8.5,
+    lineHeight: 14,
+    fontFamily: "Poppins_400Regular",
+    marginTop: 3,
+  },
+
+  /* ================= SUMMARY ================= */
+
   summaryCard: {
     flexDirection: "row",
     alignItems: "center",
+    paddingVertical: 14,
     borderRadius: 20,
-    padding: 15,
-    backgroundColor: "#ECFDF5",
+    backgroundColor: "#FFFFFF",
     borderWidth: 1,
-    borderColor: "#BBF7D0",
+    borderColor: "#E3EAE5",
     marginBottom: 23,
+    shadowColor: "#64748B",
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
   },
 
   summaryMetric: {
@@ -921,25 +1234,36 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 
+  summaryIcon: {
+    width: 31,
+    height: 31,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#ECFDF5",
+  },
+
   summaryValue: {
     color: "#14532D",
-    fontSize: 18,
-    fontWeight: "900",
+    fontSize: 17,
+    fontFamily: "Poppins_800ExtraBold",
     marginTop: 5,
   },
 
   summaryLabel: {
-    color: "#64748B",
-    fontSize: 8.5,
-    marginTop: 2,
-    textAlign: "center",
+    color: "#7A867D",
+    fontSize: 8,
+    fontFamily: "Poppins_500Medium",
+    marginTop: 1,
   },
 
   summaryDivider: {
     width: 1,
     height: 49,
-    backgroundColor: "#BBF7D0",
+    backgroundColor: "#E5EDE7",
   },
+
+  /* ================= SECTION ================= */
 
   sectionHeader: {
     flexDirection: "row",
@@ -949,37 +1273,70 @@ const styles = StyleSheet.create({
   },
 
   sectionTitle: {
-    color: "#1F2937",
+    color: "#17221A",
     fontSize: 15,
-    fontWeight: "800",
+    fontFamily: "Poppins_700Bold",
+  },
+
+  sectionSubtitle: {
+    color: "#94A3B8",
+    fontSize: 8.5,
+    fontFamily: "Poppins_400Regular",
+    marginTop: 1,
+  },
+
+  refreshBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    borderRadius: 999,
+    backgroundColor: "#F1F5F9",
   },
 
   refreshHint: {
-    color: "#9CA3AF",
-    fontSize: 9,
+    color: "#64748B",
+    fontSize: 7.5,
+    fontFamily: "Poppins_500Medium",
   },
+
+  /* ================= REQUEST LIST ================= */
 
   requestList: {
     gap: 15,
   },
 
   requestCard: {
-    borderRadius: 22,
     padding: 17,
+    borderRadius: 23,
     backgroundColor: "#FFFFFF",
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: "#E5EBE7",
+    shadowColor: "#475569",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    elevation: 3,
+  },
+
+  cardTopRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 13,
   },
 
   directionBadge: {
-    alignSelf: "flex-start",
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
     borderRadius: 999,
-    paddingHorizontal: 8,
+    paddingHorizontal: 9,
     paddingVertical: 5,
-    marginBottom: 11,
   },
 
   incomingBadge: {
@@ -991,10 +1348,34 @@ const styles = StyleSheet.create({
   },
 
   directionText: {
-    fontSize: 7.5,
-    fontWeight: "900",
+    fontSize: 7,
+    fontFamily: "Poppins_700Bold",
     letterSpacing: 0.5,
   },
+
+  /* ================= STATUS ================= */
+
+  statusBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    borderRadius: 999,
+    paddingHorizontal: 9,
+    paddingVertical: 6,
+  },
+
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+
+  statusText: {
+    fontSize: 7.5,
+    fontFamily: "Poppins_700Bold",
+  },
+
+  /* ================= MILLER ================= */
 
   requestTopRow: {
     flexDirection: "row",
@@ -1002,12 +1383,14 @@ const styles = StyleSheet.create({
   },
 
   millerIcon: {
-    width: 45,
-    height: 45,
-    borderRadius: 15,
+    width: 48,
+    height: 48,
+    borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#DCFCE7",
+    backgroundColor: "#E8F7ED",
+    borderWidth: 1,
+    borderColor: "#CFF0D9",
   },
 
   requestTitleArea: {
@@ -1016,87 +1399,117 @@ const styles = StyleSheet.create({
   },
 
   millerName: {
-    color: "#1F2937",
-    fontSize: 14,
-    fontWeight: "800",
+    color: "#17221A",
+    fontSize: 13,
+    fontFamily: "Poppins_700Bold",
+  },
+
+  millLocationRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    marginTop: 3,
   },
 
   millName: {
-    color: "#64748B",
-    fontSize: 9.5,
-    marginTop: 2,
+    color: "#7A867D",
+    fontSize: 8.5,
+    fontFamily: "Poppins_400Regular",
+    flexShrink: 1,
   },
 
-  statusBadge: {
-    maxWidth: 115,
-    borderRadius: 999,
-    paddingHorizontal: 9,
-    paddingVertical: 6,
-  },
-
-  statusText: {
-    fontSize: 8,
-    fontWeight: "900",
-    textAlign: "center",
-  },
+  /* ================= SCORE ================= */
 
   scoreCard: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    borderRadius: 16,
     padding: 13,
+    borderRadius: 18,
     backgroundColor: "#F0FDF4",
+    borderWidth: 1,
+    borderColor: "#DCFCE7",
     marginTop: 16,
+  },
+
+  scoreLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+  },
+
+  scoreIcon: {
+    width: 34,
+    height: 34,
+    borderRadius: 11,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#DCFCE7",
+    marginRight: 9,
   },
 
   scoreLabel: {
     color: "#14532D",
-    fontSize: 11,
-    fontWeight: "800",
+    fontSize: 10.5,
+    fontFamily: "Poppins_700Bold",
   },
 
   scoreDescription: {
     color: "#64748B",
-    fontSize: 8.5,
-    marginTop: 3,
+    fontSize: 7.5,
+    fontFamily: "Poppins_400Regular",
+    marginTop: 2,
   },
 
   scoreCircle: {
-    width: 56,
-    height: 56,
-    borderRadius: 19,
+    width: 59,
+    height: 59,
+    borderRadius: 20,
     flexDirection: "row",
     alignItems: "baseline",
     justifyContent: "center",
     backgroundColor: "#FFFFFF",
-    paddingTop: 14,
+    paddingTop: 15,
+    borderWidth: 1,
+    borderColor: "#D1FAE5",
   },
 
   scoreValue: {
     color: "#15803D",
-    fontSize: 19,
-    fontWeight: "900",
+    fontSize: 18,
+    fontFamily: "Poppins_800ExtraBold",
   },
 
   scoreTotal: {
     color: "#15803D",
+    fontSize: 8,
+    fontFamily: "Poppins_700Bold",
+  },
+
+  /* ================= DETAILS ================= */
+
+  detailsContainer: {
+    marginTop: 16,
+  },
+
+  detailsTitle: {
+    color: "#334155",
     fontSize: 9,
-    fontWeight: "800",
+    fontFamily: "Poppins_600SemiBold",
+    marginBottom: 9,
   },
 
   detailsGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
     rowGap: 12,
-    marginTop: 15,
   },
 
   detailItem: {
     width: "50%",
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    paddingRight: 5,
   },
 
   detailIcon: {
@@ -1110,34 +1523,57 @@ const styles = StyleSheet.create({
 
   detailText: {
     flex: 1,
+    marginLeft: 7,
   },
 
   detailLabel: {
     color: "#94A3B8",
-    fontSize: 8,
+    fontSize: 7,
+    fontFamily: "Poppins_400Regular",
   },
 
   detailValue: {
     color: "#334155",
-    fontSize: 10,
-    fontWeight: "800",
+    fontSize: 9,
+    fontFamily: "Poppins_600SemiBold",
     marginTop: 2,
   },
+
+  /* ================= TIMELINE ================= */
 
   timelineRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
+    gap: 8,
     paddingTop: 13,
-    marginTop: 13,
+    marginTop: 15,
     borderTopWidth: 1,
     borderTopColor: "#F1F5F9",
   },
 
+  timelineIcon: {
+    width: 29,
+    height: 29,
+    borderRadius: 9,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#F1F5F9",
+  },
+
+  timelineLabel: {
+    color: "#94A3B8",
+    fontSize: 7,
+    fontFamily: "Poppins_400Regular",
+  },
+
   timelineText: {
     color: "#64748B",
-    fontSize: 9,
+    fontSize: 8,
+    fontFamily: "Poppins_500Medium",
+    marginTop: 1,
   },
+
+  /* ================= RESPONSE ================= */
 
   responseActions: {
     flexDirection: "row",
@@ -1147,8 +1583,8 @@ const styles = StyleSheet.create({
 
   rejectButton: {
     flex: 1,
-    minHeight: 47,
-    borderRadius: 14,
+    minHeight: 48,
+    borderRadius: 15,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
@@ -1160,46 +1596,93 @@ const styles = StyleSheet.create({
 
   rejectText: {
     color: "#B91C1C",
-    fontSize: 10.5,
-    fontWeight: "800",
+    fontSize: 10,
+    fontFamily: "Poppins_600SemiBold",
   },
 
   acceptButton: {
-    flex: 1.2,
-    minHeight: 47,
-    borderRadius: 14,
+    flex: 1.25,
+    minHeight: 48,
+    borderRadius: 15,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 6,
     backgroundColor: "#15803D",
+    shadowColor: "#15803D",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.18,
+    shadowRadius: 7,
+    elevation: 3,
   },
 
   acceptText: {
     color: "#FFFFFF",
-    fontSize: 10.5,
-    fontWeight: "900",
+    fontSize: 10,
+    fontFamily: "Poppins_700Bold",
   },
 
   disabled: {
     opacity: 0.55,
   },
 
+  /* ================= NEGOTIATION ================= */
+
   negotiationButton: {
-    minHeight: 48,
-    borderRadius: 15,
+    minHeight: 61,
+    borderRadius: 17,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
+    paddingHorizontal: 13,
     backgroundColor: "#15803D",
     marginTop: 15,
+    shadowColor: "#15803D",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.18,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+
+  negotiationIcon: {
+    width: 35,
+    height: 35,
+    borderRadius: 11,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255,255,255,0.17)",
+  },
+
+  negotiationTextContainer: {
+    flex: 1,
+    marginLeft: 9,
   },
 
   negotiationButtonText: {
     color: "#FFFFFF",
-    fontSize: 11,
-    fontWeight: "800",
+    fontSize: 10.5,
+    fontFamily: "Poppins_700Bold",
+  },
+
+  negotiationSubtext: {
+    color: "#DCFCE7",
+    fontSize: 7.5,
+    fontFamily: "Poppins_400Regular",
+    marginTop: 2,
+  },
+
+  /* ================= STATES ================= */
+
+  loadingScreen: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 28,
   },
 
   centerState: {
@@ -1210,9 +1693,9 @@ const styles = StyleSheet.create({
   },
 
   loadingIcon: {
-    width: 76,
-    height: 76,
-    borderRadius: 25,
+    width: 78,
+    height: 78,
+    borderRadius: 26,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "#ECFDF5",
@@ -1220,9 +1703,9 @@ const styles = StyleSheet.create({
   },
 
   emptyIcon: {
-    width: 92,
-    height: 92,
-    borderRadius: 31,
+    width: 96,
+    height: 96,
+    borderRadius: 32,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "#DCFCE7",
@@ -1230,9 +1713,9 @@ const styles = StyleSheet.create({
   },
 
   errorIcon: {
-    width: 92,
-    height: 92,
-    borderRadius: 31,
+    width: 96,
+    height: 96,
+    borderRadius: 32,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "#FEF2F2",
@@ -1240,20 +1723,23 @@ const styles = StyleSheet.create({
   },
 
   stateTitle: {
-    color: "#1F2937",
-    fontSize: 19,
-    fontWeight: "800",
+    color: "#17221A",
+    fontSize: 18,
+    fontFamily: "Poppins_700Bold",
     textAlign: "center",
   },
 
   stateText: {
     color: "#64748B",
-    fontSize: 12,
-    lineHeight: 19,
+    fontSize: 10,
+    lineHeight: 17,
+    fontFamily: "Poppins_400Regular",
     textAlign: "center",
     marginTop: 8,
     marginBottom: 20,
   },
+
+  /* ================= EMPTY ================= */
 
   emptyButton: {
     minHeight: 49,
@@ -1264,13 +1750,23 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingHorizontal: 21,
     backgroundColor: "#15803D",
+    shadowColor: "#15803D",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 3,
   },
 
   emptyButtonText: {
     color: "#FFFFFF",
-    fontSize: 11,
-    fontWeight: "800",
+    fontSize: 10,
+    fontFamily: "Poppins_700Bold",
   },
+
+  /* ================= ERROR ================= */
 
   retryButton: {
     minHeight: 49,
@@ -1285,12 +1781,18 @@ const styles = StyleSheet.create({
 
   retryText: {
     color: "#FFFFFF",
-    fontSize: 11,
-    fontWeight: "800",
+    fontSize: 10,
+    fontFamily: "Poppins_700Bold",
   },
+
+  /* ================= PRESS ================= */
 
   pressed: {
     opacity: 0.82,
-    transform: [{ scale: 0.98 }],
+    transform: [
+      {
+        scale: 0.98,
+      },
+    ],
   },
 });

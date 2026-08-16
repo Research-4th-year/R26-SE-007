@@ -30,6 +30,16 @@ import {
 } from "react-native";
 
 import {
+  useFonts,
+  Poppins_400Regular,
+  Poppins_500Medium,
+  Poppins_600SemiBold,
+  Poppins_700Bold,
+  Poppins_800ExtraBold,
+  Poppins_900Black,
+} from "@expo-google-fonts/poppins";
+
+import {
   useMarketplaceAuth,
 } from "@/hooks/c03-marketplace/useMarketplaceAuth";
 
@@ -52,6 +62,17 @@ export default function PublicProfileScreen() {
       partnerType?: string;
       partnerId?: string;
     }>();
+
+  const [
+    fontsLoaded,
+  ] = useFonts({
+    Poppins_400Regular,
+    Poppins_500Medium,
+    Poppins_600SemiBold,
+    Poppins_700Bold,
+    Poppins_800ExtraBold,
+    Poppins_900Black,
+  });
 
   const [
     data,
@@ -78,30 +99,20 @@ export default function PublicProfileScreen() {
     () =>
       isFarmer
         ? {
-            primary:
-              "#15803D",
-
-            dark:
-              "#14532D",
-
-            soft:
-              "#DCFCE7",
-
-            page:
-              "#F8FAF8",
+            primary: "#15803D",
+            dark: "#14532D",
+            soft: "#DCFCE7",
+            softDark: "#BBF7D0",
+            page: "#F6FAF7",
+            accent: "#22C55E",
           }
         : {
-            primary:
-              "#92400E",
-
-            dark:
-              "#78350F",
-
-            soft:
-              "#FEF3C7",
-
-            page:
-              "#FBF8F1",
+            primary: "#92400E",
+            dark: "#78350F",
+            soft: "#FEF3C7",
+            softDark: "#FDE68A",
+            page: "#FBF8F1",
+            accent: "#D97706",
           },
     [isFarmer]
   );
@@ -225,6 +236,7 @@ export default function PublicProfileScreen() {
   }
 
   if (
+    !fontsLoaded ||
     loading ||
     !data
   ) {
@@ -243,12 +255,22 @@ export default function PublicProfileScreen() {
             styles.loadingState
           }
         >
-          <ActivityIndicator
-            size="large"
-            color={
-              theme.primary
-            }
-          />
+          <View
+            style={[
+              styles.loadingIcon,
+              {
+                backgroundColor:
+                  theme.soft,
+              },
+            ]}
+          >
+            <ActivityIndicator
+              size="small"
+              color={
+                theme.primary
+              }
+            />
+          </View>
 
           <Text
             style={
@@ -256,6 +278,14 @@ export default function PublicProfileScreen() {
             }
           >
             Loading profile
+          </Text>
+
+          <Text
+            style={
+              styles.loadingSubtext
+            }
+          >
+            Please wait a moment...
           </Text>
         </View>
       </SafeAreaView>
@@ -265,17 +295,21 @@ export default function PublicProfileScreen() {
   const profile =
     data.profile;
 
+  const isMiller =
+    profile.type ===
+    "miller";
+
   return (
     <SafeAreaView
       style={[
         styles.screen,
-
         {
           backgroundColor:
             theme.page,
         },
       ]}
     >
+      {/* HEADER */}
       <View
         style={
           styles.header
@@ -285,30 +319,56 @@ export default function PublicProfileScreen() {
           onPress={() =>
             router.back()
           }
-          style={
-            styles.backButton
-          }
+          style={({ pressed }) => [
+            styles.backButton,
+            pressed &&
+              styles.pressed,
+          ]}
         >
           <Ionicons
             name="arrow-back"
-            size={21}
+            size={20}
             color="#1F2937"
           />
         </Pressable>
 
-        <Text
+        <View
           style={
-            styles.headerTitle
+            styles.headerCenter
           }
         >
-          Public Profile
-        </Text>
+          <Text
+            style={
+              styles.headerTitle
+            }
+          >
+            Profile
+          </Text>
+
+          <Text
+            style={
+              styles.headerSubtitle
+            }
+          >
+            Marketplace partner
+          </Text>
+        </View>
 
         <View
-          style={{
-            width: 42,
-          }}
-        />
+          style={
+            styles.headerRight
+          }
+        >
+          <View
+            style={[
+              styles.headerDot,
+              {
+                backgroundColor:
+                  theme.accent,
+              },
+            ]}
+          />
+        </View>
       </View>
 
       <ScrollView
@@ -319,30 +379,70 @@ export default function PublicProfileScreen() {
           false
         }
       >
+        {/* HERO */}
         <LinearGradient
           colors={[
             theme.dark,
             theme.primary,
           ]}
+          start={{
+            x: 0,
+            y: 0,
+          }}
+          end={{
+            x: 1,
+            y: 1,
+          }}
           style={
             styles.hero
           }
         >
           <View
             style={
-              styles.avatar
+              styles.heroGlowOne
+            }
+          />
+
+          <View
+            style={
+              styles.heroGlowTwo
+            }
+          />
+
+          <View
+            style={
+              styles.avatarOuter
             }
           >
-            <Ionicons
-              name={
-                profile.type ===
-                "miller"
-                  ? "business"
-                  : "leaf"
+            <View
+              style={
+                styles.avatar
               }
-              size={32}
-              color="#FFFFFF"
-            />
+            >
+              <Ionicons
+                name={
+                  isMiller
+                    ? "business"
+                    : "leaf"
+                }
+                size={31}
+                color="#FFFFFF"
+              />
+            </View>
+
+            {profile.isVerified && (
+              <View
+                style={
+                  styles.verifiedBadge
+                }
+              >
+                <Ionicons
+                  name="checkmark"
+                  size={11}
+                  color="#FFFFFF"
+                />
+              </View>
+            )}
           </View>
 
           <Text
@@ -355,13 +455,39 @@ export default function PublicProfileScreen() {
 
           <View
             style={
+              styles.roleBadge
+            }
+          >
+            <Ionicons
+              name={
+                isMiller
+                  ? "business-outline"
+                  : "leaf-outline"
+              }
+              size={12}
+              color="#FDE68A"
+            />
+
+            <Text
+              style={
+                styles.roleBadgeText
+              }
+            >
+              {isMiller
+                ? "RICE MILLER"
+                : "FARMER"}
+            </Text>
+          </View>
+
+          <View
+            style={
               styles.verificationRow
             }
           >
             <Ionicons
               name={
                 profile.isVerified
-                  ? "checkmark-circle"
+                  ? "shield-checkmark"
                   : "information-circle-outline"
               }
               size={14}
@@ -393,7 +519,7 @@ export default function PublicProfileScreen() {
             <Ionicons
               name="location-outline"
               size={14}
-              color="rgba(255,255,255,0.7)"
+              color="rgba(255,255,255,0.75)"
             />
 
             <Text
@@ -404,7 +530,7 @@ export default function PublicProfileScreen() {
               {
                 profile.district
               }
-              {" • "}
+              {"  •  "}
               {
                 profile.location
               }
@@ -412,15 +538,19 @@ export default function PublicProfileScreen() {
           </View>
         </LinearGradient>
 
+        {/* CONNECTION STATUS */}
         <View
-          style={
-            styles.connectionCard
-          }
+          style={[
+            styles.connectionCard,
+            {
+              borderColor:
+                theme.softDark,
+            },
+          ]}
         >
           <View
             style={[
               styles.connectionIcon,
-
               {
                 backgroundColor:
                   theme.soft,
@@ -433,9 +563,13 @@ export default function PublicProfileScreen() {
                   .status ===
                 "accepted"
                   ? "people"
+                  : data.connection
+                      .status ===
+                    "pending"
+                  ? "time-outline"
                   : "person-add-outline"
               }
-              size={23}
+              size={22}
               color={
                 theme.primary
               }
@@ -443,22 +577,46 @@ export default function PublicProfileScreen() {
           </View>
 
           <View
-            style={{
-              flex: 1,
-            }}
+            style={
+              styles.connectionContent
+            }
           >
-            <Text
+            <View
               style={
-                styles.connectionTitle
+                styles.connectionTitleRow
               }
             >
-              {getConnectionTitle(
-                data.connection
-                  .status,
-                data.connection
-                  .direction
-              )}
-            </Text>
+              <Text
+                style={
+                  styles.connectionTitle
+                }
+              >
+                {getConnectionTitle(
+                  data.connection
+                    .status,
+                  data.connection
+                    .direction
+                )}
+              </Text>
+
+              <View
+                style={[
+                  styles.statusDot,
+                  {
+                    backgroundColor:
+                      data.connection
+                        .status ===
+                      "accepted"
+                        ? "#22C55E"
+                        : data.connection
+                            .status ===
+                          "pending"
+                        ? "#F59E0B"
+                        : "#94A3B8",
+                  },
+                ]}
+              />
+            </View>
 
             <Text
               style={
@@ -475,13 +633,15 @@ export default function PublicProfileScreen() {
           </View>
         </View>
 
-        <Text
-          style={
-            styles.sectionTitle
+        {/* PROFILE INFORMATION */}
+        <SectionHeader
+          title="Profile information"
+          subtitle={
+            isMiller
+              ? "Rice mill details"
+              : "Farm details"
           }
-        >
-          Profile information
-        </Text>
+        />
 
         <View
           style={
@@ -510,8 +670,7 @@ export default function PublicProfileScreen() {
             }
           />
 
-          {profile.type ===
-          "miller" ? (
+          {isMiller ? (
             <>
               <InfoRow
                 icon="business-outline"
@@ -588,20 +747,27 @@ export default function PublicProfileScreen() {
           )}
         </View>
 
-        <Text
-          style={
-            styles.sectionTitle
+        {/* CONTACT */}
+        <SectionHeader
+          title="Contact"
+          subtitle={
+            data.contactUnlocked &&
+            data.contact
+              ? "Direct contact available"
+              : "Protected until connection"
           }
-        >
-          Contact
-        </Text>
+        />
 
         {data.contactUnlocked &&
         data.contact ? (
           <View
-            style={
-              styles.contactCard
-            }
+            style={[
+              styles.contactCard,
+              {
+                borderColor:
+                  theme.softDark,
+              },
+            ]}
           >
             <View
               style={
@@ -611,7 +777,6 @@ export default function PublicProfileScreen() {
               <View
                 style={[
                   styles.contactIcon,
-
                   {
                     backgroundColor:
                       theme.soft,
@@ -627,14 +792,30 @@ export default function PublicProfileScreen() {
                 />
               </View>
 
-              <View>
-                <Text
+              <View
+                style={
+                  styles.contactHeaderContent
+                }
+              >
+                <View
                   style={
-                    styles.contactTitle
+                    styles.unlockedRow
                   }
                 >
-                  Contact unlocked
-                </Text>
+                  <Ionicons
+                    name="checkmark-circle"
+                    size={13}
+                    color="#16A34A"
+                  />
+
+                  <Text
+                    style={
+                      styles.contactTitle
+                    }
+                  >
+                    Contact unlocked
+                  </Text>
+                </View>
 
                 <Text
                   style={
@@ -651,17 +832,24 @@ export default function PublicProfileScreen() {
 
             <View
               style={
+                styles.contactDivider
+              }
+            />
+
+            <View
+              style={
                 styles.contactActions
               }
             >
               <Pressable
-                style={[
+                style={({ pressed }) => [
                   styles.contactButton,
-
                   {
                     backgroundColor:
                       theme.primary,
                   },
+                  pressed &&
+                    styles.pressed,
                 ]}
                 onPress={() =>
                   void Linking.openURL(
@@ -685,13 +873,14 @@ export default function PublicProfileScreen() {
               </Pressable>
 
               <Pressable
-                style={[
+                style={({ pressed }) => [
                   styles.contactButton,
-
                   {
                     backgroundColor:
                       "#16A34A",
                   },
+                  pressed &&
+                    styles.pressed,
                 ]}
                 onPress={() =>
                   void Linking.openURL(
@@ -724,16 +913,22 @@ export default function PublicProfileScreen() {
               styles.privateCard
             }
           >
-            <Ionicons
-              name="lock-closed-outline"
-              size={23}
-              color="#64748B"
-            />
+            <View
+              style={
+                styles.privateIcon
+              }
+            >
+              <Ionicons
+                name="lock-closed-outline"
+                size={21}
+                color="#64748B"
+              />
+            </View>
 
             <View
-              style={{
-                flex: 1,
-              }}
+              style={
+                styles.privateContent
+              }
             >
               <Text
                 style={
@@ -754,6 +949,7 @@ export default function PublicProfileScreen() {
           </View>
         )}
 
+        {/* CONNECTION ACTION */}
         <ConnectionActions
           data={data}
           theme={theme}
@@ -776,6 +972,40 @@ export default function PublicProfileScreen() {
         />
       </ScrollView>
     </SafeAreaView>
+  );
+}
+
+function SectionHeader({
+  title,
+  subtitle,
+}: {
+  title: string;
+  subtitle: string;
+}) {
+  return (
+    <View
+      style={
+        styles.sectionHeader
+      }
+    >
+      <View>
+        <Text
+          style={
+            styles.sectionTitle
+          }
+        >
+          {title}
+        </Text>
+
+        <Text
+          style={
+            styles.sectionSubtitle
+          }
+        >
+          {subtitle}
+        </Text>
+      </View>
+    </View>
   );
 }
 
@@ -810,19 +1040,45 @@ function ConnectionActions({
           styles.connectedBar
         }
       >
-        <Ionicons
-          name="checkmark-circle"
-          size={20}
-          color="#166534"
-        />
-
-        <Text
+        <View
           style={
-            styles.connectedText
+            styles.connectedIcon
           }
         >
-          Connected Trading Partner
-        </Text>
+          <Ionicons
+            name="checkmark"
+            size={15}
+            color="#166534"
+          />
+        </View>
+
+        <View
+          style={
+            styles.connectedContent
+          }
+        >
+          <Text
+            style={
+              styles.connectedText
+            }
+          >
+            Connected Trading Partner
+          </Text>
+
+          <Text
+            style={
+              styles.connectedSubtext
+            }
+          >
+            You can now trade and communicate
+          </Text>
+        </View>
+
+        <Ionicons
+          name="chevron-forward"
+          size={17}
+          color="#86A98F"
+        />
       </View>
     );
   }
@@ -836,63 +1092,86 @@ function ConnectionActions({
     return (
       <View
         style={
-          styles.responseActions
+          styles.responseContainer
         }
       >
-        <Pressable
-          disabled={loading}
+        <Text
           style={
-            styles.rejectButton
-          }
-          onPress={
-            onReject
+            styles.actionLabel
           }
         >
-          <Text
-            style={
-              styles.rejectText
+          Respond to connection request
+        </Text>
+
+        <View
+          style={
+            styles.responseActions
+          }
+        >
+          <Pressable
+            disabled={loading}
+            style={({ pressed }) => [
+              styles.rejectButton,
+              pressed &&
+                styles.pressed,
+            ]}
+            onPress={
+              onReject
             }
           >
-            Reject
-          </Text>
-        </Pressable>
-
-        <Pressable
-          disabled={loading}
-          style={[
-            styles.acceptButton,
-
-            {
-              backgroundColor:
-                theme.primary,
-            },
-          ]}
-          onPress={
-            onAccept
-          }
-        >
-          {loading ? (
-            <ActivityIndicator
-              color="#FFFFFF"
+            <Ionicons
+              name="close"
+              size={17}
+              color="#B91C1C"
             />
-          ) : (
-            <>
-              <Ionicons
-                name="checkmark"
-                size={18}
+
+            <Text
+              style={
+                styles.rejectText
+              }
+            >
+              Reject
+            </Text>
+          </Pressable>
+
+          <Pressable
+            disabled={loading}
+            style={({ pressed }) => [
+              styles.acceptButton,
+              {
+                backgroundColor:
+                  theme.primary,
+              },
+              pressed &&
+                styles.pressed,
+            ]}
+            onPress={
+              onAccept
+            }
+          >
+            {loading ? (
+              <ActivityIndicator
                 color="#FFFFFF"
               />
+            ) : (
+              <>
+                <Ionicons
+                  name="checkmark"
+                  size={18}
+                  color="#FFFFFF"
+                />
 
-              <Text
-                style={
-                  styles.acceptText
-                }
-              >
-                Accept Request
-              </Text>
-            </>
-          )}
-        </Pressable>
+                <Text
+                  style={
+                    styles.acceptText
+                  }
+                >
+                  Accept Request
+                </Text>
+              </>
+            )}
+          </Pressable>
+        </View>
       </View>
     );
   }
@@ -909,60 +1188,139 @@ function ConnectionActions({
           styles.pendingBar
         }
       >
-        <Ionicons
-          name="time-outline"
-          size={20}
-          color="#64748B"
-        />
-
-        <Text
+        <View
           style={
-            styles.pendingText
+            styles.pendingIcon
           }
         >
-          Connection request sent
-        </Text>
+          <Ionicons
+            name="time-outline"
+            size={18}
+            color="#B45309"
+          />
+        </View>
+
+        <View
+          style={
+            styles.pendingContent
+          }
+        >
+          <Text
+            style={
+              styles.pendingText
+            }
+          >
+            Connection request sent
+          </Text>
+
+          <Text
+            style={
+              styles.pendingSubtext
+            }
+          >
+            Waiting for their response
+          </Text>
+        </View>
+
+        <Ionicons
+          name="hourglass-outline"
+          size={18}
+          color="#94A3B8"
+        />
       </View>
     );
   }
 
   return (
-    <Pressable
-      disabled={loading}
-      style={[
-        styles.sendButton,
-
-        {
-          backgroundColor:
-            theme.primary,
-        },
-      ]}
-      onPress={
-        onSend
+    <View
+      style={
+        styles.sendContainer
       }
     >
-      {loading ? (
-        <ActivityIndicator
-          color="#FFFFFF"
-        />
-      ) : (
-        <>
+      <View
+        style={
+          styles.sendInfo
+        }
+      >
+        <View
+          style={
+            styles.sendInfoIcon
+          }
+        >
           <Ionicons
-            name="person-add-outline"
-            size={19}
-            color="#FFFFFF"
+            name="shield-checkmark-outline"
+            size={17}
+            color={theme.primary}
           />
+        </View>
+
+        <View
+          style={
+            styles.sendInfoContent
+          }
+        >
+          <Text
+            style={
+              styles.sendInfoTitle
+            }
+          >
+            Ready to connect?
+          </Text>
 
           <Text
             style={
-              styles.sendButtonText
+              styles.sendInfoText
             }
           >
-            Send Connection Request
+            Your contact details stay private until the connection is accepted.
           </Text>
-        </>
-      )}
-    </Pressable>
+        </View>
+      </View>
+
+      <Pressable
+        disabled={loading}
+        style={({ pressed }) => [
+          styles.sendButton,
+          {
+            backgroundColor:
+              theme.primary,
+          },
+          pressed &&
+            styles.pressed,
+        ]}
+        onPress={
+          onSend
+        }
+      >
+        {loading ? (
+          <ActivityIndicator
+            color="#FFFFFF"
+          />
+        ) : (
+          <>
+            <Ionicons
+              name="person-add-outline"
+              size={19}
+              color="#FFFFFF"
+            />
+
+            <Text
+              style={
+                styles.sendButtonText
+              }
+            >
+              Send Connection Request
+            </Text>
+
+            <Ionicons
+              name="arrow-forward"
+              size={17}
+              color="#FFFFFF"
+            />
+          </>
+        )}
+      </Pressable>
+    </View>
   );
 }
 
@@ -990,7 +1348,6 @@ function InfoRow({
     <View
       style={[
         styles.infoRow,
-
         isLast &&
           styles.infoRowLast,
       ]}
@@ -998,7 +1355,6 @@ function InfoRow({
       <View
         style={[
           styles.infoIcon,
-
           {
             backgroundColor:
               theme.soft,
@@ -1015,9 +1371,9 @@ function InfoRow({
       </View>
 
       <View
-        style={{
-          flex: 1,
-        }}
+        style={
+          styles.infoContent
+        }
       >
         <Text
           style={
@@ -1031,10 +1387,17 @@ function InfoRow({
           style={
             styles.infoValue
           }
+          numberOfLines={2}
         >
           {value}
         </Text>
       </View>
+
+      <Ionicons
+        name="chevron-forward"
+        size={15}
+        color="#CBD5E1"
+      />
     </View>
   );
 }
@@ -1132,6 +1495,18 @@ const styles =
       flex: 1,
     },
 
+    pressed: {
+      opacity: 0.78,
+
+      transform: [
+        {
+          scale: 0.985,
+        },
+      ],
+    },
+
+    /* HEADER */
+
     header: {
       minHeight: 68,
 
@@ -1151,8 +1526,9 @@ const styles =
         "#FFFFFF",
 
       borderBottomWidth: 1,
+
       borderBottomColor:
-        "#E5E7EB",
+        "#EEF2F7",
     },
 
     backButton: {
@@ -1168,24 +1544,67 @@ const styles =
         "center",
 
       backgroundColor:
-        "#F3F4F6",
+        "#F5F7FA",
+    },
+
+    headerCenter: {
+      alignItems:
+        "center",
     },
 
     headerTitle: {
       color:
-        "#1F2937",
+        "#111827",
 
-      fontSize: 16,
-      fontWeight:
-        "900",
+      fontSize: 15,
+
+      fontFamily:
+        "Poppins_800ExtraBold",
     },
 
+    headerSubtitle: {
+      color:
+        "#94A3B8",
+
+      fontSize: 7.5,
+
+      fontFamily:
+        "Poppins_600SemiBold",
+
+      marginTop: 2,
+    },
+
+    headerRight: {
+      width: 42,
+      height: 42,
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "center",
+    },
+
+    headerDot: {
+      width: 8,
+      height: 8,
+
+      borderRadius: 10,
+    },
+
+    /* CONTENT */
+
     content: {
-      padding: 18,
+      paddingHorizontal:
+        17,
+
+      paddingTop: 15,
 
       paddingBottom:
         125,
     },
+
+    /* LOADING */
 
     loadingState: {
       flex: 1,
@@ -1195,35 +1614,125 @@ const styles =
 
       justifyContent:
         "center",
-
-      gap: 10,
     },
 
-    loadingText: {
-      color:
-        "#64748B",
+    loadingIcon: {
+      width: 55,
+      height: 55,
 
-      fontSize: 10,
-      fontWeight:
-        "800",
-    },
-
-    hero: {
-      borderRadius: 25,
+      borderRadius: 18,
 
       alignItems:
         "center",
 
-      padding: 23,
+      justifyContent:
+        "center",
 
-      marginBottom: 17,
+      marginBottom: 12,
+    },
+
+    loadingText: {
+      color:
+        "#334155",
+
+      fontSize: 11,
+
+      fontFamily:
+        "Poppins_800ExtraBold",
+    },
+
+    loadingSubtext: {
+      color:
+        "#94A3B8",
+
+      fontSize: 8.5,
+
+      fontFamily:
+        "Poppins_400Regular",
+
+      marginTop: 4,
+    },
+
+    /* HERO */
+
+    hero: {
+      borderRadius: 27,
+
+      alignItems:
+        "center",
+
+      paddingHorizontal:
+        22,
+
+      paddingTop: 27,
+
+      paddingBottom: 24,
+
+      marginBottom: 14,
+
+      overflow:
+        "hidden",
+
+      shadowColor:
+        "#0F172A",
+
+      shadowOffset: {
+        width: 0,
+        height: 8,
+      },
+
+      shadowOpacity:
+        0.13,
+
+      shadowRadius: 15,
+
+      elevation: 5,
+    },
+
+    heroGlowOne: {
+      position:
+        "absolute",
+
+      width: 150,
+      height: 150,
+
+      borderRadius: 100,
+
+      backgroundColor:
+        "rgba(255,255,255,0.055)",
+
+      top: -65,
+      right: -45,
+    },
+
+    heroGlowTwo: {
+      position:
+        "absolute",
+
+      width: 120,
+      height: 120,
+
+      borderRadius: 100,
+
+      backgroundColor:
+        "rgba(255,255,255,0.04)",
+
+      bottom: -55,
+      left: -35,
+    },
+
+    avatarOuter: {
+      position:
+        "relative",
+
+      marginBottom: 12,
     },
 
     avatar: {
-      width: 76,
-      height: 76,
+      width: 78,
+      height: 78,
 
-      borderRadius: 25,
+      borderRadius: 27,
 
       alignItems:
         "center",
@@ -1235,22 +1744,92 @@ const styles =
         "rgba(255,255,255,0.13)",
 
       borderWidth: 1,
+
       borderColor:
-        "rgba(255,255,255,0.18)",
+        "rgba(255,255,255,0.22)",
+    },
+
+    verifiedBadge: {
+      position:
+        "absolute",
+
+      right: -2,
+      bottom: -2,
+
+      width: 23,
+      height: 23,
+
+      borderRadius: 12,
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "center",
+
+      backgroundColor:
+        "#16A34A",
+
+      borderWidth: 3,
+
+      borderColor:
+        "#14532D",
     },
 
     name: {
       color:
         "#FFFFFF",
 
-      fontSize: 19,
-      fontWeight:
-        "900",
+      fontSize: 20,
+
+      fontFamily:
+        "Poppins_800ExtraBold",
 
       textAlign:
         "center",
 
-      marginTop: 13,
+      letterSpacing:
+        -0.3,
+    },
+
+    roleBadge: {
+      flexDirection:
+        "row",
+
+      alignItems:
+        "center",
+
+      gap: 5,
+
+      paddingHorizontal:
+        10,
+
+      paddingVertical: 5,
+
+      borderRadius: 20,
+
+      backgroundColor:
+        "rgba(255,255,255,0.11)",
+
+      borderWidth: 1,
+
+      borderColor:
+        "rgba(255,255,255,0.13)",
+
+      marginTop: 8,
+    },
+
+    roleBadgeText: {
+      color:
+        "#FDE68A",
+
+      fontSize: 7.5,
+
+      fontFamily:
+        "Poppins_800ExtraBold",
+
+      letterSpacing:
+        0.8,
     },
 
     verificationRow: {
@@ -1262,7 +1841,7 @@ const styles =
 
       gap: 5,
 
-      marginTop: 7,
+      marginTop: 10,
     },
 
     verificationText: {
@@ -1270,11 +1849,12 @@ const styles =
         "#FDE68A",
 
       fontSize: 7.5,
-      fontWeight:
-        "900",
+
+      fontFamily:
+        "Poppins_800ExtraBold",
 
       letterSpacing:
-        0.7,
+        0.6,
     },
 
     heroLocation: {
@@ -1286,15 +1866,20 @@ const styles =
 
       gap: 4,
 
-      marginTop: 7,
+      marginTop: 8,
     },
 
     heroLocationText: {
       color:
-        "rgba(255,255,255,0.7)",
+        "rgba(255,255,255,0.72)",
 
       fontSize: 8.5,
+
+      fontFamily:
+        "Poppins_500Medium",
     },
+
+    /* CONNECTION */
 
     connectionCard: {
       flexDirection:
@@ -1303,9 +1888,9 @@ const styles =
       alignItems:
         "center",
 
-      gap: 11,
+      gap: 12,
 
-      borderRadius: 18,
+      borderRadius: 20,
 
       padding: 14,
 
@@ -1313,17 +1898,30 @@ const styles =
         "#FFFFFF",
 
       borderWidth: 1,
-      borderColor:
-        "#E5E7EB",
 
-      marginBottom: 21,
+      marginBottom: 22,
+
+      shadowColor:
+        "#0F172A",
+
+      shadowOffset: {
+        width: 0,
+        height: 3,
+      },
+
+      shadowOpacity:
+        0.045,
+
+      shadowRadius: 8,
+
+      elevation: 2,
     },
 
     connectionIcon: {
-      width: 44,
-      height: 44,
+      width: 46,
+      height: 46,
 
-      borderRadius: 14,
+      borderRadius: 15,
 
       alignItems:
         "center",
@@ -1332,13 +1930,37 @@ const styles =
         "center",
     },
 
+    connectionContent: {
+      flex: 1,
+    },
+
+    connectionTitleRow: {
+      flexDirection:
+        "row",
+
+      alignItems:
+        "center",
+
+      gap: 7,
+    },
+
     connectionTitle: {
+      flex: 1,
+
       color:
         "#1F2937",
 
       fontSize: 11,
-      fontWeight:
-        "900",
+
+      fontFamily:
+        "Poppins_800ExtraBold",
+    },
+
+    statusDot: {
+      width: 7,
+      height: 7,
+
+      borderRadius: 10,
     },
 
     connectionDescription: {
@@ -1346,24 +1968,52 @@ const styles =
         "#64748B",
 
       fontSize: 8.3,
+
+      fontFamily:
+        "Poppins_400Regular",
+
       lineHeight: 13,
 
-      marginTop: 3,
+      marginTop: 4,
+    },
+
+    /* SECTION */
+
+    sectionHeader: {
+      marginBottom: 9,
+
+      paddingHorizontal: 2,
     },
 
     sectionTitle: {
       color:
-        "#1F2937",
+        "#111827",
 
       fontSize: 14,
-      fontWeight:
-        "900",
 
-      marginBottom: 10,
+      fontFamily:
+        "Poppins_800ExtraBold",
+
+      letterSpacing:
+        -0.2,
     },
 
+    sectionSubtitle: {
+      color:
+        "#94A3B8",
+
+      fontSize: 7.8,
+
+      fontFamily:
+        "Poppins_600SemiBold",
+
+      marginTop: 3,
+    },
+
+    /* INFO */
+
     infoCard: {
-      borderRadius: 19,
+      borderRadius: 20,
 
       paddingHorizontal:
         14,
@@ -1372,14 +2022,30 @@ const styles =
         "#FFFFFF",
 
       borderWidth: 1,
+
       borderColor:
-        "#E5E7EB",
+        "#E8EDF3",
 
       marginBottom: 21,
+
+      shadowColor:
+        "#0F172A",
+
+      shadowOffset: {
+        width: 0,
+        height: 3,
+      },
+
+      shadowOpacity:
+        0.035,
+
+      shadowRadius: 8,
+
+      elevation: 2,
     },
 
     infoRow: {
-      minHeight: 63,
+      minHeight: 66,
 
       flexDirection:
         "row",
@@ -1390,19 +2056,21 @@ const styles =
       gap: 11,
 
       borderBottomWidth: 1,
+
       borderBottomColor:
         "#F1F5F9",
     },
 
     infoRowLast: {
-      borderBottomWidth: 0,
+      borderBottomWidth:
+        0,
     },
 
     infoIcon: {
-      width: 37,
-      height: 37,
+      width: 39,
+      height: 39,
 
-      borderRadius: 12,
+      borderRadius: 13,
 
       alignItems:
         "center",
@@ -1411,13 +2079,21 @@ const styles =
         "center",
     },
 
+    infoContent: {
+      flex: 1,
+    },
+
     infoLabel: {
       color:
         "#94A3B8",
 
       fontSize: 7.5,
-      fontWeight:
-        "700",
+
+      fontFamily:
+        "Poppins_600SemiBold",
+
+      letterSpacing:
+        0.2,
     },
 
     infoValue: {
@@ -1425,14 +2101,19 @@ const styles =
         "#1F2937",
 
       fontSize: 10,
-      fontWeight:
-        "800",
+
+      fontFamily:
+        "Poppins_700Bold",
 
       marginTop: 3,
+
+      lineHeight: 15,
     },
 
+    /* CONTACT */
+
     contactCard: {
-      borderRadius: 19,
+      borderRadius: 20,
 
       padding: 15,
 
@@ -1440,10 +2121,23 @@ const styles =
         "#FFFFFF",
 
       borderWidth: 1,
-      borderColor:
-        "#BBF7D0",
 
-      marginBottom: 20,
+      marginBottom: 21,
+
+      shadowColor:
+        "#0F172A",
+
+      shadowOffset: {
+        width: 0,
+        height: 3,
+      },
+
+      shadowOpacity:
+        0.04,
+
+      shadowRadius: 8,
+
+      elevation: 2,
     },
 
     contactHeader: {
@@ -1457,10 +2151,10 @@ const styles =
     },
 
     contactIcon: {
-      width: 43,
-      height: 43,
+      width: 45,
+      height: 45,
 
-      borderRadius: 14,
+      borderRadius: 15,
 
       alignItems:
         "center",
@@ -1469,24 +2163,52 @@ const styles =
         "center",
     },
 
+    contactHeaderContent: {
+      flex: 1,
+    },
+
+    unlockedRow: {
+      flexDirection:
+        "row",
+
+      alignItems:
+        "center",
+
+      gap: 4,
+    },
+
     contactTitle: {
       color:
         "#166534",
 
       fontSize: 10,
-      fontWeight:
-        "900",
+
+      fontFamily:
+        "Poppins_800ExtraBold",
     },
 
     phone: {
       color:
-        "#1F2937",
+        "#111827",
 
-      fontSize: 12,
-      fontWeight:
-        "900",
+      fontSize: 13,
 
-      marginTop: 3,
+      fontFamily:
+        "Poppins_800ExtraBold",
+
+      marginTop: 4,
+
+      letterSpacing:
+        0.2,
+    },
+
+    contactDivider: {
+      height: 1,
+
+      backgroundColor:
+        "#F1F5F9",
+
+      marginVertical: 14,
     },
 
     contactActions: {
@@ -1494,16 +2216,14 @@ const styles =
         "row",
 
       gap: 9,
-
-      marginTop: 14,
     },
 
     contactButton: {
       flex: 1,
 
-      minHeight: 44,
+      minHeight: 45,
 
-      borderRadius: 13,
+      borderRadius: 14,
 
       flexDirection:
         "row",
@@ -1521,10 +2241,13 @@ const styles =
       color:
         "#FFFFFF",
 
-      fontSize: 9,
-      fontWeight:
-        "900",
+      fontSize: 9.5,
+
+      fontFamily:
+        "Poppins_700Bold",
     },
+
+    /* PRIVATE */
 
     privateCard: {
       flexDirection:
@@ -1535,7 +2258,7 @@ const styles =
 
       gap: 11,
 
-      borderRadius: 18,
+      borderRadius: 20,
 
       padding: 15,
 
@@ -1543,10 +2266,31 @@ const styles =
         "#F8FAFC",
 
       borderWidth: 1,
+
       borderColor:
         "#E2E8F0",
 
-      marginBottom: 20,
+      marginBottom: 21,
+    },
+
+    privateIcon: {
+      width: 43,
+      height: 43,
+
+      borderRadius: 14,
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "center",
+
+      backgroundColor:
+        "#E2E8F0",
+    },
+
+    privateContent: {
+      flex: 1,
     },
 
     privateTitle: {
@@ -1554,8 +2298,9 @@ const styles =
         "#475569",
 
       fontSize: 10,
-      fontWeight:
-        "900",
+
+      fontFamily:
+        "Poppins_800ExtraBold",
     },
 
     privateText: {
@@ -1563,15 +2308,88 @@ const styles =
         "#64748B",
 
       fontSize: 8,
+
+      fontFamily:
+        "Poppins_400Regular",
+
       lineHeight: 13,
 
-      marginTop: 3,
+      marginTop: 4,
+    },
+
+    /* SEND */
+
+    sendContainer: {
+      marginTop: 1,
+    },
+
+    sendInfo: {
+      flexDirection:
+        "row",
+
+      alignItems:
+        "center",
+
+      gap: 10,
+
+      paddingHorizontal: 3,
+
+      marginBottom: 11,
+    },
+
+    sendInfoIcon: {
+      width: 34,
+      height: 34,
+
+      borderRadius: 11,
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "center",
+
+      backgroundColor:
+        "#FFFFFF",
+
+      borderWidth: 1,
+
+      borderColor:
+        "#E2E8F0",
+    },
+
+    sendInfoContent: {
+      flex: 1,
+    },
+
+    sendInfoTitle: {
+      color:
+        "#334155",
+
+      fontSize: 9.5,
+
+      fontFamily:
+        "Poppins_700Bold",
+    },
+
+    sendInfoText: {
+      color:
+        "#94A3B8",
+
+      fontSize: 7.8,
+
+      fontFamily:
+        "Poppins_400Regular",
+
+      lineHeight: 12,
+
+      marginTop: 2,
     },
 
     sendButton: {
-      minHeight: 52,
+      minHeight: 53,
 
-      borderRadius: 16,
+      borderRadius: 17,
 
       flexDirection:
         "row",
@@ -1582,7 +2400,22 @@ const styles =
       justifyContent:
         "center",
 
-      gap: 7,
+      gap: 8,
+
+      shadowColor:
+        "#0F172A",
+
+      shadowOffset: {
+        width: 0,
+        height: 5,
+      },
+
+      shadowOpacity:
+        0.12,
+
+      shadowRadius: 10,
+
+      elevation: 4,
     },
 
     sendButtonText: {
@@ -1590,14 +2423,17 @@ const styles =
         "#FFFFFF",
 
       fontSize: 10,
-      fontWeight:
-        "900",
+
+      fontFamily:
+        "Poppins_800ExtraBold",
     },
 
-    pendingBar: {
-      minHeight: 51,
+    /* PENDING */
 
-      borderRadius: 16,
+    pendingBar: {
+      minHeight: 65,
+
+      borderRadius: 18,
 
       flexDirection:
         "row",
@@ -1605,32 +2441,70 @@ const styles =
       alignItems:
         "center",
 
+      gap: 10,
+
+      paddingHorizontal:
+        13,
+
+      backgroundColor:
+        "#FFFBEB",
+
+      borderWidth: 1,
+
+      borderColor:
+        "#FDE68A",
+
+      marginBottom: 5,
+    },
+
+    pendingIcon: {
+      width: 39,
+      height: 39,
+
+      borderRadius: 13,
+
+      alignItems:
+        "center",
+
       justifyContent:
         "center",
 
-      gap: 7,
-
       backgroundColor:
-        "#F1F5F9",
+        "#FEF3C7",
+    },
 
-      borderWidth: 1,
-      borderColor:
-        "#E2E8F0",
+    pendingContent: {
+      flex: 1,
     },
 
     pendingText: {
       color:
-        "#64748B",
+        "#92400E",
 
       fontSize: 9.5,
-      fontWeight:
-        "900",
+
+      fontFamily:
+        "Poppins_800ExtraBold",
     },
 
-    connectedBar: {
-      minHeight: 51,
+    pendingSubtext: {
+      color:
+        "#A16207",
 
-      borderRadius: 16,
+      fontSize: 7.8,
+
+      fontFamily:
+        "Poppins_400Regular",
+
+      marginTop: 3,
+    },
+
+    /* CONNECTED */
+
+    connectedBar: {
+      minHeight: 65,
+
+      borderRadius: 18,
 
       flexDirection:
         "row",
@@ -1638,17 +2512,40 @@ const styles =
       alignItems:
         "center",
 
+      gap: 10,
+
+      paddingHorizontal:
+        13,
+
+      backgroundColor:
+        "#F0FDF4",
+
+      borderWidth: 1,
+
+      borderColor:
+        "#BBF7D0",
+
+      marginBottom: 5,
+    },
+
+    connectedIcon: {
+      width: 39,
+      height: 39,
+
+      borderRadius: 13,
+
+      alignItems:
+        "center",
+
       justifyContent:
         "center",
 
-      gap: 7,
-
       backgroundColor:
         "#DCFCE7",
+    },
 
-      borderWidth: 1,
-      borderColor:
-        "#BBF7D0",
+    connectedContent: {
+      flex: 1,
     },
 
     connectedText: {
@@ -1656,8 +2553,41 @@ const styles =
         "#166534",
 
       fontSize: 9.5,
-      fontWeight:
-        "900",
+
+      fontFamily:
+        "Poppins_800ExtraBold",
+    },
+
+    connectedSubtext: {
+      color:
+        "#4D7C5A",
+
+      fontSize: 7.8,
+
+      fontFamily:
+        "Poppins_400Regular",
+
+      marginTop: 3,
+    },
+
+    /* RESPONSE */
+
+    responseContainer: {
+      marginTop: 1,
+    },
+
+    actionLabel: {
+      color:
+        "#64748B",
+
+      fontSize: 8,
+
+      fontFamily:
+        "Poppins_600SemiBold",
+
+      marginBottom: 8,
+
+      paddingHorizontal: 2,
     },
 
     responseActions: {
@@ -1665,14 +2595,19 @@ const styles =
         "row",
 
       gap: 9,
+
+      marginBottom: 5,
     },
 
     rejectButton: {
-      flex: 1,
+      flex: 0.85,
 
-      minHeight: 51,
+      minHeight: 53,
 
-      borderRadius: 15,
+      borderRadius: 16,
+
+      flexDirection:
+        "row",
 
       alignItems:
         "center",
@@ -1680,10 +2615,13 @@ const styles =
       justifyContent:
         "center",
 
+      gap: 5,
+
       backgroundColor:
         "#FEF2F2",
 
       borderWidth: 1,
+
       borderColor:
         "#FECACA",
     },
@@ -1693,16 +2631,17 @@ const styles =
         "#B91C1C",
 
       fontSize: 9.5,
-      fontWeight:
-        "900",
+
+      fontFamily:
+        "Poppins_800ExtraBold",
     },
 
     acceptButton: {
       flex: 1.5,
 
-      minHeight: 51,
+      minHeight: 53,
 
-      borderRadius: 15,
+      borderRadius: 16,
 
       flexDirection:
         "row",
@@ -1714,6 +2653,21 @@ const styles =
         "center",
 
       gap: 6,
+
+      shadowColor:
+        "#0F172A",
+
+      shadowOffset: {
+        width: 0,
+        height: 4,
+      },
+
+      shadowOpacity:
+        0.1,
+
+      shadowRadius: 8,
+
+      elevation: 3,
     },
 
     acceptText: {
@@ -1721,7 +2675,8 @@ const styles =
         "#FFFFFF",
 
       fontSize: 9.5,
-      fontWeight:
-        "900",
+
+      fontFamily:
+        "Poppins_800ExtraBold",
     },
   });

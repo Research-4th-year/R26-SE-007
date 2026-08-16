@@ -1,20 +1,24 @@
+
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { router, useFocusEffect } from "expo-router";
 import {
-  router,
-  useFocusEffect,
-} from "expo-router";
-
-import {
-  useCallback,
-  useMemo,
-  useState,
-} from "react";
-
+  Poppins_400Regular,
+  Poppins_500Medium,
+  Poppins_600SemiBold,
+  Poppins_700Bold,
+  Poppins_800ExtraBold,
+  useFonts,
+} from "@expo-google-fonts/poppins";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Animated,
+  Easing,
+  LayoutAnimation,
   Modal,
+  Platform,
   Pressable,
   RefreshControl,
   SafeAreaView,
@@ -22,37 +26,25 @@ import {
   StyleSheet,
   Text,
   TextInput,
+  UIManager,
   View,
 } from "react-native";
 
-import {
-  useMarketplaceAuth,
-} from "@/hooks/c03-marketplace/useMarketplaceAuth";
+import { useMarketplaceAuth } from "@/hooks/c03-marketplace/useMarketplaceAuth";
+import { partnerService } from "@/services/c03-marketplace/partner.service";
+import { connectionService } from "@/services/c03-marketplace/connection.service";
+import { getApiErrorMessage } from "@/utils/c03-marketplace/getApiErrorMessage";
+import type { PartnerListItem } from "@/types/c03-marketplace/partner.types";
+import type { MyConnectionItem } from "@/types/c03-marketplace/connection.types";
 
-import {
-  partnerService,
-} from "@/services/c03-marketplace/partner.service";
+if (
+  Platform.OS === "android" &&
+  UIManager.setLayoutAnimationEnabledExperimental
+) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 
-import {
-  connectionService,
-} from "@/services/c03-marketplace/connection.service";
-
-import {
-  getApiErrorMessage,
-} from "@/utils/c03-marketplace/getApiErrorMessage";
-
-import type {
-  PartnerListItem,
-} from "@/types/c03-marketplace/partner.types";
-
-import type {
-  MyConnectionItem,
-} from "@/types/c03-marketplace/connection.types";
-
-type PartnerTab =
-  | "connected"
-  | "requests"
-  | "trade";
+type PartnerTab = "connected" | "requests" | "trade";
 
 type Theme = {
   primary: string;
@@ -60,246 +52,156 @@ type Theme = {
   soft: string;
   border: string;
   page: string;
+  glow: string;
+  gradientStart: string;
+  gradientEnd: string;
 };
 
+const TAB_CONFIG: {
+  key: PartnerTab;
+  label: string;
+  icon: keyof typeof Ionicons.glyphMap;
+}[] = [
+  {
+    key: "connected",
+    label: "Connected",
+    icon: "people-outline",
+  },
+  {
+    key: "requests",
+    label: "Requests",
+    icon: "mail-unread-outline",
+  },
+  {
+    key: "trade",
+    label: "Trade",
+    icon: "receipt-outline",
+  },
+];
+
 export default function PartnersScreen() {
-  const {
-    user,
-  } = useMarketplaceAuth();
+  const { user } = useMarketplaceAuth();
 
-  const [
-    activeTab,
-    setActiveTab,
-  ] =
-    useState<PartnerTab>(
-      "connected"
-    );
+  const [fontsLoaded] = useFonts({
+    Poppins_400Regular,
+    Poppins_500Medium,
+    Poppins_600SemiBold,
+    Poppins_700Bold,
+    Poppins_800ExtraBold,
+  });
 
-  const [
-    connections,
-    setConnections,
-  ] =
-    useState<
-      MyConnectionItem[]
-    >([]);
+  const [activeTab, setActiveTab] =
+    useState<PartnerTab>("connected");
 
-  const [
-    requests,
-    setRequests,
-  ] =
-    useState<
-      MyConnectionItem[]
-    >([]);
+  const [connections, setConnections] = useState<MyConnectionItem[]>([]);
+  const [requests, setRequests] = useState<MyConnectionItem[]>([]);
+  const [tradePartners, setTradePartners] = useState<PartnerListItem[]>([]);
 
-  const [
-    tradePartners,
-    setTradePartners,
-  ] =
-    useState<
-      PartnerListItem[]
-    >([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [actionId, setActionId] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [searchFocused, setSearchFocused] = useState(false);
 
-  const [
-    searchQuery,
-    setSearchQuery,
-  ] = useState("");
+  const [selectedOutgoingRequest, setSelectedOutgoingRequest] =
+    useState<MyConnectionItem | null>(null);
 
-  const [
-    loading,
-    setLoading,
-  ] = useState(true);
+  const [cancellingRequest, setCancellingRequest] = useState(false);
 
-  const [
-    refreshing,
-    setRefreshing,
-  ] = useState(false);
+  const isFarmer = user?.role === "farmer";
 
-  const [
-    actionId,
-    setActionId,
-  ] =
-    useState<
-      string | null
-    >(null);
-
-  const [
-    errorMessage,
-    setErrorMessage,
-  ] =
-    useState<
-      string | null
-    >(null);
-
-  const [
-    selectedOutgoingRequest,
-    setSelectedOutgoingRequest,
-  ] =
-    useState<
-      MyConnectionItem | null
-    >(null);
-
-  const [
-    cancellingRequest,
-    setCancellingRequest,
-  ] = useState(false);
-
-  const isFarmer =
-    user?.role === "farmer";
-
-  const theme =
-    useMemo(
-      () =>
-        isFarmer
-          ? {
-              primary:
-                "#15803D",
-
-              dark:
-                "#14532D",
-
-              soft:
-                "#DCFCE7",
-
-              border:
-                "#BBF7D0",
-
-              page:
-                "#F8FAF8",
-            }
-          : {
-              primary:
-                "#92400E",
-
-              dark:
-                "#78350F",
-
-              soft:
-                "#FEF3C7",
-
-              border:
-                "#FDE68A",
-
-              page:
-                "#FBF8F1",
-            },
-      [isFarmer]
-    );
-
-  const loadAll =
-    useCallback(
-      async (
-        refresh = false
-      ) => {
-        try {
-          setErrorMessage(
-            null
-          );
-
-          if (refresh) {
-            setRefreshing(
-              true
-            );
-          } else {
-            setLoading(
-              true
-            );
+  const theme = useMemo<Theme>(
+    () =>
+      isFarmer
+        ? {
+            primary: "#15803D",
+            dark: "#14532D",
+            soft: "#DCFCE7",
+            border: "#BBF7D0",
+            page: "#F5F8F5",
+            glow: "rgba(21,128,61,0.16)",
+            gradientStart: "#14532D",
+            gradientEnd: "#16A34A",
           }
+        : {
+            primary: "#A16207",
+            dark: "#78350F",
+            soft: "#FEF3C7",
+            border: "#FDE68A",
+            page: "#FBF8F1",
+            glow: "rgba(161,98,7,0.16)",
+            gradientStart: "#78350F",
+            gradientEnd: "#D97706",
+          },
+    [isFarmer]
+  );
 
-          const [
-            acceptedResponse,
-            requestResponse,
-            tradeResponse,
-          ] =
-            await Promise.all([
-              connectionService
-                .getMyConnections(
-                  "accepted"
-                ),
+  // ---------------------------------------------------------------------
+  // Data loading
+  // ---------------------------------------------------------------------
 
-              connectionService
-                .getMyConnections(
-                  "pending"
-                ),
+  const loadAll = useCallback(async (refresh = false) => {
+    try {
+      setErrorMessage(null);
 
-              partnerService
-                .getMyPartners(),
-            ]);
+      if (refresh) {
+        setRefreshing(true);
+      } else {
+        setLoading(true);
+      }
 
-          setConnections(
-            Array.isArray(
-              acceptedResponse.data
-            )
-              ? acceptedResponse.data
-              : []
-          );
+      const [acceptedResponse, requestResponse, tradeResponse] =
+        await Promise.all([
+          connectionService.getMyConnections("accepted"),
+          connectionService.getMyConnections("pending"),
+          partnerService.getMyPartners(),
+        ]);
 
-          setRequests(
-            Array.isArray(
-              requestResponse.data
-            )
-              ? requestResponse.data
-              : []
-          );
+      setConnections(
+        Array.isArray(acceptedResponse.data)
+          ? acceptedResponse.data
+          : []
+      );
 
-          setTradePartners(
-            Array.isArray(
-              tradeResponse.data
-            )
-              ? tradeResponse.data
-              : []
-          );
-        } catch (
-          error
-        ) {
-          setErrorMessage(
-            getApiErrorMessage(
-              error
-            )
-          );
-        } finally {
-          setLoading(
-            false
-          );
+      setRequests(
+        Array.isArray(requestResponse.data)
+          ? requestResponse.data
+          : []
+      );
 
-          setRefreshing(
-            false
-          );
-        }
-      },
-      []
-    );
+      setTradePartners(
+        Array.isArray(tradeResponse.data)
+          ? tradeResponse.data
+          : []
+      );
+    } catch (error) {
+      setErrorMessage(getApiErrorMessage(error));
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
 
   useFocusEffect(
-    useCallback(
-      () => {
-        void loadAll();
-      },
-      [loadAll]
-    )
+    useCallback(() => {
+      void loadAll();
+    }, [loadAll])
   );
 
   async function respondToRequest(
-    item:
-      MyConnectionItem,
-
-    decision:
-      | "accepted"
-      | "rejected"
+    item: MyConnectionItem,
+    decision: "accepted" | "rejected"
   ) {
     try {
-      setActionId(
-        item.connectionId
-      );
+      setActionId(item.connectionId);
 
       await connectionService.respond(
         item.connectionId,
         decision
       );
 
-      if (
-        decision ===
-        "accepted"
-      ) {
+      if (decision === "accepted") {
         Alert.alert(
           "Connection accepted",
           `${item.partner.name} is now in your marketplace network.`
@@ -307,33 +209,23 @@ export default function PartnersScreen() {
       }
 
       await loadAll();
-    } catch (
-      error
-    ) {
+    } catch (error) {
       Alert.alert(
         "Unable to respond",
-        getApiErrorMessage(
-          error
-        )
+        getApiErrorMessage(error)
       );
     } finally {
-      setActionId(
-        null
-      );
+      setActionId(null);
     }
   }
 
   async function cancelRequest() {
-    if (
-      !selectedOutgoingRequest
-    ) {
+    if (!selectedOutgoingRequest) {
       return;
     }
 
     try {
-      setCancellingRequest(
-        true
-      );
+      setCancellingRequest(true);
 
       await connectionService.cancelRequest(
         selectedOutgoingRequest.connectionId
@@ -342,9 +234,7 @@ export default function PartnersScreen() {
       const partnerName =
         selectedOutgoingRequest.partner.name;
 
-      setSelectedOutgoingRequest(
-        null
-      );
+      setSelectedOutgoingRequest(null);
 
       Alert.alert(
         "Request cancelled",
@@ -352,34 +242,23 @@ export default function PartnersScreen() {
       );
 
       await loadAll();
-    } catch (
-      error
-    ) {
+    } catch (error) {
       Alert.alert(
         "Unable to cancel request",
-        getApiErrorMessage(
-          error
-        )
+        getApiErrorMessage(error)
       );
     } finally {
-      setCancellingRequest(
-        false
-      );
+      setCancellingRequest(false);
     }
   }
 
   function openPartner(
-    partnerType:
-      "farmer" |
-      "miller",
-
-    partnerId:
-      string
+    partnerType: "farmer" | "miller",
+    partnerId: string
   ) {
     router.push({
       pathname:
         "/(c03-marketplace)/partner-detail" as any,
-
       params: {
         partnerType,
         partnerId,
@@ -387,385 +266,499 @@ export default function PartnersScreen() {
     });
   }
 
-  function openPublicProfile(
-    item:
-      MyConnectionItem
-  ) {
-    setSelectedOutgoingRequest(
-      null
-    );
+  function openPublicProfile(item: MyConnectionItem) {
+    closeOutgoingSheet();
 
     router.push({
       pathname:
         "/(c03-marketplace)/public-profile" as any,
-
       params: {
-        partnerType:
-          item.partner.type,
-
-        partnerId:
-          item.partner.id,
+        partnerType: item.partner.type,
+        partnerId: item.partner.id,
       },
     });
   }
 
-  const query =
-    searchQuery
-      .trim()
-      .toLowerCase();
+  const query = searchQuery.trim().toLowerCase();
 
-  const visibleConnections =
-    useMemo(
-      () =>
-        connections.filter(
-          (item) =>
-            matchesSearch(
-              item.partner,
-              query
-            )
-        ),
-      [
-        connections,
-        query,
-      ]
+  const visibleConnections = useMemo(
+    () =>
+      connections.filter((item) =>
+        matchesSearch(item.partner, query)
+      ),
+    [connections, query]
+  );
+
+  const visibleRequests = useMemo(
+    () =>
+      requests.filter((item) =>
+        matchesSearch(item.partner, query)
+      ),
+    [requests, query]
+  );
+
+  const visibleTrades = useMemo(
+    () =>
+      tradePartners.filter((item) =>
+        matchesSearch(item.partner, query)
+      ),
+    [tradePartners, query]
+  );
+
+  const incomingCount = requests.filter(
+    (item) => item.direction === "incoming"
+  ).length;
+
+  // ---------------------------------------------------------------------
+  // Animations
+  // ---------------------------------------------------------------------
+
+  useEffect(() => {
+    LayoutAnimation.configureNext(
+      LayoutAnimation.Presets.easeInEaseOut
     );
+  }, [activeTab, query]);
 
-  const visibleRequests =
-    useMemo(
-      () =>
-        requests.filter(
-          (item) =>
-            matchesSearch(
-              item.partner,
-              query
-            )
-        ),
-      [
-        requests,
-        query,
-      ]
-    );
+  const tabLayouts = useRef<
+    Record<string, { x: number; width: number }>
+  >({}).current;
 
-  const visibleTrades =
-    useMemo(
-      () =>
-        tradePartners.filter(
-          (item) =>
-            matchesSearch(
-              item.partner,
-              query
-            )
-        ),
-      [
-        tradePartners,
-        query,
-      ]
-    );
+  const indicatorX = useRef(
+    new Animated.Value(0)
+  ).current;
 
-  const incomingCount =
-    requests.filter(
-      (item) =>
-        item.direction ===
-        "incoming"
-    ).length;
+  const indicatorWidth = useRef(
+    new Animated.Value(0)
+  ).current;
 
-  if (
-    loading
+  const indicatorMeasured = useRef(false);
+
+  function handleTabLayout(
+    tab: PartnerTab,
+    x: number,
+    width: number
   ) {
+    tabLayouts[tab] = { x, width };
+
+    if (
+      tab === activeTab &&
+      !indicatorMeasured.current
+    ) {
+      indicatorMeasured.current = true;
+      indicatorX.setValue(x);
+      indicatorWidth.setValue(width);
+    }
+  }
+
+  useEffect(() => {
+    const layout = tabLayouts[activeTab];
+
+    if (!layout) {
+      return;
+    }
+
+    Animated.parallel([
+      Animated.spring(indicatorX, {
+        toValue: layout.x,
+        useNativeDriver: false,
+        friction: 9,
+        tension: 90,
+      }),
+      Animated.spring(indicatorWidth, {
+        toValue: layout.width,
+        useNativeDriver: false,
+        friction: 9,
+        tension: 90,
+      }),
+    ]).start();
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
+
+  const screenOpacity = useRef(
+    new Animated.Value(0)
+  ).current;
+
+  useEffect(() => {
+    if (!loading) {
+      screenOpacity.setValue(0);
+
+      Animated.timing(screenOpacity, {
+        toValue: 1,
+        duration: 350,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [loading]);
+
+  const sheetY = useRef(
+    new Animated.Value(420)
+  ).current;
+
+  const overlayOpacity = useRef(
+    new Animated.Value(0)
+  ).current;
+
+  useEffect(() => {
+    if (selectedOutgoingRequest) {
+      Animated.parallel([
+        Animated.timing(overlayOpacity, {
+          toValue: 1,
+          duration: 220,
+          useNativeDriver: true,
+        }),
+        Animated.spring(sheetY, {
+          toValue: 0,
+          useNativeDriver: true,
+          friction: 10,
+          tension: 80,
+        }),
+      ]).start();
+    } else {
+      overlayOpacity.setValue(0);
+      sheetY.setValue(420);
+    }
+  }, [selectedOutgoingRequest]);
+
+  function closeOutgoingSheet() {
+    Animated.parallel([
+      Animated.timing(overlayOpacity, {
+        toValue: 0,
+        duration: 160,
+        useNativeDriver: true,
+      }),
+      Animated.timing(sheetY, {
+        toValue: 420,
+        duration: 180,
+        easing: Easing.in(Easing.cubic),
+        useNativeDriver: true,
+      }),
+    ]).start(() =>
+      setSelectedOutgoingRequest(null)
+    );
+  }
+
+  // ---------------------------------------------------------------------
+  // Loading
+  // ---------------------------------------------------------------------
+
+  if (!fontsLoaded || loading) {
     return (
       <SafeAreaView
         style={[
           styles.screen,
-          {
-            backgroundColor:
-              theme.page,
-          },
+          { backgroundColor: theme.page },
         ]}
       >
-        <View
-          style={
-            styles.centerState
-          }
-        >
-          <ActivityIndicator
-            size="large"
-            color={
-              theme.primary
-            }
-          />
-
-          <Text
-            style={
-              styles.stateTitle
-            }
-          >
-            Loading your network
-          </Text>
-
-          <Text
-            style={
-              styles.stateText
-            }
-          >
-            Checking connections,
-            requests and trading
-            history.
-          </Text>
-        </View>
+        <LoadingState theme={theme} />
       </SafeAreaView>
     );
   }
+
+  // ---------------------------------------------------------------------
+  // Render
+  // ---------------------------------------------------------------------
 
   return (
     <SafeAreaView
       style={[
         styles.screen,
-        {
-          backgroundColor:
-            theme.page,
-        },
+        { backgroundColor: theme.page },
       ]}
     >
-      <View
-        style={
-          styles.header
-        }
-      >
-        <View
-          style={{
-            flex: 1,
-          }}
-        >
-          <Text
-            style={
-              styles.headerEyebrow
-            }
-          >
-            MARKETPLACE NETWORK
-          </Text>
+      {/* --------------------------------------------------------------- */}
+      {/* Header                                                          */}
+      {/* --------------------------------------------------------------- */}
 
-          <Text
-            style={
-              styles.headerTitle
-            }
-          >
-            Partners
-          </Text>
+      <View style={styles.header}>
+        <View style={styles.headerTitleRow}>
+          <View style={{ flex: 1 }}>
+            <View style={styles.headerEyebrowRow}>
+              <View
+                style={[
+                  styles.headerEyebrowDot,
+                  { backgroundColor: theme.primary },
+                ]}
+              />
 
-          <Text
-            style={
-              styles.headerSubtitle
-            }
+              <Text style={styles.headerEyebrow}>
+                MARKETPLACE NETWORK
+              </Text>
+            </View>
+
+            <Text style={styles.headerTitle}>
+              Partners
+            </Text>
+
+            <Text style={styles.headerSubtitle}>
+              Build trusted connections and manage your
+              trading relationships.
+            </Text>
+          </View>
+
+          <View
+            style={[
+              styles.headerRoleBadge,
+              {
+                backgroundColor: theme.soft,
+                borderColor: theme.border,
+              },
+            ]}
           >
-            Manage trusted marketplace
-            connections and trading
-            relationships.
-          </Text>
+            <Ionicons
+              name={
+                isFarmer
+                  ? "leaf-outline"
+                  : "business-outline"
+              }
+              size={17}
+              color={theme.primary}
+            />
+
+            <Text
+              style={[
+                styles.headerRoleText,
+                { color: theme.primary },
+              ]}
+            >
+              {isFarmer ? "Farmer" : "Miller"}
+            </Text>
+          </View>
         </View>
       </View>
 
-      <ScrollView
-        contentContainerStyle={
-          styles.content
-        }
-        showsVerticalScrollIndicator={
-          false
-        }
+      <Animated.ScrollView
+        style={{ opacity: screenOpacity }}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         refreshControl={
           <RefreshControl
-            refreshing={
-              refreshing
-            }
-            onRefresh={() =>
-              void loadAll(
-                true
-              )
-            }
-            tintColor={
-              theme.primary
-            }
-            colors={[
-              theme.primary,
-            ]}
+            refreshing={refreshing}
+            onRefresh={() => void loadAll(true)}
+            tintColor={theme.primary}
+            colors={[theme.primary]}
           />
         }
       >
+        {/* ------------------------------------------------------------- */}
+        {/* Hero                                                          */}
+        {/* ------------------------------------------------------------- */}
+
         <LinearGradient
           colors={[
-            theme.dark,
-            theme.primary,
+            theme.gradientStart,
+            theme.gradientEnd,
           ]}
-          start={{
-            x: 0,
-            y: 0,
-          }}
-          end={{
-            x: 1,
-            y: 1,
-          }}
-          style={
-            styles.hero
-          }
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.hero}
         >
           <View
-            style={
-              styles.heroTop
-            }
-          >
-            <View
-              style={
-                styles.heroIcon
-              }
-            >
+            pointerEvents="none"
+            style={styles.heroCircleLarge}
+          />
+
+          <View
+            pointerEvents="none"
+            style={styles.heroCircleSmall}
+          />
+
+          <View style={styles.heroTop}>
+            <View style={styles.heroIcon}>
               <Ionicons
                 name="people"
-                size={25}
+                size={26}
                 color="#FFFFFF"
               />
             </View>
 
-            <View
-              style={{
-                flex: 1,
-              }}
-            >
-              <Text
-                style={
-                  styles.heroEyebrow
-                }
-              >
+            <View style={{ flex: 1 }}>
+              <Text style={styles.heroEyebrow}>
                 TRUSTED NETWORK
               </Text>
 
-              <Text
-                style={
-                  styles.heroTitle
-                }
-              >
+              <Text style={styles.heroTitle}>
                 Your trading relationships
+              </Text>
+
+              <Text style={styles.heroDescription}>
+                Connect, collaborate and trade with
+                verified marketplace partners.
               </Text>
             </View>
           </View>
 
-          <View
-            style={
-              styles.statsRow
-            }
-          >
+          <View style={styles.statsRow}>
             <Stat
               label="Connected"
-              value={
-                connections.length
-              }
+              value={connections.length}
+              icon="people-outline"
             />
 
             <Stat
               label="Requests"
-              value={
-                requests.length
-              }
+              value={requests.length}
+              icon="mail-outline"
             />
 
             <Stat
               label="Incoming"
-              value={
-                incomingCount
-              }
+              value={incomingCount}
+              icon="arrow-down-outline"
             />
 
             <Stat
               label="Trade partners"
-              value={
-                tradePartners.length
-              }
+              value={tradePartners.length}
+              icon="swap-horizontal-outline"
             />
           </View>
         </LinearGradient>
 
-        <View
-          style={
-            styles.tabBar
-          }
-        >
-          <TabButton
-            label="Connected"
-            icon="people-outline"
-            selected={
-              activeTab ===
-              "connected"
-            }
-            badge={
-              connections.length
-            }
-            theme={
-              theme
-            }
-            onPress={() =>
-              setActiveTab(
-                "connected"
-              )
-            }
-          />
+        {/* ------------------------------------------------------------- */}
+        {/* Tabs                                                          */}
+        {/* ------------------------------------------------------------- */}
 
-          <TabButton
-            label="Requests"
-            icon="mail-unread-outline"
-            selected={
-              activeTab ===
-              "requests"
-            }
-            badge={
-              incomingCount
-            }
-            theme={
-              theme
-            }
-            onPress={() =>
-              setActiveTab(
-                "requests"
-              )
-            }
-          />
+        <View style={styles.tabWrapper}>
+          <View style={styles.tabBar}>
+            <Animated.View
+              style={[
+                styles.tabIndicator,
+                {
+                  backgroundColor: theme.dark,
+                  left: indicatorX,
+                  width: indicatorWidth,
+                },
+              ]}
+            />
 
-          <TabButton
-            label="Trade"
-            icon="receipt-outline"
-            selected={
-              activeTab ===
-              "trade"
-            }
-            badge={
-              tradePartners.length
-            }
-            theme={
-              theme
-            }
-            onPress={() =>
-              setActiveTab(
-                "trade"
-              )
-            }
-          />
+            {TAB_CONFIG.map(
+              ({ key, label, icon }) => {
+                const selected =
+                  activeTab === key;
+
+                const badge =
+                  key === "connected"
+                    ? connections.length
+                    : key === "requests"
+                    ? incomingCount
+                    : tradePartners.length;
+
+                return (
+                  <Pressable
+                    key={key}
+                    onLayout={(e) =>
+                      handleTabLayout(
+                        key,
+                        e.nativeEvent.layout.x,
+                        e.nativeEvent.layout.width
+                      )
+                    }
+                    onPress={() =>
+                      setActiveTab(key)
+                    }
+                    style={styles.tabButton}
+                  >
+                    <Ionicons
+                      name={icon}
+                      size={17}
+                      color={
+                        selected
+                          ? "#FFFFFF"
+                          : "#64748B"
+                      }
+                    />
+
+                    <Text
+                      style={[
+                        styles.tabText,
+                        selected &&
+                          styles.tabTextSelected,
+                      ]}
+                    >
+                      {label}
+                    </Text>
+
+                    {badge > 0 ? (
+                      <View
+                        style={[
+                          styles.tabBadge,
+                          selected && {
+                            backgroundColor:
+                              "rgba(255,255,255,0.18)",
+                          },
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.tabBadgeText,
+                            selected && {
+                              color: "#FFFFFF",
+                            },
+                          ]}
+                        >
+                          {badge > 99
+                            ? "99+"
+                            : badge}
+                        </Text>
+                      </View>
+                    ) : null}
+                  </Pressable>
+                );
+              }
+            )}
+          </View>
         </View>
 
+        {/* ------------------------------------------------------------- */}
+        {/* Search                                                        */}
+        {/* ------------------------------------------------------------- */}
+
         <View
-          style={
-            styles.searchBox
-          }
+          style={[
+            styles.searchBox,
+            searchFocused && {
+              borderColor: theme.primary,
+              shadowColor: theme.primary,
+              shadowOpacity: 0.16,
+              shadowRadius: 12,
+              shadowOffset: {
+                width: 0,
+                height: 5,
+              },
+              elevation: 4,
+            },
+          ]}
         >
-          <Ionicons
-            name="search-outline"
-            size={18}
-            color="#64748B"
-          />
+          <View
+            style={[
+              styles.searchIconContainer,
+              searchFocused && {
+                backgroundColor: theme.soft,
+              },
+            ]}
+          >
+            <Ionicons
+              name="search-outline"
+              size={17}
+              color={
+                searchFocused
+                  ? theme.primary
+                  : "#64748B"
+              }
+            />
+          </View>
 
           <TextInput
-            value={
-              searchQuery
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            onFocus={() =>
+              setSearchFocused(true)
             }
-            onChangeText={
-              setSearchQuery
+            onBlur={() =>
+              setSearchFocused(false)
             }
             placeholder={
               isFarmer
@@ -773,166 +766,134 @@ export default function PartnersScreen() {
                 : "Search farmer, district or location..."
             }
             placeholderTextColor="#94A3B8"
-            style={
-              styles.searchInput
-            }
+            style={styles.searchInput}
           />
 
           {searchQuery ? (
             <Pressable
-              onPress={() =>
-                setSearchQuery(
-                  ""
-                )
-              }
+              onPress={() => setSearchQuery("")}
+              hitSlop={8}
+              style={styles.searchClear}
             >
               <Ionicons
-                name="close-circle"
-                size={19}
-                color="#94A3B8"
+                name="close"
+                size={14}
+                color="#64748B"
               />
             </Pressable>
           ) : null}
         </View>
 
-        {errorMessage ? (
-          <Pressable
-            style={
-              styles.errorCard
-            }
-            onPress={() =>
-              void loadAll()
-            }
-          >
-            <Ionicons
-              name="warning-outline"
-              size={23}
-              color="#B91C1C"
-            />
+        {/* ------------------------------------------------------------- */}
+        {/* Error                                                         */}
+        {/* ------------------------------------------------------------- */}
 
-            <View
-              style={{
-                flex: 1,
-              }}
-            >
-              <Text
-                style={
-                  styles.errorTitle
-                }
-              >
+        {errorMessage ? (
+          <PressableScale
+            onPress={() => void loadAll()}
+            style={styles.errorCard}
+          >
+            <View style={styles.errorIcon}>
+              <Ionicons
+                name="warning-outline"
+                size={20}
+                color="#B91C1C"
+              />
+            </View>
+
+            <View style={{ flex: 1 }}>
+              <Text style={styles.errorTitle}>
                 Unable to load network
               </Text>
 
-              <Text
-                style={
-                  styles.errorText
-                }
-              >
+              <Text style={styles.errorText}>
                 {errorMessage}
               </Text>
             </View>
-          </Pressable>
+
+            <View style={styles.errorRefresh}>
+              <Ionicons
+                name="refresh-outline"
+                size={17}
+                color="#B91C1C"
+              />
+            </View>
+          </PressableScale>
         ) : null}
 
-        {activeTab ===
-        "connected" ? (
+        {/* ------------------------------------------------------------- */}
+        {/* Content                                                       */}
+        {/* ------------------------------------------------------------- */}
+
+        {activeTab === "connected" ? (
           <ConnectedSection
-            items={
-              visibleConnections
-            }
-            theme={
-              theme
-            }
-            onOpen={
-              openPartner
-            }
+            items={visibleConnections}
+            theme={theme}
+            onOpen={openPartner}
           />
         ) : null}
 
-        {activeTab ===
-        "requests" ? (
+        {activeTab === "requests" ? (
           <RequestsSection
-            items={
-              visibleRequests
-            }
-            actionId={
-              actionId
-            }
-            theme={
-              theme
-            }
-            onRespond={
-              respondToRequest
-            }
-            onOpen={
-              openPartner
-            }
+            items={visibleRequests}
+            actionId={actionId}
+            theme={theme}
+            onRespond={respondToRequest}
+            onOpen={openPartner}
             onOutgoingPress={
               setSelectedOutgoingRequest
             }
           />
         ) : null}
 
-        {activeTab ===
-        "trade" ? (
+        {activeTab === "trade" ? (
           <TradeSection
-            items={
-              visibleTrades
-            }
-            theme={
-              theme
-            }
-            onOpen={
-              openPartner
-            }
+            items={visibleTrades}
+            theme={theme}
+            onOpen={openPartner}
           />
         ) : null}
-      </ScrollView>
+      </Animated.ScrollView>
+
+      {/* --------------------------------------------------------------- */}
+      {/* Pending Request Bottom Sheet                                    */}
+      {/* --------------------------------------------------------------- */}
 
       <Modal
-        visible={
-          Boolean(
-            selectedOutgoingRequest
-          )
-        }
+        visible={Boolean(
+          selectedOutgoingRequest
+        )}
         transparent
-        animationType="fade"
+        animationType="none"
         statusBarTranslucent
-        onRequestClose={() =>
-          setSelectedOutgoingRequest(
-            null
-          )
-        }
+        onRequestClose={closeOutgoingSheet}
       >
-        <Pressable
-          style={
-            styles.modalOverlay
-          }
-          onPress={() =>
-            setSelectedOutgoingRequest(
-              null
-            )
-          }
+        <Animated.View
+          style={[
+            styles.modalOverlay,
+            { opacity: overlayOpacity },
+          ]}
         >
           <Pressable
-            onPress={() => {}}
-            style={
-              styles.requestPopup
-            }
+            style={StyleSheet.absoluteFill}
+            onPress={closeOutgoingSheet}
+          />
+
+          <Animated.View
+            style={[
+              styles.requestPopup,
+              {
+                transform: [
+                  { translateY: sheetY },
+                ],
+              },
+            ]}
           >
             {selectedOutgoingRequest ? (
               <>
-                <View
-                  style={
-                    styles.popupHandle
-                  }
-                />
+                <View style={styles.popupHandle} />
 
-                <View
-                  style={
-                    styles.popupHeader
-                  }
-                >
+                <View style={styles.popupHeader}>
                   <View
                     style={[
                       styles.popupIcon,
@@ -945,82 +906,57 @@ export default function PartnersScreen() {
                     <Ionicons
                       name="time-outline"
                       size={24}
-                      color={
-                        theme.primary
-                      }
+                      color={theme.primary}
                     />
                   </View>
 
-                  <View
-                    style={{
-                      flex: 1,
-                    }}
-                  >
-                    <Text
-                      style={
-                        styles.popupTitle
-                      }
-                    >
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.popupTitle}>
                       Connection request
                     </Text>
 
                     <Text
-                      style={
-                        styles.popupSubtitle
-                      }
+                      style={styles.popupSubtitle}
                     >
                       Waiting for response
                     </Text>
                   </View>
 
                   <Pressable
-                    onPress={() =>
-                      setSelectedOutgoingRequest(
-                        null
-                      )
-                    }
-                    style={
-                      styles.popupClose
-                    }
+                    onPress={closeOutgoingSheet}
+                    style={styles.popupClose}
+                    hitSlop={8}
                   >
                     <Ionicons
                       name="close"
-                      size={20}
+                      size={19}
                       color="#64748B"
                     />
                   </Pressable>
                 </View>
 
                 <View
-                  style={
-                    styles.popupPartnerCard
-                  }
+                  style={styles.popupPartnerCard}
                 >
                   <PartnerIdentity
                     partner={
                       selectedOutgoingRequest.partner
                     }
-                    theme={
-                      theme
-                    }
+                    theme={theme}
                   />
                 </View>
 
-                <View
-                  style={
-                    styles.popupInfo
-                  }
-                >
-                  <Ionicons
-                    name="information-circle-outline"
-                    size={18}
-                    color="#64748B"
-                  />
+                <View style={styles.popupInfo}>
+                  <View style={styles.popupInfoIcon}>
+                    <Ionicons
+                      name="information-circle-outline"
+                      size={17}
+                      color="#64748B"
+                    />
+                  </View>
 
                   <Text
-                    style={
-                      styles.popupInfoText
-                    }
+                    style={styles.popupInfoText}
                   >
                     Your request was sent on{" "}
                     {formatDate(
@@ -1032,7 +968,12 @@ export default function PartnersScreen() {
                   </Text>
                 </View>
 
-                <Pressable
+                <PressableScale
+                  onPress={() =>
+                    openPublicProfile(
+                      selectedOutgoingRequest
+                    )
+                  }
                   style={[
                     styles.popupPrimaryButton,
                     {
@@ -1040,11 +981,6 @@ export default function PartnersScreen() {
                         theme.primary,
                     },
                   ]}
-                  onPress={() =>
-                    openPublicProfile(
-                      selectedOutgoingRequest
-                    )
-                  }
                 >
                   <Ionicons
                     name="person-outline"
@@ -1053,18 +989,20 @@ export default function PartnersScreen() {
                   />
 
                   <Text
-                    style={
-                      styles.popupPrimaryText
-                    }
+                    style={styles.popupPrimaryText}
                   >
                     View Profile
                   </Text>
-                </Pressable>
 
-                <Pressable
-                  disabled={
-                    cancellingRequest
-                  }
+                  <Ionicons
+                    name="arrow-forward"
+                    size={16}
+                    color="#FFFFFF"
+                  />
+                </PressableScale>
+
+                <PressableScale
+                  disabled={cancellingRequest}
                   style={[
                     styles.popupCancelButton,
                     cancellingRequest &&
@@ -1076,23 +1014,14 @@ export default function PartnersScreen() {
                       `Do you want to cancel your connection request to ${selectedOutgoingRequest.partner.name}?`,
                       [
                         {
-                          text:
-                            "Keep request",
-
-                          style:
-                            "cancel",
+                          text: "Keep request",
+                          style: "cancel",
                         },
-
                         {
-                          text:
-                            "Cancel request",
-
-                          style:
-                            "destructive",
-
-                          onPress:
-                            () =>
-                              void cancelRequest(),
+                          text: "Cancel request",
+                          style: "destructive",
+                          onPress: () =>
+                            void cancelRequest(),
                         },
                       ]
                     )
@@ -1120,33 +1049,30 @@ export default function PartnersScreen() {
                       </Text>
                     </>
                   )}
-                </Pressable>
+                </PressableScale>
               </>
             ) : null}
-          </Pressable>
-        </Pressable>
+          </Animated.View>
+        </Animated.View>
       </Modal>
     </SafeAreaView>
   );
 }
+
+// =====================================================================
+// SECTIONS
+// =====================================================================
 
 function ConnectedSection({
   items,
   theme,
   onOpen,
 }: {
-  items:
-    MyConnectionItem[];
-
-  theme:
-    Theme;
-
+  items: MyConnectionItem[];
+  theme: Theme;
   onOpen: (
-    type:
-      "farmer" |
-      "miller",
-    id:
-      string
+    type: "farmer" | "miller",
+    id: string
   ) => void;
 }) {
   return (
@@ -1154,63 +1080,57 @@ function ConnectedSection({
       <SectionHeader
         title="Connected partners"
         subtitle={`${items.length} marketplace connection${
-          items.length === 1
-            ? ""
-            : "s"
+          items.length === 1 ? "" : "s"
         }`}
+        icon="people-outline"
+        theme={theme}
       />
 
-      {items.length ===
-      0 ? (
+      {items.length === 0 ? (
         <EmptyState
           icon="people-outline"
           title="No connections yet"
           text="Use Search to discover Farmers or Millers and send a connection request."
-          theme={
-            theme
-          }
+          theme={theme}
         />
       ) : (
-        <View
-          style={
-            styles.list
-          }
-        >
-          {items.map(
-            (item) => (
-              <Pressable
-                key={
-                  item.connectionId
-                }
+        <View style={styles.list}>
+          {items.map((item, index) => (
+            <FadeInItem
+              key={item.connectionId}
+              index={index}
+            >
+              <PressableScale
                 onPress={() =>
                   onOpen(
                     item.partner.type,
                     item.partner.id
                   )
                 }
-                style={({
-                  pressed,
-                }) => [
+                style={[
                   styles.connectionCard,
-
-                  pressed &&
-                    styles.pressed,
+                  {
+                    shadowColor: theme.glow,
+                  },
                 ]}
               >
-                <PartnerIdentity
-                  partner={
-                    item.partner
-                  }
-                  theme={
-                    theme
-                  }
+                <View
+                  style={[
+                    styles.cardAccent,
+                    {
+                      backgroundColor:
+                        theme.primary,
+                    },
+                  ]}
                 />
 
-                <View
-                  style={
-                    styles.badgeRow
-                  }
-                >
+                <PartnerIdentity
+                  partner={item.partner}
+                  theme={theme}
+                  showStatusDot
+                />
+
+                <View style={styles.badgeRow}>
                   <Badge
                     icon="checkmark-circle"
                     text="Connected"
@@ -1226,27 +1146,36 @@ function ConnectedSection({
                   />
                 </View>
 
-                <View
-                  style={
-                    styles.cardFooter
-                  }
-                >
-                  <Text
-                    style={
-                      styles.cardFooterText
-                    }
-                  >
-                    Connected{" "}
-                    {formatDate(
-                      item.respondedAt ||
-                        item.requestedAt
-                    )}
-                  </Text>
+                <View style={styles.cardFooter}>
+                  <View>
+                    <Text
+                      style={
+                        styles.cardFooterLabel
+                      }
+                    >
+                      CONNECTION SINCE
+                    </Text>
+
+                    <Text
+                      style={
+                        styles.cardFooterText
+                      }
+                    >
+                      {formatDate(
+                        item.respondedAt ||
+                          item.requestedAt
+                      )}
+                    </Text>
+                  </View>
 
                   <View
-                    style={
-                      styles.openRow
-                    }
+                    style={[
+                      styles.openPill,
+                      {
+                        backgroundColor:
+                          theme.soft,
+                      },
+                    ]}
                   >
                     <Text
                       style={[
@@ -1261,17 +1190,15 @@ function ConnectedSection({
                     </Text>
 
                     <Ionicons
-                      name="chevron-forward"
-                      size={16}
-                      color={
-                        theme.primary
-                      }
+                      name="arrow-forward"
+                      size={14}
+                      color={theme.primary}
                     />
                   </View>
                 </View>
-              </Pressable>
-            )
-          )}
+              </PressableScale>
+            </FadeInItem>
+          ))}
         </View>
       )}
     </View>
@@ -1286,67 +1213,44 @@ function RequestsSection({
   onOpen,
   onOutgoingPress,
 }: {
-  items:
-    MyConnectionItem[];
-
-  actionId:
-    string | null;
-
-  theme:
-    Theme;
-
+  items: MyConnectionItem[];
+  actionId: string | null;
+  theme: Theme;
   onRespond: (
-    item:
-      MyConnectionItem,
-    decision:
-      | "accepted"
-      | "rejected"
+    item: MyConnectionItem,
+    decision: "accepted" | "rejected"
   ) => void;
-
   onOpen: (
-    type:
-      "farmer" |
-      "miller",
-    id:
-      string
+    type: "farmer" | "miller",
+    id: string
   ) => void;
-
   onOutgoingPress: (
-    item:
-      MyConnectionItem
+    item: MyConnectionItem
   ) => void;
 }) {
-  const incoming =
-    items.filter(
-      (item) =>
-        item.direction ===
-        "incoming"
-    );
+  const incoming = items.filter(
+    (item) => item.direction === "incoming"
+  );
 
-  const outgoing =
-    items.filter(
-      (item) =>
-        item.direction ===
-        "outgoing"
-    );
+  const outgoing = items.filter(
+    (item) => item.direction === "outgoing"
+  );
 
-  if (
-    items.length === 0
-  ) {
+  if (items.length === 0) {
     return (
       <>
         <SectionHeader
           title="Connection requests"
           subtitle="Incoming and outgoing requests"
+          icon="mail-outline"
+          theme={theme}
         />
 
         <EmptyState
           icon="mail-outline"
           title="No pending requests"
           text="New connection requests will appear here."
-          theme={
-            theme
-          }
+          theme={theme}
         />
       </>
     );
@@ -1354,34 +1258,45 @@ function RequestsSection({
 
   return (
     <View>
-      {incoming.length >
-      0 ? (
+      {/* Incoming */}
+      {incoming.length > 0 ? (
         <>
           <SectionHeader
             title="Incoming requests"
             subtitle={`${incoming.length} waiting for your response`}
+            icon="arrow-down-outline"
+            theme={theme}
           />
 
-          <View
-            style={
-              styles.list
-            }
-          >
-            {incoming.map(
-              (item) => {
-                const busy =
-                  actionId ===
-                  item.connectionId;
+          <View style={styles.list}>
+            {incoming.map((item, index) => {
+              const busy =
+                actionId === item.connectionId;
 
-                return (
+              return (
+                <FadeInItem
+                  key={item.connectionId}
+                  index={index}
+                >
                   <View
-                    key={
-                      item.connectionId
-                    }
-                    style={
-                      styles.requestCard
-                    }
+                    style={[
+                      styles.requestCard,
+                      {
+                        shadowColor:
+                          theme.glow,
+                      },
+                    ]}
                   >
+                    <View
+                      style={[
+                        styles.cardAccent,
+                        {
+                          backgroundColor:
+                            "#F59E0B",
+                        },
+                      ]}
+                    />
+
                     <Pressable
                       onPress={() =>
                         onOpen(
@@ -1391,27 +1306,31 @@ function RequestsSection({
                       }
                     >
                       <PartnerIdentity
-                        partner={
-                          item.partner
-                        }
-                        theme={
-                          theme
-                        }
+                        partner={item.partner}
+                        theme={theme}
                       />
                     </Pressable>
 
                     <View
-                      style={
-                        styles.requestMessage
-                      }
+                      style={styles.requestMessage}
                     >
-                      <Ionicons
-                        name="person-add-outline"
-                        size={16}
-                        color={
-                          theme.primary
-                        }
-                      />
+                      <View
+                        style={[
+                          styles.requestMessageIcon,
+                          {
+                            backgroundColor:
+                              theme.soft,
+                          },
+                        ]}
+                      >
+                        <Ionicons
+                          name="person-add-outline"
+                          size={15}
+                          color={
+                            theme.primary
+                          }
+                        />
+                      </View>
 
                       <Text
                         style={
@@ -1428,10 +1347,8 @@ function RequestsSection({
                         styles.requestActions
                       }
                     >
-                      <Pressable
-                        disabled={
-                          busy
-                        }
+                      <PressableScale
+                        disabled={busy}
                         style={[
                           styles.rejectButton,
                           busy &&
@@ -1444,19 +1361,21 @@ function RequestsSection({
                           )
                         }
                       >
+                        <Ionicons
+                          name="close-outline"
+                          size={16}
+                          color="#B91C1C"
+                        />
+
                         <Text
-                          style={
-                            styles.rejectText
-                          }
+                          style={styles.rejectText}
                         >
                           Reject
                         </Text>
-                      </Pressable>
+                      </PressableScale>
 
-                      <Pressable
-                        disabled={
-                          busy
-                        }
+                      <PressableScale
+                        disabled={busy}
                         style={[
                           styles.acceptButton,
                           {
@@ -1495,73 +1414,72 @@ function RequestsSection({
                             </Text>
                           </>
                         )}
-                      </Pressable>
+                      </PressableScale>
                     </View>
                   </View>
-                );
-              }
-            )}
+                </FadeInItem>
+              );
+            })}
           </View>
         </>
       ) : null}
 
-      {outgoing.length >
-      0 ? (
+      {/* Outgoing */}
+      {outgoing.length > 0 ? (
         <>
           <SectionHeader
             title="Sent requests"
             subtitle={`${outgoing.length} waiting for a response`}
+            icon="paper-plane-outline"
+            theme={theme}
           />
 
-          <View
-            style={
-              styles.list
-            }
-          >
-            {outgoing.map(
-              (item) => (
-                <Pressable
-                  key={
-                    item.connectionId
-                  }
+          <View style={styles.list}>
+            {outgoing.map((item, index) => (
+              <FadeInItem
+                key={item.connectionId}
+                index={index}
+              >
+                <PressableScale
                   onPress={() =>
-                    onOutgoingPress(
-                      item
-                    )
+                    onOutgoingPress(item)
                   }
-                  style={({
-                    pressed,
-                  }) => [
+                  style={[
                     styles.connectionCard,
-
-                    pressed &&
-                      styles.pressed,
+                    {
+                      shadowColor:
+                        theme.glow,
+                    },
                   ]}
                 >
-                  <PartnerIdentity
-                    partner={
-                      item.partner
-                    }
-                    theme={
-                      theme
-                    }
+                  <View
+                    style={[
+                      styles.cardAccent,
+                      {
+                        backgroundColor:
+                          "#94A3B8",
+                      },
+                    ]}
                   />
 
-                  <View
-                    style={
-                      styles.pendingBox
-                    }
-                  >
-                    <Ionicons
-                      name="time-outline"
-                      size={17}
-                      color="#64748B"
-                    />
+                  <PartnerIdentity
+                    partner={item.partner}
+                    theme={theme}
+                  />
+
+                  <View style={styles.pendingBox}>
+                    <View
+                      style={styles.pendingIcon}
+                    >
+                      <Ionicons
+                        name="time-outline"
+                        size={17}
+                        color="#64748B"
+                      />
+                    </View>
 
                     <View
-                      style={{
-                        flex: 1,
-                      }}
+                      style={{ flex: 1 }}
                     >
                       <Text
                         style={
@@ -1576,23 +1494,29 @@ function RequestsSection({
                           styles.pendingText
                         }
                       >
-                        Waiting for their response
-                        since{" "}
+                        Waiting for their
+                        response since{" "}
                         {formatDate(
                           item.requestedAt
                         )}
                       </Text>
                     </View>
 
-                    <Ionicons
-                      name="ellipsis-horizontal"
-                      size={18}
-                      color="#64748B"
-                    />
+                    <View
+                      style={
+                        styles.pendingMore
+                      }
+                    >
+                      <Ionicons
+                        name="ellipsis-horizontal"
+                        size={17}
+                        color="#64748B"
+                      />
+                    </View>
                   </View>
-                </Pressable>
-              )
-            )}
+                </PressableScale>
+              </FadeInItem>
+            ))}
           </View>
         </>
       ) : null}
@@ -1605,18 +1529,11 @@ function TradeSection({
   theme,
   onOpen,
 }: {
-  items:
-    PartnerListItem[];
-
-  theme:
-    Theme;
-
+  items: PartnerListItem[];
+  theme: Theme;
   onOpen: (
-    type:
-      "farmer" |
-      "miller",
-    id:
-      string
+    type: "farmer" | "miller",
+    id: string
   ) => void;
 }) {
   return (
@@ -1624,61 +1541,56 @@ function TradeSection({
       <SectionHeader
         title="Trade partners"
         subtitle="Partners from successful AI negotiations"
+        icon="swap-horizontal-outline"
+        theme={theme}
       />
 
-      {items.length ===
-      0 ? (
+      {items.length === 0 ? (
         <EmptyState
           icon="receipt-outline"
           title="No trade partners yet"
           text="Successful AI negotiations will automatically appear here."
-          theme={
-            theme
-          }
+          theme={theme}
         />
       ) : (
-        <View
-          style={
-            styles.list
-          }
-        >
-          {items.map(
-            (item) => (
-              <Pressable
-                key={
-                  item.partner.id
-                }
+        <View style={styles.list}>
+          {items.map((item, index) => (
+            <FadeInItem
+              key={item.partner.id}
+              index={index}
+            >
+              <PressableScale
                 onPress={() =>
                   onOpen(
                     item.partner.type,
                     item.partner.id
                   )
                 }
-                style={({
-                  pressed,
-                }) => [
+                style={[
                   styles.tradeCard,
-
-                  pressed &&
-                    styles.pressed,
+                  {
+                    shadowColor:
+                      theme.glow,
+                  },
                 ]}
               >
-                <PartnerIdentity
-                  partner={
-                    item.partner
-                  }
-                  theme={
-                    theme
-                  }
+                <View
+                  style={[
+                    styles.cardAccent,
+                    {
+                      backgroundColor:
+                        theme.dark,
+                    },
+                  ]}
                 />
 
-                <View
-                  style={
-                    styles.badgeRow
-                  }
-                >
-                  {item.relationship
-                    ?.connected ? (
+                <PartnerIdentity
+                  partner={item.partner}
+                  theme={theme}
+                />
+
+                <View style={styles.badgeRow}>
+                  {item.relationship?.connected ? (
                     <Badge
                       icon="people"
                       text="Connected"
@@ -1697,140 +1609,163 @@ function TradeSection({
                   ) : null}
                 </View>
 
-                <View
-                  style={
-                    styles.metrics
-                  }
-                >
+                <View style={styles.metrics}>
                   <Metric
-                    label="Trades"
+                    label="TOTAL TRADES"
                     value={String(
                       item.summary
                         .totalAgreements
                     )}
+                    icon="repeat-outline"
                   />
 
                   <Metric
-                    label="Quantity"
+                    label="QUANTITY"
                     value={`${formatNumber(
                       item.summary
                         .totalQuantityKg
                     )} kg`}
+                    icon="scale-outline"
                   />
 
                   <Metric
-                    label="Avg price"
+                    label="AVG. PRICE"
                     value={formatCurrency(
                       item.summary
                         .averageAgreedPrice
                     )}
+                    icon="cash-outline"
                   />
                 </View>
 
-                <View
-                  style={
-                    styles.cardFooter
-                  }
-                >
-                  <Text
-                    style={
-                      styles.cardFooterText
-                    }
+                <View style={styles.cardFooter}>
+                  <View>
+                    <Text
+                      style={
+                        styles.cardFooterLabel
+                      }
+                    >
+                      LAST TRADE
+                    </Text>
+
+                    <Text
+                      style={
+                        styles.cardFooterText
+                      }
+                    >
+                      {formatDate(
+                        item.summary
+                          .lastTransactionAt
+                      )}
+                    </Text>
+                  </View>
+
+                  <View
+                    style={[
+                      styles.openPill,
+                      {
+                        backgroundColor:
+                          theme.soft,
+                      },
+                    ]}
                   >
-                    Last trade:{" "}
-                    {formatDate(
-                      item.summary
-                        .lastTransactionAt
-                    )}
-                  </Text>
+                    <Text
+                      style={[
+                        styles.openText,
+                        {
+                          color:
+                            theme.primary,
+                        },
+                      ]}
+                    >
+                      View details
+                    </Text>
 
-                  <Ionicons
-                    name="chevron-forward"
-                    size={16}
-                    color={
-                      theme.primary
-                    }
-                  />
+                    <Ionicons
+                      name="arrow-forward"
+                      size={14}
+                      color={theme.primary}
+                    />
+                  </View>
                 </View>
-              </Pressable>
-            )
-          )}
+              </PressableScale>
+            </FadeInItem>
+          ))}
         </View>
       )}
     </View>
   );
 }
 
+// =====================================================================
+// SHARED COMPONENTS
+// =====================================================================
+
 function PartnerIdentity({
   partner,
   theme,
+  showStatusDot,
 }: {
   partner: {
-    type:
-      "farmer" |
-      "miller";
-
-    name:
-      string;
-
-    district:
-      string;
-
-    location:
-      string;
+    type: "farmer" | "miller";
+    name: string;
+    district: string;
+    location: string;
   };
-
-  theme:
-    Theme;
+  theme: Theme;
+  showStatusDot?: boolean;
 }) {
   return (
-    <View
-      style={
-        styles.partnerTop
-      }
-    >
+    <View style={styles.partnerTop}>
       <View
         style={[
-          styles.avatar,
+          styles.avatarRing,
           {
-            backgroundColor:
-              theme.soft,
+            borderColor: theme.border,
           },
         ]}
       >
-        <Ionicons
-          name={
-            partner.type ===
-            "miller"
-              ? "business-outline"
-              : "leaf-outline"
-          }
-          size={24}
-          color={
-            theme.primary
-          }
-        />
+        <View
+          style={[
+            styles.avatar,
+            {
+              backgroundColor:
+                theme.soft,
+            },
+          ]}
+        >
+          <Ionicons
+            name={
+              partner.type === "miller"
+                ? "business-outline"
+                : "leaf-outline"
+            }
+            size={22}
+            color={theme.primary}
+          />
+        </View>
+
+        {showStatusDot ? (
+          <View
+            style={[
+              styles.statusDot,
+              {
+                borderColor: "#FFFFFF",
+              },
+            ]}
+          />
+        ) : null}
       </View>
 
-      <View
-        style={{
-          flex: 1,
-        }}
-      >
+      <View style={{ flex: 1 }}>
         <Text
-          style={
-            styles.partnerName
-          }
+          style={styles.partnerName}
           numberOfLines={1}
         >
           {partner.name}
         </Text>
 
-        <View
-          style={
-            styles.locationRow
-          }
-        >
+        <View style={styles.locationRow}>
           <Ionicons
             name="location-outline"
             size={13}
@@ -1838,16 +1773,48 @@ function PartnerIdentity({
           />
 
           <Text
-            style={
-              styles.partnerLocation
-            }
+            style={styles.partnerLocation}
             numberOfLines={1}
           >
-            {partner.district}
-            {" • "}
+            {partner.district} •{" "}
             {partner.location}
           </Text>
         </View>
+      </View>
+
+      <View
+        style={[
+          styles.typeChip,
+          {
+            backgroundColor:
+              theme.soft,
+            borderColor:
+              theme.border,
+          },
+        ]}
+      >
+        <Ionicons
+          name={
+            partner.type === "miller"
+              ? "business-outline"
+              : "leaf-outline"
+          }
+          size={11}
+          color={theme.primary}
+        />
+
+        <Text
+          style={[
+            styles.typeChipText,
+            {
+              color: theme.primary,
+            },
+          ]}
+        >
+          {partner.type === "miller"
+            ? "Miller"
+            : "Farmer"}
+        </Text>
       </View>
     </View>
   );
@@ -1856,129 +1823,44 @@ function PartnerIdentity({
 function SectionHeader({
   title,
   subtitle,
+  icon,
+  theme,
 }: {
-  title:
-    string;
-
-  subtitle:
-    string;
+  title: string;
+  subtitle: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  theme: Theme;
 }) {
   return (
-    <View
-      style={
-        styles.sectionHeader
-      }
-    >
-      <View>
-        <Text
-          style={
-            styles.sectionTitle
-          }
-        >
+    <View style={styles.sectionHeader}>
+      <View
+        style={[
+          styles.sectionIcon,
+          {
+            backgroundColor:
+              theme.soft,
+          },
+        ]}
+      >
+        <Ionicons
+          name={icon}
+          size={16}
+          color={theme.primary}
+        />
+      </View>
+
+      <View style={{ flex: 1 }}>
+        <Text style={styles.sectionTitle}>
           {title}
         </Text>
 
         <Text
-          style={
-            styles.sectionSubtitle
-          }
+          style={styles.sectionSubtitle}
         >
           {subtitle}
         </Text>
       </View>
     </View>
-  );
-}
-
-function TabButton({
-  label,
-  icon,
-  selected,
-  badge,
-  theme,
-  onPress,
-}: {
-  label:
-    string;
-
-  icon:
-    keyof typeof Ionicons.glyphMap;
-
-  selected:
-    boolean;
-
-  badge:
-    number;
-
-  theme:
-    Theme;
-
-  onPress:
-    () => void;
-}) {
-  return (
-    <Pressable
-      onPress={
-        onPress
-      }
-      style={[
-        styles.tabButton,
-
-        selected && {
-          backgroundColor:
-            theme.dark,
-        },
-      ]}
-    >
-      <Ionicons
-        name={icon}
-        size={17}
-        color={
-          selected
-            ? "#FFFFFF"
-            : "#64748B"
-        }
-      />
-
-      <Text
-        style={[
-          styles.tabText,
-
-          selected &&
-            styles.tabTextSelected,
-        ]}
-      >
-        {label}
-      </Text>
-
-      {badge > 0 ? (
-        <View
-          style={[
-            styles.tabBadge,
-
-            selected && {
-              backgroundColor:
-                "rgba(255,255,255,0.18)",
-            },
-          ]}
-        >
-          <Text
-            style={[
-              styles.tabBadgeText,
-
-              selected && {
-                color:
-                  "#FFFFFF",
-              },
-            ]}
-          >
-            {badge > 99
-              ? "99+"
-              : badge}
-          </Text>
-        </View>
-      ) : null}
-    </Pressable>
   );
 }
 
@@ -1988,17 +1870,10 @@ function Badge({
   background,
   color,
 }: {
-  icon:
-    keyof typeof Ionicons.glyphMap;
-
-  text:
-    string;
-
-  background:
-    string;
-
-  color:
-    string;
+  icon: keyof typeof Ionicons.glyphMap;
+  text: string;
+  background: string;
+  color: string;
 }) {
   return (
     <View
@@ -2013,17 +1888,13 @@ function Badge({
       <Ionicons
         name={icon}
         size={12}
-        color={
-          color
-        }
+        color={color}
       />
 
       <Text
         style={[
           styles.badgeText,
-          {
-            color,
-          },
+          { color },
         ]}
       >
         {text}
@@ -2038,55 +1909,48 @@ function EmptyState({
   text,
   theme,
 }: {
-  icon:
-    keyof typeof Ionicons.glyphMap;
-
-  title:
-    string;
-
-  text:
-    string;
-
-  theme:
-    Theme;
+  icon: keyof typeof Ionicons.glyphMap;
+  title: string;
+  text: string;
+  theme: Theme;
 }) {
   return (
-    <View
-      style={
-        styles.emptyState
-      }
-    >
-      <View
-        style={[
-          styles.emptyIcon,
-          {
-            backgroundColor:
-              theme.soft,
-          },
-        ]}
-      >
-        <Ionicons
-          name={icon}
-          size={31}
-          color={
-            theme.primary
-          }
-        />
-      </View>
+    <View style={styles.emptyState}>
+      <FloatingIcon>
+        <View
+          style={[
+            styles.emptyIconOuter,
+            {
+              backgroundColor:
+                theme.soft,
+              borderColor:
+                theme.border,
+            },
+          ]}
+        >
+          <View
+            style={[
+              styles.emptyIcon,
+              {
+                backgroundColor:
+                  "#FFFFFF",
+              },
+            ]}
+          >
+            <Ionicons
+              name={icon}
+              size={28}
+              color={theme.primary}
+            />
+          </View>
+        </View>
+      </FloatingIcon>
 
-      <Text
-        style={
-          styles.emptyTitle
-        }
-      >
+      <Text style={styles.emptyTitle}>
         {title}
       </Text>
 
-      <Text
-        style={
-          styles.emptyText
-        }
-      >
+      <Text style={styles.emptyText}>
         {text}
       </Text>
     </View>
@@ -2096,31 +1960,28 @@ function EmptyState({
 function Stat({
   label,
   value,
+  icon,
 }: {
-  label:
-    string;
-
-  value:
-    number;
+  label: string;
+  value: number;
+  icon: keyof typeof Ionicons.glyphMap;
 }) {
   return (
-    <View
-      style={
-        styles.stat
-      }
-    >
-      <Text
-        style={
-          styles.statValue
-        }
-      >
+    <View style={styles.stat}>
+      <View style={styles.statIcon}>
+        <Ionicons
+          name={icon}
+          size={12}
+          color="#FFFFFF"
+        />
+      </View>
+
+      <Text style={styles.statValue}>
         {value}
       </Text>
 
       <Text
-        style={
-          styles.statLabel
-        }
+        style={styles.statLabel}
         numberOfLines={1}
       >
         {label}
@@ -2132,31 +1993,28 @@ function Stat({
 function Metric({
   label,
   value,
+  icon,
 }: {
-  label:
-    string;
-
-  value:
-    string;
+  label: string;
+  value: string;
+  icon: keyof typeof Ionicons.glyphMap;
 }) {
   return (
-    <View
-      style={{
-        flex: 1,
-      }}
-    >
-      <Text
-        style={
-          styles.metricLabel
-        }
-      >
-        {label}
-      </Text>
+    <View style={styles.metric}>
+      <View style={styles.metricTop}>
+        <Ionicons
+          name={icon}
+          size={12}
+          color="#94A3B8"
+        />
+
+        <Text style={styles.metricLabel}>
+          {label}
+        </Text>
+      </View>
 
       <Text
-        style={
-          styles.metricValue
-        }
+        style={styles.metricValue}
         numberOfLines={1}
       >
         {value}
@@ -2165,19 +2023,332 @@ function Metric({
   );
 }
 
+// =====================================================================
+// ANIMATION HELPERS
+// =====================================================================
+
+function PressableScale({
+  onPress,
+  style,
+  children,
+  disabled,
+}: {
+  onPress?: () => void;
+  style?: any;
+  children: React.ReactNode;
+  disabled?: boolean;
+}) {
+  const scale = useRef(
+    new Animated.Value(1)
+  ).current;
+
+  const animateTo = (
+    toValue: number
+  ) =>
+    Animated.spring(scale, {
+      toValue,
+      useNativeDriver: true,
+      friction: 7,
+      tension: 140,
+    }).start();
+
+  return (
+    <Pressable
+      disabled={disabled}
+      onPress={onPress}
+      onPressIn={() =>
+        animateTo(0.975)
+      }
+      onPressOut={() =>
+        animateTo(1)
+      }
+    >
+      <Animated.View
+        style={[
+          style,
+          {
+            transform: [
+              { scale },
+            ],
+          },
+        ]}
+      >
+        {children}
+      </Animated.View>
+    </Pressable>
+  );
+}
+
+function FadeInItem({
+  index = 0,
+  children,
+}: {
+  index?: number;
+  children: React.ReactNode;
+}) {
+  const opacity = useRef(
+    new Animated.Value(0)
+  ).current;
+
+  const translateY = useRef(
+    new Animated.Value(14)
+  ).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(opacity, {
+        toValue: 1,
+        duration: 360,
+        delay:
+          Math.min(index, 8) * 55,
+        easing: Easing.out(
+          Easing.cubic
+        ),
+        useNativeDriver: true,
+      }),
+
+      Animated.timing(translateY, {
+        toValue: 0,
+        duration: 360,
+        delay:
+          Math.min(index, 8) * 55,
+        easing: Easing.out(
+          Easing.cubic
+        ),
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <Animated.View
+      style={{
+        opacity,
+        transform: [
+          { translateY },
+        ],
+      }}
+    >
+      {children}
+    </Animated.View>
+  );
+}
+
+function FloatingIcon({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const translateY = useRef(
+    new Animated.Value(0)
+  ).current;
+
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(translateY, {
+          toValue: -6,
+          duration: 1400,
+          easing: Easing.inOut(
+            Easing.sin
+          ),
+          useNativeDriver: true,
+        }),
+
+        Animated.timing(translateY, {
+          toValue: 0,
+          duration: 1400,
+          easing: Easing.inOut(
+            Easing.sin
+          ),
+          useNativeDriver: true,
+        }),
+      ])
+    );
+
+    loop.start();
+
+    return () => loop.stop();
+  }, [translateY]);
+
+  return (
+    <Animated.View
+      style={{
+        transform: [
+          { translateY },
+        ],
+      }}
+    >
+      {children}
+    </Animated.View>
+  );
+}
+
+function SkeletonBlock({
+  style,
+}: {
+  style?: any;
+}) {
+  const pulse = useRef(
+    new Animated.Value(0.35)
+  ).current;
+
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulse, {
+          toValue: 1,
+          duration: 750,
+          easing: Easing.inOut(
+            Easing.ease
+          ),
+          useNativeDriver: true,
+        }),
+
+        Animated.timing(pulse, {
+          toValue: 0.35,
+          duration: 750,
+          easing: Easing.inOut(
+            Easing.ease
+          ),
+          useNativeDriver: true,
+        }),
+      ])
+    );
+
+    loop.start();
+
+    return () => loop.stop();
+  }, [pulse]);
+
+  return (
+    <Animated.View
+      style={[
+        styles.skeletonBlock,
+        style,
+        { opacity: pulse },
+      ]}
+    />
+  );
+}
+
+function LoadingState({
+  theme,
+}: {
+  theme: Theme;
+}) {
+  return (
+    <ScrollView
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={
+        styles.loadingContent
+      }
+    >
+      <View style={styles.loadingHeader}>
+        <View style={{ flex: 1 }}>
+          <SkeletonBlock
+            style={{
+              width: 105,
+              height: 8,
+              borderRadius: 5,
+            }}
+          />
+
+          <SkeletonBlock
+            style={{
+              width: 100,
+              height: 22,
+              borderRadius: 7,
+              marginTop: 9,
+            }}
+          />
+
+          <SkeletonBlock
+            style={{
+              width: "75%",
+              height: 9,
+              borderRadius: 5,
+              marginTop: 8,
+            }}
+          />
+        </View>
+
+        <SkeletonBlock
+          style={{
+            width: 72,
+            height: 34,
+            borderRadius: 12,
+          }}
+        />
+      </View>
+
+      <SkeletonBlock
+        style={{
+          height: 180,
+          borderRadius: 24,
+          marginTop: 20,
+          marginBottom: 14,
+        }}
+      />
+
+      <SkeletonBlock
+        style={{
+          height: 59,
+          borderRadius: 17,
+          marginBottom: 13,
+        }}
+      />
+
+      <SkeletonBlock
+        style={{
+          height: 52,
+          borderRadius: 16,
+          marginBottom: 18,
+        }}
+      />
+
+      {[0, 1, 2].map((i) => (
+        <SkeletonBlock
+          key={i}
+          style={{
+            height: 155,
+            borderRadius: 21,
+            marginBottom: 12,
+          }}
+        />
+      ))}
+
+      <View
+        style={styles.loadingLabelRow}
+      >
+        <ActivityIndicator
+          size="small"
+          color={theme.primary}
+        />
+
+        <Text
+          style={styles.loadingLabel}
+        >
+          Loading your network…
+        </Text>
+      </View>
+    </ScrollView>
+  );
+}
+
+// =====================================================================
+// PURE HELPERS
+// =====================================================================
+
 function matchesSearch(
   partner: {
-    name:
-      string;
-
-    district:
-      string;
-
-    location:
-      string;
+    name: string;
+    district: string;
+    location: string;
   },
-  query:
-    string
+  query: string
 ) {
   if (!query) {
     return true;
@@ -2190,1331 +2361,1085 @@ function matchesSearch(
   ]
     .join(" ")
     .toLowerCase()
-    .includes(
-      query
-    );
+    .includes(query);
 }
 
 function formatDate(
-  value:
-    string |
-    null |
-    undefined
+  value: string | null | undefined
 ) {
   if (!value) {
     return "No date";
   }
 
-  const date =
-    new Date(
-      value
-    );
+  const date = new Date(value);
 
-  if (
-    Number.isNaN(
-      date.getTime()
-    )
-  ) {
+  if (Number.isNaN(date.getTime())) {
     return "Date unavailable";
   }
 
   return new Intl.DateTimeFormat(
     "en-LK",
     {
-      day:
-        "numeric",
-
-      month:
-        "short",
-
-      year:
-        "numeric",
+      day: "numeric",
+      month: "short",
+      year: "numeric",
     }
-  ).format(
-    date
-  );
+  ).format(date);
 }
 
-function formatNumber(
-  value:
-    number
-) {
+function formatNumber(value: number) {
   return new Intl.NumberFormat(
     "en-LK",
     {
-      maximumFractionDigits:
-        2,
+      maximumFractionDigits: 2,
     }
-  ).format(
-    value
-  );
+  ).format(value);
 }
 
-function formatCurrency(
-  value:
-    number
-) {
+function formatCurrency(value: number) {
   return `Rs. ${new Intl.NumberFormat(
     "en-LK",
     {
-      minimumFractionDigits:
-        2,
-
-      maximumFractionDigits:
-        2,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
     }
-  ).format(
-    value
-  )}`;
+  ).format(value)}`;
 }
 
-const styles =
-  StyleSheet.create({
-    screen: {
-      flex: 1,
-    },
-
-    header: {
-      paddingHorizontal:
-        18,
-
-      paddingTop:
-        13,
-
-      paddingBottom:
-        14,
-
-      backgroundColor:
-        "#FFFFFF",
-
-      borderBottomWidth:
-        1,
-
-      borderBottomColor:
-        "#E5E7EB",
-    },
-
-    headerEyebrow: {
-      color:
-        "#94A3B8",
-
-      fontSize:
-        7.5,
-
-      fontWeight:
-        "900",
-
-      letterSpacing:
-        1.2,
-    },
-
-    headerTitle: {
-      color:
-        "#1F2937",
-
-      fontSize:
-        21,
-
-      fontWeight:
-        "900",
-
-      marginTop:
-        2,
-    },
-
-    headerSubtitle: {
-      color:
-        "#64748B",
-
-      fontSize:
-        9,
-
-      lineHeight:
-        14,
-
-      marginTop:
-        3,
-    },
-
-    content: {
-      padding:
-        17,
-
-      paddingBottom:
-        125,
-    },
-
-    centerState: {
-      flex: 1,
-
-      alignItems:
-        "center",
-
-      justifyContent:
-        "center",
-
-      padding:
-        30,
-    },
-
-    stateTitle: {
-      color:
-        "#1F2937",
-
-      fontSize:
-        15,
-
-      fontWeight:
-        "900",
-
-      marginTop:
-        12,
-    },
-
-    stateText: {
-      color:
-        "#64748B",
-
-      fontSize:
-        9,
-
-      lineHeight:
-        15,
-
-      textAlign:
-        "center",
-
-      marginTop:
-        5,
-    },
-
-    hero: {
-      borderRadius:
-        23,
-
-      padding:
-        17,
-
-      marginBottom:
-        14,
-    },
-
-    heroTop: {
-      flexDirection:
-        "row",
-
-      alignItems:
-        "center",
-
-      gap:
-        11,
-    },
-
-    heroIcon: {
-      width:
-        47,
-
-      height:
-        47,
-
-      borderRadius:
-        15,
-
-      alignItems:
-        "center",
-
-      justifyContent:
-        "center",
-
-      backgroundColor:
-        "rgba(255,255,255,0.13)",
-    },
-
-    heroEyebrow: {
-      color:
-        "#FDE68A",
-
-      fontSize:
-        7,
-
-      fontWeight:
-        "900",
-
-      letterSpacing:
-        1,
-    },
-
-    heroTitle: {
-      color:
-        "#FFFFFF",
-
-      fontSize:
-        14,
-
-      fontWeight:
-        "900",
-
-      marginTop:
-        3,
-    },
-
-    statsRow: {
-      flexDirection:
-        "row",
-
-      gap:
-        6,
-
-      marginTop:
-        15,
-    },
-
-    stat: {
-      flex: 1,
-
-      alignItems:
-        "center",
-
-      paddingVertical:
-        8,
-
-      borderRadius:
-        12,
-
-      backgroundColor:
-        "rgba(255,255,255,0.1)",
-    },
-
-    statValue: {
-      color:
-        "#FFFFFF",
-
-      fontSize:
-        14,
-
-      fontWeight:
-        "900",
-    },
-
-    statLabel: {
-      color:
-        "rgba(255,255,255,0.68)",
-
-      fontSize:
-        6.5,
-
-      fontWeight:
-        "700",
-
-      marginTop:
-        2,
-    },
-
-    tabBar: {
-      flexDirection:
-        "row",
-
-      gap:
-        6,
-
-      padding:
-        5,
-
-      borderRadius:
-        17,
-
-      backgroundColor:
-        "#FFFFFF",
-
-      borderWidth:
-        1,
-
-      borderColor:
-        "#E5E7EB",
-
-      marginBottom:
-        12,
-    },
-
-    tabButton: {
-      flex: 1,
-
-      minHeight:
-        43,
-
-      borderRadius:
-        13,
-
-      flexDirection:
-        "row",
-
-      alignItems:
-        "center",
-
-      justifyContent:
-        "center",
-
-      gap:
-        4,
-    },
-
-    tabText: {
-      color:
-        "#64748B",
-
-      fontSize:
-        7.5,
-
-      fontWeight:
-        "900",
-    },
-
-    tabTextSelected: {
-      color:
-        "#FFFFFF",
-    },
-
-    tabBadge: {
-      minWidth:
-        17,
-
-      height:
-        17,
-
-      paddingHorizontal:
-        4,
-
-      borderRadius:
-        9,
-
-      alignItems:
-        "center",
-
-      justifyContent:
-        "center",
-
-      backgroundColor:
-        "#F1F5F9",
-    },
-
-    tabBadgeText: {
-      color:
-        "#64748B",
-
-      fontSize:
-        6.5,
-
-      fontWeight:
-        "900",
-    },
-
-    searchBox: {
-      minHeight:
-        48,
-
-      flexDirection:
-        "row",
-
-      alignItems:
-        "center",
-
-      gap:
-        8,
-
-      paddingHorizontal:
-        13,
-
-      borderRadius:
-        15,
-
-      backgroundColor:
-        "#FFFFFF",
-
-      borderWidth:
-        1,
-
-      borderColor:
-        "#E5E7EB",
-
-      marginBottom:
-        16,
-    },
-
-    searchInput: {
-      flex: 1,
-
-      color:
-        "#1F2937",
-
-      fontSize:
-        10,
-
-      paddingVertical:
-        0,
-    },
-
-    sectionHeader: {
-      marginBottom:
-        10,
-
-      marginTop:
-        3,
-    },
-
-    sectionTitle: {
-      color:
-        "#1F2937",
-
-      fontSize:
-        14,
-
-      fontWeight:
-        "900",
-    },
-
-    sectionSubtitle: {
-      color:
-        "#94A3B8",
-
-      fontSize:
-        8,
-
-      marginTop:
-        2,
-    },
-
-    list: {
-      gap:
-        11,
-
-      marginBottom:
-        18,
-    },
-
-    connectionCard: {
-      padding:
-        14,
-
-      borderRadius:
-        19,
-
-      backgroundColor:
-        "#FFFFFF",
-
-      borderWidth:
-        1,
-
-      borderColor:
-        "#E5E7EB",
-    },
-
-    requestCard: {
-      padding:
-        14,
-
-      borderRadius:
-        19,
-
-      backgroundColor:
-        "#FFFFFF",
-
-      borderWidth:
-        1,
-
-      borderColor:
-        "#E5E7EB",
-    },
-
-    tradeCard: {
-      padding:
-        14,
-
-      borderRadius:
-        19,
-
-      backgroundColor:
-        "#FFFFFF",
-
-      borderWidth:
-        1,
-
-      borderColor:
-        "#E5E7EB",
-    },
-
-    partnerTop: {
-      flexDirection:
-        "row",
-
-      alignItems:
-        "center",
-
-      gap:
-        10,
-    },
-
-    avatar: {
-      width:
-        48,
-
-      height:
-        48,
-
-      borderRadius:
-        16,
-
-      alignItems:
-        "center",
-
-      justifyContent:
-        "center",
-    },
-
-    partnerName: {
-      color:
-        "#1F2937",
-
-      fontSize:
-        12.5,
-
-      fontWeight:
-        "900",
-    },
-
-    locationRow: {
-      flexDirection:
-        "row",
-
-      alignItems:
-        "center",
-
-      gap:
-        3,
-
-      marginTop:
-        4,
-    },
-
-    partnerLocation: {
-      flex: 1,
-
-      color:
-        "#64748B",
-
-      fontSize:
-        8,
-    },
-
-    badgeRow: {
-      flexDirection:
-        "row",
-
-      flexWrap:
-        "wrap",
-
-      gap:
-        5,
-
-      marginTop:
-        10,
-    },
-
-    badge: {
-      flexDirection:
-        "row",
-
-      alignItems:
-        "center",
-
-      gap:
-        4,
-
-      paddingHorizontal:
-        8,
-
-      paddingVertical:
-        5,
-
-      borderRadius:
-        999,
-    },
-
-    badgeText: {
-      fontSize:
-        7,
-
-      fontWeight:
-        "900",
-    },
-
-    cardFooter: {
-      flexDirection:
-        "row",
-
-      alignItems:
-        "center",
-
-      justifyContent:
-        "space-between",
-
-      marginTop:
-        12,
-
-      paddingTop:
-        11,
-
-      borderTopWidth:
-        1,
-
-      borderTopColor:
-        "#F1F5F9",
-    },
-
-    cardFooterText: {
-      color:
-        "#94A3B8",
-
-      fontSize:
-        7.5,
-    },
-
-    openRow: {
-      flexDirection:
-        "row",
-
-      alignItems:
-        "center",
+// =====================================================================
+// STYLES
+// =====================================================================
+
+const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+  },
+
+  // -------------------------------------------------------------------
+  // Header
+  // -------------------------------------------------------------------
+
+  header: {
+    paddingHorizontal: 18,
+    paddingTop: 12,
+    paddingBottom: 14,
+    backgroundColor: "#FFFFFF",
+    borderBottomWidth: 1,
+    borderBottomColor: "#E8EDF2",
+  },
+
+  headerTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+
+  headerEyebrowRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+
+  headerEyebrowDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+
+  headerEyebrow: {
+    color: "#94A3B8",
+    fontFamily: "Poppins_700Bold",
+    fontSize: 7,
+    letterSpacing: 1.15,
+  },
+
+  headerTitle: {
+    color: "#172033",
+    fontFamily: "Poppins_800ExtraBold",
+    fontSize: 22,
+    lineHeight: 29,
+    marginTop: 1,
+  },
+
+  headerSubtitle: {
+    color: "#64748B",
+    fontFamily: "Poppins_400Regular",
+    fontSize: 8.5,
+    lineHeight: 14,
+    marginTop: 2,
+    maxWidth: "94%",
+  },
+
+  headerRoleBadge: {
+    minWidth: 67,
+    paddingHorizontal: 9,
+    paddingVertical: 7,
+    borderRadius: 12,
+    borderWidth: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 4,
+  },
+
+  headerRoleText: {
+    fontFamily: "Poppins_700Bold",
+    fontSize: 7,
+  },
+
+  // -------------------------------------------------------------------
+  // Main content
+  // -------------------------------------------------------------------
+
+  content: {
+    paddingHorizontal: 17,
+    paddingTop: 16,
+    paddingBottom: 130,
+  },
+
+  loadingContent: {
+    padding: 17,
+    paddingBottom: 100,
+  },
+
+  // -------------------------------------------------------------------
+  // Hero
+  // -------------------------------------------------------------------
+
+  hero: {
+    borderRadius: 24,
+    padding: 17,
+    marginBottom: 14,
+    overflow: "hidden",
+    shadowColor: "#000000",
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
+    shadowOffset: {
+      width: 0,
+      height: 7,
+    },
+    elevation: 4,
+  },
+
+  heroCircleLarge: {
+    position: "absolute",
+    width: 175,
+    height: 175,
+    borderRadius: 88,
+    backgroundColor:
+      "rgba(8, 72, 30, 0.36)",
+    top: -75,
+    right: -60,
+  },
+
+  heroCircleSmall: {
+    position: "absolute",
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor:
+      "rgba(255,255,255,0.055)",
+    bottom: -38,
+    left: -25,
+  },
+
+  heroTop: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+
+  heroIcon: {
+    width: 49,
+    height: 49,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor:
+      "rgba(255,255,255,0.14)",
+    borderWidth: 1,
+    borderColor:
+      "rgba(255,255,255,0.12)",
+  },
+
+  heroEyebrow: {
+    color: "#FDE68A",
+    fontFamily: "Poppins_700Bold",
+    fontSize: 6.5,
+    letterSpacing: 1.05,
+  },
+
+  heroTitle: {
+    color: "#FFFFFF",
+    fontFamily: "Poppins_800ExtraBold",
+    fontSize: 14,
+    lineHeight: 20,
+    marginTop: 2,
+  },
+
+  heroDescription: {
+    color: "rgba(255,255,255,0.72)",
+    fontFamily: "Poppins_400Regular",
+    fontSize: 7.2,
+    lineHeight: 12,
+    marginTop: 2,
+    maxWidth: "96%",
+  },
+
+  statsRow: {
+    flexDirection: "row",
+    gap: 6,
+    marginTop: 17,
+  },
+
+  stat: {
+    flex: 1,
+    alignItems: "center",
+    paddingVertical: 9,
+    paddingHorizontal: 3,
+    borderRadius: 13,
+    backgroundColor:
+      "rgba(255,255,255,0.105)",
+    borderWidth: 1,
+    borderColor:
+      "rgba(255,255,255,0.075)",
+  },
+
+  statIcon: {
+    width: 21,
+    height: 21,
+    borderRadius: 7,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor:
+      "rgba(255,255,255,0.13)",
+    marginBottom: 3,
+  },
+
+  statValue: {
+    color: "#FFFFFF",
+    fontFamily: "Poppins_800ExtraBold",
+    fontSize: 14,
+    lineHeight: 19,
+  },
+
+  statLabel: {
+    color: "rgba(255,255,255,0.67)",
+    fontFamily: "Poppins_500Medium",
+    fontSize: 5.8,
+    marginTop: 1,
+    maxWidth: "100%",
+  },
+
+  // -------------------------------------------------------------------
+  // Tabs
+  // -------------------------------------------------------------------
+
+  tabWrapper: {
+    marginBottom: 12,
+  },
+
+  tabBar: {
+    flexDirection: "row",
+    gap: 5,
+    padding: 5,
+    borderRadius: 18,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    position: "relative",
+    overflow: "hidden",
+    shadowColor: "#0F172A",
+    shadowOpacity: 0.045,
+    shadowRadius: 9,
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
+    elevation: 1,
+  },
+
+  tabIndicator: {
+    position: "absolute",
+    top: 5,
+    bottom: 5,
+    borderRadius: 13,
+  },
+
+  tabButton: {
+    flex: 1,
+    minHeight: 44,
+    borderRadius: 13,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 4,
+    zIndex: 2,
+  },
+
+  tabText: {
+    color: "#64748B",
+    fontFamily: "Poppins_600SemiBold",
+    fontSize: 7,
+  },
+
+  tabTextSelected: {
+    color: "#FFFFFF",
+    fontFamily: "Poppins_700Bold",
+  },
+
+  tabBadge: {
+    minWidth: 17,
+    height: 17,
+    paddingHorizontal: 4,
+    borderRadius: 9,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#F1F5F9",
+  },
+
+  tabBadgeText: {
+    color: "#64748B",
+    fontFamily: "Poppins_700Bold",
+    fontSize: 6,
+  },
+
+  // -------------------------------------------------------------------
+  // Search
+  // -------------------------------------------------------------------
+
+  searchBox: {
+    minHeight: 51,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingHorizontal: 8,
+    paddingRight: 9,
+    borderRadius: 16,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    marginBottom: 18,
+    shadowColor: "#0F172A",
+    shadowOpacity: 0.035,
+    shadowRadius: 8,
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
+    elevation: 1,
+  },
+
+  searchIconContainer: {
+    width: 35,
+    height: 35,
+    borderRadius: 11,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#F8FAFC",
+  },
+
+  searchInput: {
+    flex: 1,
+    color: "#1F2937",
+    fontFamily: "Poppins_500Medium",
+    fontSize: 8.5,
+    paddingVertical: 0,
+  },
+
+  searchClear: {
+    width: 29,
+    height: 29,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#F1F5F9",
+  },
+
+  // -------------------------------------------------------------------
+  // Section header
+  // -------------------------------------------------------------------
+
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 9,
+    marginBottom: 11,
+    marginTop: 3,
+  },
+
+  sectionIcon: {
+    width: 34,
+    height: 34,
+    borderRadius: 11,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  sectionTitle: {
+    color: "#172033",
+    fontFamily: "Poppins_800ExtraBold",
+    fontSize: 12.5,
+    lineHeight: 18,
+  },
+
+  sectionSubtitle: {
+    color: "#94A3B8",
+    fontFamily: "Poppins_400Regular",
+    fontSize: 7,
+    marginTop: 0,
+  },
+
+  list: {
+    gap: 11,
+    marginBottom: 19,
+  },
+
+  // -------------------------------------------------------------------
+  // Cards
+  // -------------------------------------------------------------------
+
+  connectionCard: {
+    padding: 15,
+    paddingLeft: 18,
+    borderRadius: 21,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    overflow: "hidden",
+    shadowOpacity: 0.45,
+    shadowRadius: 13,
+    shadowOffset: {
+      width: 0,
+      height: 6,
+    },
+    elevation: 2,
+  },
+
+  requestCard: {
+    padding: 15,
+    paddingLeft: 18,
+    borderRadius: 21,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    overflow: "hidden",
+    shadowOpacity: 0.45,
+    shadowRadius: 13,
+    shadowOffset: {
+      width: 0,
+      height: 6,
+    },
+    elevation: 2,
+  },
+
+  tradeCard: {
+    padding: 15,
+    paddingLeft: 18,
+    borderRadius: 21,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    overflow: "hidden",
+    shadowOpacity: 0.45,
+    shadowRadius: 13,
+    shadowOffset: {
+      width: 0,
+      height: 6,
+    },
+    elevation: 2,
+  },
+
+  cardAccent: {
+    position: "absolute",
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 4,
+  },
+
+  // -------------------------------------------------------------------
+  // Partner identity
+  // -------------------------------------------------------------------
+
+  partnerTop: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+
+  avatarRing: {
+    width: 55,
+    height: 55,
+    borderRadius: 18,
+    borderWidth: 1.5,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FFFFFF",
+  },
+
+  avatar: {
+    width: 46,
+    height: 46,
+    borderRadius: 15,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  statusDot: {
+    position: "absolute",
+    right: -1,
+    bottom: -1,
+    width: 13,
+    height: 13,
+    borderRadius: 7,
+    backgroundColor: "#22C55E",
+    borderWidth: 2,
+  },
+
+  partnerName: {
+    color: "#172033",
+    fontFamily: "Poppins_700Bold",
+    fontSize: 11.5,
+  },
+
+  locationRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+    marginTop: 3,
+  },
+
+  partnerLocation: {
+    flex: 1,
+    color: "#64748B",
+    fontFamily: "Poppins_400Regular",
+    fontSize: 7.2,
+  },
+
+  typeChip: {
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    borderRadius: 999,
+    alignSelf: "flex-start",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+    borderWidth: 1,
+  },
+
+  typeChipText: {
+    fontFamily: "Poppins_700Bold",
+    fontSize: 6,
+    letterSpacing: 0.15,
+  },
+
+  // -------------------------------------------------------------------
+  // Badges
+  // -------------------------------------------------------------------
+
+  badgeRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 5,
+    marginTop: 11,
+  },
+
+  badge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    borderRadius: 999,
+  },
+
+  badgeText: {
+    fontFamily: "Poppins_600SemiBold",
+    fontSize: 6.4,
+  },
+
+  // -------------------------------------------------------------------
+  // Card footer
+  // -------------------------------------------------------------------
+
+  cardFooter: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: 13,
+    paddingTop: 11,
+    borderTopWidth: 1,
+    borderTopColor: "#F1F5F9",
+  },
+
+  cardFooterLabel: {
+    color: "#CBD5E1",
+    fontFamily: "Poppins_700Bold",
+    fontSize: 5.3,
+    letterSpacing: 0.5,
+  },
+
+  cardFooterText: {
+    color: "#64748B",
+    fontFamily: "Poppins_500Medium",
+    fontSize: 7,
+    marginTop: 1,
+  },
+
+  openPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    paddingHorizontal: 9,
+    paddingVertical: 7,
+    borderRadius: 10,
+  },
+
+  openText: {
+    fontFamily: "Poppins_700Bold",
+    fontSize: 6.7,
+  },
+
+  // -------------------------------------------------------------------
+  // Request message
+  // -------------------------------------------------------------------
+
+  requestMessage: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    padding: 10,
+    borderRadius: 13,
+    backgroundColor: "#F8FAFC",
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: "#F1F5F9",
+  },
+
+  requestMessageIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 9,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  requestMessageText: {
+    flex: 1,
+    color: "#64748B",
+    fontFamily: "Poppins_400Regular",
+    fontSize: 7.2,
+    lineHeight: 12,
+  },
+
+  requestActions: {
+    flexDirection: "row",
+    gap: 8,
+    marginTop: 11,
+  },
+
+  rejectButton: {
+    flex: 1,
+    minHeight: 44,
+    borderRadius: 13,
+    alignItems: "center",
+    justifyContent: "center",
+    flexDirection: "row",
+    gap: 4,
+    backgroundColor: "#FEF2F2",
+    borderWidth: 1,
+    borderColor: "#FECACA",
+  },
+
+  rejectText: {
+    color: "#B91C1C",
+    fontFamily: "Poppins_700Bold",
+    fontSize: 7.8,
+  },
+
+  acceptButton: {
+    flex: 1.4,
+    minHeight: 44,
+    borderRadius: 13,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 5,
+  },
+
+  acceptText: {
+    color: "#FFFFFF",
+    fontFamily: "Poppins_700Bold",
+    fontSize: 7.8,
+  },
+
+  // -------------------------------------------------------------------
+  // Pending request
+  // -------------------------------------------------------------------
+
+  pendingBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    padding: 10,
+    borderRadius: 13,
+    backgroundColor: "#F8FAFC",
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: "#EEF2F6",
+  },
+
+  pendingIcon: {
+    width: 30,
+    height: 30,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#E2E8F0",
+  },
+
+  pendingTitle: {
+    color: "#475569",
+    fontFamily: "Poppins_700Bold",
+    fontSize: 7.8,
+  },
+
+  pendingText: {
+    color: "#64748B",
+    fontFamily: "Poppins_400Regular",
+    fontSize: 6.7,
+    marginTop: 1,
+  },
+
+  pendingMore: {
+    width: 27,
+    height: 27,
+    borderRadius: 9,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#E2E8F0",
+  },
+
+  // -------------------------------------------------------------------
+  // Trade metrics
+  // -------------------------------------------------------------------
+
+  metrics: {
+    flexDirection: "row",
+    gap: 6,
+    padding: 9,
+    borderRadius: 14,
+    backgroundColor: "#F8FAFC",
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: "#F1F5F9",
+  },
+
+  metric: {
+    flex: 1,
+    minWidth: 0,
+  },
+
+  metricTop: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+  },
+
+  metricLabel: {
+    color: "#94A3B8",
+    fontFamily: "Poppins_600SemiBold",
+    fontSize: 5.4,
+  },
+
+  metricValue: {
+    color: "#172033",
+    fontFamily: "Poppins_700Bold",
+    fontSize: 7.7,
+    marginTop: 3,
+  },
+
+  // -------------------------------------------------------------------
+  // Empty state
+  // -------------------------------------------------------------------
+
+  emptyState: {
+    alignItems: "center",
+    paddingVertical: 46,
+    paddingHorizontal: 25,
+    borderRadius: 21,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    shadowColor: "#0F172A",
+    shadowOpacity: 0.025,
+    shadowRadius: 10,
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    elevation: 1,
+  },
+
+  emptyIconOuter: {
+    width: 76,
+    height: 76,
+    borderRadius: 25,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+  },
+
+  emptyIcon: {
+    width: 58,
+    height: 58,
+    borderRadius: 19,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  emptyTitle: {
+    color: "#172033",
+    fontFamily: "Poppins_800ExtraBold",
+    fontSize: 12.5,
+    marginTop: 12,
+  },
+
+  emptyText: {
+    color: "#64748B",
+    fontFamily: "Poppins_400Regular",
+    fontSize: 7.5,
+    lineHeight: 13,
+    textAlign: "center",
+    marginTop: 5,
+    maxWidth: 285,
+  },
+
+  // -------------------------------------------------------------------
+  // Error
+  // -------------------------------------------------------------------
+
+  errorCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 9,
+    padding: 11,
+    borderRadius: 17,
+    backgroundColor: "#FEF2F2",
+    borderWidth: 1,
+    borderColor: "#FECACA",
+    marginBottom: 14,
+  },
+
+  errorIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 11,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FEE2E2",
+  },
+
+  errorTitle: {
+    color: "#991B1B",
+    fontFamily: "Poppins_700Bold",
+    fontSize: 8.3,
+  },
+
+  errorText: {
+    color: "#B91C1C",
+    fontFamily: "Poppins_400Regular",
+    fontSize: 6.7,
+    marginTop: 2,
+  },
+
+  errorRefresh: {
+    width: 31,
+    height: 31,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FEE2E2",
+  },
+
+  // -------------------------------------------------------------------
+  // Modal / bottom sheet
+  // -------------------------------------------------------------------
+
+  modalOverlay: {
+    flex: 1,
+    justifyContent: "flex-end",
+    backgroundColor:
+      "rgba(15,23,42,0.50)",
+  },
+
+  requestPopup: {
+    backgroundColor: "#FFFFFF",
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    paddingHorizontal: 18,
+    paddingTop: 10,
+    paddingBottom: 28,
+    shadowColor: "#000000",
+    shadowOpacity: 0.23,
+    shadowRadius: 22,
+    shadowOffset: {
+      width: 0,
+      height: -6,
+    },
+    elevation: 20,
+  },
+
+  popupHandle: {
+    alignSelf: "center",
+    width: 42,
+    height: 4,
+    borderRadius: 999,
+    backgroundColor: "#CBD5E1",
+    marginBottom: 17,
+  },
+
+  popupHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 11,
+  },
+
+  popupIcon: {
+    width: 49,
+    height: 49,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  popupTitle: {
+    color: "#172033",
+    fontFamily: "Poppins_800ExtraBold",
+    fontSize: 13.5,
+  },
+
+  popupSubtitle: {
+    color: "#64748B",
+    fontFamily: "Poppins_400Regular",
+    fontSize: 7.2,
+    marginTop: 1,
+  },
+
+  popupClose: {
+    width: 37,
+    height: 37,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#F1F5F9",
+  },
+
+  popupPartnerCard: {
+    padding: 13,
+    borderRadius: 17,
+    backgroundColor: "#F8FAFC",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    marginTop: 16,
+  },
+
+  popupInfo: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 8,
+    padding: 11,
+    borderRadius: 14,
+    backgroundColor: "#F8FAFC",
+    marginTop: 11,
+    borderWidth: 1,
+    borderColor: "#F1F5F9",
+  },
+
+  popupInfoIcon: {
+    width: 27,
+    height: 27,
+    borderRadius: 9,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#E2E8F0",
+  },
+
+  popupInfoText: {
+    flex: 1,
+    color: "#64748B",
+    fontFamily: "Poppins_400Regular",
+    fontSize: 7.2,
+    lineHeight: 13,
+  },
+
+  popupPrimaryButton: {
+    minHeight: 50,
+    borderRadius: 15,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 7,
+    marginTop: 15,
+  },
+
+  popupPrimaryText: {
+    color: "#FFFFFF",
+    fontFamily: "Poppins_700Bold",
+    fontSize: 8.5,
+  },
+
+  popupCancelButton: {
+    minHeight: 50,
+    borderRadius: 15,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 7,
+    backgroundColor: "#FEF2F2",
+    borderWidth: 1,
+    borderColor: "#FECACA",
+    marginTop: 8,
+  },
+
+  popupCancelText: {
+    color: "#B91C1C",
+    fontFamily: "Poppins_700Bold",
+    fontSize: 8.5,
+  },
+
+  // -------------------------------------------------------------------
+  // Loading
+  // -------------------------------------------------------------------
+
+  loadingHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 15,
+    paddingTop: 10,
+  },
+
+  loadingLabelRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    marginTop: 6,
+  },
+
+  loadingLabel: {
+    color: "#64748B",
+    fontFamily: "Poppins_600SemiBold",
+    fontSize: 7.5,
+  },
+
+  skeletonBlock: {
+    backgroundColor: "#E2E8F0",
+  },
+
+  disabledButton: {
+    opacity: 0.55,
+  },
+});
 
-      gap:
-        3,
-    },
-
-    openText: {
-      fontSize:
-        7.5,
-
-      fontWeight:
-        "900",
-    },
-
-    requestMessage: {
-      flexDirection:
-        "row",
-
-      alignItems:
-        "center",
-
-      gap:
-        7,
-
-      padding:
-        10,
-
-      borderRadius:
-        12,
-
-      backgroundColor:
-        "#F8FAFC",
-
-      marginTop:
-        11,
-    },
-
-    requestMessageText: {
-      flex: 1,
-
-      color:
-        "#64748B",
-
-      fontSize:
-        8,
-
-      lineHeight:
-        13,
-    },
-
-    requestActions: {
-      flexDirection:
-        "row",
-
-      gap:
-        8,
-
-      marginTop:
-        11,
-    },
-
-    rejectButton: {
-      flex: 1,
-
-      minHeight:
-        43,
-
-      borderRadius:
-        13,
-
-      alignItems:
-        "center",
-
-      justifyContent:
-        "center",
-
-      backgroundColor:
-        "#FEF2F2",
-
-      borderWidth:
-        1,
-
-      borderColor:
-        "#FECACA",
-    },
-
-    rejectText: {
-      color:
-        "#B91C1C",
-
-      fontSize:
-        8.5,
-
-      fontWeight:
-        "900",
-    },
-
-    acceptButton: {
-      flex:
-        1.4,
-
-      minHeight:
-        43,
-
-      borderRadius:
-        13,
-
-      flexDirection:
-        "row",
-
-      alignItems:
-        "center",
-
-      justifyContent:
-        "center",
-
-      gap:
-        5,
-    },
-
-    acceptText: {
-      color:
-        "#FFFFFF",
-
-      fontSize:
-        8.5,
-
-      fontWeight:
-        "900",
-    },
-
-    pendingBox: {
-      flexDirection:
-        "row",
-
-      alignItems:
-        "center",
-
-      gap:
-        8,
-
-      padding:
-        10,
-
-      borderRadius:
-        12,
-
-      backgroundColor:
-        "#F1F5F9",
-
-      marginTop:
-        11,
-    },
-
-    pendingTitle: {
-      color:
-        "#475569",
-
-      fontSize:
-        8.5,
-
-      fontWeight:
-        "900",
-    },
-
-    pendingText: {
-      color:
-        "#64748B",
-
-      fontSize:
-        7.5,
-
-      marginTop:
-        2,
-    },
-
-    metrics: {
-      flexDirection:
-        "row",
-
-      gap:
-        7,
-
-      padding:
-        10,
-
-      borderRadius:
-        13,
-
-      backgroundColor:
-        "#F8FAFC",
-
-      marginTop:
-        11,
-    },
-
-    metricLabel: {
-      color:
-        "#94A3B8",
-
-      fontSize:
-        6.5,
-
-      fontWeight:
-        "700",
-    },
-
-    metricValue: {
-      color:
-        "#1F2937",
-
-      fontSize:
-        8.5,
-
-      fontWeight:
-        "900",
-
-      marginTop:
-        2,
-    },
-
-    emptyState: {
-      alignItems:
-        "center",
-
-      paddingVertical:
-        45,
-
-      paddingHorizontal:
-        25,
-
-      borderRadius:
-        18,
-
-      backgroundColor:
-        "#FFFFFF",
-
-      borderWidth:
-        1,
-
-      borderColor:
-        "#E5E7EB",
-    },
-
-    emptyIcon: {
-      width:
-        64,
-
-      height:
-        64,
-
-      borderRadius:
-        21,
-
-      alignItems:
-        "center",
-
-      justifyContent:
-        "center",
-    },
-
-    emptyTitle: {
-      color:
-        "#1F2937",
-
-      fontSize:
-        13,
-
-      fontWeight:
-        "900",
-
-      marginTop:
-        10,
-    },
-
-    emptyText: {
-      color:
-        "#64748B",
-
-      fontSize:
-        8.5,
-
-      lineHeight:
-        14,
-
-      textAlign:
-        "center",
-
-      marginTop:
-        4,
-    },
-
-    errorCard: {
-      flexDirection:
-        "row",
-
-      alignItems:
-        "center",
-
-      gap:
-        10,
-
-      padding:
-        13,
-
-      borderRadius:
-        16,
-
-      backgroundColor:
-        "#FEF2F2",
-
-      borderWidth:
-        1,
-
-      borderColor:
-        "#FECACA",
-
-      marginBottom:
-        13,
-    },
-
-    errorTitle: {
-      color:
-        "#991B1B",
-
-      fontSize:
-        10,
-
-      fontWeight:
-        "900",
-    },
-
-    errorText: {
-      color:
-        "#B91C1C",
-
-      fontSize:
-        8,
-
-      marginTop:
-        2,
-    },
-
-    modalOverlay: {
-      flex:
-        1,
-
-      justifyContent:
-        "flex-end",
-
-      backgroundColor:
-        "rgba(15,23,42,0.45)",
-    },
-
-    requestPopup: {
-      backgroundColor:
-        "#FFFFFF",
-
-      borderTopLeftRadius:
-        28,
-
-      borderTopRightRadius:
-        28,
-
-      paddingHorizontal:
-        18,
-
-      paddingTop:
-        10,
-
-      paddingBottom:
-        28,
-
-      shadowColor:
-        "#000000",
-
-      shadowOpacity:
-        0.2,
-
-      shadowRadius:
-        20,
-
-      shadowOffset: {
-        width:
-          0,
-
-        height:
-          -5,
-      },
-
-      elevation:
-        20,
-    },
-
-    popupHandle: {
-      alignSelf:
-        "center",
-
-      width:
-        40,
-
-      height:
-        4,
-
-      borderRadius:
-        999,
-
-      backgroundColor:
-        "#CBD5E1",
-
-      marginBottom:
-        16,
-    },
-
-    popupHeader: {
-      flexDirection:
-        "row",
-
-      alignItems:
-        "center",
-
-      gap:
-        11,
-    },
-
-    popupIcon: {
-      width:
-        48,
-
-      height:
-        48,
-
-      borderRadius:
-        15,
-
-      alignItems:
-        "center",
-
-      justifyContent:
-        "center",
-    },
-
-    popupTitle: {
-      color:
-        "#1F2937",
-
-      fontSize:
-        15,
-
-      fontWeight:
-        "900",
-    },
-
-    popupSubtitle: {
-      color:
-        "#64748B",
-
-      fontSize:
-        8.5,
-
-      marginTop:
-        2,
-    },
-
-    popupClose: {
-      width:
-        38,
-
-      height:
-        38,
-
-      borderRadius:
-        12,
-
-      alignItems:
-        "center",
-
-      justifyContent:
-        "center",
-
-      backgroundColor:
-        "#F1F5F9",
-    },
-
-    popupPartnerCard: {
-      padding:
-        13,
-
-      borderRadius:
-        17,
-
-      backgroundColor:
-        "#F8FAFC",
-
-      borderWidth:
-        1,
-
-      borderColor:
-        "#E2E8F0",
-
-      marginTop:
-        16,
-    },
-
-    popupInfo: {
-      flexDirection:
-        "row",
-
-      alignItems:
-        "flex-start",
-
-      gap:
-        8,
-
-      padding:
-        12,
-
-      borderRadius:
-        14,
-
-      backgroundColor:
-        "#F8FAFC",
-
-      marginTop:
-        11,
-    },
-
-    popupInfoText: {
-      flex:
-        1,
-
-      color:
-        "#64748B",
-
-      fontSize:
-        8.5,
-
-      lineHeight:
-        14,
-    },
-
-    popupPrimaryButton: {
-      minHeight:
-        50,
-
-      borderRadius:
-        15,
-
-      flexDirection:
-        "row",
-
-      alignItems:
-        "center",
-
-      justifyContent:
-        "center",
-
-      gap:
-        7,
-
-      marginTop:
-        15,
-    },
-
-    popupPrimaryText: {
-      color:
-        "#FFFFFF",
-
-      fontSize:
-        9.5,
-
-      fontWeight:
-        "900",
-    },
-
-    popupCancelButton: {
-      minHeight:
-        50,
-
-      borderRadius:
-        15,
-
-      flexDirection:
-        "row",
-
-      alignItems:
-        "center",
-
-      justifyContent:
-        "center",
-
-      gap:
-        7,
-
-      backgroundColor:
-        "#FEF2F2",
-
-      borderWidth:
-        1,
-
-      borderColor:
-        "#FECACA",
-
-      marginTop:
-        8,
-    },
-
-    popupCancelText: {
-      color:
-        "#B91C1C",
-
-      fontSize:
-        9.5,
-
-      fontWeight:
-        "900",
-    },
-
-    disabledButton: {
-      opacity:
-        0.55,
-    },
-
-    pressed: {
-      opacity:
-        0.84,
-
-      transform: [
-        {
-          scale:
-            0.99,
-        },
-      ],
-    },
-  });

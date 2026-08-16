@@ -23,6 +23,16 @@ import {
 } from "react-native";
 
 import {
+  useFonts,
+  Poppins_400Regular,
+  Poppins_500Medium,
+  Poppins_600SemiBold,
+  Poppins_700Bold,
+  Poppins_800ExtraBold,
+  Poppins_900Black,
+} from "@expo-google-fonts/poppins";
+
+import {
   useMarketplaceAuth,
 } from "@/hooks/c03-marketplace/useMarketplaceAuth";
 
@@ -48,13 +58,16 @@ import type {
 } from "@/types/c03-marketplace/contact-request.types";
 
 /* ------------------------------------------------------------------ */
-/*  Small animation helpers — purely presentational, no logic changes  */
+/* Animation helpers                                                   */
 /* ------------------------------------------------------------------ */
 
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+const AnimatedPressable =
+  Animated.createAnimatedComponent(Pressable);
 
 function usePressScale(target = 0.96) {
-  const scale = useRef(new Animated.Value(1)).current;
+  const scale = useRef(
+    new Animated.Value(1)
+  ).current;
 
   const onPressIn = () => {
     Animated.spring(scale, {
@@ -74,11 +87,17 @@ function usePressScale(target = 0.96) {
     }).start();
   };
 
-  return { scale, onPressIn, onPressOut };
+  return {
+    scale,
+    onPressIn,
+    onPressOut,
+  };
 }
 
 function useEntrance(delay = 0) {
-  const progress = useRef(new Animated.Value(0)).current;
+  const progress = useRef(
+    new Animated.Value(0)
+  ).current;
 
   useEffect(() => {
     Animated.timing(progress, {
@@ -94,17 +113,23 @@ function useEntrance(delay = 0) {
     opacity: progress,
     transform: [
       {
-        translateY: progress.interpolate({
-          inputRange: [0, 1],
-          outputRange: [16, 0],
-        }),
+        translateY:
+          progress.interpolate({
+            inputRange: [0, 1],
+            outputRange: [16, 0],
+          }),
       },
     ],
   };
 }
 
+/* ------------------------------------------------------------------ */
+/* Main screen                                                         */
+/* ------------------------------------------------------------------ */
+
 export default function NegotiationResultScreen() {
-  const { user } = useMarketplaceAuth();
+  const { user } =
+    useMarketplaceAuth();
 
   const params =
     useLocalSearchParams();
@@ -126,7 +151,9 @@ export default function NegotiationResultScreen() {
   const [
     contactState,
     setContactState,
-  ] = useState<ContactRequestState | null>(null);
+  ] = useState<ContactRequestState | null>(
+    null
+  );
 
   const [
     contactLoading,
@@ -153,21 +180,25 @@ export default function NegotiationResultScreen() {
     () =>
       isMiller
         ? {
-            primary: "#92400E",
-            dark: "#78350F",
+            primary: "#A16207",
+            dark: "#713F12",
             soft: "#FEF3C7",
             border: "#FDE68A",
-            background: "#FBF8F1",
+            background: "#FAF9F6",
           }
         : {
             primary: "#15803D",
             dark: "#14532D",
             soft: "#DCFCE7",
             border: "#BBF7D0",
-            background: "#F8FAF8",
+            background: "#F7FAF8",
           },
     [isMiller]
   );
+
+  /* ---------------------------------------------------------------- */
+  /* Load negotiation                                                 */
+  /* ---------------------------------------------------------------- */
 
   useEffect(() => {
     const load = async () => {
@@ -181,10 +212,9 @@ export default function NegotiationResultScreen() {
 
       try {
         const response =
-          await negotiationService
-            .getNegotiation(
-              negotiationId
-            );
+          await negotiationService.getNegotiation(
+            negotiationId
+          );
 
         setNegotiation(
           response.data
@@ -196,7 +226,6 @@ export default function NegotiationResultScreen() {
             duration: 450,
             useNativeDriver: true,
           }),
-
           Animated.timing(rise, {
             toValue: 0,
             duration: 450,
@@ -219,6 +248,10 @@ export default function NegotiationResultScreen() {
     rise,
   ]);
 
+  /* ---------------------------------------------------------------- */
+  /* Contact state                                                     */
+  /* ---------------------------------------------------------------- */
+
   useEffect(() => {
     if (
       !negotiation ||
@@ -228,31 +261,35 @@ export default function NegotiationResultScreen() {
       return;
     }
 
-    const loadContactState = async () => {
-      try {
-        setContactLoading(true);
+    const loadContactState =
+      async () => {
+        try {
+          setContactLoading(true);
 
-        const response =
-          await contactRequestService
-            .getForNegotiation(
+          const response =
+            await contactRequestService.getForNegotiation(
               negotiation._id
             );
 
-        setContactState(
-          response.data
-        );
-      } catch (error) {
-        console.error(
-          "Load contact state failed:",
-          error
-        );
-      } finally {
-        setContactLoading(false);
-      }
-    };
+          setContactState(
+            response.data
+          );
+        } catch (error) {
+          console.error(
+            "Load contact state failed:",
+            error
+          );
+        } finally {
+          setContactLoading(false);
+        }
+      };
 
     void loadContactState();
   }, [negotiation]);
+
+  /* ---------------------------------------------------------------- */
+  /* Create contact request                                           */
+  /* ---------------------------------------------------------------- */
 
   const handleCreateContactRequest =
     async () => {
@@ -266,17 +303,15 @@ export default function NegotiationResultScreen() {
       try {
         setContactProcessing(true);
 
-        await contactRequestService
-          .create({
-            negotiationId:
-              negotiation._id,
-          });
+        await contactRequestService.create({
+          negotiationId:
+            negotiation._id,
+        });
 
         const refreshed =
-          await contactRequestService
-            .getForNegotiation(
-              negotiation._id
-            );
+          await contactRequestService.getForNegotiation(
+            negotiation._id
+          );
 
         setContactState(
           refreshed.data
@@ -289,6 +324,10 @@ export default function NegotiationResultScreen() {
         setContactProcessing(false);
       }
     };
+
+  /* ---------------------------------------------------------------- */
+  /* Respond to contact request                                      */
+  /* ---------------------------------------------------------------- */
 
   const handleContactResponse =
     async (
@@ -307,22 +346,22 @@ export default function NegotiationResultScreen() {
         setContactProcessing(true);
 
         const response =
-          await contactRequestService
-            .respond(
-              contactState.request._id,
-              decision
-            );
+          await contactRequestService.respond(
+            contactState.request._id,
+            decision
+          );
 
         setContactState({
           ...contactState,
           request:
             response.data.request,
           contactUnlocked:
-            response.data
-              .contactUnlocked,
+            response.data.contactUnlocked,
           canRespond: false,
           canRequest: false,
-          contact: response.data.contact ?? null,
+          contact:
+            response.data.contact ??
+            null,
           exists: true,
         });
       } catch (error) {
@@ -334,9 +373,19 @@ export default function NegotiationResultScreen() {
       }
     };
 
+  /* ---------------------------------------------------------------- */
+  /* Loading                                                          */
+  /* ---------------------------------------------------------------- */
+
   if (loading) {
-    return <LoadingState theme={theme} />;
+    return (
+      <LoadingState theme={theme} />
+    );
   }
+
+  /* ---------------------------------------------------------------- */
+  /* Error                                                            */
+  /* ---------------------------------------------------------------- */
 
   if (
     errorMessage ||
@@ -363,7 +412,10 @@ export default function NegotiationResultScreen() {
         },
       ]}
     >
-      <Header theme={theme} negotiation={negotiation} />
+      <Header
+        theme={theme}
+        negotiation={negotiation}
+      />
 
       <ScrollView
         contentContainerStyle={
@@ -383,17 +435,34 @@ export default function NegotiationResultScreen() {
             ],
           }}
         >
+          {/* -------------------------------------------------------- */}
+          {/* Result                                                    */}
+          {/* -------------------------------------------------------- */}
+
           <ResultHero
             agreed={agreed}
             negotiation={negotiation}
             theme={theme}
           />
 
-          <View style={styles.metricsGrid}>
+          {/* -------------------------------------------------------- */}
+          {/* Quick summary                                             */}
+          {/* -------------------------------------------------------- */}
+
+          <SectionHeader
+            icon="stats-chart-outline"
+            title="Negotiation Summary"
+            subtitle="Key results from the AI negotiation"
+            theme={theme}
+          />
+
+          <View
+            style={styles.metricsGrid}
+          >
             <MetricCard
               index={0}
               icon="repeat-outline"
-              label="Rounds"
+              label="ROUNDS"
               value={String(
                 negotiation.roundsCompleted
               )}
@@ -404,7 +473,7 @@ export default function NegotiationResultScreen() {
             <MetricCard
               index={1}
               icon="analytics-outline"
-              label="FL reference"
+              label="FL REFERENCE"
               value={`Rs.${negotiation.flReferencePrice.toFixed(
                 2
               )}`}
@@ -415,7 +484,7 @@ export default function NegotiationResultScreen() {
             <MetricCard
               index={2}
               icon="shield-checkmark-outline"
-              label="Fairness"
+              label="FAIRNESS"
               value={
                 negotiation.fairnessScore !==
                 null
@@ -429,48 +498,73 @@ export default function NegotiationResultScreen() {
             />
           </View>
 
+          {/* -------------------------------------------------------- */}
+          {/* Fairness                                                   */}
+          {/* -------------------------------------------------------- */}
+
           {agreed &&
           negotiation.priceDifferenceFromReference !==
             null ? (
             <FairnessCard
               theme={theme}
               value={Math.abs(
-                negotiation
-                  .priceDifferenceFromReference
+                negotiation.priceDifferenceFromReference
               )}
             />
           ) : null}
 
+          {/* -------------------------------------------------------- */}
+          {/* Contact                                                    */}
+          {/* -------------------------------------------------------- */}
+
           {agreed ? (
-            <ContactAccessCard
-              theme={theme}
-              role={user?.role}
-              state={contactState}
-              loading={contactLoading}
-              processing={contactProcessing}
-              onRequest={() =>
-                void handleCreateContactRequest()
-              }
-              onAccept={() =>
-                void handleContactResponse(
-                  "accepted"
-                )
-              }
-              onReject={() =>
-                void handleContactResponse(
-                  "rejected"
-                )
-              }
-            />
+            <>
+              <SectionHeader
+                icon="lock-open-outline"
+                title="Secure Contact"
+                subtitle="Connect after agreement"
+                theme={theme}
+              />
+
+              <ContactAccessCard
+                theme={theme}
+                role={user?.role}
+                state={contactState}
+                loading={contactLoading}
+                processing={
+                  contactProcessing
+                }
+                onRequest={() =>
+                  void handleCreateContactRequest()
+                }
+                onAccept={() =>
+                  void handleContactResponse(
+                    "accepted"
+                  )
+                }
+                onReject={() =>
+                  void handleContactResponse(
+                    "rejected"
+                  )
+                }
+              />
+            </>
           ) : null}
 
-          <Text
-            style={styles.sectionTitle}
-          >
-            Agent conversation
-          </Text>
+          {/* -------------------------------------------------------- */}
+          {/* Conversation                                               */}
+          {/* -------------------------------------------------------- */}
 
-          <View style={styles.timeline}>
+          <SectionHeader
+            icon="chatbubbles-outline"
+            title="Agent Conversation"
+            subtitle="How the farmer and miller agents negotiated"
+            theme={theme}
+          />
+
+          <View
+            style={styles.timeline}
+          >
             {negotiation.history.map(
               (item, index) => (
                 <HistoryCard
@@ -480,7 +574,7 @@ export default function NegotiationResultScreen() {
                   accent={
                     item.agent === "farmer"
                       ? "#15803D"
-                      : "#92400E"
+                      : "#A16207"
                   }
                   soft={
                     item.agent === "farmer"
@@ -492,7 +586,14 @@ export default function NegotiationResultScreen() {
             )}
           </View>
 
-          <DoneButton theme={theme} role={user?.role} />
+          {/* -------------------------------------------------------- */}
+          {/* Bottom action                                              */}
+          {/* -------------------------------------------------------- */}
+
+          <DoneButton
+            theme={theme}
+            role={user?.role}
+          />
         </Animated.View>
       </ScrollView>
     </SafeAreaView>
@@ -500,7 +601,7 @@ export default function NegotiationResultScreen() {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Header / states                                                    */
+/* Theme                                                              */
 /* ------------------------------------------------------------------ */
 
 interface ResultTheme {
@@ -511,6 +612,67 @@ interface ResultTheme {
   background: string;
 }
 
+/* ------------------------------------------------------------------ */
+/* Section header                                                     */
+/* ------------------------------------------------------------------ */
+
+function SectionHeader({
+  icon,
+  title,
+  subtitle,
+  theme,
+}: {
+  icon: keyof typeof Ionicons.glyphMap;
+  title: string;
+  subtitle: string;
+  theme: ResultTheme;
+}) {
+  return (
+    <View style={styles.sectionHeader}>
+      <View
+        style={[
+          styles.sectionIcon,
+          {
+            backgroundColor:
+              theme.soft,
+          },
+        ]}
+      >
+        <Ionicons
+          name={icon}
+          size={18}
+          color={theme.primary}
+        />
+      </View>
+
+      <View
+        style={styles.sectionHeaderText}
+      >
+        <Text
+          style={[
+            styles.sectionTitle,
+            {
+              color: theme.dark,
+            },
+          ]}
+        >
+          {title}
+        </Text>
+
+        <Text
+          style={styles.sectionSubtitle}
+        >
+          {subtitle}
+        </Text>
+      </View>
+    </View>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Header                                                             */
+/* ------------------------------------------------------------------ */
+
 function Header({
   theme,
   negotiation,
@@ -518,8 +680,11 @@ function Header({
   theme: ResultTheme;
   negotiation: Negotiation;
 }) {
-  const { user } = useMarketplaceAuth();
-  const press = usePressScale(0.9);
+  const { user } =
+    useMarketplaceAuth();
+
+  const press =
+    usePressScale(0.9);
 
   return (
     <View style={styles.header}>
@@ -531,26 +696,43 @@ function Header({
               : "/(c03-marketplace)/(farmer)/home"
           )
         }
-        onPressIn={press.onPressIn}
-        onPressOut={press.onPressOut}
+        onPressIn={
+          press.onPressIn
+        }
+        onPressOut={
+          press.onPressOut
+        }
         style={[
           styles.headerButton,
-          { transform: [{ scale: press.scale }] },
+          {
+            transform: [
+              {
+                scale: press.scale,
+              },
+            ],
+          },
         ]}
       >
         <Ionicons
-          name="close"
+          name="chevron-back"
           size={21}
           color="#1F2937"
         />
       </AnimatedPressable>
 
-      <View style={styles.headerText}>
-        <Text style={styles.headerTitle}>
+      <View
+        style={styles.headerText}
+      >
+        <Text
+          style={styles.headerTitle}
+        >
           Negotiation Result
         </Text>
 
-        <Text style={styles.headerSubtitle}>
+        <Text
+          style={styles.headerSubtitle}
+          numberOfLines={1}
+        >
           {negotiation.negotiationId}
         </Text>
       </View>
@@ -558,7 +740,10 @@ function Header({
       <View
         style={[
           styles.headerIcon,
-          { backgroundColor: theme.soft },
+          {
+            backgroundColor:
+              theme.soft,
+          },
         ]}
       >
         <Ionicons
@@ -571,26 +756,50 @@ function Header({
   );
 }
 
-function LoadingState({ theme }: { theme: ResultTheme }) {
-  const pulse = useRef(new Animated.Value(1)).current;
+/* ------------------------------------------------------------------ */
+/* Loading                                                            */
+/* ------------------------------------------------------------------ */
+
+function LoadingState({
+  theme,
+}: {
+  theme: ResultTheme;
+}) {
+  const pulse =
+    useRef(
+      new Animated.Value(1)
+    ).current;
 
   useEffect(() => {
-    const loop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulse, {
-          toValue: 1.12,
-          duration: 800,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }),
-        Animated.timing(pulse, {
-          toValue: 1,
-          duration: 800,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }),
-      ])
-    );
+    const loop =
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(
+            pulse,
+            {
+              toValue: 1.12,
+              duration: 800,
+              easing:
+                Easing.inOut(
+                  Easing.ease
+                ),
+              useNativeDriver: true,
+            }
+          ),
+          Animated.timing(
+            pulse,
+            {
+              toValue: 1,
+              duration: 800,
+              easing:
+                Easing.inOut(
+                  Easing.ease
+                ),
+              useNativeDriver: true,
+            }
+          ),
+        ])
+      );
 
     loop.start();
 
@@ -601,16 +810,26 @@ function LoadingState({ theme }: { theme: ResultTheme }) {
     <SafeAreaView
       style={[
         styles.screen,
-        { backgroundColor: theme.background },
+        {
+          backgroundColor:
+            theme.background,
+        },
       ]}
     >
-      <View style={styles.centerState}>
+      <View
+        style={styles.centerState}
+      >
         <Animated.View
           style={[
             styles.loadingRing,
             {
-              backgroundColor: theme.soft,
-              transform: [{ scale: pulse }],
+              backgroundColor:
+                theme.soft,
+              transform: [
+                {
+                  scale: pulse,
+                },
+              ],
             },
           ]}
         >
@@ -620,13 +839,25 @@ function LoadingState({ theme }: { theme: ResultTheme }) {
           />
         </Animated.View>
 
-        <Text style={styles.stateTitle}>
+        <Text
+          style={styles.stateTitle}
+        >
           Loading negotiation result
+        </Text>
+
+        <Text
+          style={styles.stateText}
+        >
+          Preparing your negotiation summary...
         </Text>
       </View>
     </SafeAreaView>
   );
 }
+
+/* ------------------------------------------------------------------ */
+/* Error                                                              */
+/* ------------------------------------------------------------------ */
 
 function ErrorState({
   theme,
@@ -635,44 +866,81 @@ function ErrorState({
   theme: ResultTheme;
   message: string | null;
 }) {
-  const entrance = useEntrance(0);
-  const press = usePressScale(0.96);
+  const entrance =
+    useEntrance(0);
+
+  const press =
+    usePressScale(0.96);
 
   return (
     <SafeAreaView
       style={[
         styles.screen,
-        { backgroundColor: theme.background },
+        {
+          backgroundColor:
+            theme.background,
+        },
       ]}
     >
       <Animated.View
-        style={[styles.centerState, entrance]}
+        style={[
+          styles.centerState,
+          entrance,
+        ]}
       >
-        <Ionicons
-          name="warning-outline"
-          size={45}
-          color="#B91C1C"
-        />
+        <View
+          style={styles.errorIcon}
+        >
+          <Ionicons
+            name="warning-outline"
+            size={42}
+            color="#B91C1C"
+          />
+        </View>
 
-        <Text style={styles.stateTitle}>
+        <Text
+          style={styles.stateTitle}
+        >
           Result unavailable
         </Text>
 
-        <Text style={styles.stateText}>
+        <Text
+          style={styles.stateText}
+        >
           {message}
         </Text>
 
         <AnimatedPressable
-          onPress={() => router.back()}
-          onPressIn={press.onPressIn}
-          onPressOut={press.onPressOut}
+          onPress={() =>
+            router.back()
+          }
+          onPressIn={
+            press.onPressIn
+          }
+          onPressOut={
+            press.onPressOut
+          }
           style={[
             styles.simpleButton,
-            { backgroundColor: theme.primary },
-            { transform: [{ scale: press.scale }] },
+            {
+              backgroundColor:
+                theme.primary,
+            },
+            {
+              transform: [
+                {
+                  scale:
+                    press.scale,
+                },
+              ],
+            },
           ]}
         >
-          <Text style={styles.simpleButtonText}>
+          <Text
+            style={
+              styles.simpleButtonText
+            }
+          >
             Go Back
           </Text>
         </AnimatedPressable>
@@ -682,7 +950,7 @@ function ErrorState({
 }
 
 /* ------------------------------------------------------------------ */
-/*  Result pieces                                                      */
+/* Result hero                                                        */
 /* ------------------------------------------------------------------ */
 
 function ResultHero({
@@ -694,88 +962,184 @@ function ResultHero({
   negotiation: Negotiation;
   theme: ResultTheme;
 }) {
-  const iconScale = useRef(new Animated.Value(0)).current;
-  const ring = useRef(new Animated.Value(0)).current;
+  const iconScale =
+    useRef(
+      new Animated.Value(0)
+    ).current;
+
+  const ring =
+    useRef(
+      new Animated.Value(0)
+    ).current;
 
   useEffect(() => {
-    Animated.spring(iconScale, {
-      toValue: 1,
-      useNativeDriver: true,
-      speed: 14,
-      bounciness: agreed ? 16 : 8,
-    }).start();
+    Animated.spring(
+      iconScale,
+      {
+        toValue: 1,
+        useNativeDriver: true,
+        speed: 14,
+        bounciness: agreed
+          ? 16
+          : 8,
+      }
+    ).start();
 
     if (agreed) {
       Animated.loop(
-        Animated.timing(ring, {
-          toValue: 1,
-          duration: 1400,
-          easing: Easing.out(Easing.ease),
-          useNativeDriver: true,
-        }),
-        { iterations: 3 }
+        Animated.timing(
+          ring,
+          {
+            toValue: 1,
+            duration: 1400,
+            easing:
+              Easing.out(
+                Easing.ease
+              ),
+            useNativeDriver: true,
+          }
+        ),
+        {
+          iterations: 3,
+        }
       ).start();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const ringScale = ring.interpolate({
-    inputRange: [0, 1],
-    outputRange: [1, 1.6],
-  });
+  const ringScale =
+    ring.interpolate({
+      inputRange: [0, 1],
+      outputRange: [1, 1.6],
+    });
 
-  const ringOpacity = ring.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0.5, 0],
-  });
+  const ringOpacity =
+    ring.interpolate({
+      inputRange: [0, 1],
+      outputRange: [0.5, 0],
+    });
 
   return (
     <View
       style={[
         styles.resultHero,
-        { backgroundColor: agreed ? theme.dark : "#7F1D1D" },
+        {
+          backgroundColor:
+            agreed
+              ? theme.dark
+              : "#7F1D1D",
+        },
       ]}
     >
-      <View style={styles.resultIcon}>
+      <View
+        style={styles.resultIcon}
+      >
         {agreed ? (
           <Animated.View
             style={[
               styles.resultRing,
               {
-                opacity: ringOpacity,
-                transform: [{ scale: ringScale }],
+                opacity:
+                  ringOpacity,
+                transform: [
+                  {
+                    scale:
+                      ringScale,
+                  },
+                ],
               },
             ]}
           />
         ) : null}
 
         <Animated.View
-          style={{ transform: [{ scale: iconScale }] }}
+          style={{
+            transform: [
+              {
+                scale:
+                  iconScale,
+              },
+            ],
+          }}
         >
           <Ionicons
-            name={agreed ? "checkmark-circle" : "close-circle"}
-            size={47}
-            color={agreed ? "#4ADE80" : "#FCA5A5"}
+            name={
+              agreed
+                ? "checkmark-circle"
+                : "close-circle"
+            }
+            size={54}
+            color={
+              agreed
+                ? "#4ADE80"
+                : "#FCA5A5"
+            }
           />
         </Animated.View>
       </View>
 
-      <Text style={styles.resultEyebrow}>
-        {agreed ? "AGREEMENT REACHED" : "NO AGREEMENT"}
-      </Text>
+      <View
+        style={[
+          styles.statusPill,
+          {
+            backgroundColor:
+              agreed
+                ? "rgba(74,222,128,0.14)"
+                : "rgba(252,165,165,0.14)",
+          },
+        ]}
+      >
+        <View
+          style={[
+            styles.statusDot,
+            {
+              backgroundColor:
+                agreed
+                  ? "#4ADE80"
+                  : "#FCA5A5",
+            },
+          ]}
+        />
 
-      <Text style={styles.resultPrice}>
-        {agreed && negotiation.agreedPrice !== null
-          ? `Rs.${negotiation.agreedPrice.toFixed(2)}/kg`
+        <Text
+          style={[
+            styles.resultEyebrow,
+            {
+              color: agreed
+                ? "#BBF7D0"
+                : "#FECACA",
+            },
+          ]}
+        >
+          {agreed
+            ? "AGREEMENT REACHED"
+            : "NO AGREEMENT"}
+        </Text>
+      </View>
+
+      <Text
+        style={styles.resultPrice}
+      >
+        {agreed &&
+        negotiation.agreedPrice !==
+          null
+          ? `Rs.${negotiation.agreedPrice.toFixed(
+              2
+            )}/kg`
           : "Negotiation closed"}
       </Text>
 
-      <Text style={styles.resultDescription}>
+      <Text
+        style={styles.resultDescription}
+      >
         {negotiation.finalReason}
       </Text>
     </View>
   );
 }
+
+/* ------------------------------------------------------------------ */
+/* Metric card                                                        */
+/* ------------------------------------------------------------------ */
 
 function MetricCard({
   index,
@@ -792,49 +1156,90 @@ function MetricCard({
   accent: string;
   soft: string;
 }) {
-  const scale = useRef(new Animated.Value(0.85)).current;
-  const opacity = useRef(new Animated.Value(0)).current;
+  const scale =
+    useRef(
+      new Animated.Value(0.85)
+    ).current;
+
+  const opacity =
+    useRef(
+      new Animated.Value(0)
+    ).current;
 
   useEffect(() => {
     Animated.parallel([
       Animated.spring(scale, {
         toValue: 1,
         useNativeDriver: true,
-        delay: 120 + index * 90,
+        delay:
+          120 + index * 90,
         speed: 16,
         bounciness: 9,
       }),
       Animated.timing(opacity, {
         toValue: 1,
         duration: 300,
-        delay: 120 + index * 90,
+        delay:
+          120 + index * 90,
         useNativeDriver: true,
       }),
     ]).start();
-  }, [index, scale, opacity]);
+  }, [
+    index,
+    scale,
+    opacity,
+  ]);
 
   return (
     <Animated.View
       style={[
         styles.metricCard,
-        { opacity, transform: [{ scale }] },
+        {
+          opacity,
+          transform: [
+            {
+              scale,
+            },
+          ],
+        },
       ]}
     >
       <View
         style={[
           styles.metricIcon,
-          { backgroundColor: soft },
+          {
+            backgroundColor:
+              soft,
+          },
         ]}
       >
-        <Ionicons name={icon} size={18} color={accent} />
+        <Ionicons
+          name={icon}
+          size={19}
+          color={accent}
+        />
       </View>
 
-      <Text style={styles.metricValue}>{value}</Text>
+      <Text
+        style={styles.metricValue}
+        numberOfLines={1}
+        adjustsFontSizeToFit
+      >
+        {value}
+      </Text>
 
-      <Text style={styles.metricLabel}>{label}</Text>
+      <Text
+        style={styles.metricLabel}
+      >
+        {label}
+      </Text>
     </Animated.View>
   );
 }
+
+/* ------------------------------------------------------------------ */
+/* Fairness card                                                      */
+/* ------------------------------------------------------------------ */
 
 function FairnessCard({
   theme,
@@ -843,43 +1248,76 @@ function FairnessCard({
   theme: ResultTheme;
   value: number;
 }) {
-  const entrance = useEntrance(360);
+  const entrance =
+    useEntrance(360);
 
   return (
     <Animated.View
       style={[
         styles.fairnessCard,
         {
-          backgroundColor: theme.soft,
-          borderColor: theme.border,
+          backgroundColor:
+            theme.soft,
+          borderColor:
+            theme.border,
         },
         entrance,
       ]}
     >
-      <Ionicons
-        name="scale-outline"
-        size={24}
-        color={theme.primary}
-      />
+      <View
+        style={[
+          styles.fairnessIcon,
+          {
+            backgroundColor:
+              "rgba(255,255,255,0.65)",
+          },
+        ]}
+      >
+        <Ionicons
+          name="scale-outline"
+          size={23}
+          color={theme.primary}
+        />
+      </View>
 
-      <View style={styles.fairnessText}>
+      <View
+        style={styles.fairnessText}
+      >
         <Text
           style={[
             styles.fairnessTitle,
-            { color: theme.dark },
+            {
+              color: theme.dark,
+            },
           ]}
         >
           Market alignment
         </Text>
 
-        <Text style={styles.fairnessDescription}>
-          The final price differs from the FL market
-          reference by Rs.{value.toFixed(2)}.
+        <Text
+          style={
+            styles.fairnessDescription
+          }
+        >
+          The final price differs from the
+          FL market reference by{" "}
+          <Text
+            style={
+              styles.inlineStrong
+            }
+          >
+            Rs.{value.toFixed(2)}
+          </Text>
+          .
         </Text>
       </View>
     </Animated.View>
   );
 }
+
+/* ------------------------------------------------------------------ */
+/* History card                                                       */
+/* ------------------------------------------------------------------ */
 
 function HistoryCard({
   item,
@@ -892,24 +1330,39 @@ function HistoryCard({
   accent: string;
   soft: string;
 }) {
-  const fromLeft = item.agent === "farmer";
+  const fromLeft =
+    item.agent === "farmer";
 
-  const progress = useRef(new Animated.Value(0)).current;
+  const progress =
+    useRef(
+      new Animated.Value(0)
+    ).current;
 
   useEffect(() => {
     Animated.timing(progress, {
       toValue: 1,
       duration: 420,
-      delay: 420 + index * 90,
-      easing: Easing.out(Easing.cubic),
+      delay:
+        420 + index * 90,
+      easing:
+        Easing.out(
+          Easing.cubic
+        ),
       useNativeDriver: true,
     }).start();
-  }, [progress, index]);
+  }, [
+    progress,
+    index,
+  ]);
 
-  const translateX = progress.interpolate({
-    inputRange: [0, 1],
-    outputRange: [fromLeft ? -22 : 22, 0],
-  });
+  const translateX =
+    progress.interpolate({
+      inputRange: [0, 1],
+      outputRange: [
+        fromLeft ? -22 : 22,
+        0,
+      ],
+    });
 
   return (
     <Animated.View
@@ -917,70 +1370,143 @@ function HistoryCard({
         styles.historyCard,
         {
           opacity: progress,
-          transform: [{ translateX }],
+          transform: [
+            {
+              translateX,
+            },
+          ],
         },
       ]}
     >
       <View
         style={[
-          styles.historyIcon,
-          { backgroundColor: soft },
+          styles.historyConnector,
+          {
+            backgroundColor:
+              soft,
+          },
         ]}
       >
-        <Ionicons
-          name={
-            item.agent === "farmer"
-              ? "leaf-outline"
-              : "business-outline"
-          }
-          size={18}
-          color={accent}
-        />
+        <View
+          style={[
+            styles.historyIcon,
+            {
+              backgroundColor:
+                soft,
+            },
+          ]}
+        >
+          <Ionicons
+            name={
+              item.agent ===
+              "farmer"
+                ? "leaf-outline"
+                : "business-outline"
+            }
+            size={18}
+            color={accent}
+          />
+        </View>
       </View>
 
-      <View style={styles.historyBody}>
-        <View style={styles.historyTopRow}>
-          <Text
-            style={[
-              styles.historyAgent,
-              { color: accent },
-            ]}
-          >
-            {item.agent === "farmer"
-              ? "Farmer Agent"
-              : "Miller Agent"}
-          </Text>
+      <View
+        style={styles.historyBody}
+      >
+        <View
+          style={
+            styles.historyTopRow
+          }
+        >
+          <View>
+            <Text
+              style={[
+                styles.historyAgent,
+                {
+                  color:
+                    accent,
+                },
+              ]}
+            >
+              {item.agent ===
+              "farmer"
+                ? "Farmer Agent"
+                : "Miller Agent"}
+            </Text>
 
-          <Text style={styles.historyRound}>
-            Round {item.round_number}
-          </Text>
+            <Text
+              style={
+                styles.historyRole
+              }
+            >
+              AI Negotiation Agent
+            </Text>
+          </View>
+
+          <View
+            style={
+              styles.roundPill
+            }
+          >
+            <Text
+              style={
+                styles.historyRound
+              }
+            >
+              ROUND{" "}
+              {item.round_number}
+            </Text>
+          </View>
         </View>
 
-        <View style={styles.historyDecision}>
+        <View
+          style={
+            styles.historyDecision
+          }
+        >
           <View
             style={[
               styles.actionBadge,
-              { backgroundColor: soft },
+              {
+                backgroundColor:
+                  soft,
+              },
             ]}
           >
             <Text
               style={[
                 styles.actionText,
-                { color: accent },
+                {
+                  color:
+                    accent,
+                },
               ]}
             >
-              {formatLabel(item.action)}
+              {formatLabel(
+                item.action
+              )}
             </Text>
           </View>
 
-          {item.price !== null ? (
-            <Text style={styles.historyPrice}>
-              Rs.{item.price.toFixed(2)}
+          {item.price !==
+          null ? (
+            <Text
+              style={
+                styles.historyPrice
+              }
+            >
+              Rs.
+              {item.price.toFixed(
+                2
+              )}
             </Text>
           ) : null}
         </View>
 
-        <Text style={styles.historyReason}>
+        <Text
+          style={
+            styles.historyReason
+          }
+        >
           {item.reason}
         </Text>
       </View>
@@ -988,6 +1514,9 @@ function HistoryCard({
   );
 }
 
+/* ------------------------------------------------------------------ */
+/* Contact access                                                     */
+/* ------------------------------------------------------------------ */
 
 function ContactAccessCard({
   theme,
@@ -1008,7 +1537,8 @@ function ContactAccessCard({
   onAccept: () => void;
   onReject: () => void;
 }) {
-  const entrance = useEntrance(390);
+  const entrance =
+    useEntrance(390);
 
   const otherParty =
     role === "miller"
@@ -1034,25 +1564,30 @@ function ContactAccessCard({
     );
   };
 
-  const openWhatsApp = async () => {
-    if (!otherParty?.phone) {
-      return;
-    }
+  const openWhatsApp =
+    async () => {
+      if (!otherParty?.phone) {
+        return;
+      }
 
-    const normalized =
-      normalizeSriLankanPhone(
-        otherParty.phone
+      const normalized =
+        normalizeSriLankanPhone(
+          otherParty.phone
+        );
+
+      const message =
+        "Hello, I am contacting you regarding our agreed paddy marketplace negotiation.";
+
+      await Linking.openURL(
+        `https://wa.me/${normalized}?text=${encodeURIComponent(
+          message
+        )}`
       );
+    };
 
-    const message =
-      "Hello, I am contacting you regarding our agreed paddy marketplace negotiation.";
-
-    await Linking.openURL(
-      `https://wa.me/${normalized}?text=${encodeURIComponent(
-        message
-      )}`
-    );
-  };
+  /* -------------------------------------------------------------- */
+  /* Loading                                                         */
+  /* -------------------------------------------------------------- */
 
   if (loading) {
     return (
@@ -1077,16 +1612,21 @@ function ContactAccessCard({
         >
           <ActivityIndicator
             size="small"
-            color={theme.primary}
+            color={
+              theme.primary
+            }
           />
         </View>
 
-        <View style={styles.contactBody}>
+        <View
+          style={styles.contactBody}
+        >
           <Text
             style={[
               styles.contactTitle,
               {
-                color: theme.dark,
+                color:
+                  theme.dark,
               },
             ]}
           >
@@ -1094,7 +1634,9 @@ function ContactAccessCard({
           </Text>
 
           <Text
-            style={styles.contactDescription}
+            style={
+              styles.contactDescription
+            }
           >
             Secure contact permissions are being verified.
           </Text>
@@ -1106,6 +1648,10 @@ function ContactAccessCard({
   if (!state) {
     return null;
   }
+
+  /* -------------------------------------------------------------- */
+  /* Contact unlocked                                                */
+  /* -------------------------------------------------------------- */
 
   if (
     state.contactUnlocked &&
@@ -1123,7 +1669,11 @@ function ContactAccessCard({
           entrance,
         ]}
       >
-        <View style={styles.contactTopRow}>
+        <View
+          style={
+            styles.contactTopRow
+          }
+        >
           <View
             style={[
               styles.contactIcon,
@@ -1136,22 +1686,42 @@ function ContactAccessCard({
             <Ionicons
               name="lock-open-outline"
               size={23}
-              color={theme.primary}
+              color={
+                theme.primary
+              }
             />
           </View>
 
-          <View style={styles.contactBody}>
-            <Text
-              style={[
-                styles.contactEyebrow,
-                {
-                  color:
-                    theme.primary,
-                },
-              ]}
+          <View
+            style={
+              styles.contactBody
+            }
+          >
+            <View
+              style={
+                styles.unlockedBadge
+              }
             >
-              CONTACT UNLOCKED
-            </Text>
+              <Ionicons
+                name="checkmark-circle"
+                size={13}
+                color={
+                  theme.primary
+                }
+              />
+
+              <Text
+                style={[
+                  styles.contactEyebrow,
+                  {
+                    color:
+                      theme.primary,
+                  },
+                ]}
+              >
+                CONTACT UNLOCKED
+              </Text>
+            </View>
 
             <Text
               style={[
@@ -1166,14 +1736,20 @@ function ContactAccessCard({
             </Text>
 
             <Text
-              style={styles.contactDescription}
+              style={
+                styles.contactDescription
+              }
             >
               Both participants approved contact exchange after the successful AI negotiation.
             </Text>
           </View>
         </View>
 
-        <View style={styles.contactIdentity}>
+        <View
+          style={
+            styles.contactIdentity
+          }
+        >
           <View
             style={[
               styles.contactAvatar,
@@ -1190,31 +1766,67 @@ function ContactAccessCard({
                   : "business-outline"
               }
               size={21}
-              color={theme.primary}
+              color={
+                theme.primary
+              }
             />
           </View>
 
-          <View style={styles.contactIdentityText}>
-            <Text style={styles.contactName}>
-              {role === "miller"
+          <View
+            style={
+              styles.contactIdentityText
+            }
+          >
+            <Text
+              style={
+                styles.contactName
+              }
+            >
+              {role ===
+              "miller"
                 ? otherParty.farmerName ||
                   otherParty.name
                 : otherParty.millName ||
                   otherParty.name}
             </Text>
 
-            <Text style={styles.contactLocation}>
-              {otherParty.location}, {otherParty.district}
+            <Text
+              style={
+                styles.contactLocation
+              }
+            >
+              {otherParty.location},{" "}
+              {otherParty.district}
             </Text>
+          </View>
+
+          <View
+            style={
+              styles.verifiedBadge
+            }
+          >
+            <Ionicons
+              name="shield-checkmark"
+              size={14}
+              color={
+                theme.primary
+              }
+            />
           </View>
         </View>
 
-        <View style={styles.contactActions}>
+        <View
+          style={
+            styles.contactActions
+          }
+        >
           <Pressable
             onPress={() =>
               void openPhone()
             }
-            style={({ pressed }) => [
+            style={({
+              pressed,
+            }) => [
               styles.contactActionButton,
               {
                 backgroundColor:
@@ -1231,7 +1843,9 @@ function ContactAccessCard({
             />
 
             <Text
-              style={styles.contactActionText}
+              style={
+                styles.contactActionText
+              }
             >
               Call
             </Text>
@@ -1241,7 +1855,9 @@ function ContactAccessCard({
             onPress={() =>
               void openWhatsApp()
             }
-            style={({ pressed }) => [
+            style={({
+              pressed,
+            }) => [
               styles.contactActionButton,
               styles.whatsAppButton,
               pressed &&
@@ -1255,7 +1871,9 @@ function ContactAccessCard({
             />
 
             <Text
-              style={styles.contactActionText}
+              style={
+                styles.contactActionText
+              }
             >
               WhatsApp
             </Text>
@@ -1265,9 +1883,14 @@ function ContactAccessCard({
     );
   }
 
+  /* -------------------------------------------------------------- */
+  /* Rejected                                                        */
+  /* -------------------------------------------------------------- */
+
   if (
     state.exists &&
-    state.request?.status === "rejected"
+    state.request?.status ===
+      "rejected"
   ) {
     return (
       <Animated.View
@@ -1277,8 +1900,16 @@ function ContactAccessCard({
           entrance,
         ]}
       >
-        <View style={styles.contactTopRow}>
-          <View style={styles.contactRejectedIcon}>
+        <View
+          style={
+            styles.contactTopRow
+          }
+        >
+          <View
+            style={
+              styles.contactRejectedIcon
+            }
+          >
             <Ionicons
               name="close-circle-outline"
               size={23}
@@ -1286,12 +1917,24 @@ function ContactAccessCard({
             />
           </View>
 
-          <View style={styles.contactBody}>
-            <Text style={styles.contactRejectedTitle}>
+          <View
+            style={
+              styles.contactBody
+            }
+          >
+            <Text
+              style={
+                styles.contactRejectedTitle
+              }
+            >
               Contact request declined
             </Text>
 
-            <Text style={styles.contactDescription}>
+            <Text
+              style={
+                styles.contactDescription
+              }
+            >
               Contact details remain private because the other participant did not approve the request.
             </Text>
           </View>
@@ -1300,9 +1943,14 @@ function ContactAccessCard({
     );
   }
 
+  /* -------------------------------------------------------------- */
+  /* Incoming request                                                */
+  /* -------------------------------------------------------------- */
+
   if (
     state.exists &&
-    state.request?.status === "pending" &&
+    state.request?.status ===
+      "pending" &&
     state.canRespond
   ) {
     return (
@@ -1316,7 +1964,11 @@ function ContactAccessCard({
           entrance,
         ]}
       >
-        <View style={styles.contactTopRow}>
+        <View
+          style={
+            styles.contactTopRow
+          }
+        >
           <View
             style={[
               styles.contactIcon,
@@ -1329,22 +1981,40 @@ function ContactAccessCard({
             <Ionicons
               name="mail-unread-outline"
               size={23}
-              color={theme.primary}
+              color={
+                theme.primary
+              }
             />
           </View>
 
-          <View style={styles.contactBody}>
-            <Text
-              style={[
-                styles.contactEyebrow,
-                {
-                  color:
-                    theme.primary,
-                },
-              ]}
+          <View
+            style={
+              styles.contactBody
+            }
+          >
+            <View
+              style={
+                styles.contactRequestBadge
+              }
             >
-              CONTACT REQUEST
-            </Text>
+              <View
+                style={
+                  styles.requestDot
+                }
+              />
+
+              <Text
+                style={[
+                  styles.contactEyebrow,
+                  {
+                    color:
+                      theme.primary,
+                  },
+                ]}
+              >
+                NEW REQUEST
+              </Text>
+            </View>
 
             <Text
               style={[
@@ -1358,17 +2028,27 @@ function ContactAccessCard({
               The other participant wants to connect
             </Text>
 
-            <Text style={styles.contactDescription}>
+            <Text
+              style={
+                styles.contactDescription
+              }
+            >
               Accept to unlock phone and WhatsApp contact for both sides.
             </Text>
           </View>
         </View>
 
-        <View style={styles.contactResponseActions}>
+        <View
+          style={
+            styles.contactResponseActions
+          }
+        >
           <Pressable
             disabled={processing}
             onPress={onReject}
-            style={({ pressed }) => [
+            style={({
+              pressed,
+            }) => [
               styles.contactRejectButton,
               pressed &&
                 styles.contactActionPressed,
@@ -1382,7 +2062,11 @@ function ContactAccessCard({
               color="#B91C1C"
             />
 
-            <Text style={styles.contactRejectText}>
+            <Text
+              style={
+                styles.contactRejectText
+              }
+            >
               Reject
             </Text>
           </Pressable>
@@ -1390,7 +2074,9 @@ function ContactAccessCard({
           <Pressable
             disabled={processing}
             onPress={onAccept}
-            style={({ pressed }) => [
+            style={({
+              pressed,
+            }) => [
               styles.contactAcceptButton,
               {
                 backgroundColor:
@@ -1416,7 +2102,9 @@ function ContactAccessCard({
                 />
 
                 <Text
-                  style={styles.contactAcceptText}
+                  style={
+                    styles.contactAcceptText
+                  }
                 >
                   Accept Access
                 </Text>
@@ -1428,9 +2116,14 @@ function ContactAccessCard({
     );
   }
 
+  /* -------------------------------------------------------------- */
+  /* Request pending                                                 */
+  /* -------------------------------------------------------------- */
+
   if (
     state.exists &&
-    state.request?.status === "pending" &&
+    state.request?.status ===
+      "pending" &&
     requesterIsMe
   ) {
     return (
@@ -1444,7 +2137,11 @@ function ContactAccessCard({
           entrance,
         ]}
       >
-        <View style={styles.contactTopRow}>
+        <View
+          style={
+            styles.contactTopRow
+          }
+        >
           <View
             style={[
               styles.contactIcon,
@@ -1457,11 +2154,17 @@ function ContactAccessCard({
             <Ionicons
               name="time-outline"
               size={23}
-              color={theme.primary}
+              color={
+                theme.primary
+              }
             />
           </View>
 
-          <View style={styles.contactBody}>
+          <View
+            style={
+              styles.contactBody
+            }
+          >
             <Text
               style={[
                 styles.contactEyebrow,
@@ -1486,7 +2189,11 @@ function ContactAccessCard({
               Waiting for approval
             </Text>
 
-            <Text style={styles.contactDescription}>
+            <Text
+              style={
+                styles.contactDescription
+              }
+            >
               Your contact request was sent successfully. Phone and WhatsApp remain protected until the other participant accepts.
             </Text>
           </View>
@@ -1503,7 +2210,9 @@ function ContactAccessCard({
         >
           <ActivityIndicator
             size="small"
-            color={theme.primary}
+            color={
+              theme.primary
+            }
           />
 
           <Text
@@ -1522,6 +2231,10 @@ function ContactAccessCard({
     );
   }
 
+  /* -------------------------------------------------------------- */
+  /* Request available                                               */
+  /* -------------------------------------------------------------- */
+
   if (state.canRequest) {
     return (
       <Animated.View
@@ -1534,7 +2247,11 @@ function ContactAccessCard({
           entrance,
         ]}
       >
-        <View style={styles.contactTopRow}>
+        <View
+          style={
+            styles.contactTopRow
+          }
+        >
           <View
             style={[
               styles.contactIcon,
@@ -1547,11 +2264,17 @@ function ContactAccessCard({
             <Ionicons
               name="shield-checkmark-outline"
               size={23}
-              color={theme.primary}
+              color={
+                theme.primary
+              }
             />
           </View>
 
-          <View style={styles.contactBody}>
+          <View
+            style={
+              styles.contactBody
+            }
+          >
             <Text
               style={[
                 styles.contactEyebrow,
@@ -1576,20 +2299,32 @@ function ContactAccessCard({
               Continue the conversation
             </Text>
 
-            <Text style={styles.contactDescription}>
+            <Text
+              style={
+                styles.contactDescription
+              }
+            >
               The AI agents reached an agreement. Request permission to securely exchange phone and WhatsApp contact details.
             </Text>
           </View>
         </View>
 
-        <View style={styles.contactPrivacyNote}>
+        <View
+          style={
+            styles.contactPrivacyNote
+          }
+        >
           <Ionicons
             name="lock-closed-outline"
             size={16}
             color="#64748B"
           />
 
-          <Text style={styles.contactPrivacyText}>
+          <Text
+            style={
+              styles.contactPrivacyText
+            }
+          >
             Contact information stays private until the other participant approves.
           </Text>
         </View>
@@ -1597,7 +2332,9 @@ function ContactAccessCard({
         <Pressable
           disabled={processing}
           onPress={onRequest}
-          style={({ pressed }) => [
+          style={({
+            pressed,
+          }) => [
             styles.requestContactButton,
             {
               backgroundColor:
@@ -1623,7 +2360,9 @@ function ContactAccessCard({
               />
 
               <Text
-                style={styles.requestContactText}
+                style={
+                  styles.requestContactText
+                }
               >
                 Request Contact Access
               </Text>
@@ -1643,6 +2382,10 @@ function ContactAccessCard({
   return null;
 }
 
+/* ------------------------------------------------------------------ */
+/* Done button                                                        */
+/* ------------------------------------------------------------------ */
+
 function DoneButton({
   theme,
   role,
@@ -1650,7 +2393,8 @@ function DoneButton({
   theme: ResultTheme;
   role: string | undefined;
 }) {
-  const press = usePressScale(0.97);
+  const press =
+    usePressScale(0.97);
 
   return (
     <AnimatedPressable
@@ -1661,25 +2405,60 @@ function DoneButton({
             : "/(c03-marketplace)/(farmer)/home"
         )
       }
-      onPressIn={press.onPressIn}
-      onPressOut={press.onPressOut}
+      onPressIn={
+        press.onPressIn
+      }
+      onPressOut={
+        press.onPressOut
+      }
       style={[
         styles.doneButton,
-        { backgroundColor: theme.primary },
-        { transform: [{ scale: press.scale }] },
+        {
+          backgroundColor:
+            theme.primary,
+        },
+        {
+          transform: [
+            {
+              scale:
+                press.scale,
+            },
+          ],
+        },
       ]}
     >
-      <Ionicons name="home-outline" size={19} color="#FFFFFF" />
+      <Ionicons
+        name="home-outline"
+        size={19}
+        color="#FFFFFF"
+      />
 
-      <Text style={styles.doneButtonText}>
+      <Text
+        style={
+          styles.doneButtonText
+        }
+      >
         Return to Dashboard
       </Text>
+
+      <Ionicons
+        name="arrow-forward"
+        size={17}
+        color="#FFFFFF"
+      />
     </AnimatedPressable>
   );
 }
 
+/* ------------------------------------------------------------------ */
+/* Utilities                                                          */
+/* ------------------------------------------------------------------ */
+
 function readString(
-  value: string | string[] | undefined
+  value:
+    | string
+    | string[]
+    | undefined
 ): string {
   return Array.isArray(value)
     ? value[0] ?? ""
@@ -1690,14 +2469,23 @@ function normalizeSriLankanPhone(
   phone: string
 ): string {
   const digits =
-    phone.replace(/\D/g, "");
+    phone.replace(
+      /\D/g,
+      ""
+    );
 
-  if (digits.startsWith("94")) {
+  if (
+    digits.startsWith("94")
+  ) {
     return digits;
   }
 
-  if (digits.startsWith("0")) {
-    return `94${digits.slice(1)}`;
+  if (
+    digits.startsWith("0")
+  ) {
+    return `94${digits.slice(
+      1
+    )}`;
   }
 
   return digits;
@@ -1710,35 +2498,47 @@ function formatLabel(
     .split(/[\s_-]+/)
     .map(
       (part) =>
-        part.charAt(0).toUpperCase() +
-        part.slice(1).toLowerCase()
+        part
+          .charAt(0)
+          .toUpperCase() +
+        part
+          .slice(1)
+          .toLowerCase()
     )
     .join(" ");
 }
+
+/* ------------------------------------------------------------------ */
+/* Styles                                                             */
+/* ------------------------------------------------------------------ */
 
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
   },
 
+  /* -------------------------------------------------------------- */
+  /* Header                                                          */
+  /* -------------------------------------------------------------- */
+
   header: {
-    minHeight: 72,
+    minHeight: 76,
     flexDirection: "row",
     alignItems: "center",
-    gap: 11,
-    paddingHorizontal: 17,
+    gap: 12,
+    paddingHorizontal: 18,
     backgroundColor: "#FFFFFF",
     borderBottomWidth: 1,
     borderBottomColor: "#E5E7EB",
   },
 
   headerButton: {
-    width: 41,
-    height: 41,
+    width: 42,
+    height: 42,
     borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#F3F4F6",
+    backgroundColor: "#F5F7F6",
   },
 
   headerText: {
@@ -1746,123 +2546,216 @@ const styles = StyleSheet.create({
   },
 
   headerTitle: {
-    color: "#1F2937",
-    fontSize: 18,
-    fontWeight: "800",
+    color: "#111827",
+    fontFamily: "Poppins_800ExtraBold",
+    fontSize: 17,
+    letterSpacing: -0.35,
   },
 
   headerSubtitle: {
-    color: "#6B7280",
-    fontSize: 8.5,
-    marginTop: 2,
+    color: "#94A3B8",
+    fontFamily: "Poppins_500Medium",
+    fontSize: 7.5,
+    marginTop: 1,
   },
 
   headerIcon: {
-    width: 40,
-    height: 40,
+    width: 42,
+    height: 42,
     borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
   },
 
+  /* -------------------------------------------------------------- */
+  /* Content                                                         */
+  /* -------------------------------------------------------------- */
+
   content: {
-    padding: 17,
-    paddingBottom: 120,
+    paddingHorizontal: 17,
+    paddingTop: 17,
+    paddingBottom: 110,
   },
+
+  /* -------------------------------------------------------------- */
+  /* Result hero                                                     */
+  /* -------------------------------------------------------------- */
 
   resultHero: {
     alignItems: "center",
-    borderRadius: 25,
-    padding: 23,
+    borderRadius: 27,
+    paddingHorizontal: 22,
+    paddingVertical: 25,
+    overflow: "hidden",
   },
 
   resultIcon: {
-    width: 70,
-    height: 70,
-    borderRadius: 24,
+    width: 76,
+    height: 76,
+    borderRadius: 25,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor:
-      "rgba(255,255,255,0.12)",
+      "rgba(255,255,255,0.11)",
   },
 
   resultRing: {
     position: "absolute",
-    width: 70,
-    height: 70,
-    borderRadius: 24,
+    width: 76,
+    height: 76,
+    borderRadius: 25,
     borderWidth: 2,
     borderColor: "#4ADE80",
   },
 
+  statusPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    marginTop: 14,
+  },
+
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 99,
+  },
+
   resultEyebrow: {
-    color: "#FDE68A",
-    fontSize: 9,
-    fontWeight: "900",
-    letterSpacing: 1,
-    marginTop: 13,
+    fontFamily: "Poppins_800ExtraBold",
+    fontSize: 8,
+    letterSpacing: 1.15,
   },
 
   resultPrice: {
     color: "#FFFFFF",
-    fontSize: 27,
-    fontWeight: "900",
-    marginTop: 6,
+    fontFamily: "Poppins_800ExtraBold",
+    fontSize: 28,
+    letterSpacing: -0.8,
+    marginTop: 7,
   },
 
   resultDescription: {
-    color: "rgba(255,255,255,0.72)",
-    fontSize: 10,
+    color:
+      "rgba(255,255,255,0.72)",
+    fontFamily: "Poppins_400Regular",
+    fontSize: 9.5,
     lineHeight: 16,
     textAlign: "center",
     marginTop: 8,
+    maxWidth: 310,
   },
+
+  /* -------------------------------------------------------------- */
+  /* Section header                                                  */
+  /* -------------------------------------------------------------- */
+
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginTop: 25,
+    marginBottom: 12,
+  },
+
+  sectionIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 13,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  sectionHeaderText: {
+    flex: 1,
+  },
+
+  sectionTitle: {
+    fontFamily: "Poppins_800ExtraBold",
+    fontSize: 14,
+    letterSpacing: -0.25,
+  },
+
+  sectionSubtitle: {
+    color: "#94A3B8",
+    fontFamily: "Poppins_400Regular",
+    fontSize: 8,
+    marginTop: 1,
+  },
+
+  /* -------------------------------------------------------------- */
+  /* Metrics                                                         */
+  /* -------------------------------------------------------------- */
 
   metricsGrid: {
     flexDirection: "row",
     gap: 9,
-    marginTop: 16,
   },
 
   metricCard: {
     flex: 1,
-    minHeight: 105,
-    borderRadius: 18,
-    padding: 12,
+    minHeight: 112,
+    borderRadius: 19,
+    padding: 13,
     backgroundColor: "#FFFFFF",
     borderWidth: 1,
     borderColor: "#E5E7EB",
+    shadowColor: "#000",
+    shadowOpacity: 0.025,
+    shadowRadius: 7,
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
+    elevation: 1,
   },
 
   metricIcon: {
-    width: 34,
-    height: 34,
-    borderRadius: 11,
+    width: 35,
+    height: 35,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
   },
 
   metricValue: {
-    color: "#1F2937",
-    fontSize: 13,
-    fontWeight: "900",
-    marginTop: 8,
+    color: "#111827",
+    fontFamily: "Poppins_800ExtraBold",
+    fontSize: 12.5,
+    marginTop: 9,
   },
 
   metricLabel: {
-    color: "#64748B",
-    fontSize: 8,
-    marginTop: 3,
+    color: "#94A3B8",
+    fontFamily: "Poppins_700Bold",
+    fontSize: 6.5,
+    letterSpacing: 0.55,
+    marginTop: 2,
   },
+
+  /* -------------------------------------------------------------- */
+  /* Fairness                                                        */
+  /* -------------------------------------------------------------- */
 
   fairnessCard: {
     flexDirection: "row",
     alignItems: "center",
     gap: 11,
-    borderRadius: 18,
+    borderRadius: 19,
     padding: 14,
     borderWidth: 1,
-    marginTop: 16,
+    marginTop: 15,
+  },
+
+  fairnessIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
   },
 
   fairnessText: {
@@ -1870,29 +2763,39 @@ const styles = StyleSheet.create({
   },
 
   fairnessTitle: {
+    fontFamily: "Poppins_800ExtraBold",
     fontSize: 11,
-    fontWeight: "800",
   },
 
   fairnessDescription: {
     color: "#64748B",
-    fontSize: 9,
+    fontFamily: "Poppins_400Regular",
+    fontSize: 8.5,
     lineHeight: 14,
     marginTop: 2,
   },
+
+  inlineStrong: {
+    fontFamily: "Poppins_700Bold",
+    color: "#475569",
+  },
+
+  /* -------------------------------------------------------------- */
+  /* Contact card                                                    */
+  /* -------------------------------------------------------------- */
 
   contactCard: {
     borderRadius: 22,
     padding: 16,
     backgroundColor: "#FFFFFF",
     borderWidth: 1,
-    marginTop: 18,
+    marginTop: 0,
     shadowColor: "#000",
     shadowOpacity: 0.035,
-    shadowRadius: 8,
+    shadowRadius: 9,
     shadowOffset: {
       width: 0,
-      height: 3,
+      height: 4,
     },
     elevation: 2,
   },
@@ -1934,118 +2837,55 @@ const styles = StyleSheet.create({
   },
 
   contactEyebrow: {
-    fontSize: 8,
-    fontWeight: "900",
+    fontFamily: "Poppins_800ExtraBold",
+    fontSize: 7.5,
     letterSpacing: 0.9,
   },
 
   contactTitle: {
-    fontSize: 13,
-    fontWeight: "900",
+    fontFamily: "Poppins_800ExtraBold",
+    fontSize: 12.5,
     marginTop: 2,
   },
 
   contactRejectedTitle: {
     color: "#991B1B",
-    fontSize: 13,
-    fontWeight: "900",
+    fontFamily: "Poppins_800ExtraBold",
+    fontSize: 12.5,
   },
 
   contactDescription: {
     color: "#64748B",
-    fontSize: 9.5,
-    lineHeight: 15,
+    fontFamily: "Poppins_400Regular",
+    fontSize: 8.5,
+    lineHeight: 14.5,
     marginTop: 4,
   },
 
-  contactPrivacyNote: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 7,
-    borderRadius: 14,
-    padding: 11,
-    backgroundColor: "#F8FAFC",
-    marginTop: 14,
-  },
-
-  contactPrivacyText: {
-    flex: 1,
-    color: "#64748B",
-    fontSize: 8.5,
-    lineHeight: 14,
-  },
-
-  requestContactButton: {
-    minHeight: 50,
-    borderRadius: 15,
+  unlockedBadge: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    marginTop: 13,
+    gap: 4,
+    marginBottom: 2,
   },
 
-  requestContactText: {
-    color: "#FFFFFF",
-    fontSize: 10.5,
-    fontWeight: "900",
-  },
-
-  contactPendingStatus: {
-    minHeight: 44,
-    borderRadius: 14,
+  contactRequestBadge: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    marginTop: 14,
+    gap: 5,
+    marginBottom: 2,
   },
 
-  contactPendingText: {
-    fontSize: 9.5,
-    fontWeight: "800",
+  requestDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 99,
+    backgroundColor: "#F59E0B",
   },
 
-  contactResponseActions: {
-    flexDirection: "row",
-    gap: 10,
-    marginTop: 15,
-  },
-
-  contactRejectButton: {
-    flex: 1,
-    minHeight: 48,
-    borderRadius: 14,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
-    backgroundColor: "#FEF2F2",
-    borderWidth: 1,
-    borderColor: "#FECACA",
-  },
-
-  contactRejectText: {
-    color: "#B91C1C",
-    fontSize: 10,
-    fontWeight: "800",
-  },
-
-  contactAcceptButton: {
-    flex: 1.25,
-    minHeight: 48,
-    borderRadius: 14,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
-  },
-
-  contactAcceptText: {
-    color: "#FFFFFF",
-    fontSize: 10,
-    fontWeight: "900",
-  },
+  /* -------------------------------------------------------------- */
+  /* Contact identity                                                */
+  /* -------------------------------------------------------------- */
 
   contactIdentity: {
     flexDirection: "row",
@@ -2071,15 +2911,29 @@ const styles = StyleSheet.create({
 
   contactName: {
     color: "#1F2937",
-    fontSize: 12,
-    fontWeight: "900",
+    fontFamily: "Poppins_800ExtraBold",
+    fontSize: 11.5,
   },
 
   contactLocation: {
     color: "#64748B",
-    fontSize: 8.5,
-    marginTop: 3,
+    fontFamily: "Poppins_400Regular",
+    fontSize: 8,
+    marginTop: 2,
   },
+
+  verifiedBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FFFFFF",
+  },
+
+  /* -------------------------------------------------------------- */
+  /* Contact buttons                                                 */
+  /* -------------------------------------------------------------- */
 
   contactActions: {
     flexDirection: "row",
@@ -2103,40 +2957,158 @@ const styles = StyleSheet.create({
 
   contactActionText: {
     color: "#FFFFFF",
-    fontSize: 10.5,
-    fontWeight: "900",
+    fontFamily: "Poppins_800ExtraBold",
+    fontSize: 9.5,
   },
 
   contactActionPressed: {
     opacity: 0.84,
-    transform: [{ scale: 0.98 }],
+    transform: [
+      {
+        scale: 0.98,
+      },
+    ],
   },
 
   contactDisabled: {
     opacity: 0.55,
   },
 
-  sectionTitle: {
-    color: "#1F2937",
-    fontSize: 15,
-    fontWeight: "800",
-    marginTop: 24,
-    marginBottom: 12,
+  /* -------------------------------------------------------------- */
+  /* Privacy                                                         */
+  /* -------------------------------------------------------------- */
+
+  contactPrivacyNote: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 7,
+    borderRadius: 14,
+    padding: 11,
+    backgroundColor: "#F8FAFC",
+    marginTop: 14,
   },
 
+  contactPrivacyText: {
+    flex: 1,
+    color: "#64748B",
+    fontFamily: "Poppins_400Regular",
+    fontSize: 8,
+    lineHeight: 13.5,
+  },
+
+  requestContactButton: {
+    minHeight: 50,
+    borderRadius: 15,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    marginTop: 13,
+  },
+
+  requestContactText: {
+    color: "#FFFFFF",
+    fontFamily: "Poppins_800ExtraBold",
+    fontSize: 9.5,
+  },
+
+  /* -------------------------------------------------------------- */
+  /* Pending                                                         */
+  /* -------------------------------------------------------------- */
+
+  contactPendingStatus: {
+    minHeight: 44,
+    borderRadius: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    marginTop: 14,
+  },
+
+  contactPendingText: {
+    fontFamily: "Poppins_700Bold",
+    fontSize: 8.5,
+  },
+
+  /* -------------------------------------------------------------- */
+  /* Response                                                        */
+  /* -------------------------------------------------------------- */
+
+  contactResponseActions: {
+    flexDirection: "row",
+    gap: 10,
+    marginTop: 15,
+  },
+
+  contactRejectButton: {
+    flex: 1,
+    minHeight: 48,
+    borderRadius: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    backgroundColor: "#FEF2F2",
+    borderWidth: 1,
+    borderColor: "#FECACA",
+  },
+
+  contactRejectText: {
+    color: "#B91C1C",
+    fontFamily: "Poppins_700Bold",
+    fontSize: 9.5,
+  },
+
+  contactAcceptButton: {
+    flex: 1.25,
+    minHeight: 48,
+    borderRadius: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+  },
+
+  contactAcceptText: {
+    color: "#FFFFFF",
+    fontFamily: "Poppins_800ExtraBold",
+    fontSize: 9.5,
+  },
+
+  /* -------------------------------------------------------------- */
+  /* Timeline                                                        */
+  /* -------------------------------------------------------------- */
+
   timeline: {
-    gap: 12,
+    gap: 11,
   },
 
   historyCard: {
     flexDirection: "row",
     alignItems: "flex-start",
     gap: 10,
-    borderRadius: 18,
-    padding: 14,
+    borderRadius: 19,
+    padding: 13,
     backgroundColor: "#FFFFFF",
     borderWidth: 1,
     borderColor: "#E5E7EB",
+    shadowColor: "#000",
+    shadowOpacity: 0.025,
+    shadowRadius: 6,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    elevation: 1,
+  },
+
+  historyConnector: {
+    width: 39,
+    height: 39,
+    borderRadius: 13,
+    alignItems: "center",
+    justifyContent: "center",
   },
 
   historyIcon: {
@@ -2153,25 +3125,42 @@ const styles = StyleSheet.create({
 
   historyTopRow: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     justifyContent: "space-between",
+    gap: 8,
   },
 
   historyAgent: {
-    fontSize: 10.5,
-    fontWeight: "900",
+    fontFamily: "Poppins_800ExtraBold",
+    fontSize: 10,
+  },
+
+  historyRole: {
+    color: "#A1A1AA",
+    fontFamily: "Poppins_400Regular",
+    fontSize: 6.8,
+    marginTop: 1,
+  },
+
+  roundPill: {
+    borderRadius: 999,
+    paddingHorizontal: 7,
+    paddingVertical: 4,
+    backgroundColor: "#F8FAFC",
   },
 
   historyRound: {
     color: "#94A3B8",
-    fontSize: 8,
+    fontFamily: "Poppins_700Bold",
+    fontSize: 6.5,
+    letterSpacing: 0.35,
   },
 
   historyDecision: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    marginTop: 7,
+    marginTop: 8,
   },
 
   actionBadge: {
@@ -2181,38 +3170,55 @@ const styles = StyleSheet.create({
   },
 
   actionText: {
-    fontSize: 7.5,
-    fontWeight: "900",
+    fontFamily: "Poppins_800ExtraBold",
+    fontSize: 7,
   },
 
   historyPrice: {
     color: "#1F2937",
-    fontSize: 12,
-    fontWeight: "900",
+    fontFamily: "Poppins_800ExtraBold",
+    fontSize: 11.5,
   },
 
   historyReason: {
     color: "#64748B",
-    fontSize: 9,
-    lineHeight: 15,
+    fontFamily: "Poppins_400Regular",
+    fontSize: 8.5,
+    lineHeight: 14.5,
     marginTop: 7,
   },
 
+  /* -------------------------------------------------------------- */
+  /* Bottom button                                                   */
+  /* -------------------------------------------------------------- */
+
   doneButton: {
-    minHeight: 52,
-    borderRadius: 16,
+    minHeight: 53,
+    borderRadius: 17,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-    marginTop: 22,
+    marginTop: 24,
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    elevation: 3,
   },
 
   doneButtonText: {
     color: "#FFFFFF",
-    fontSize: 11.5,
-    fontWeight: "900",
+    fontFamily: "Poppins_800ExtraBold",
+    fontSize: 10.5,
   },
+
+  /* -------------------------------------------------------------- */
+  /* States                                                          */
+  /* -------------------------------------------------------------- */
 
   centerState: {
     flex: 1,
@@ -2227,23 +3233,34 @@ const styles = StyleSheet.create({
     borderRadius: 32,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 4,
+  },
+
+  errorIcon: {
+    width: 82,
+    height: 82,
+    borderRadius: 28,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FEF2F2",
   },
 
   stateTitle: {
-    color: "#1F2937",
-    fontSize: 18,
-    fontWeight: "800",
-    marginTop: 15,
+    color: "#111827",
+    fontFamily: "Poppins_800ExtraBold",
+    fontSize: 17,
+    letterSpacing: -0.3,
+    marginTop: 16,
     textAlign: "center",
   },
 
   stateText: {
     color: "#64748B",
-    fontSize: 11,
-    lineHeight: 18,
+    fontFamily: "Poppins_400Regular",
+    fontSize: 9.5,
+    lineHeight: 17,
     textAlign: "center",
     marginTop: 7,
+    maxWidth: 300,
   },
 
   simpleButton: {
@@ -2251,13 +3268,13 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 22,
+    paddingHorizontal: 24,
     marginTop: 18,
   },
 
   simpleButtonText: {
     color: "#FFFFFF",
-    fontSize: 11,
-    fontWeight: "800",
+    fontFamily: "Poppins_800ExtraBold",
+    fontSize: 10,
   },
 });
