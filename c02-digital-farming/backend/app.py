@@ -38,13 +38,13 @@ class YieldPredictionInput(BaseModel):
     Paddy_Type: str
     lat: float
     lon: float
-    field_id: str
+    field_id: str = ""
     use_firebase: bool = False
     
 class EnvironmentDataRequest(BaseModel):
     lat: float
     lon: float
-    field_id: str
+    field_id: str = ""
     use_firebase: bool = False
 
 # Global variables for model and category data
@@ -138,15 +138,15 @@ def get_environment_data(input_data: EnvironmentDataRequest):
         # Default soil moisture if Firebase is disabled or fails
         combined_moisture = 0.35 
         
-        if input_data.use_firebase and input_data.field_id:
+        if input_data.use_firebase:
             init_firebase()
             iot_data = fetch_iot_data(input_data.field_id)
             if iot_data:
-                combined_temp = (iot_data['temp_mean'] + forecast_data['forecast_temp_mean']) / 2
-                combined_hum = (iot_data['humidity_mean'] + forecast_data['forecast_humidity_mean']) / 2
+                combined_temp = iot_data['temp_mean']
+                combined_hum = iot_data['humidity_mean']
                 combined_moisture = iot_data['soil_moisture_7']
             else:
-                print(f"Warning: No IoT data found for field {input_data.field_id}. Falling back to default soil moisture.")
+                print(f"Warning: No IoT data found. Falling back to weather and default soil moisture.")
         
         return {
             "Temperature_C": float(combined_temp),
@@ -170,15 +170,15 @@ def predict_yield_production(input_data: YieldPredictionInput):
         combined_hum = forecast_data['forecast_humidity_mean']
         combined_moisture = 0.35
         
-        if input_data.use_firebase and input_data.field_id:
+        if input_data.use_firebase:
             init_firebase()
             iot_data = fetch_iot_data(input_data.field_id)
             if iot_data:
-                combined_temp = (iot_data['temp_mean'] + forecast_data['forecast_temp_mean']) / 2
-                combined_hum = (iot_data['humidity_mean'] + forecast_data['forecast_humidity_mean']) / 2
+                combined_temp = iot_data['temp_mean']
+                combined_hum = iot_data['humidity_mean']
                 combined_moisture = iot_data['soil_moisture_7']
             else:
-                print(f"Warning: No IoT data found for field {input_data.field_id}.")
+                print(f"Warning: No IoT data found. Falling back to weather and default soil moisture.")
         
         # Extract components from pipeline
         model_xgb = yield_pipeline['model']

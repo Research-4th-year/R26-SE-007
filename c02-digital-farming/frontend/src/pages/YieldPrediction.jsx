@@ -33,7 +33,7 @@ const findClosestLocation = (lat, lon) => {
 function YieldPrediction() {
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
-    googleMapsApiKey: "AIzaSyCfNslBQ-Q_czbhuPrr0oqmbMPbGZmoARc"
+    // googleMapsApiKey: "AIzaSyCfNslBQ-Q_czbhuPrr0oqmbMPbGZmoARc"
   });
 
   const [loading, setLoading] = useState(false);
@@ -117,7 +117,6 @@ function YieldPrediction() {
           body: JSON.stringify({
             lat: yieldData.lat,
             lon: yieldData.lon,
-            field_id: yieldData.field_id,
             use_firebase: yieldData.useFirebase
           }),
         });
@@ -163,7 +162,6 @@ function YieldPrediction() {
           Paddy_Type: yieldData.Paddy_Type,
           lat: yieldData.lat,
           lon: yieldData.lon,
-          field_id: yieldData.field_id,
           use_firebase: yieldData.useFirebase
         }),
       });
@@ -275,16 +273,10 @@ function YieldPrediction() {
               onChange={(e) => handleYieldChange({ target: { name: 'useFirebase', value: e.target.checked } })}
               style={{ marginRight: '10px', width: '20px', height: '20px' }}
             />
-            Use Firebase IoT Sensor Data
+            Data Get From IoT Device
           </label>
         </div>
 
-        {yieldData.useFirebase && (
-          <div className="form-group">
-            <label htmlFor="field_id">ESP32 Field ID (For IoT Integration)</label>
-            <input type="text" name="field_id" id="field_id" value={yieldData.field_id} onChange={handleYieldChange} style={{ marginBottom: '10px' }} />
-          </div>
-        )}
 
         {environmentalData && (
           <div className="variety-details fade-in" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '20px', background: 'rgba(0,0,0,0.2)', padding: '15px', borderRadius: '12px', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
@@ -305,7 +297,7 @@ function YieldPrediction() {
               <span className="value">{environmentalData.Soil_Moisture.toFixed(2)} m³/m³</span>
             </div>
             <p style={{ gridColumn: '1 / -1', fontSize: '0.8rem', color: '#94a3b8', margin: '5px 0 0 0', textAlign: 'center' }}>
-              {yieldData.useFirebase ? 'Averaged with real-time IoT sensors' : 'Fetched from 14-day Weather Forecast'}
+              {yieldData.useFirebase ? 'Fetched directly from IoT Device' : 'Fetched from 14-day Weather Forecast'}
             </p>
           </div>
         )}
