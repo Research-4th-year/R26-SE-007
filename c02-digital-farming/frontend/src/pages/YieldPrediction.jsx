@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { GoogleMap, useJsApiLoader, Marker } from '@react-google-maps/api';
 import { districtData } from '../data/constants';
+import { useAuth } from '../contexts/AuthContext';
 
 const mapContainerStyle = {
   width: '100%',
@@ -41,6 +42,8 @@ function YieldPrediction() {
   const [error, setError] = useState(null);
   const [yieldResult, setYieldResult] = useState(null);
   const [environmentalData, setEnvironmentalData] = useState(null);
+  const { currentUser } = useAuth();
+  const [saveStatus, setSaveStatus] = useState('');
 
   const [yieldData, setYieldData] = useState({
     District: 'Anuradhapura',
@@ -187,6 +190,42 @@ function YieldPrediction() {
       final_land_size_ha = final_land_size_ha * 0.00252929;
     }
     return val_per_ha * final_land_size_ha;
+  };
+
+  const handleSaveToProfile = async () => {
+    if (!currentUser) {
+      alert("Please login to save to profile.");
+      return;
+    }
+    setSaveStatus('Saving...');
+    try {
+      const final_land_size_ha = parseFloat(yieldData.Total_Land_Size || 0);
+      let converted = final_land_size_ha;
+      if (yieldData.Land_Size_Unit === 'Acres') converted *= 0.404686;
+      else if (yieldData.Land_Size_Unit === 'Perches') converted *= 0.00252929;
+
+      const payload = {
+        user_id: currentUser.uid,
+        district: yieldData.District,
+        land_size: converted,
+        paddy_type: yieldData.Paddy_Type,
+        predicted_yield_kg_per_ha: yieldResult.predicted_yield_kg_per_ha,
+        total_yield_kg: getTotalYieldKg(yieldResult.predicted_yield_kg_per_ha)
+      };
+
+      const res = await fetch('http://127.0.0.1:8000/api/yield_history', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) throw new Error("Failed to save");
+      setSaveStatus('Saved!');
+      setTimeout(() => setSaveStatus(''), 3000);
+    } catch (err) {
+      console.error(err);
+      setSaveStatus('Error saving');
+      setTimeout(() => setSaveStatus(''), 3000);
+    }
   };
 
   return (
@@ -344,7 +383,7 @@ function YieldPrediction() {
               </div>
             </div>
 
-            <div className="reasoning-box" style={{ background: 'rgba(0,0,0,0.2)', padding: '15px', borderRadius: '12px', fontSize: '0.95rem', color: '#e2e8f0', textAlign: 'left' }}>
+            <div className="reasoning-box" style={{ background: 'rgba(0,0,0,0.2)', padding: '15px', borderRadius: '12px', fontSize: '0.95rem', color: '#e2e8f0', textAlign: 'left', marginBottom: '20px' }}>
               <h3 style={{ marginTop: 0, marginBottom: '10px', fontSize: '1.1rem', color: '#10b981' }}>Agronomic Recommendations</h3>
               <ul style={{ margin: 0, paddingLeft: '20px' }}>
                 {yieldResult.agronomic_recommendations && yieldResult.agronomic_recommendations.map((insight, idx) => (
@@ -352,6 +391,10 @@ function YieldPrediction() {
                 ))}
               </ul>
             </div>
+
+            <button onClick={handleSaveToProfile} className="submit-btn" style={{ background: '#3b82f6' }}>
+              {saveStatus || 'Save to Profile'}
+            </button>
           </div>
         </div>
       )}

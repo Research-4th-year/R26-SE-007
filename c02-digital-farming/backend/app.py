@@ -510,3 +510,152 @@ def delete_profile(user_id: str):
         return {"message": "Profile and associated history deleted"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+# ================= YIELD HISTORY =================
+
+class YieldHistoryItem(BaseModel):
+    user_id: str
+    district: str
+    land_size: float
+    paddy_type: str
+    predicted_yield_kg_per_ha: float
+    total_yield_kg: float
+
+@app.post("/api/yield_history")
+def save_yield_history(item: YieldHistoryItem):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('''
+            INSERT INTO yield_history 
+            (user_id, district, land_size, paddy_type, predicted_yield_kg_per_ha, total_yield_kg) 
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (item.user_id, item.district, item.land_size, item.paddy_type, item.predicted_yield_kg_per_ha, item.total_yield_kg))
+        conn.commit()
+        conn.close()
+        return {"message": "Yield history saved successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/yield_history/{user_id}")
+def get_yield_history(user_id: str):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('SELECT * FROM yield_history WHERE user_id = ? ORDER BY id DESC', (user_id,))
+        rows = cursor.fetchall()
+        conn.close()
+        return [dict(row) for row in rows]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.delete("/api/yield_history/{id}")
+def delete_yield_history(id: int):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('DELETE FROM yield_history WHERE id = ?', (id,))
+        conn.commit()
+        conn.close()
+        return {"message": "Deleted successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# ================= DISEASE HISTORY =================
+
+class DiseaseHistoryItem(BaseModel):
+    user_id: str
+    disease_name: str
+    disease_type: str
+    confidence: float
+
+@app.post("/api/disease_history")
+def save_disease_history(item: DiseaseHistoryItem):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('''
+            INSERT INTO disease_history 
+            (user_id, disease_name, disease_type, confidence) 
+            VALUES (?, ?, ?, ?)
+        ''', (item.user_id, item.disease_name, item.disease_type, item.confidence))
+        conn.commit()
+        conn.close()
+        return {"message": "Disease history saved successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/disease_history/{user_id}")
+def get_disease_history(user_id: str):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('SELECT * FROM disease_history WHERE user_id = ? ORDER BY id DESC', (user_id,))
+        rows = cursor.fetchall()
+        conn.close()
+        return [dict(row) for row in rows]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.delete("/api/disease_history/{id}")
+def delete_disease_history(id: int):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('DELETE FROM disease_history WHERE id = ?', (id,))
+        conn.commit()
+        conn.close()
+        return {"message": "Deleted successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# ================= FERTILIZER HISTORY =================
+
+class FertilizerHistoryItem(BaseModel):
+    user_id: str
+    agro_zone: str
+    crop_duration: str
+    total_urea: float = 0
+    total_tsp: float = 0
+    total_mop: float = 0
+    total_zinc: float = 0
+
+@app.post("/api/fertilizer_history")
+def save_fertilizer_history(item: FertilizerHistoryItem):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('''
+            INSERT INTO fertilizer_history 
+            (user_id, agro_zone, crop_duration, total_urea, total_tsp, total_mop, total_zinc) 
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        ''', (item.user_id, item.agro_zone, item.crop_duration, item.total_urea, item.total_tsp, item.total_mop, item.total_zinc))
+        conn.commit()
+        conn.close()
+        return {"message": "Fertilizer history saved successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/fertilizer_history/{user_id}")
+def get_fertilizer_history(user_id: str):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('SELECT * FROM fertilizer_history WHERE user_id = ? ORDER BY id DESC', (user_id,))
+        rows = cursor.fetchall()
+        conn.close()
+        return [dict(row) for row in rows]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.delete("/api/fertilizer_history/{id}")
+def delete_fertilizer_history(id: int):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('DELETE FROM fertilizer_history WHERE id = ?', (id,))
+        conn.commit()
+        conn.close()
+        return {"message": "Deleted successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
 import fertilizerData from '../data/fertilizer.json';
+import { useAuth } from '../contexts/AuthContext';
 
 const FertilizerGuide = () => {
   const [selectedZone, setSelectedZone] = useState('Dry Zone');
   const [selectedDuration, setSelectedDuration] = useState('3_5_month');
+  const { currentUser } = useAuth();
+  const [saveStatus, setSaveStatus] = useState('');
 
   const mainFertilizers = [
     {
@@ -34,6 +37,43 @@ const FertilizerGuide = () => {
 
   const zoneData = fertilizerData.recommendations.find(r => r.agro_zone === selectedZone);
   const durationData = zoneData ? zoneData.fertilizer_recommendations[selectedDuration] : null;
+
+  const handleSaveToProfile = async () => {
+    if (!currentUser) {
+      alert("Please login to save to profile.");
+      return;
+    }
+    if (!durationData || !durationData.total) {
+      alert("No valid data to save.");
+      return;
+    }
+    
+    setSaveStatus('Saving...');
+    try {
+      const payload = {
+        user_id: currentUser.uid,
+        agro_zone: selectedZone,
+        crop_duration: selectedDuration,
+        total_urea: parseFloat(durationData.total.urea || 0),
+        total_tsp: parseFloat(durationData.total.tsp || 0),
+        total_mop: parseFloat(durationData.total.mop || 0),
+        total_zinc: parseFloat(durationData.total.zinc_sulphate || 0)
+      };
+
+      const res = await fetch('http://127.0.0.1:8000/api/fertilizer_history', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) throw new Error("Failed to save");
+      setSaveStatus('Saved!');
+      setTimeout(() => setSaveStatus(''), 3000);
+    } catch (err) {
+      console.error(err);
+      setSaveStatus('Error saving');
+      setTimeout(() => setSaveStatus(''), 3000);
+    }
+  };
 
   return (
     <div className="page-container fade-in">
@@ -124,6 +164,14 @@ const FertilizerGuide = () => {
         ) : (
           <div style={{ padding: '20px', background: '#fef2f2', color: '#dc2626', borderRadius: '8px', textAlign: 'center' }}>
             Recommendation data not available for this selection.
+          </div>
+        )}
+
+        {durationData && (
+          <div style={{ marginTop: '20px', textAlign: 'right' }}>
+            <button onClick={handleSaveToProfile} className="submit-btn" style={{ background: '#3b82f6', width: 'auto', padding: '12px 24px', display: 'inline-block' }}>
+              {saveStatus || 'Save Plan to Profile'}
+            </button>
           </div>
         )}
       </div>

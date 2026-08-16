@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 
 function DiseaseDetection() {
   const [loading, setLoading] = useState(false);
@@ -6,6 +7,8 @@ function DiseaseDetection() {
   const [diseaseFile, setDiseaseFile] = useState(null);
   const [diseasePreview, setDiseasePreview] = useState(null);
   const [diseaseResult, setDiseaseResult] = useState(null);
+  const { currentUser } = useAuth();
+  const [saveStatus, setSaveStatus] = useState('');
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -46,6 +49,35 @@ function DiseaseDetection() {
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSaveToProfile = async () => {
+    if (!currentUser) {
+      alert("Please login to save to profile.");
+      return;
+    }
+    setSaveStatus('Saving...');
+    try {
+      const payload = {
+        user_id: currentUser.uid,
+        disease_name: diseaseResult.disease,
+        disease_type: diseaseResult.disease_type,
+        confidence: diseaseResult.confidence
+      };
+
+      const res = await fetch('http://127.0.0.1:8000/api/disease_history', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) throw new Error("Failed to save");
+      setSaveStatus('Saved!');
+      setTimeout(() => setSaveStatus(''), 3000);
+    } catch (err) {
+      console.error(err);
+      setSaveStatus('Error saving');
+      setTimeout(() => setSaveStatus(''), 3000);
     }
   };
 
@@ -141,6 +173,10 @@ function DiseaseDetection() {
                 </div>
               </div>
             )}
+
+            <button onClick={handleSaveToProfile} className="submit-btn" style={{ background: '#3b82f6', marginTop: '20px' }}>
+              {saveStatus || 'Save to Profile'}
+            </button>
           </div>
         </div>
       )}

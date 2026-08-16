@@ -46,6 +46,44 @@ def init_db():
         )
     ''')
     
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS yield_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id TEXT NOT NULL,
+            district TEXT NOT NULL,
+            land_size REAL NOT NULL,
+            paddy_type TEXT NOT NULL,
+            predicted_yield_kg_per_ha REAL NOT NULL,
+            total_yield_kg REAL NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS disease_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id TEXT NOT NULL,
+            disease_name TEXT NOT NULL,
+            disease_type TEXT NOT NULL,
+            confidence REAL NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS fertilizer_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id TEXT NOT NULL,
+            agro_zone TEXT NOT NULL,
+            crop_duration TEXT NOT NULL,
+            total_urea REAL,
+            total_tsp REAL,
+            total_mop REAL,
+            total_zinc REAL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    
     # Try to add farm_unit to existing farmer_profiles if it doesn't exist
     try:
         cursor.execute("ALTER TABLE farmer_profiles ADD COLUMN farm_unit TEXT DEFAULT 'Acres'")
