@@ -75,6 +75,7 @@ def init_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id TEXT NOT NULL,
             agro_zone TEXT NOT NULL,
+            irrigation TEXT NOT NULL,
             crop_duration TEXT NOT NULL,
             total_urea REAL,
             total_tsp REAL,

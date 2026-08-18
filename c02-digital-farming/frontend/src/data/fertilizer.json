@@ -3,11 +3,228 @@
   "resource_type": "fertilizer_recommendation",
   "crop": "Rice",
   "country": "Sri Lanka",
-  "cultivation_condition": "Irrigated paddy fields",
   "unit": "kg/ha",
   "recommendations": [
     {
       "agro_zone": "Wet Zone",
+      "cultivation_condition": "Rainfed paddy fields",
+      "description": "Wet zone for paddy fields cultivated under rainfed conditions",
+      "applicable_areas": {
+        "districts_fully_applicable": [
+          "Kegalle",
+          "Gampaha",
+          "Colombo",
+          "Kalutara"
+        ],
+        "districts_partially_applicable": {
+          "Matale": {
+            "rule": "For",
+            "divisional_secretariats": [
+              "Yatawaththa",
+              "Ukuwela"
+            ]
+          },
+          "Kandy": {
+            "rule": "Except",
+            "divisional_secretariats": [
+              "Minipe",
+              "Udadumbara",
+              "Panwila",
+              "Medadumbara",
+              "Kundasale",
+              "Pathahewaheta",
+              "Delthota"
+            ]
+          },
+          "Nuwara Eliya": {
+            "rule": "Except",
+            "divisional_secretariats": [
+              "Hanguranketha",
+              "Walapane"
+            ]
+          },
+          "Matara": {
+            "rule": "Except",
+            "divisional_secretariats": [
+              "Hakmana",
+              "Kirinda",
+              "Devinuwara",
+              "Dikwella",
+              "Thihagoda",
+              "Kamburupitiya"
+            ]
+          },
+          "Ratnapura": {
+            "rule": "Except",
+            "divisional_secretariats": [
+              "Embilipitiya",
+              "Kolonna",
+              "Balangoda",
+              "Imbulpe",
+              "Weligepola"
+            ]
+          }
+        }
+      },
+      "fertilizer_recommendations": {
+        "3_month": {
+          "crop_duration": "3 Month",
+          "schedule": [
+            {
+              "age_group": "Basic",
+              "time": "Basic",
+              "urea": 0,
+              "tsp": 55,
+              "mop": 0,
+              "zinc_sulphate": 5
+            },
+            {
+              "age_group": "2 Weeks",
+              "time": "2 Weeks",
+              "urea": 25,
+              "tsp": 0,
+              "mop": 35,
+              "zinc_sulphate": 0
+            },
+            {
+              "age_group": "4 Weeks",
+              "time": "4 Weeks",
+              "urea": 30,
+              "tsp": 0,
+              "mop": 45,
+              "zinc_sulphate": 0
+            },
+            {
+              "age_group": "6 Weeks",
+              "time": "6 Weeks",
+              "urea": 25,
+              "tsp": 0,
+              "mop": 30,
+              "zinc_sulphate": 0
+            },
+            {
+              "age_group": "7 Weeks",
+              "time": "7 Weeks",
+              "urea": 20,
+              "tsp": 0,
+              "mop": 0,
+              "zinc_sulphate": 0
+            }
+          ],
+          "total": {
+            "urea": 100,
+            "tsp": 55,
+            "mop": 110,
+            "zinc_sulphate": 5
+          }
+        },
+        "3_5_month": {
+          "crop_duration": "3 1/2 Month",
+          "schedule": [
+            {
+              "age_group": "Basic",
+              "time": "Basic",
+              "urea": 0,
+              "tsp": 55,
+              "mop": 0,
+              "zinc_sulphate": 5
+            },
+            {
+              "age_group": "2 Weeks",
+              "time": "2 Weeks",
+              "urea": 25,
+              "tsp": 0,
+              "mop": 35,
+              "zinc_sulphate": 0
+            },
+            {
+              "age_group": "4 Weeks",
+              "time": "4 Weeks",
+              "urea": 30,
+              "tsp": 0,
+              "mop": 45,
+              "zinc_sulphate": 0
+            },
+            {
+              "age_group": "6 Weeks",
+              "time": "6 Weeks",
+              "urea": 25,
+              "tsp": 0,
+              "mop": 30,
+              "zinc_sulphate": 0
+            },
+            {
+              "age_group": "8 Weeks",
+              "time": "8 Weeks",
+              "urea": 20,
+              "tsp": 0,
+              "mop": 0,
+              "zinc_sulphate": 0
+            }
+          ],
+          "total": {
+            "urea": 100,
+            "tsp": 55,
+            "mop": 110,
+            "zinc_sulphate": 5
+          }
+        },
+        "4_month": {
+          "crop_duration": "4 Month",
+          "schedule": [
+            {
+              "age_group": "Basic",
+              "time": "Basic",
+              "urea": 0,
+              "tsp": 55,
+              "mop": 0,
+              "zinc_sulphate": 5
+            },
+            {
+              "age_group": "2 Weeks",
+              "time": "2 Weeks",
+              "urea": 25,
+              "tsp": 0,
+              "mop": 35,
+              "zinc_sulphate": 0
+            },
+            {
+              "age_group": "4 Weeks",
+              "time": "4 Weeks",
+              "urea": 30,
+              "tsp": 0,
+              "mop": 45,
+              "zinc_sulphate": 0
+            },
+            {
+              "age_group": "7 Weeks",
+              "time": "7 Weeks",
+              "urea": 25,
+              "tsp": 0,
+              "mop": 30,
+              "zinc_sulphate": 0
+            },
+            {
+              "age_group": "9 Weeks",
+              "time": "9 Weeks",
+              "urea": 20,
+              "tsp": 0,
+              "mop": 0,
+              "zinc_sulphate": 0
+            }
+          ],
+          "total": {
+            "urea": 100,
+            "tsp": 55,
+            "mop": 110,
+            "zinc_sulphate": 5
+          }
+        }
+      }
+    },
+    {
+      "agro_zone": "Wet Zone",
+      "cultivation_condition": "Irrigated paddy fields",
       "description": "Wet zone for paddy fields cultivated under irrigated conditions",
       "applicable_areas": {
         "districts_fully_applicable": [
@@ -91,16 +308,16 @@
               "age_group": "4 Weeks",
               "time": "4 Weeks",
               "urea": 55,
-              "tsp": 25,
-              "mop": 0,
+              "tsp": 0,
+              "mop": 25,
               "zinc_sulphate": 0
             },
             {
               "age_group": "6 Weeks",
               "time": "6 Weeks",
               "urea": 45,
-              "tsp": 25,
-              "mop": 0,
+              "tsp": 0,
+              "mop": 25,
               "zinc_sulphate": 0
             },
             {
@@ -128,7 +345,7 @@
               "urea": 0,
               "tsp": 35,
               "mop": 0,
-              "zinc_sulphate": 0
+              "zinc_sulphate": 5
             },
             {
               "age_group": "2 Weeks",
@@ -142,16 +359,16 @@
               "age_group": "4 Weeks",
               "time": "4 Weeks",
               "urea": 55,
-              "tsp": 25,
-              "mop": 0,
+              "tsp": 0,
+              "mop": 25,
               "zinc_sulphate": 0
             },
             {
               "age_group": "6 Weeks",
               "time": "6 Weeks",
               "urea": 45,
-              "tsp": 25,
-              "mop": 0,
+              "tsp": 0,
+              "mop": 25,
               "zinc_sulphate": 0
             },
             {
@@ -193,16 +410,16 @@
               "age_group": "4 Weeks",
               "time": "4 Weeks",
               "urea": 55,
-              "tsp": 25,
-              "mop": 0,
+              "tsp": 0,
+              "mop": 25,
               "zinc_sulphate": 0
             },
             {
               "age_group": "7 Weeks",
               "time": "7 Weeks",
               "urea": 45,
-              "tsp": 25,
-              "mop": 0,
+              "tsp": 0,
+              "mop": 25,
               "zinc_sulphate": 0
             },
             {
@@ -224,7 +441,185 @@
       }
     },
     {
-      "agro_zone": "Intermediate Zone and Dry Zone",
+      "agro_zone": "Intermediate zone and dry zone",
+      "cultivation_condition": "Rainfed paddy fields",
+      "description": "Intermediate zone and dry zone for paddy fields cultivated under rainfed conditions",
+      "applicable_areas": {
+        "districts_fully_applicable": [
+          "Anuradhapura",
+          "Polonnaruwa",
+          "Monaragala",
+          "Hambantota",
+          "Mulathiw",
+          "Jaffna",
+          "Kurunegala",
+          "Puttlam",
+          "Mannar",
+          "Vauniya",
+          "Ampara",
+          "Batticaloa",
+          "Trincomalee",
+          "Kilinochchi",
+          "Badulla"
+        ],
+        "districts_partially_applicable": {
+          "Kandy": {
+            "rule": "For",
+            "divisional_secretariats": [
+              "Minipe",
+              "Udadumbara",
+              "Panwila",
+              "Medadumbara",
+              "Kundasale",
+              "Pathahewaheta",
+              "Delthota"
+            ]
+          },
+          "Nuwara Eliya": {
+            "rule": "For",
+            "divisional_secretariats": [
+              "Hanguranketha",
+              "Walapane"
+            ]
+          },
+          "Ratnapura": {
+            "rule": "For",
+            "divisional_secretariats": [
+              "Embilipitiya",
+              "Kolonna",
+              "Balangoda",
+              "Imbulpe",
+              "Weligepola"
+            ]
+          },
+          "Matara": {
+            "rule": "For",
+            "divisional_secretariats": [
+              "Hakmana",
+              "Kirinda",
+              "Devinuwara",
+              "Dikwella",
+              "Thihagoda",
+              "Kamburupitiya"
+            ]
+          },
+          "Matale": {
+            "rule": "For",
+            "divisional_secretariats": [
+              "Yatawatha",
+              "Ukuwela"
+            ]
+          }
+        }
+      },
+      "fertilizer_recommendations": {
+        "3_month": {
+          "crop_duration": "3 Month",
+          "schedule": [
+            {
+              "age_group": "Basic",
+              "time": "Basic",
+              "urea": 0,
+              "tsp": 35,
+              "mop": 0,
+              "zinc_sulphate": 5
+            },
+            {
+              "age_group": "2 Weeks",
+              "time": "2 Weeks",
+              "urea": 30,
+              "tsp": 0,
+              "mop": 0,
+              "zinc_sulphate": 0
+            },
+            {
+              "age_group": "4 Weeks",
+              "time": "4 Weeks",
+              "urea": 65,
+              "tsp": 0,
+              "mop": 25,
+              "zinc_sulphate": 0
+            },
+            {
+              "age_group": "6 Weeks",
+              "time": "6 Weeks",
+              "urea": 50,
+              "tsp": 0,
+              "mop": 25,
+              "zinc_sulphate": 0
+            },
+            {
+              "age_group": "7 Weeks",
+              "time": "7 Weeks",
+              "urea": 30,
+              "tsp": 0,
+              "mop": 0,
+              "zinc_sulphate": 0
+            }
+          ],
+          "total": {
+            "urea": 175,
+            "tsp": 35,
+            "mop": 50,
+            "zinc_sulphate": 5
+          }
+        },
+        "3_5_month": {
+          "crop_duration": "3 1/2 Month",
+          "schedule": [
+            {
+              "age_group": "Basic",
+              "time": "Basic",
+              "urea": 0,
+              "tsp": 35,
+              "mop": 0,
+              "zinc_sulphate": 5
+            },
+            {
+              "age_group": "2 Weeks",
+              "time": "2 Weeks",
+              "urea": 30,
+              "tsp": 0,
+              "mop": 0,
+              "zinc_sulphate": 0
+            },
+            {
+              "age_group": "4 Weeks",
+              "time": "4 Weeks",
+              "urea": 65,
+              "tsp": 0,
+              "mop": 25,
+              "zinc_sulphate": 0
+            },
+            {
+              "age_group": "6 Weeks",
+              "time": "6 Weeks",
+              "urea": 50,
+              "tsp": 0,
+              "mop": 25,
+              "zinc_sulphate": 0
+            },
+            {
+              "age_group": "8 Weeks",
+              "time": "8 Weeks",
+              "urea": 30,
+              "tsp": 0,
+              "mop": 0,
+              "zinc_sulphate": 0
+            }
+          ],
+          "total": {
+            "urea": 175,
+            "tsp": 35,
+            "mop": 50,
+            "zinc_sulphate": 5
+          }
+        }
+      }
+    },
+    {
+      "agro_zone": "Intermediate Zone and Dry zone",
+      "cultivation_condition": "Irrigated paddy fields",
       "description": "Intermediate zone and dry zone for paddy fields cultivated under irrigated conditions",
       "applicable_areas": {
         "districts_fully_applicable": [
@@ -232,13 +627,13 @@
           "Polonnaruwa",
           "Monaragala",
           "Hambantota",
-          "Mullaitivu",
+          "Mulatiw",
           "Jaffna",
           "Kurunegala",
           "Mannar",
-          "Puttalam",
+          "Puttlm",
           "Trincomalee",
-          "Kilinochchi",
+          "Kilinochchii",
           "Badulla"
         ],
         "districts_partially_applicable": {
@@ -285,7 +680,7 @@
           "Matale": {
             "rule": "Except",
             "divisional_secretariats": [
-              "Yatawaththa",
+              "Yatawattha",
               "Ukuwela"
             ]
           }
@@ -315,16 +710,16 @@
               "age_group": "4 Weeks",
               "time": "4 Weeks",
               "urea": 75,
-              "tsp": 25,
-              "mop": 0,
+              "tsp": 0,
+              "mop": 25,
               "zinc_sulphate": 0
             },
             {
               "age_group": "6 Weeks",
               "time": "6 Weeks",
               "urea": 65,
-              "tsp": 35,
-              "mop": 0,
+              "tsp": 0,
+              "mop": 35,
               "zinc_sulphate": 0
             },
             {
@@ -366,16 +761,16 @@
               "age_group": "4 Weeks",
               "time": "4 Weeks",
               "urea": 75,
-              "tsp": 25,
-              "mop": 0,
+              "tsp": 0,
+              "mop": 25,
               "zinc_sulphate": 0
             },
             {
               "age_group": "6 Weeks",
               "time": "6 Weeks",
               "urea": 65,
-              "tsp": 35,
-              "mop": 0,
+              "tsp": 0,
+              "mop": 35,
               "zinc_sulphate": 0
             },
             {
@@ -417,16 +812,16 @@
               "age_group": "4 Weeks",
               "time": "4 Weeks",
               "urea": 75,
-              "tsp": 25,
-              "mop": 0,
+              "tsp": 0,
+              "mop": 25,
               "zinc_sulphate": 0
             },
             {
               "age_group": "7 Weeks",
               "time": "7 Weeks",
               "urea": 65,
-              "tsp": 35,
-              "mop": 0,
+              "tsp": 0,
+              "mop": 35,
               "zinc_sulphate": 0
             },
             {
@@ -448,4 +843,4 @@
       }
     }
   ]
-}
+} 

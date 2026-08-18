@@ -614,6 +614,7 @@ def delete_disease_history(id: int):
 class FertilizerHistoryItem(BaseModel):
     user_id: str
     agro_zone: str
+    irrigation: str
     crop_duration: str
     total_urea: float = 0
     total_tsp: float = 0
@@ -627,9 +628,9 @@ def save_fertilizer_history(item: FertilizerHistoryItem):
         cursor = conn.cursor()
         cursor.execute('''
             INSERT INTO fertilizer_history 
-            (user_id, agro_zone, crop_duration, total_urea, total_tsp, total_mop, total_zinc) 
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        ''', (item.user_id, item.agro_zone, item.crop_duration, item.total_urea, item.total_tsp, item.total_mop, item.total_zinc))
+            (user_id, agro_zone, irrigation, crop_duration, total_urea, total_tsp, total_mop, total_zinc) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (item.user_id, item.agro_zone, item.irrigation, item.crop_duration, item.total_urea, item.total_tsp, item.total_mop, item.total_zinc))
         conn.commit()
         conn.close()
         return {"message": "Fertilizer history saved successfully"}

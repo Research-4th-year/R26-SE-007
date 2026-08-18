@@ -14,6 +14,7 @@ import {
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { authService } from "@/services/shared/auth.service";
 
 const API_URL = "http://127.0.0.1:8000";
 
@@ -81,6 +82,7 @@ export default function YieldPredictionScreen() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+  const [saveStatus, setSaveStatus] = useState<string>('');
 
   const handleSubmit = async () => {
     setLoading(true);
@@ -109,6 +111,41 @@ export default function YieldPredictionScreen() {
       setError(err.message || "Failed to fetch data from backend.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSaveToProfile = async () => {
+    if (!result) return;
+    setSaveStatus('Saving...');
+    try {
+      const user = await authService.getStoredUser();
+      
+      let convertedSize = parseFloat(formData.Total_Land_Size) || 0;
+      if (formData.Land_Size_Unit === 'Perches') convertedSize = convertedSize * 0.00252929;
+      else if (formData.Land_Size_Unit === 'Acres') convertedSize = convertedSize * 0.404686;
+
+      const payload = {
+        user_id: user?.id || 'mobile_user',
+        district: formData.District,
+        land_size: convertedSize,
+        paddy_type: formData.Paddy_Type,
+        estimated_yield: getTotalYieldKg(result.predicted_yield_kg_per_ha)
+      };
+
+      const res = await fetch(`${API_URL}/api/history/yield`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (res.ok) {
+        setSaveStatus('Saved to Profile');
+        setTimeout(() => setSaveStatus(''), 3000);
+      } else {
+        setSaveStatus('Failed to Save');
+      }
+    } catch (err) {
+      setSaveStatus('Failed to Save');
     }
   };
 
@@ -267,6 +304,13 @@ export default function YieldPredictionScreen() {
                   ))}
                 </View>
               )}
+              
+              <TouchableOpacity
+                style={[styles.primaryBtn, { marginTop: 20, backgroundColor: "#3B82F6" }]}
+                onPress={handleSaveToProfile}
+              >
+                <Text style={styles.primaryBtnText}>{saveStatus || "Save to Profile"}</Text>
+              </TouchableOpacity>
             </View>
           )}
         </ScrollView>

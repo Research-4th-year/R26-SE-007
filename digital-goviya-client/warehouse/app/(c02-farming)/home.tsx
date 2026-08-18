@@ -23,6 +23,7 @@ const ROUTES = {
   variety: "/(c02-farming)/variety-prediction",
   yield: "/(c02-farming)/yield-prediction",
   disease: "/(c02-farming)/disease-detection",
+  fertilizer: "/(c02-farming)/fertilizer-guide",
 };
 
 export default function FarmingHomeScreen() {
@@ -153,6 +154,25 @@ export default function FarmingHomeScreen() {
               >
                 <Text style={[styles.secondaryBtnText, { color: "#B91C1C" }]}>Scan Leaf</Text>
                 <Ionicons name="arrow-forward" size={16} color="#B91C1C" />
+              </TouchableOpacity>
+            </View>
+
+            {/* Fertilizer card */}
+            <View style={styles.featureCard}>
+              <View style={[styles.featureIconBox, { backgroundColor: "#DCFCE7" }]}>
+                <Ionicons name="leaf" size={26} color="#15803D" />
+              </View>
+              <Text style={styles.featureTitle}>Fertilizer Guide</Text>
+              <Text style={styles.featureDesc}>
+                Calculate optimal Urea, TSP, and MOP requirements based on RRDI guidelines.
+              </Text>
+              <TouchableOpacity
+                style={[styles.secondaryBtn, { backgroundColor: "#F0FDF4" }]}
+                activeOpacity={0.85}
+                onPress={() => router.push(ROUTES.fertilizer as any)}
+              >
+                <Text style={[styles.secondaryBtnText, { color: "#15803D" }]}>Calculate Needs</Text>
+                <Ionicons name="arrow-forward" size={16} color="#15803D" />
               </TouchableOpacity>
             </View>
             

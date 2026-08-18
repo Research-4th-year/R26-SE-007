@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import fertilizerData from '../data/fertilizer.json';
 
-const FertilizerSummary = ({ zone, ageGroup }) => {
+const FertilizerSummary = ({ zone, ageGroup, irrigation = 'Irrigated' }) => {
   const summaryData = useMemo(() => {
     if (!zone || !ageGroup) return null;
 
@@ -14,11 +14,14 @@ const FertilizerSummary = ({ zone, ageGroup }) => {
     else if (lowerAge.includes('3 1/2') || lowerAge.includes('3.5')) durationKey = '3_5_month';
     else if (lowerAge.includes('3')) durationKey = '3_month';
 
-    const zData = fertilizerData.recommendations.find(r => r.agro_zone === zone);
+    const zData = fertilizerData.recommendations.find(r => 
+      r.agro_zone.toLowerCase().includes(zone.toLowerCase()) && 
+      r.cultivation_condition.toLowerCase().includes(irrigation.toLowerCase())
+    );
     if (!zData) return null;
 
     return zData.fertilizer_recommendations[durationKey];
-  }, [zone, ageGroup]);
+  }, [zone, ageGroup, irrigation]);
 
   if (!summaryData) return null;
 

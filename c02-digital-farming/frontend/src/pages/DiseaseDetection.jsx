@@ -25,7 +25,7 @@ function DiseaseDetection() {
       setError("Please select an image first.");
       return;
     }
-    
+
     setLoading(true);
     setError(null);
     setDiseaseResult(null);
@@ -94,11 +94,11 @@ function DiseaseDetection() {
         <div className="form-group">
           <label>Upload Paddy Leaf Image</label>
           <div className="image-upload-container">
-            <input 
-              type="file" 
-              accept="image/*" 
-              onChange={handleImageChange} 
-              id="disease-image-upload" 
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageChange}
+              id="disease-image-upload"
               className="file-input"
             />
             <label htmlFor="disease-image-upload" className="file-upload-label">
@@ -106,13 +106,13 @@ function DiseaseDetection() {
               <span>{diseaseFile ? diseaseFile.name : 'Choose an image'}</span>
             </label>
           </div>
-          
+
           {diseasePreview && (
             <div className="image-preview" style={{ marginTop: '15px', textAlign: 'center' }}>
-              <img 
-                src={diseasePreview} 
-                alt="Leaf preview" 
-                style={{ maxWidth: '100%', maxHeight: '250px', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.3)' }} 
+              <img
+                src={diseasePreview}
+                alt="Leaf preview"
+                style={{ maxWidth: '100%', maxHeight: '250px', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.3)' }}
               />
             </div>
           )}
@@ -127,27 +127,27 @@ function DiseaseDetection() {
         <div className="result-card fade-in merged-results-card">
           <div className="merged-variety-section" style={{ width: '100%', textAlign: 'center' }}>
             <h2>Diagnosis Result</h2>
-            
-            <div className="variety-highlight" style={{ 
-              fontSize: '2.5rem', 
-              marginBottom: '5px', 
-              color: diseaseResult.disease.toLowerCase() === 'healthy' ? '#10b981' : '#ef4444' 
+
+            <div className="variety-highlight" style={{
+              fontSize: '2.5rem',
+              marginBottom: '5px',
+              color: diseaseResult.disease.toLowerCase() === 'healthy' ? '#10b981' : '#ef4444'
             }}>
               {diseaseResult.disease}
             </div>
-            
+
             <div style={{ fontSize: '1.2rem', color: '#94a3b8', marginBottom: '20px' }}>
               Type: {diseaseResult.disease_type}
             </div>
-            
+
             <div className="confidence-meter" style={{ marginBottom: '25px', textAlign: 'left' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                 <span style={{ color: '#cbd5e1' }}>Confidence Level</span>
                 <span style={{ fontWeight: 'bold' }}>{diseaseResult.confidence.toFixed(2)}%</span>
               </div>
               <div style={{ width: '100%', height: '10px', background: 'rgba(255,255,255,0.1)', borderRadius: '5px', overflow: 'hidden' }}>
-                <div style={{ 
-                  height: '100%', 
+                <div style={{
+                  height: '100%',
                   width: `${diseaseResult.confidence}%`,
                   background: diseaseResult.confidence > 80 ? '#10b981' : (diseaseResult.confidence > 50 ? '#fbbf24' : '#ef4444'),
                   transition: 'width 1s ease-in-out'

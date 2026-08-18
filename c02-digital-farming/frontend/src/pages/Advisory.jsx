@@ -24,7 +24,7 @@ const getCurrentSeason = () => {
 const findClosestLocation = (lat, lon) => {
   let closestDist = Infinity;
   let bestMatch = null;
-  
+
   for (const [district, cities] of Object.entries(districtData)) {
     for (const city of cities) {
       // Simple euclidean distance is fine for this scale
@@ -68,7 +68,7 @@ function Advisory() {
   const [result, setResult] = useState(null);
   const [suitabilityResult, setSuitabilityResult] = useState(null);
   const [error, setError] = useState(null);
-  
+
   // History State
   const [historyData, setHistoryData] = useState([]);
   const [saving, setSaving] = useState(false);
@@ -108,13 +108,13 @@ function Advisory() {
         predicted_variety: result.predicted_variety_code,
         suitability_score: suitabilityResult.suitability_score
       };
-      
+
       const response = await fetch('http://127.0.0.1:8000/api/history', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
-      
+
       if (response.ok) {
         fetchHistory(); // refresh table
       }
@@ -140,7 +140,7 @@ function Advisory() {
   const editFieldId = async (id, currentFieldId) => {
     const newFieldId = window.prompt("Enter new Field ID:", currentFieldId);
     if (!newFieldId || newFieldId === currentFieldId) return;
-    
+
     try {
       const response = await fetch(`http://127.0.0.1:8000/api/history/${id}?field_id=${encodeURIComponent(newFieldId)}`, {
         method: 'PUT'
@@ -186,7 +186,7 @@ function Advisory() {
     const clickedLat = e.latLng.lat();
     const clickedLon = e.latLng.lng();
     const match = findClosestLocation(clickedLat, clickedLon);
-    
+
     if (match) {
       setAdvisoryData({
         ...advisoryData,
@@ -260,7 +260,7 @@ function Advisory() {
   const getMetricStatus = (type, value) => {
     let status = 'Optimal';
     let color = '#10b981'; // Green
-    
+
     if (type === 'temp') {
       if (value < 22 || value > 32) {
         if (value < 18 || value > 35) { status = 'Bad'; color = '#ef4444'; }
@@ -277,7 +277,7 @@ function Advisory() {
         else { status = 'Medium'; color = '#f59e0b'; }
       }
     }
-    
+
     return (
       <div style={{ marginTop: '8px', fontSize: '0.75rem', fontWeight: '600', color: color, background: `${color}20`, padding: '3px 8px', borderRadius: '12px', display: 'inline-block' }}>
         {status}
@@ -306,13 +306,13 @@ function Advisory() {
       {error && <div className="error-message">{error}</div>}
 
       <form onSubmit={handleAdvisorySubmit} className="prediction-form glass-panel" style={{ background: 'linear-gradient(145deg, #ffffff 0%, #f8fafc 100%)', borderRadius: '20px', padding: '30px', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)', border: '1px solid #e2e8f0' }}>
-        
+
         {/* 1. Map Section */}
         <div className="form-group" style={{ marginBottom: '25px' }}>
           <label style={{ fontSize: '1.1rem', color: '#1e293b', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '15px' }}>
             📍 Select Location via Map
           </label>
-          
+
           {isLoaded && (
             <div style={{ borderRadius: '16px', overflow: 'hidden', border: '2px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', marginBottom: '15px', transition: 'border-color 0.3s' }}>
               <GoogleMap
@@ -325,11 +325,11 @@ function Advisory() {
               </GoogleMap>
             </div>
           )}
-          
-          <div style={{ 
-            background: 'linear-gradient(to right, #eff6ff, #ffffff)', 
-            padding: '15px 20px', 
-            borderRadius: '12px', 
+
+          <div style={{
+            background: 'linear-gradient(to right, #eff6ff, #ffffff)',
+            padding: '15px 20px',
+            borderRadius: '12px',
             border: '1px solid #bfdbfe',
             display: 'flex',
             justifyContent: 'space-between',
@@ -387,25 +387,25 @@ function Advisory() {
           <input type="text" name="field_id" id="field_id" value={advisoryData.field_id} onChange={handleAdvisoryChange} style={{ width: '100%', padding: '15px', borderRadius: '10px', border: '1px solid #cbd5e1', background: '#f8fafc', fontSize: '1.1rem', color: '#1e293b', outline: 'none', transition: 'all 0.2s' }} onFocus={(e) => { e.target.style.borderColor = '#3b82f6'; e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.2)'; }} onBlur={(e) => { e.target.style.borderColor = '#cbd5e1'; e.target.style.boxShadow = 'none'; }} />
         </div>
 
-        <button type="submit" className="submit-btn" disabled={loading} style={{ 
-          width: '100%', 
-          padding: '16px', 
-          fontSize: '1.2rem', 
-          fontWeight: 'bold', 
-          borderRadius: '12px', 
-          background: loading ? '#94a3b8' : 'linear-gradient(135deg, #10b981 0%, #059669 100%)', 
-          color: 'white', 
-          border: 'none', 
-          cursor: loading ? 'not-allowed' : 'pointer', 
-          boxShadow: loading ? 'none' : '0 10px 15px -3px rgba(16, 185, 129, 0.4)', 
+        <button type="submit" className="submit-btn" disabled={loading} style={{
+          width: '100%',
+          padding: '16px',
+          fontSize: '1.2rem',
+          fontWeight: 'bold',
+          borderRadius: '12px',
+          background: loading ? '#94a3b8' : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+          color: 'white',
+          border: 'none',
+          cursor: loading ? 'not-allowed' : 'pointer',
+          boxShadow: loading ? 'none' : '0 10px 15px -3px rgba(16, 185, 129, 0.4)',
           transition: 'all 0.3s ease',
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
           gap: '10px'
         }}
-        onMouseEnter={(e) => { if(!loading) e.currentTarget.style.transform = 'translateY(-2px)' }}
-        onMouseLeave={(e) => { if(!loading) e.currentTarget.style.transform = 'translateY(0)' }}>
+          onMouseEnter={(e) => { if (!loading) e.currentTarget.style.transform = 'translateY(-2px)' }}
+          onMouseLeave={(e) => { if (!loading) e.currentTarget.style.transform = 'translateY(0)' }}>
           {loading ? (
             <>⏳ Analyzing Field Data...</>
           ) : (
@@ -479,7 +479,7 @@ function Advisory() {
                   </div>
                 );
               })()}
-              
+
               <div style={{ background: 'rgba(255,255,255,0.7)', padding: '15px', borderRadius: '12px', border: '1px solid #e2e8f0', marginBottom: '15px' }}>
                 <p style={{ margin: 0, fontSize: '0.95rem', color: '#334155', display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
                   <span style={{ fontSize: '1.2rem' }}>💡</span>
@@ -492,30 +492,30 @@ function Advisory() {
                   <span style={{ fontSize: '1.5rem', display: 'block', marginBottom: '5px' }}>🌡️</span>
                   <span style={{ color: '#64748b', fontSize: '0.75rem', display: 'block' }}>Temp</span>
                   <strong style={{ color: '#0f172a', fontSize: '1.1rem' }}>{suitabilityResult.metrics.temperature}°C</strong>
-                  <br/>
+                  <br />
                   {getMetricStatus('temp', suitabilityResult.metrics.temperature)}
                 </div>
                 <div style={{ background: '#f8fafc', padding: '12px', borderRadius: '10px', textAlign: 'center', border: '1px solid #e2e8f0' }}>
                   <span style={{ fontSize: '1.5rem', display: 'block', marginBottom: '5px' }}>💧</span>
                   <span style={{ color: '#64748b', fontSize: '0.75rem', display: 'block' }}>Humidity</span>
                   <strong style={{ color: '#0f172a', fontSize: '1.1rem' }}>{suitabilityResult.metrics.humidity}%</strong>
-                  <br/>
+                  <br />
                   {getMetricStatus('hum', suitabilityResult.metrics.humidity)}
                 </div>
                 <div style={{ background: '#f8fafc', padding: '12px', borderRadius: '10px', textAlign: 'center', border: '1px solid #e2e8f0' }}>
                   <span style={{ fontSize: '1.5rem', display: 'block', marginBottom: '5px' }}>🌱</span>
                   <span style={{ color: '#64748b', fontSize: '0.75rem', display: 'block' }}>Moisture</span>
                   <strong style={{ color: '#0f172a', fontSize: '1.1rem' }}>{suitabilityResult.metrics.soil_moisture}</strong>
-                  <br/>
+                  <br />
                   {getMetricStatus('moist', suitabilityResult.metrics.soil_moisture)}
                 </div>
               </div>
             </div>
           )}
-          
-          <button 
-            onClick={saveToHistory} 
-            className="submit-btn" 
+
+          <button
+            onClick={saveToHistory}
+            className="submit-btn"
             style={{ marginTop: '20px', background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' }}
             disabled={saving}
           >
@@ -527,16 +527,17 @@ function Advisory() {
       {/* Farmer Crop Guidance */}
       {result && result.details && (
         <>
-          <FarmerGuidance 
+          <FarmerGuidance
             variety={result.predicted_variety_code}
             ageGroup={result.details.Age_Group}
             zone={advisoryData.Zone}
             irrigation={advisoryData.Irrigation}
             cultivationDate={advisoryData.Cultivation_Date}
           />
-          <FertilizerSummary 
-            zone={advisoryData.Zone} 
-            ageGroup={result.details.Age_Group} 
+          <FertilizerSummary
+            zone={advisoryData.Zone}
+            ageGroup={result.details.Age_Group}
+            irrigation={advisoryData.Irrigation}
           />
         </>
       )}
@@ -557,8 +558,8 @@ function Advisory() {
             </thead>
             <tbody>
               {historyData.map(row => (
-                <tr 
-                  key={row.id} 
+                <tr
+                  key={row.id}
                   onClick={() => setSelectedHistory(row)}
                   style={{ borderBottom: '1px solid rgba(0,0,0,0.05)', cursor: 'pointer', transition: 'background 0.2s' }}
                   onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(0,0,0,0.02)'}
@@ -569,13 +570,13 @@ function Advisory() {
                   <td style={{ padding: '12px 8px', color: '#10b981', fontWeight: 'bold' }}>{row.predicted_variety}</td>
                   <td style={{ padding: '12px 8px' }}>{row.suitability_score}/5</td>
                   <td style={{ padding: '12px 8px' }}>
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); editFieldId(row.id, row.field_id); }} 
+                    <button
+                      onClick={(e) => { e.stopPropagation(); editFieldId(row.id, row.field_id); }}
                       style={{ marginRight: '10px', background: 'none', border: 'none', cursor: 'pointer', color: '#3b82f6' }}
                       title="Edit Field ID"
                     >✏️</button>
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); deleteHistory(row.id); }} 
+                    <button
+                      onClick={(e) => { e.stopPropagation(); deleteHistory(row.id); }}
                       style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444' }}
                       title="Delete Record"
                     >🗑️</button>
@@ -608,7 +609,7 @@ function Advisory() {
             boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)',
             position: 'relative'
           }} onClick={(e) => e.stopPropagation()}>
-            <button 
+            <button
               onClick={() => setSelectedHistory(null)}
               style={{
                 position: 'absolute',
@@ -618,11 +619,11 @@ function Advisory() {
                 color: '#64748b'
               }}
             >&times;</button>
-            
+
             <h3 style={{ color: '#0f172a', margin: '0 0 20px 0', fontSize: '1.5rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '10px' }}>
               Advisory Details
             </h3>
-            
+
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', fontSize: '0.95rem' }}>
               <div>
                 <span style={{ color: '#64748b', display: 'block', fontSize: '0.8rem' }}>Field ID</span>

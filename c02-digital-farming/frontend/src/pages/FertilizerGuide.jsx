@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 
 const FertilizerGuide = () => {
   const [selectedZone, setSelectedZone] = useState('Dry Zone');
+  const [selectedIrrigation, setSelectedIrrigation] = useState('Irrigated paddy fields');
   const [selectedDuration, setSelectedDuration] = useState('3_5_month');
   const { currentUser } = useAuth();
   const [saveStatus, setSaveStatus] = useState('');
@@ -35,7 +36,10 @@ const FertilizerGuide = () => {
     }
   ];
 
-  const zoneData = fertilizerData.recommendations.find(r => r.agro_zone === selectedZone);
+  const zoneData = fertilizerData.recommendations.find(r => 
+    r.agro_zone.toLowerCase().includes(selectedZone.toLowerCase()) && 
+    r.cultivation_condition.toLowerCase().includes(selectedIrrigation.toLowerCase().replace(' paddy fields', ''))
+  );
   const durationData = zoneData ? zoneData.fertilizer_recommendations[selectedDuration] : null;
 
   const handleSaveToProfile = async () => {
@@ -47,12 +51,13 @@ const FertilizerGuide = () => {
       alert("No valid data to save.");
       return;
     }
-    
+
     setSaveStatus('Saving...');
     try {
       const payload = {
         user_id: currentUser.uid,
         agro_zone: selectedZone,
+        irrigation: selectedIrrigation,
         crop_duration: selectedDuration,
         total_urea: parseFloat(durationData.total.urea || 0),
         total_tsp: parseFloat(durationData.total.tsp || 0),
@@ -103,20 +108,36 @@ const FertilizerGuide = () => {
       {/* Recommendations Section */}
       <div className="glass-panel" style={{ padding: '20px' }}>
         <h3 style={{ color: '#1e293b', marginBottom: '20px' }}>RRDI Fertilizer Recommendations (kg/ha)</h3>
-        
+
         {/* Selectors */}
         <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', marginBottom: '20px' }}>
           <div className="form-group" style={{ flex: '1 1 200px' }}>
-            <label>Agro Climatic Zone</label>
-            <select value={selectedZone} onChange={(e) => setSelectedZone(e.target.value)} style={{ padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', width: '100%' }}>
+            <label style={{ display: 'block', marginBottom: '8px', color: '#475569', fontWeight: '500' }}>Climatic Zone</label>
+            <select
+              value={selectedZone}
+              onChange={(e) => setSelectedZone(e.target.value)}
+              style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '1rem', background: 'white' }}
+            >
               <option value="Dry Zone">Dry Zone</option>
-              <option value="Wet Zone">Wet Zone</option>
               <option value="Intermediate Zone">Intermediate Zone</option>
+              <option value="Wet Zone">Wet Zone</option>
             </select>
           </div>
-          
-          <div className="form-group" style={{ flex: '1 1 200px' }}>
-            <label>Crop Duration</label>
+
+          <div style={{ flex: '1 1 200px' }}>
+            <label style={{ display: 'block', marginBottom: '8px', color: '#475569', fontWeight: '500' }}>Cultivation Condition</label>
+            <select
+              value={selectedIrrigation}
+              onChange={(e) => setSelectedIrrigation(e.target.value)}
+              style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '1rem', background: 'white' }}
+            >
+              <option value="Irrigated paddy fields">Irrigated</option>
+              <option value="Rainfed paddy fields">Rainfed</option>
+            </select>
+          </div>
+
+          <div style={{ flex: '1 1 200px' }}>
+            <label style={{ display: 'block', marginBottom: '8px', color: '#475569', fontWeight: '500' }}>Crop Duration</label>
             <select value={selectedDuration} onChange={(e) => setSelectedDuration(e.target.value)} style={{ padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', width: '100%' }}>
               <option value="3_month">3 Months</option>
               <option value="3_5_month">3.5 Months</option>

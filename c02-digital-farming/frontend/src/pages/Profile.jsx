@@ -17,12 +17,12 @@ function Profile() {
     farm_size: '',
     farm_unit: 'Acres'
   });
-  
+
   const [advisoryHistory, setAdvisoryHistory] = useState([]);
   const [yieldHistory, setYieldHistory] = useState([]);
   const [diseaseHistory, setDiseaseHistory] = useState([]);
   const [fertilizerHistory, setFertilizerHistory] = useState([]);
-  
+
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
   const [isEditing, setIsEditing] = useState(false);
@@ -104,7 +104,7 @@ function Profile() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(profileData)
       });
-      
+
       if (res.ok) {
         setMessage('Profile updated successfully!');
         setIsEditing(false);
@@ -156,20 +156,20 @@ function Profile() {
                 <button className="btn-edit" onClick={() => setIsEditing(true)}>Edit</button>
               )}
             </div>
-            
+
             {isEditing ? (
               <form onSubmit={handleUpdateProfile} className="profile-form">
                 <div className="form-group">
                   <label>Name</label>
-                  <input type="text" value={profile.name} onChange={e => setProfile({...profile, name: e.target.value})} required />
+                  <input type="text" value={profile.name} onChange={e => setProfile({ ...profile, name: e.target.value })} required />
                 </div>
                 <div className="form-group">
                   <label>Phone</label>
-                  <input type="tel" value={profile.phone} onChange={e => setProfile({...profile, phone: e.target.value})} />
+                  <input type="tel" value={profile.phone} onChange={e => setProfile({ ...profile, phone: e.target.value })} />
                 </div>
                 <div className="form-group">
                   <label>Location (District)</label>
-                  <select value={profile.location} onChange={e => setProfile({...profile, location: e.target.value})} required>
+                  <select value={profile.location} onChange={e => setProfile({ ...profile, location: e.target.value })} required>
                     {Object.keys(districtData).map(district => (
                       <option key={district} value={district}>{district}</option>
                     ))}
@@ -178,8 +178,8 @@ function Profile() {
                 <div className="form-group">
                   <label>Farm Size</label>
                   <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    <input type="number" step="0.1" value={profile.farm_size} onChange={e => setProfile({...profile, farm_size: e.target.value})} required style={{ flex: 2 }} />
-                    <select value={profile.farm_unit} onChange={e => setProfile({...profile, farm_unit: e.target.value})} style={{ flex: 1 }}>
+                    <input type="number" step="0.1" value={profile.farm_size} onChange={e => setProfile({ ...profile, farm_size: e.target.value })} required style={{ flex: 2 }} />
+                    <select value={profile.farm_unit} onChange={e => setProfile({ ...profile, farm_unit: e.target.value })} style={{ flex: 1 }}>
                       <option value="Acres">Acres</option>
                       <option value="Perch">Perch</option>
                       <option value="Hectares">Hectares</option>
@@ -318,10 +318,10 @@ function Profile() {
                       <p><strong>Zone:</strong> {item.agro_zone}</p>
                       <p><strong>Duration:</strong> {item.crop_duration.replace(/_/g, ' ')}</p>
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '5px', marginTop: '10px', background: 'rgba(0,0,0,0.03)', padding: '10px', borderRadius: '8px' }}>
-                        <span>Urea: <strong style={{color:'#2563eb'}}>{item.total_urea} kg</strong></span>
-                        <span>TSP: <strong style={{color:'#d97706'}}>{item.total_tsp} kg</strong></span>
-                        <span>MOP: <strong style={{color:'#ef4444'}}>{item.total_mop} kg</strong></span>
-                        <span>Zinc: <strong style={{color:'#10b981'}}>{item.total_zinc} kg</strong></span>
+                        <span>Urea: <strong style={{ color: '#2563eb' }}>{item.total_urea} kg</strong></span>
+                        <span>TSP: <strong style={{ color: '#d97706' }}>{item.total_tsp} kg</strong></span>
+                        <span>MOP: <strong style={{ color: '#ef4444' }}>{item.total_mop} kg</strong></span>
+                        <span>Zinc: <strong style={{ color: '#10b981' }}>{item.total_zinc} kg</strong></span>
                       </div>
                       <button onClick={() => handleDeleteRecord('fertilizer_history', item.id, setFertilizerHistory, fertilizerHistory)} className="btn-delete-small" style={{ marginTop: '10px' }}>Delete</button>
                     </div>

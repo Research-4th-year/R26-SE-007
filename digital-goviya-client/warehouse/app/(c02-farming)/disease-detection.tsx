@@ -13,6 +13,7 @@ import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import * as ImagePicker from 'expo-image-picker';
+import { authService } from "@/services/shared/auth.service";
 
 const API_URL = "http://127.0.0.1:8000";
 
@@ -21,6 +22,7 @@ export default function DiseaseDetectionScreen() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+  const [saveStatus, setSaveStatus] = useState<string>('');
 
   const pickImage = async () => {
     try {
@@ -103,6 +105,35 @@ export default function DiseaseDetectionScreen() {
       setError(err.message || "Something went wrong.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSaveToProfile = async () => {
+    if (!result) return;
+    setSaveStatus('Saving...');
+    try {
+      const user = await authService.getStoredUser();
+      const payload = {
+        user_id: user?.id || 'mobile_user',
+        disease_name: result.disease,
+        disease_type: result.disease_type,
+        confidence: result.confidence
+      };
+
+      const res = await fetch(`${API_URL}/api/disease_history`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (res.ok) {
+        setSaveStatus('Saved to Profile');
+        setTimeout(() => setSaveStatus(''), 3000);
+      } else {
+        setSaveStatus('Failed to Save');
+      }
+    } catch (err) {
+      setSaveStatus('Failed to Save');
     }
   };
 
@@ -205,6 +236,13 @@ export default function DiseaseDetectionScreen() {
                   <Text style={styles.metricValue}>{result.confidence.toFixed(1)}%</Text>
                 </View>
               </View>
+              
+              <TouchableOpacity
+                style={[styles.primaryBtn, { marginTop: 20, backgroundColor: "#3B82F6" }]}
+                onPress={handleSaveToProfile}
+              >
+                <Text style={styles.primaryBtnText}>{saveStatus || "Save to Profile"}</Text>
+              </TouchableOpacity>
             </View>
           )}
         </ScrollView>

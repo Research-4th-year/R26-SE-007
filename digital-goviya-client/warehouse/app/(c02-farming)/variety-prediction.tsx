@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -14,6 +14,19 @@ import {
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { authService } from "@/services/shared/auth.service";
+import { Platform, Alert } from "react-native";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import FarmerGuidance from "@/components/FarmerGuidance";
+import FertilizerSummary from "@/components/FertilizerSummary";
+
+let MapView: any = View;
+let Marker: any = View;
+if (Platform.OS !== 'web') {
+  const Maps = require('react-native-maps');
+  MapView = Maps.default;
+  Marker = Maps.Marker;
+}
 
 const API_URL = "http://127.0.0.1:8000";
 
@@ -26,6 +39,7 @@ const DISTRICTS = [
 
 const ZONES = ["Dry Zone", "Wet Zone", "Intermediate Zone"];
 const SEASONS = ["Maha", "Yala", "Annual"];
+const IRRIGATION_METHODS = ["Irrigated", "Rainfed"];
 const YN = ["No", "Yes"];
 
 // Custom Dropdown Component to fix iOS clipping and styling issues
@@ -110,12 +124,88 @@ export default function VarietyPredictionScreen() {
     Salinity_Prone: "No",
     Iron_Toxicity_Prone: "No",
     field_id: "field_001",
+    Irrigation: "Irrigated",
+    Cultivation_Date: new Date()
   });
+
+  const [showDatePicker, setShowDatePicker] = useState(false);
+
+  const findClosestLocation = (lat: number, lon: number) => {
+    let bestMatch = null;
+    let minDistance = Infinity;
+
+    for (const district in districtData) {
+      for (const city of districtData[district]) {
+        const dLat = city.lat - lat;
+        const dLon = city.lon - lon;
+        const distance = Math.sqrt(dLat * dLat + dLon * dLon);
+
+        if (distance < minDistance) {
+          minDistance = distance;
+          bestMatch = { District: district, City: city.name, Zone: districtToZoneMap[district] || 'Dry Zone' };
+        }
+      }
+    }
+    return bestMatch;
+  };
+
+  const onMapClick = (e: any) => {
+    const clickedLat = e.nativeEvent.coordinate.latitude;
+    const clickedLon = e.nativeEvent.coordinate.longitude;
+    const match = findClosestLocation(clickedLat, clickedLon);
+
+    if (match) {
+      setFormData({
+        ...formData,
+        District: match.District,
+        City: match.City,
+        Zone: match.Zone,
+        lat: clickedLat.toString(),
+        lon: clickedLon.toString()
+      });
+    } else {
+      setFormData({
+        ...formData,
+        lat: clickedLat.toString(),
+        lon: clickedLon.toString()
+      });
+    }
+  };
 
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [suitability, setSuitability] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+  const [saveStatus, setSaveStatus] = useState<string>('');
+  const [historyData, setHistoryData] = useState<any[]>([]);
+  const [selectedHistory, setSelectedHistory] = useState<any>(null);
+
+  useEffect(() => {
+    fetchHistory();
+  }, []);
+
+  const fetchHistory = async () => {
+    try {
+      const user = await authService.getStoredUser();
+      if (!user) return;
+      const res = await fetch(`${API_URL}/api/history/${user.id}`);
+      if (res.ok) {
+        const data = await res.json();
+        setHistoryData(data.history || []);
+      }
+    } catch (err) {
+      console.log("History fetch error", err);
+    }
+  };
+
+  const deleteHistory = async (recordId: string) => {
+    try {
+      const res = await fetch(`${API_URL}/api/history/${recordId}`, { method: 'DELETE' });
+      if (res.ok) fetchHistory();
+    } catch (err) {
+      console.log("Failed to delete record", err);
+    }
+  };
 
   const handleDistrictChange = (district: string) => {
     const cities = districtData[district] || [];
@@ -176,6 +266,36 @@ export default function VarietyPredictionScreen() {
     }
   };
 
+  const handleSaveToProfile = async () => {
+    if (!result || !suitability) return;
+    setSaveStatus('Saving...');
+    try {
+      const user = await authService.getStoredUser();
+      const payload = {
+        user_id: user?.id || 'mobile_user',
+        field_id: formData.field_id,
+        predicted_variety: result.predicted_variety_code,
+        suitability_score: suitability.suitability_score || 0
+      };
+
+      const res = await fetch(`${API_URL}/api/history`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (res.ok) {
+        setSaveStatus('Saved successfully!');
+        setTimeout(() => setSaveStatus(''), 3000);
+        fetchHistory(); // Refresh list
+      } else {
+        setSaveStatus('Failed to Save');
+      }
+    } catch (err) {
+      setSaveStatus('Failed to Save');
+    }
+  };
+
   return (
     <View style={styles.screen}>
       <LinearGradient
@@ -195,6 +315,32 @@ export default function VarietyPredictionScreen() {
 
         <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
           <View style={styles.card}>
+            <Text style={styles.cardTitle}>📍 Select Location via Map</Text>
+            <View style={{ height: 200, borderRadius: 16, overflow: 'hidden', marginBottom: 20, borderWidth: 1, borderColor: '#E5E7EB', justifyContent: 'center', alignItems: 'center' }}>
+              {Platform.OS === 'web' ? (
+                <Text style={{ color: '#6B7280' }}>Map is not supported on web. Please select from dropdowns.</Text>
+              ) : (
+                <MapView
+                  style={{ flex: 1, width: '100%' }}
+                  region={{
+                    latitude: parseFloat(formData.lat) || 8.3114,
+                    longitude: parseFloat(formData.lon) || 80.4037,
+                    latitudeDelta: 1.5,
+                    longitudeDelta: 1.5,
+                  }}
+                  onPress={onMapClick}
+                >
+                  <Marker
+                    coordinate={{
+                      latitude: parseFloat(formData.lat) || 8.3114,
+                      longitude: parseFloat(formData.lon) || 80.4037,
+                    }}
+                    title="Selected Location"
+                  />
+                </MapView>
+              )}
+            </View>
+
             <Text style={styles.cardTitle}>Farm Details</Text>
             
             <Text style={styles.label}>District</Text>
@@ -205,7 +351,7 @@ export default function VarietyPredictionScreen() {
               onSelect={handleDistrictChange} 
             />
             
-            <Text style={styles.label}>City (Coordinates Auto-Linked)</Text>
+            <Text style={styles.label}>City</Text>
             <CustomSelect 
               label="City" 
               value={formData.City} 
@@ -236,22 +382,37 @@ export default function VarietyPredictionScreen() {
 
             <View style={styles.row}>
               <View style={{ flex: 1, marginRight: 10 }}>
-                <Text style={styles.label}>Salinity Prone</Text>
+                <Text style={styles.label}>💧 Irrigation</Text>
                 <CustomSelect 
-                  label="Salinity" 
-                  value={formData.Salinity_Prone} 
-                  options={YN} 
-                  onSelect={(v: string) => setFormData({...formData, Salinity_Prone: v})} 
+                  label="Irrigation Method" 
+                  value={formData.Irrigation} 
+                  options={IRRIGATION_METHODS} 
+                  onSelect={(v: string) => setFormData({...formData, Irrigation: v})} 
                 />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.label}>Iron Toxicity</Text>
-                <CustomSelect 
-                  label="Iron Toxicity" 
-                  value={formData.Iron_Toxicity_Prone} 
-                  options={YN} 
-                  onSelect={(v: string) => setFormData({...formData, Iron_Toxicity_Prone: v})} 
-                />
+                <Text style={styles.label}>🌱 Cultivation Date</Text>
+                <TouchableOpacity 
+                  style={[styles.inputBox, { justifyContent: 'center' }]} 
+                  onPress={() => setShowDatePicker(true)}
+                >
+                  <Text style={styles.input}>
+                    {formData.Cultivation_Date.toISOString().split('T')[0]}
+                  </Text>
+                </TouchableOpacity>
+                {showDatePicker && (
+                  <DateTimePicker
+                    value={formData.Cultivation_Date}
+                    mode="date"
+                    display="default"
+                    onChange={(event: any, selectedDate?: Date) => {
+                      setShowDatePicker(false);
+                      if (selectedDate) {
+                        setFormData({...formData, Cultivation_Date: selectedDate});
+                      }
+                    }}
+                  />
+                )}
               </View>
             </View>
 
@@ -289,65 +450,201 @@ export default function VarietyPredictionScreen() {
           )}
 
           {result && (
-            <View style={styles.resultCard}>
+            <View style={[styles.resultCard, { borderColor: '#BBF7D0', borderWidth: 1, backgroundColor: '#F0FDF4' }]}>
               <View style={styles.resultHeaderBox}>
-                <Ionicons name="star" size={24} color="#F5C542" />
-                <Text style={styles.resultHeader}>Recommended Variety</Text>
+                <View style={{ backgroundColor: '#D1FAE5', padding: 10, borderRadius: 12, marginRight: 10 }}>
+                  <Text style={{ fontSize: 24 }}>🌾</Text>
+                </View>
+                <View>
+                  <Text style={[styles.resultHeader, { color: '#065F46', marginLeft: 0 }]}>Optimal Variety</Text>
+                  <Text style={{ color: '#059669', fontSize: 12, fontFamily: 'Poppins_500Medium' }}>AI Recommended</Text>
+                </View>
               </View>
-              <Text style={styles.varietyName}>{result.predicted_variety_code}</Text>
+              <View style={{ backgroundColor: '#10B981', paddingHorizontal: 20, paddingVertical: 10, borderRadius: 30, alignSelf: 'flex-start', marginBottom: 20 }}>
+                <Text style={{ color: 'white', fontSize: 24, fontFamily: 'Poppins_700Bold' }}>{result.predicted_variety_code}</Text>
+              </View>
               
               {result.details && (
-                <Text style={styles.varietyDesc}>
-                  Harvests in {result.details["Age_months"]} months. Ideal for {result.details["Climatic_Zone"]} with an average yield of {result.details["Average_Yield_tha"]} t/ha.
-                </Text>
-              )}
-            </View>
-          )}
-
-          {suitability && suitability.field_suitability && (
-            <View style={styles.resultCard}>
-              <Text style={styles.suitabilityTitle}>IoT Field Status</Text>
-              <View style={[styles.statusBadge, {
-                backgroundColor: suitability.field_suitability.status === 'Optimal' ? '#DCFCE7' : 
-                                 suitability.field_suitability.status === 'Action Required' ? '#FEF2F2' : '#FEF9C3'
-              }]}>
-                <Text style={[styles.statusText, {
-                  color: suitability.field_suitability.status === 'Optimal' ? '#15803D' : 
-                         suitability.field_suitability.status === 'Action Required' ? '#DC2626' : '#D97706'
-                }]}>
-                  {suitability.field_suitability.status}
-                </Text>
-              </View>
-
-              <Text style={styles.suitabilityMsg}>{suitability.field_suitability.message}</Text>
-              
-              {suitability.iot_readings && (
-                <View style={styles.readingsGrid}>
-                  <View style={styles.readingBox}>
-                    <Text style={styles.readingLabel}>Temp</Text>
-                    <Text style={styles.readingVal}>{suitability.iot_readings.temperature.toFixed(1)}°C</Text>
+                <View style={{ backgroundColor: 'rgba(255,255,255,0.7)', padding: 15, borderRadius: 12, borderWidth: 1, borderColor: '#E2E8F0', gap: 12 }}>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', borderBottomWidth: 1, borderBottomColor: '#F1F5F9', paddingBottom: 8 }}>
+                    <Text style={{ color: '#64748B', fontFamily: 'Poppins_500Medium' }}>🌾 Grain Type</Text>
+                    <Text style={{ color: '#0F172A', fontFamily: 'Poppins_600SemiBold' }}>{result.details.Grain_Type}</Text>
                   </View>
-                  <View style={styles.readingBox}>
-                    <Text style={styles.readingLabel}>Humidity</Text>
-                    <Text style={styles.readingVal}>{suitability.iot_readings.humidity.toFixed(1)}%</Text>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', borderBottomWidth: 1, borderBottomColor: '#F1F5F9', paddingBottom: 8 }}>
+                    <Text style={{ color: '#64748B', fontFamily: 'Poppins_500Medium' }}>⏱️ Age Group</Text>
+                    <Text style={{ color: '#0F172A', fontFamily: 'Poppins_600SemiBold' }}>{result.details.Age_Group}</Text>
                   </View>
-                  <View style={styles.readingBox}>
-                    <Text style={styles.readingLabel}>Moisture</Text>
-                    <Text style={styles.readingVal}>{suitability.iot_readings.soil_moisture.toFixed(1)}%</Text>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                    <Text style={{ color: '#64748B', fontFamily: 'Poppins_500Medium' }}>🏷️ Category</Text>
+                    <Text style={{ color: '#0F172A', fontFamily: 'Poppins_600SemiBold' }}>{result.details.Category}</Text>
                   </View>
                 </View>
               )}
             </View>
           )}
+
+          {suitability && (
+            <View style={[styles.resultCard, { borderColor: '#BFDBFE', borderWidth: 1, backgroundColor: '#EFF6FF' }]}>
+              <View style={styles.resultHeaderBox}>
+                <View style={{ backgroundColor: '#DBEAFE', padding: 10, borderRadius: 12, marginRight: 10 }}>
+                  <Text style={{ fontSize: 24 }}>🛰️</Text>
+                </View>
+                <View>
+                  <Text style={[styles.resultHeader, { color: '#1E3A8A', marginLeft: 0 }]}>Field Suitability</Text>
+                  <Text style={{ color: '#2563EB', fontSize: 12, fontFamily: 'Poppins_500Medium' }}>Real-time IoT Analysis</Text>
+                </View>
+              </View>
+
+              <View style={{ alignItems: 'center', marginBottom: 20 }}>
+                <Text style={{ fontSize: 40, fontWeight: 'bold', color: suitability.suitability_score <= 2 ? '#10B981' : (suitability.suitability_score <= 3 ? '#F59E0B' : '#EF4444') }}>
+                  {suitability.suitability_score} / 5
+                </Text>
+                <Text style={{ fontSize: 14, color: '#64748B', marginTop: 5 }}>Suitability Score</Text>
+              </View>
+
+              <View style={{ backgroundColor: 'rgba(255,255,255,0.7)', padding: 15, borderRadius: 12, borderWidth: 1, borderColor: '#E2E8F0', marginBottom: 15 }}>
+                <Text style={{ fontFamily: 'Poppins_500Medium', color: '#334155', lineHeight: 22 }}>
+                  💡 {suitability.reasoning}
+                </Text>
+              </View>
+              
+              {suitability.metrics && (
+                <View style={styles.readingsGrid}>
+                  <View style={[styles.readingBox, { backgroundColor: '#F8FAFC', borderWidth: 1, borderColor: '#E2E8F0' }]}>
+                    <Text style={{ fontSize: 24, marginBottom: 5 }}>🌡️</Text>
+                    <Text style={styles.readingLabel}>Temp</Text>
+                    <Text style={styles.readingVal}>{suitability.metrics.temperature}°C</Text>
+                  </View>
+                  <View style={[styles.readingBox, { backgroundColor: '#F8FAFC', borderWidth: 1, borderColor: '#E2E8F0' }]}>
+                    <Text style={{ fontSize: 24, marginBottom: 5 }}>💧</Text>
+                    <Text style={styles.readingLabel}>Humidity</Text>
+                    <Text style={styles.readingVal}>{suitability.metrics.humidity}%</Text>
+                  </View>
+                  <View style={[styles.readingBox, { backgroundColor: '#F8FAFC', borderWidth: 1, borderColor: '#E2E8F0' }]}>
+                    <Text style={{ fontSize: 24, marginBottom: 5 }}>🌱</Text>
+                    <Text style={styles.readingLabel}>Moisture</Text>
+                    <Text style={styles.readingVal}>{suitability.metrics.soil_moisture}</Text>
+                  </View>
+                </View>
+              )}
+            </View>
+          )}
+
+          {result && suitability && (
+            <TouchableOpacity
+              style={[styles.primaryBtn, { marginTop: 10, marginBottom: 20, backgroundColor: "#2563EB" }]}
+              onPress={handleSaveToProfile}
+              disabled={saveStatus === 'Saving...'}
+            >
+              <Text style={styles.primaryBtnText}>{saveStatus || "💾 Save Result to History"}</Text>
+            </TouchableOpacity>
+          )}
+
+          {result && result.details && (
+            <>
+              <FarmerGuidance 
+                variety={result.predicted_variety_code}
+                ageGroup={result.details.Age_Group}
+                zone={formData.Zone}
+                irrigation={formData.Irrigation}
+                cultivationDate={formData.Cultivation_Date}
+              />
+              <FertilizerSummary 
+                zone={formData.Zone}
+                ageGroup={result.details.Age_Group}
+                irrigation={formData.Irrigation}
+              />
+            </>
+          )}
+
+          {/* History Section */}
+          {historyData.length > 0 && (
+            <View style={{ marginTop: 30 }}>
+              <Text style={{ fontFamily: 'Poppins_700Bold', fontSize: 18, color: '#1E293B', marginBottom: 15 }}>Saved Advisory History</Text>
+              {historyData.map(row => (
+                <TouchableOpacity 
+                  key={row.id}
+                  style={{ backgroundColor: 'white', borderRadius: 12, padding: 15, marginBottom: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2 }}
+                  onPress={() => setSelectedHistory(row)}
+                >
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontFamily: 'Poppins_600SemiBold', color: '#1E293B', fontSize: 15 }}>{row.field_id}</Text>
+                    <Text style={{ fontFamily: 'Poppins_400Regular', color: '#64748B', fontSize: 12 }}>{row.city}, {row.district}</Text>
+                    <Text style={{ fontFamily: 'Poppins_700Bold', color: '#10B981', fontSize: 14, marginTop: 4 }}>{row.predicted_variety} <Text style={{ color: '#94A3B8', fontSize: 12 }}>({row.suitability_score}/5)</Text></Text>
+                  </View>
+                  <TouchableOpacity onPress={() => deleteHistory(row.id)} style={{ padding: 10 }}>
+                    <Ionicons name="trash-outline" size={20} color="#EF4444" />
+                  </TouchableOpacity>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+
         </ScrollView>
       </View>
+
+      {/* History Details Modal */}
+      <Modal visible={!!selectedHistory} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { maxWidth: 500 }]}>
+            <TouchableOpacity onPress={() => setSelectedHistory(null)} style={{ position: 'absolute', top: 15, right: 15, zIndex: 10 }}>
+              <Ionicons name="close" size={24} color="#64748B" />
+            </TouchableOpacity>
+            
+            <Text style={{ fontFamily: 'Poppins_700Bold', fontSize: 20, color: '#0F172A', borderBottomWidth: 1, borderBottomColor: '#E2E8F0', paddingBottom: 10, marginBottom: 20 }}>
+              Advisory Details
+            </Text>
+
+            {selectedHistory && (
+              <ScrollView>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }}>
+                  <View style={{ width: '48%', marginBottom: 15 }}>
+                    <Text style={{ color: '#64748B', fontSize: 12, fontFamily: 'Poppins_500Medium' }}>Field ID</Text>
+                    <Text style={{ color: '#1E293B', fontSize: 14, fontFamily: 'Poppins_700Bold' }}>{selectedHistory.field_id}</Text>
+                  </View>
+                  <View style={{ width: '48%', marginBottom: 15 }}>
+                    <Text style={{ color: '#64748B', fontSize: 12, fontFamily: 'Poppins_500Medium' }}>Location</Text>
+                    <Text style={{ color: '#1E293B', fontSize: 14, fontFamily: 'Poppins_700Bold' }}>{selectedHistory.city}, {selectedHistory.district}</Text>
+                  </View>
+                  <View style={{ width: '48%', marginBottom: 15 }}>
+                    <Text style={{ color: '#64748B', fontSize: 12, fontFamily: 'Poppins_500Medium' }}>Climatic Zone</Text>
+                    <Text style={{ color: '#1E293B', fontSize: 14, fontFamily: 'Poppins_700Bold' }}>{selectedHistory.zone}</Text>
+                  </View>
+                  <View style={{ width: '48%', marginBottom: 15 }}>
+                    <Text style={{ color: '#64748B', fontSize: 12, fontFamily: 'Poppins_500Medium' }}>Season</Text>
+                    <Text style={{ color: '#1E293B', fontSize: 14, fontFamily: 'Poppins_700Bold' }}>{selectedHistory.season}</Text>
+                  </View>
+                </View>
+
+                <View style={{ backgroundColor: '#F8FAFC', padding: 15, borderRadius: 8, borderWidth: 1, borderColor: '#E2E8F0', marginBottom: 15 }}>
+                  <Text style={{ color: '#64748B', fontSize: 12, fontFamily: 'Poppins_500Medium' }}>Predicted Optimal Variety</Text>
+                  <Text style={{ color: '#10B981', fontSize: 24, fontFamily: 'Poppins_700Bold' }}>{selectedHistory.predicted_variety}</Text>
+                </View>
+
+                <View style={{ backgroundColor: '#F8FAFC', padding: 15, borderRadius: 8, borderWidth: 1, borderColor: '#E2E8F0', marginBottom: 15 }}>
+                  <Text style={{ color: '#64748B', fontSize: 12, fontFamily: 'Poppins_500Medium' }}>Field Suitability Score (1-5)</Text>
+                  <Text style={{ color: selectedHistory.suitability_score <= 2 ? '#10B981' : (selectedHistory.suitability_score <= 3 ? '#F59E0B' : '#EF4444'), fontSize: 24, fontFamily: 'Poppins_700Bold' }}>
+                    {selectedHistory.suitability_score}
+                  </Text>
+                </View>
+
+                {selectedHistory.created_at && (
+                  <Text style={{ color: '#94A3B8', fontSize: 12, textAlign: 'right', marginTop: 10 }}>
+                    Saved on: {new Date(selectedHistory.created_at + 'Z').toLocaleString()}
+                  </Text>
+                )}
+              </ScrollView>
+            )}
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: "#F3F4F6" },
-  heroBg: { ...StyleSheet.absoluteFillObject, height: 250 },
+  heroBg: { ...StyleSheet.absoluteFill, height: 250 },
   header: {
     flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 20, paddingTop: 40, paddingBottom: 20,
   },

@@ -13,7 +13,7 @@ const mapContainerStyle = {
 const findClosestLocation = (lat, lon) => {
   let closestDist = Infinity;
   let bestMatch = null;
-  
+
   for (const [district, cities] of Object.entries(districtData)) {
     for (const city of cities) {
       const dist = Math.pow(city.lat - lat, 2) + Math.pow(city.lon - lon, 2);
@@ -59,7 +59,7 @@ function YieldPrediction() {
 
   const handleYieldChange = (e) => {
     const { name, value } = e.target;
-    
+
     if (name === 'District') {
       const defaultCity = districtData[value][0];
       setYieldData({
@@ -91,7 +91,7 @@ function YieldPrediction() {
     const clickedLat = e.latLng.lat();
     const clickedLon = e.latLng.lng();
     const match = findClosestLocation(clickedLat, clickedLon);
-    
+
     if (match) {
       setYieldData({
         ...yieldData,
@@ -269,7 +269,7 @@ function YieldPrediction() {
 
         <div className="form-group">
           <label>Select Location via Map</label>
-          
+
           {isLoaded && (
             <div style={{ borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(255, 255, 255, 0.1)', marginBottom: '15px' }}>
               <GoogleMap
@@ -282,11 +282,11 @@ function YieldPrediction() {
               </GoogleMap>
             </div>
           )}
-          
-          <div style={{ 
-            background: '#f8fafc', 
-            padding: '15px', 
-            borderRadius: '8px', 
+
+          <div style={{
+            background: '#f8fafc',
+            padding: '15px',
+            borderRadius: '8px',
             border: '1px solid #e2e8f0',
             display: 'flex',
             justifyContent: 'space-between',
@@ -353,7 +353,7 @@ function YieldPrediction() {
             <div className="variety-highlight" style={{ fontSize: '3rem', marginBottom: '10px', color: '#10b981' }}>
               {yieldResult.total_estimated_production_mt.toFixed(2)} <span style={{ fontSize: '1.2rem', color: '#94a3b8' }}>Metric Tons</span>
             </div>
-            
+
             <div className="yield-insights" style={{ marginTop: '20px' }}>
               <h3 style={{ marginBottom: '15px', color: '#10b981' }}>Automated Environmental Data</h3>
               <div className="variety-details" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
@@ -371,7 +371,7 @@ function YieldPrediction() {
                 </div>
               </div>
             </div>
-            
+
             <div style={{ padding: '15px', background: 'rgba(255,255,255,0.05)', borderRadius: '12px', marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '10px' }}>
                 <span style={{ color: '#cbd5e1' }}>Yield per Hectare</span>
