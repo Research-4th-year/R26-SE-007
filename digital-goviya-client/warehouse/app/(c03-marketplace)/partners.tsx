@@ -243,6 +243,7 @@ export default function PartnersScreen() {
 
       await loadAll();
     } catch (error) {
+      console.log("CANCEL REQUEST FAILED:", error);
       Alert.alert(
         "Unable to cancel request",
         getApiErrorMessage(error)
@@ -461,12 +462,7 @@ export default function PartnersScreen() {
   // ---------------------------------------------------------------------
 
   return (
-    <SafeAreaView
-      style={[
-        styles.screen,
-        { backgroundColor: theme.page },
-      ]}
-    >
+    <SafeAreaView style={[styles.screen, { backgroundColor: theme.page }]}>
       {/* --------------------------------------------------------------- */}
       {/* Header                                                          */}
       {/* --------------------------------------------------------------- */}
@@ -482,18 +478,13 @@ export default function PartnersScreen() {
                 ]}
               />
 
-              <Text style={styles.headerEyebrow}>
-                MARKETPLACE NETWORK
-              </Text>
+              <Text style={styles.headerEyebrow}>MARKETPLACE NETWORK</Text>
             </View>
 
-            <Text style={styles.headerTitle}>
-              Partners
-            </Text>
+            <Text style={styles.headerTitle}>Partners</Text>
 
             <Text style={styles.headerSubtitle}>
-              Build trusted connections and manage your
-              trading relationships.
+              Build trusted connections and manage your trading relationships.
             </Text>
           </View>
 
@@ -507,21 +498,12 @@ export default function PartnersScreen() {
             ]}
           >
             <Ionicons
-              name={
-                isFarmer
-                  ? "leaf-outline"
-                  : "business-outline"
-              }
+              name={isFarmer ? "leaf-outline" : "business-outline"}
               size={17}
               color={theme.primary}
             />
 
-            <Text
-              style={[
-                styles.headerRoleText,
-                { color: theme.primary },
-              ]}
-            >
+            <Text style={[styles.headerRoleText, { color: theme.primary }]}>
               {isFarmer ? "Farmer" : "Miller"}
             </Text>
           </View>
@@ -547,45 +529,28 @@ export default function PartnersScreen() {
         {/* ------------------------------------------------------------- */}
 
         <LinearGradient
-          colors={[
-            theme.gradientStart,
-            theme.gradientEnd,
-          ]}
+          colors={[theme.gradientStart, theme.gradientEnd]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.hero}
         >
-          <View
-            pointerEvents="none"
-            style={styles.heroCircleLarge}
-          />
+          <View pointerEvents="none" style={styles.heroCircleLarge} />
 
-          <View
-            pointerEvents="none"
-            style={styles.heroCircleSmall}
-          />
+          <View pointerEvents="none" style={styles.heroCircleSmall} />
 
           <View style={styles.heroTop}>
             <View style={styles.heroIcon}>
-              <Ionicons
-                name="people"
-                size={26}
-                color="#FFFFFF"
-              />
+              <Ionicons name="people" size={26} color="#FFFFFF" />
             </View>
 
             <View style={{ flex: 1 }}>
-              <Text style={styles.heroEyebrow}>
-                TRUSTED NETWORK
-              </Text>
+              <Text style={styles.heroEyebrow}>TRUSTED NETWORK</Text>
 
-              <Text style={styles.heroTitle}>
-                Your trading relationships
-              </Text>
+              <Text style={styles.heroTitle}>Your trading relationships</Text>
 
               <Text style={styles.heroDescription}>
-                Connect, collaborate and trade with
-                verified marketplace partners.
+                Connect, collaborate and trade with verified marketplace
+                partners.
               </Text>
             </View>
           </View>
@@ -634,81 +599,65 @@ export default function PartnersScreen() {
               ]}
             />
 
-            {TAB_CONFIG.map(
-              ({ key, label, icon }) => {
-                const selected =
-                  activeTab === key;
+            {TAB_CONFIG.map(({ key, label, icon }) => {
+              const selected = activeTab === key;
 
-                const badge =
-                  key === "connected"
-                    ? connections.length
-                    : key === "requests"
+              const badge =
+                key === "connected"
+                  ? connections.length
+                  : key === "requests"
                     ? incomingCount
                     : tradePartners.length;
 
-                return (
-                  <Pressable
-                    key={key}
-                    onLayout={(e) =>
-                      handleTabLayout(
-                        key,
-                        e.nativeEvent.layout.x,
-                        e.nativeEvent.layout.width
-                      )
-                    }
-                    onPress={() =>
-                      setActiveTab(key)
-                    }
-                    style={styles.tabButton}
-                  >
-                    <Ionicons
-                      name={icon}
-                      size={17}
-                      color={
-                        selected
-                          ? "#FFFFFF"
-                          : "#64748B"
-                      }
-                    />
+              return (
+                <Pressable
+                  key={key}
+                  onLayout={(e) =>
+                    handleTabLayout(
+                      key,
+                      e.nativeEvent.layout.x,
+                      e.nativeEvent.layout.width,
+                    )
+                  }
+                  onPress={() => setActiveTab(key)}
+                  style={styles.tabButton}
+                >
+                  <Ionicons
+                    name={icon}
+                    size={17}
+                    color={selected ? "#FFFFFF" : "#64748B"}
+                  />
 
-                    <Text
+                  <Text
+                    style={[styles.tabText, selected && styles.tabTextSelected]}
+                  >
+                    {label}
+                  </Text>
+
+                  {badge > 0 ? (
+                    <View
                       style={[
-                        styles.tabText,
-                        selected &&
-                          styles.tabTextSelected,
+                        styles.tabBadge,
+                        selected && {
+                          backgroundColor: "rgba(255,255,255,0.18)",
+                        },
                       ]}
                     >
-                      {label}
-                    </Text>
-
-                    {badge > 0 ? (
-                      <View
+                      <Text
                         style={[
-                          styles.tabBadge,
+                          styles.tabBadgeText,
                           selected && {
-                            backgroundColor:
-                              "rgba(255,255,255,0.18)",
+                            color: "#FFFFFF",
                           },
                         ]}
                       >
-                        <Text
-                          style={[
-                            styles.tabBadgeText,
-                            selected && {
-                              color: "#FFFFFF",
-                            },
-                          ]}
-                        >
-                          {badge > 99
-                            ? "99+"
-                            : badge}
-                        </Text>
-                      </View>
-                    ) : null}
-                  </Pressable>
-                );
-              }
-            )}
+                        {badge > 99 ? "99+" : badge}
+                      </Text>
+                    </View>
+                  ) : null}
+                </Pressable>
+              );
+            })}
           </View>
         </View>
 
@@ -743,23 +692,15 @@ export default function PartnersScreen() {
             <Ionicons
               name="search-outline"
               size={17}
-              color={
-                searchFocused
-                  ? theme.primary
-                  : "#64748B"
-              }
+              color={searchFocused ? theme.primary : "#64748B"}
             />
           </View>
 
           <TextInput
             value={searchQuery}
             onChangeText={setSearchQuery}
-            onFocus={() =>
-              setSearchFocused(true)
-            }
-            onBlur={() =>
-              setSearchFocused(false)
-            }
+            onFocus={() => setSearchFocused(true)}
+            onBlur={() => setSearchFocused(false)}
             placeholder={
               isFarmer
                 ? "Search miller, district or location..."
@@ -775,11 +716,7 @@ export default function PartnersScreen() {
               hitSlop={8}
               style={styles.searchClear}
             >
-              <Ionicons
-                name="close"
-                size={14}
-                color="#64748B"
-              />
+              <Ionicons name="close" size={14} color="#64748B" />
             </Pressable>
           ) : null}
         </View>
@@ -794,29 +731,17 @@ export default function PartnersScreen() {
             style={styles.errorCard}
           >
             <View style={styles.errorIcon}>
-              <Ionicons
-                name="warning-outline"
-                size={20}
-                color="#B91C1C"
-              />
+              <Ionicons name="warning-outline" size={20} color="#B91C1C" />
             </View>
 
             <View style={{ flex: 1 }}>
-              <Text style={styles.errorTitle}>
-                Unable to load network
-              </Text>
+              <Text style={styles.errorTitle}>Unable to load network</Text>
 
-              <Text style={styles.errorText}>
-                {errorMessage}
-              </Text>
+              <Text style={styles.errorText}>{errorMessage}</Text>
             </View>
 
             <View style={styles.errorRefresh}>
-              <Ionicons
-                name="refresh-outline"
-                size={17}
-                color="#B91C1C"
-              />
+              <Ionicons name="refresh-outline" size={17} color="#B91C1C" />
             </View>
           </PressableScale>
         ) : null}
@@ -840,9 +765,7 @@ export default function PartnersScreen() {
             theme={theme}
             onRespond={respondToRequest}
             onOpen={openPartner}
-            onOutgoingPress={
-              setSelectedOutgoingRequest
-            }
+            onOutgoingPress={setSelectedOutgoingRequest}
           />
         ) : null}
 
@@ -860,19 +783,14 @@ export default function PartnersScreen() {
       {/* --------------------------------------------------------------- */}
 
       <Modal
-        visible={Boolean(
-          selectedOutgoingRequest
-        )}
+        visible={Boolean(selectedOutgoingRequest)}
         transparent
         animationType="none"
         statusBarTranslucent
         onRequestClose={closeOutgoingSheet}
       >
         <Animated.View
-          style={[
-            styles.modalOverlay,
-            { opacity: overlayOpacity },
-          ]}
+          style={[styles.modalOverlay, { opacity: overlayOpacity }]}
         >
           <Pressable
             style={StyleSheet.absoluteFill}
@@ -883,9 +801,7 @@ export default function PartnersScreen() {
             style={[
               styles.requestPopup,
               {
-                transform: [
-                  { translateY: sheetY },
-                ],
+                transform: [{ translateY: sheetY }],
               },
             ]}
           >
@@ -898,8 +814,7 @@ export default function PartnersScreen() {
                     style={[
                       styles.popupIcon,
                       {
-                        backgroundColor:
-                          theme.soft,
+                        backgroundColor: theme.soft,
                       },
                     ]}
                   >
@@ -911,13 +826,9 @@ export default function PartnersScreen() {
                   </View>
 
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.popupTitle}>
-                      Connection request
-                    </Text>
+                    <Text style={styles.popupTitle}>Connection request</Text>
 
-                    <Text
-                      style={styles.popupSubtitle}
-                    >
+                    <Text style={styles.popupSubtitle}>
                       Waiting for response
                     </Text>
                   </View>
@@ -927,21 +838,13 @@ export default function PartnersScreen() {
                     style={styles.popupClose}
                     hitSlop={8}
                   >
-                    <Ionicons
-                      name="close"
-                      size={19}
-                      color="#64748B"
-                    />
+                    <Ionicons name="close" size={19} color="#64748B" />
                   </Pressable>
                 </View>
 
-                <View
-                  style={styles.popupPartnerCard}
-                >
+                <View style={styles.popupPartnerCard}>
                   <PartnerIdentity
-                    partner={
-                      selectedOutgoingRequest.partner
-                    }
+                    partner={selectedOutgoingRequest.partner}
                     theme={theme}
                   />
                 </View>
@@ -955,63 +858,52 @@ export default function PartnersScreen() {
                     />
                   </View>
 
-                  <Text
-                    style={styles.popupInfoText}
-                  >
+                  <Text style={styles.popupInfoText}>
                     Your request was sent on{" "}
-                    {formatDate(
-                      selectedOutgoingRequest.requestedAt
-                    )}
-                    . The other party has not
-                    responded yet. You can cancel
-                    the request while it is pending.
+                    {formatDate(selectedOutgoingRequest.requestedAt)}. The other
+                    party has not responded yet. You can cancel the request
+                    while it is pending.
                   </Text>
                 </View>
 
                 <PressableScale
-                  onPress={() =>
-                    openPublicProfile(
-                      selectedOutgoingRequest
-                    )
-                  }
+                  onPress={() => openPublicProfile(selectedOutgoingRequest)}
                   style={[
                     styles.popupPrimaryButton,
                     {
-                      backgroundColor:
-                        theme.primary,
+                      backgroundColor: theme.primary,
                     },
                   ]}
                 >
-                  <Ionicons
-                    name="person-outline"
-                    size={18}
-                    color="#FFFFFF"
-                  />
+                  <Ionicons name="person-outline" size={18} color="#FFFFFF" />
 
-                  <Text
-                    style={styles.popupPrimaryText}
-                  >
-                    View Profile
-                  </Text>
+                  <Text style={styles.popupPrimaryText}>View Profile</Text>
 
-                  <Ionicons
-                    name="arrow-forward"
-                    size={16}
-                    color="#FFFFFF"
-                  />
+                  <Ionicons name="arrow-forward" size={16} color="#FFFFFF" />
                 </PressableScale>
 
                 <PressableScale
                   disabled={cancellingRequest}
                   style={[
                     styles.popupCancelButton,
-                    cancellingRequest &&
-                      styles.disabledButton,
+                    cancellingRequest && styles.disabledButton,
                   ]}
-                  onPress={() =>
+                  onPress={() => {
+                    if (Platform.OS === "web") {
+                      const confirmed = window.confirm(
+                        `Do you want to cancel your connection request to ${selectedOutgoingRequest?.partner.name}?`,
+                      );
+
+                      if (confirmed) {
+                        void cancelRequest();
+                      }
+
+                      return;
+                    }
+
                     Alert.alert(
                       "Cancel request?",
-                      `Do you want to cancel your connection request to ${selectedOutgoingRequest.partner.name}?`,
+                      `Do you want to cancel your connection request to ${selectedOutgoingRequest?.partner.name}?`,
                       [
                         {
                           text: "Keep request",
@@ -1020,18 +912,14 @@ export default function PartnersScreen() {
                         {
                           text: "Cancel request",
                           style: "destructive",
-                          onPress: () =>
-                            void cancelRequest(),
+                          onPress: () => void cancelRequest(),
                         },
-                      ]
-                    )
-                  }
+                      ],
+                    );
+                  }}
                 >
                   {cancellingRequest ? (
-                    <ActivityIndicator
-                      size="small"
-                      color="#B91C1C"
-                    />
+                    <ActivityIndicator size="small" color="#B91C1C" />
                   ) : (
                     <>
                       <Ionicons
@@ -1040,13 +928,7 @@ export default function PartnersScreen() {
                         color="#B91C1C"
                       />
 
-                      <Text
-                        style={
-                          styles.popupCancelText
-                        }
-                      >
-                        Cancel Request
-                      </Text>
+                      <Text style={styles.popupCancelText}>Cancel Request</Text>
                     </>
                   )}
                 </PressableScale>
