@@ -681,3 +681,5 @@ const styles = StyleSheet.create({
   modalOptionText: { fontFamily: "Poppins_500Medium", fontSize: 16, color: "#4B5563" },
   modalOptionTextActive: { color: "#0A331D", fontFamily: "Poppins_700Bold" },
 });
+
+

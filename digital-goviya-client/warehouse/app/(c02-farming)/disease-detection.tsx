@@ -15,7 +15,15 @@ import { LinearGradient } from "expo-linear-gradient";
 import * as ImagePicker from 'expo-image-picker';
 import { authService } from "@/services/shared/auth.service";
 
-const API_URL = "http://127.0.0.1:8000";
+// const API_URL = "http://127.0.0.1:8000";
+// Update this to the IP of the machine running the FastAPI backend
+//    – Android emulator: 10.0.2.2
+//    – iOS simulator:   http://localhost
+//    – Physical device:  http://<your‑local‑ip> 192.168.8.105
+// const API_URL = "http://127.0.0.1:8000";
+// const API_URL = "http://localhost:8000";
+const API_URL = "http://192.168.8.105:8000";
+
 
 export default function DiseaseDetectionScreen() {
   const [imageUri, setImageUri] = useState<string | null>(null);
@@ -81,23 +89,29 @@ export default function DiseaseDetectionScreen() {
     try {
       const filename = imageUri.split('/').pop() || 'image.jpeg';
       const match = /\.(\w+)$/.exec(filename);
-      let type = match ? `image/${match[1]}` : `image/jpeg`;
-      if (type === 'image/jpg') type = 'image/jpeg';
+      let mimeType = match ? `image/${match[1]}` : `image/jpeg`;
+      if (mimeType === 'image/jpg') mimeType = 'image/jpeg';
+
+      // Fetch the image as a blob first to avoid "Unsupported FormDataPart"
+      // error caused by Hermes rejecting plain { uri, name, type } objects.
+      const imageResponse = await fetch(imageUri);
+      const blob = await imageResponse.blob();
 
       const formData = new FormData();
-      formData.append('file', {
-        uri: imageUri,
-        name: filename,
-        type,
-      } as any);
+      // @ts-ignore – React Native FormData accepts Blob with a filename
+      formData.append('file', blob, filename);
 
       const response = await fetch(`${API_URL}/predict_disease`, {
         method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+        },
         body: formData,
       });
 
       if (!response.ok) {
-        throw new Error("Analysis failed. Ensure the server is running.");
+        const errText = await response.text();
+        throw new Error(`Analysis failed (${response.status}): ${errText}`);
       }
 
       const data = await response.json();
