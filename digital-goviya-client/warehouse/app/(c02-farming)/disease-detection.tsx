@@ -13,7 +13,7 @@ import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import * as ImagePicker from 'expo-image-picker';
-import { authService } from "@/services/shared/auth.service";
+import { useFarmingAuth } from "@/contexts/FarmingAuthContext";
 
 // const API_URL = "http://127.0.0.1:8000";
 // Update this to the IP of the machine running the FastAPI backend
@@ -26,6 +26,7 @@ const API_URL = "http://192.168.8.105:8000";
 
 
 export default function DiseaseDetectionScreen() {
+  const { currentUser } = useFarmingAuth();
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
@@ -127,9 +128,8 @@ export default function DiseaseDetectionScreen() {
     if (!result) return;
     setSaveStatus('Saving...');
     try {
-      const user = await authService.getStoredUser();
       const payload = {
-        user_id: user?.id || 'mobile_user',
+        user_id: currentUser?.uid || 'mobile_user',
         disease_name: result.disease,
         disease_type: result.disease_type,
         confidence: result.confidence

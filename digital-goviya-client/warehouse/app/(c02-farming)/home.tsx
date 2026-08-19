@@ -24,6 +24,7 @@ const ROUTES = {
   yield: "/(c02-farming)/yield-prediction",
   disease: "/(c02-farming)/disease-detection",
   fertilizer: "/(c02-farming)/fertilizer-guide",
+  profile: "/(c02-farming)/profile",
 };
 
 export default function FarmingHomeScreen() {
@@ -59,13 +60,22 @@ export default function FarmingHomeScreen() {
       <View style={{ flex: 1, paddingTop: 60 }}>
         {/* Hero */}
         <View style={styles.hero}>
-          <TouchableOpacity
-            style={styles.backBtn}
-            onPress={() => router.back()}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-          >
-            <Ionicons name="chevron-back" size={20} color="white" />
-          </TouchableOpacity>
+          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+            <TouchableOpacity
+              style={styles.backBtn}
+              onPress={() => router.back()}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <Ionicons name="chevron-back" size={20} color="white" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.backBtn}
+              onPress={() => router.push(ROUTES.profile as any)}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <Ionicons name="person" size={20} color="white" />
+            </TouchableOpacity>
+          </View>
 
           <View style={styles.eyebrowPill}>
             <Ionicons name="sparkles" size={11} color="#F5C542" />
@@ -176,6 +186,25 @@ export default function FarmingHomeScreen() {
               </TouchableOpacity>
             </View>
             
+            {/* Profile card */}
+            <View style={styles.featureCard}>
+              <View style={[styles.featureIconBox, { backgroundColor: "#EDE9FE" }]}>
+                <Ionicons name="person" size={26} color="#7C3AED" />
+              </View>
+              <Text style={styles.featureTitle}>Farmer Profile</Text>
+              <Text style={styles.featureDesc}>
+                View and manage your account details, and browse your advisory, yield, disease, and fertilizer history.
+              </Text>
+              <TouchableOpacity
+                style={[styles.secondaryBtn, { backgroundColor: "#F5F3FF" }]}
+                activeOpacity={0.85}
+                onPress={() => router.push(ROUTES.profile as any)}
+              >
+                <Text style={[styles.secondaryBtnText, { color: "#7C3AED" }]}>View Profile</Text>
+                <Ionicons name="arrow-forward" size={16} color="#7C3AED" />
+              </TouchableOpacity>
+            </View>
+
             {/* Spacer */}
             <View style={{height: 40}} />
 
