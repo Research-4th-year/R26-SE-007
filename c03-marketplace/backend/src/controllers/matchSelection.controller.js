@@ -333,31 +333,23 @@ const createSelections = async (
 
           await createMarketplaceNotification({
             recipientType: "farmer",
-            recipientId:
-              farmer._id,
+            recipientId: farmer._id,
             actorType: "miller",
-            actorId:
-              miller._id,
-            actorName:
-              miller.millName ||
-              miller.name,
-            type:
-              "MATCH_REQUEST",
+            actorId: demand.millerId._id,
+            actorName: demand.millerId.millName || demand.millerId.name,
+            type: "MATCH_REQUEST",
 
-            titleEnglish:
-              "New Miller match request",
-            titleSinhala:
-              "නව මෝල්කරු ගැළපීමේ ඉල්ලීමක්",
+            titleEnglish: "New Miller match request",
 
-            messageEnglish:
-              `${miller.millName || miller.name} sent a match request for your ${harvest.paddyType} harvest.`,
-            messageSinhala:
-              `${miller.millName || miller.name} විසින් ඔබගේ ${harvest.paddyType} අස්වැන්න සඳහා ගැළපීමේ ඉල්ලීමක් යවා ඇත.`,
+            titleSinhala: "නව මෝල්කරු ගැළපීමේ ඉල්ලීමක්",
 
-            relatedHarvestId:
-              harvest._id,
-            relatedSelectionId:
-              selection._id,
+            messageEnglish: `${demand.millerId.millName || demand.millerId.name} sent a match request for your ${harvest.paddyType} harvest.`,
+
+            messageSinhala: `${demand.millerId.millName || demand.millerId.name} විසින් ඔබගේ ${harvest.paddyType} අස්වැන්න සඳහා ගැළපීමේ ඉල්ලීමක් යවා ඇත.`,
+
+            relatedHarvestId: harvest._id,
+
+            relatedSelectionId: selection._id,
           });
 
         await createMarketplaceNotification({
@@ -776,6 +768,11 @@ const createSelectionsByMiller =
         createdSelections.length ===
         0
       ) {
+
+        console.log(
+          "MATCH SELECTIONS - NOTHING CREATED:",
+          JSON.stringify(skippedSelections, null, 2),
+        );
         return res.status(409).json({
           success: false,
 
