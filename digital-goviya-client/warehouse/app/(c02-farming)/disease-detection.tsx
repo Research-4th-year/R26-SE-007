@@ -4,11 +4,11 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   Image,
   ActivityIndicator,
   ScrollView,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -33,7 +33,7 @@ export default function DiseaseDetectionScreen() {
       }
 
       let pickerResult = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ['images'],
         allowsEditing: true,
         aspect: [1, 1],
         quality: 0.8,
@@ -79,9 +79,10 @@ export default function DiseaseDetectionScreen() {
     setError(null);
 
     try {
-      const filename = imageUri.split('/').pop() || 'image.jpg';
+      const filename = imageUri.split('/').pop() || 'image.jpeg';
       const match = /\.(\w+)$/.exec(filename);
-      const type = match ? `image/${match[1]}` : `image`;
+      let type = match ? `image/${match[1]}` : `image/jpeg`;
+      if (type === 'image/jpg') type = 'image/jpeg';
 
       const formData = new FormData();
       formData.append('file', {
