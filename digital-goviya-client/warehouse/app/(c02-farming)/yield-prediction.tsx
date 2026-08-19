@@ -321,7 +321,7 @@ export default function YieldPredictionScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: "#F3F4F6" },
-  heroBg: { ...StyleSheet.absoluteFillObject, height: 250 },
+  heroBg: { ...StyleSheet.absoluteFill, height: 250 },
   header: {
     flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 20, paddingTop: 40, paddingBottom: 20,
   },

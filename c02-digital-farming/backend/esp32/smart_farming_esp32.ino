@@ -28,13 +28,13 @@ const char* password = "22222222";
 #define FIREBASE_HOST    "esp32-project01-1641b-default-rtdb.firebaseio.com"
 
 // Add your Firebase Database Secret here (Project Settings -> Service accounts -> Database secrets)
-#define FIREBASE_SECRET  "YOUR_DATABASE_SECRET" 
+#define FIREBASE_SECRET  "AIzaSyBqs9kHOCJ5nBlRoGuWaPxuPRkBoUmXcmE" 
 
 // ================= 4G CONFIG =================
 #define MODEM_RX 16
 #define MODEM_TX 17
 #define MODEM_BAUDRATE 115200
-const char* APN = "mobitel";
+const char* APN = "mobitel3g";
 const char* GPRS_USER = "";
 const char* GPRS_PASS = "";
 

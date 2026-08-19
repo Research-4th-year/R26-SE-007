@@ -373,17 +373,17 @@ function YieldPrediction() {
             </div>
 
             <div style={{ padding: '15px', background: 'rgba(255,255,255,0.05)', borderRadius: '12px', marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '10px' }}>
-                <span style={{ color: '#cbd5e1' }}>Yield per Hectare</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', borderBottom: '1px solid rgba(255,255,255,0.)', paddingBottom: '10px' }}>
+                <span style={{ color: '#303030ff' }}>Yield per Hectare</span>
                 <span style={{ fontWeight: 'bold' }}>{yieldResult.predicted_yield_kg_per_ha.toFixed(2)} kg/ha</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: '#cbd5e1' }}>Total Expected Yield</span>
+                <span style={{ color: '#303030ff' }}>Total Expected Yield</span>
                 <span style={{ fontWeight: 'bold', color: '#34d399' }}>{getTotalYieldKg(yieldResult.predicted_yield_kg_per_ha).toFixed(2)} kg</span>
               </div>
             </div>
 
-            <div className="reasoning-box" style={{ background: 'rgba(0,0,0,0.2)', padding: '15px', borderRadius: '12px', fontSize: '0.95rem', color: '#e2e8f0', textAlign: 'left', marginBottom: '20px' }}>
+            <div className="reasoning-box" style={{ background: 'rgba(0,0,0,0.2)', padding: '15px', borderRadius: '12px', fontSize: '0.95rem', color: '#000000ff', textAlign: 'left', marginBottom: '20px' }}>
               <h3 style={{ marginTop: 0, marginBottom: '10px', fontSize: '1.1rem', color: '#10b981' }}>Agronomic Recommendations</h3>
               <ul style={{ margin: 0, paddingLeft: '20px' }}>
                 {yieldResult.agronomic_recommendations && yieldResult.agronomic_recommendations.map((insight, idx) => (

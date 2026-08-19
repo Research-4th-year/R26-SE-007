@@ -253,7 +253,7 @@ export default function DiseaseDetectionScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: "#fefffeff" },
-  heroBg: { ...StyleSheet.absoluteFillObject, height: 250 },
+  heroBg: { ...StyleSheet.absoluteFill, height: 250 },
   header: {
     flexDirection: "row",
     alignItems: "center",

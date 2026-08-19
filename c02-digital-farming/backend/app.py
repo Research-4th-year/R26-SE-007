@@ -66,7 +66,7 @@ def load_resources():
     C_END = '\033[0m'
 
     print(f"\n{C_CYAN}=================================================={C_END}")
-    print(f"{C_CYAN}🚀 STARTING FARMER ADVISORY BACKEND SERVICES...{C_END}")
+    print(f"{C_CYAN} STARTING FARMER ADVISORY BACKEND SERVICES...{C_END}")
     print(f"{C_CYAN}=================================================={C_END}\n")
     
     time.sleep(0.3)
@@ -269,17 +269,18 @@ disease_model = None
 disease_class_names = None
 
 @app.post("/predict_disease")
-async def predict_disease(file: UploadFile = File(...)):
+def predict_disease(file: UploadFile = File(...)):
     global disease_model, disease_class_names
     
     try:
         import tensorflow as tf
+        import keras
         from PIL import Image
         import numpy as np
         import io
         import json
     except ImportError:
-        raise HTTPException(status_code=500, detail="TensorFlow or Pillow is not installed.")
+        raise HTTPException(status_code=500, detail="TensorFlow, Keras, or Pillow is not installed.")
         
     try:
         # Load model and classes lazily
@@ -287,16 +288,16 @@ async def predict_disease(file: UploadFile = File(...)):
             models_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'models')
             model_path = os.path.join(models_dir, 'disease_prediction_model.keras')
             classes_path = os.path.join(models_dir, 'disease_classes.json')
-            
             if not os.path.exists(model_path):
                 raise HTTPException(status_code=500, detail="Disease prediction model not found. Please train it first.")
-                
-            disease_model = tf.keras.models.load_model(model_path)
+            
+            disease_model = keras.models.load_model(model_path, compile=False)
+                    
             with open(classes_path, 'r') as f:
                 disease_class_names = json.load(f)
                 
         # Read and preprocess the image
-        contents = await file.read()
+        contents = file.file.read()
         image = Image.open(io.BytesIO(contents))
         
         # Convert to RGB if necessary (e.g. RGBA)
@@ -305,15 +306,25 @@ async def predict_disease(file: UploadFile = File(...)):
             
         # Resize to 224x224 for MobileNetV2
         image = image.resize((224, 224))
-        img_array = tf.keras.preprocessing.image.img_to_array(image)
+        img_array = keras.preprocessing.image.img_to_array(image)
         img_array = tf.expand_dims(img_array, 0) # Create batch axis
         
-        # Predict
-        predictions = disease_model.predict(img_array)
-        score = tf.nn.softmax(predictions[0]) if not isinstance(predictions[0], np.ndarray) else predictions[0]
+        # Predict (using direct call instead of .predict() to avoid TF threading bugs)
+        predictions = disease_model(img_array, training=False)
         
-        max_confidence = np.max(score)
-        predicted_class_index = np.argmax(score)
+        # If it returns a dict (e.g. from TFSMLayer fallback), extract the tensor
+        if isinstance(predictions, dict):
+            predictions = list(predictions.values())[0]
+
+        # score = tf.nn.softmax(predictions[0]) if not isinstance(predictions[0], np.ndarray) else predictions[0]
+        
+        # max_confidence = np.max(score)
+        # predicted_class_index = np.argmax(score)
+        # predicted_class = disease_class_names[predicted_class_index]
+        score = predictions[0]
+
+        max_confidence = float(tf.reduce_max(score))
+        predicted_class_index = int(tf.argmax(score))
         predicted_class = disease_class_names[predicted_class_index]
         
         # Safety net: if confidence is extremely low (<50%), fallback to "Another Type"
