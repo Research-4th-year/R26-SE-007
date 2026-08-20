@@ -25,6 +25,7 @@ const ROUTES = {
   disease: "/(c02-farming)/disease-detection",
   fertilizer: "/(c02-farming)/fertilizer-guide",
   profile: "/(c02-farming)/profile",
+  iotDashboard: "/(c02-farming)/iot-dashboard",
 };
 
 export default function FarmingHomeScreen() {
@@ -102,6 +103,32 @@ export default function FarmingHomeScreen() {
             <Text style={styles.welcomeText}>
               Leverage advanced machine learning and real-time IoT data to manage your paddy fields.
             </Text>
+
+            {/* IoT Dashboard card */}
+            <View style={styles.featureCard}>
+              <View style={[styles.featureIconBox, { backgroundColor: "#E0F2FE" }]}>
+                <Ionicons name="hardware-chip" size={26} color="#0369A1" />
+              </View>
+              <Text style={styles.featureTitle}>IoT Dashboard</Text>
+              <Text style={styles.featureDesc}>
+                Monitor real-time sensor data from your ESP32 IoT device — temperature, humidity, soil moisture, NPK, and more.
+              </Text>
+              <TouchableOpacity
+                style={styles.primaryBtnShadow}
+                activeOpacity={0.9}
+                onPress={() => router.push(ROUTES.iotDashboard as any)}
+              >
+                <LinearGradient
+                  colors={["#0369A1", "#0C4A6E"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.primaryBtn}
+                >
+                  <Text style={[styles.primaryBtnText, { color: "white" }]}>View Dashboard</Text>
+                  <Ionicons name="arrow-forward" size={16} color="white" />
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
 
             {/* Advisory card */}
             <View style={styles.featureCard}>
