@@ -80,11 +80,6 @@ const SENSOR_CARDS: SensorCardConfig[] = [
     icon: "flash", gradientColors: ["rgba(244,63,94,0.15)", "rgba(244,63,94,0.08)"],
     iconBg: "#F43F5E", min: 0, max: 80,
   },
-  {
-    key: "ec", label: "EC Value", unit: "dS/m",
-    icon: "pulse", gradientColors: ["rgba(99,102,241,0.15)", "rgba(99,102,241,0.08)"],
-    iconBg: "#6366F1", min: 0, max: 4,
-  },
 ];
 
 // ─── Animated Sensor Card ─────────────────────────────────────────────────────

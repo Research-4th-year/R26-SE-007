@@ -5,7 +5,7 @@
  * INTERNET CONNECTION PRIORITY:
  * 1. Wi-Fi
  * 2. A7670C 4G LTE SIM module
- */
+*/
 
 #include <WiFi.h>
 #include <DHT.h>

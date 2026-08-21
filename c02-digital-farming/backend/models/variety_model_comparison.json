@@ -1,17 +1,32 @@
 {
-    "models": [
-        {
-            "name": "Random Forest",
-            "accuracy": 0.16666666666666666
-        },
-        {
-            "name": "Decision Tree",
-            "accuracy": 0.20833333333333334
-        },
-        {
-            "name": "Logistic Regression",
-            "accuracy": 0.16666666666666666
-        }
-    ],
-    "best_model": "Decision Tree"
+  "models": [
+    {
+      "name": "Random Forest",
+      "accuracy": 0.814414933048119,
+      "precision": 0.8427410313070046,
+      "recall": 0.814414933048119,
+      "f1_score": 0.7956850111864384,
+      "cross_val_score": 0.8262573443008225,
+      "roc_auc": 0.9151041199725579
+    },
+    {
+      "name": "Decision Tree",
+      "accuracy": 0.6625277989238612,
+      "precision": 0.789529013290778,
+      "recall": 0.6625277989238612,
+      "f1_score": 0.6860148103563634,
+      "cross_val_score": 0.7100763807285547,
+      "roc_auc": 0.9147958139641305
+    },
+    {
+      "name": "Logistic Regression",
+      "accuracy": 0.4070381038564802,
+      "precision": 0.6830687606179148,
+      "recall": 0.4070381038564802,
+      "f1_score": 0.4811128805783067,
+      "cross_val_score": 0.5558578143360752,
+      "roc_auc": 0.8994000507947036
+    }
+  ],
+  "best_model": "Random Forest"
 }
