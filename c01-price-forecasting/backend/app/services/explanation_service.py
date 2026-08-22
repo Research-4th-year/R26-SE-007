@@ -17,6 +17,18 @@ from app.xai.recommendation import (
 from app.xai.summary import generate_summary
 from app.core.exceptions import PredictionException
 
+from app.schemas.llm_explanation import (
+    LLMExplanationEvidence,
+    SHAPFeatureEvidence
+)
+
+from app.schemas.prediction_explanation import (
+    PredictionExplanationResponse,
+    PredictionInfo,
+    MarketInfo,
+    ExplanationInfo
+)
+
 class ExplanationService:
 
     def __init__(self):
@@ -120,5 +132,158 @@ class ExplanationService:
 
         }
 
+    def create_llm_evidence(
+        self,
+        district: str,
+        input_date: str
+    ) -> LLMExplanationEvidence:
+
+        prediction, X = prediction_service.predict_with_features(
+            district,
+            input_date
+        )
+
+        previous_price = float(
+            X["lag_1"].values[0]
+        )
+
+        shap_values = self.explainer.shap_values(X)
+
+        if isinstance(shap_values, list):
+            shap_values = shap_values[0]
+
+        shap_values = np.asarray(
+            shap_values
+        ).reshape(-1)
+
+        explanation = self.generate_explanation(
+            X,
+            prediction,
+            previous_price,
+            shap_values
+        )
+
+        market_outlook = generate_market_outlook(
+            explanation["trend"]
+        )
+
+        recommendation = generate_recommendation(
+            explanation["trend"],
+            explanation["confidence"]
+        )
+
+        risk_level = assess_risk(
+            explanation["trend"],
+            explanation["confidence"]
+        )
+
+        top_features = []
+
+        for feature in explanation["top_features"]:
+
+            top_features.append(
+                SHAPFeatureEvidence(
+                    feature=feature["Feature"],
+                    value=feature["Value"],
+                    contribution=feature["Contribution"]
+                )
+            )
+
+        return LLMExplanationEvidence(
+
+            district=district,
+
+            date=input_date,
+
+            predicted_price=round(
+                float(prediction),
+                2
+            ),
+
+            previous_price=round(
+                previous_price,
+                2
+            ),
+
+            trend=explanation["trend"],
+
+            confidence=explanation["confidence"],
+
+            risk_level=risk_level,
+
+            market_outlook=market_outlook,
+
+            recommendation=recommendation,
+
+            top_features=top_features,
+
+            shap_reasons=explanation["reasons"]
+        )
+
+    def create_combined_explanation(
+        self,
+        district: str,
+        input_date: str
+    ) -> PredictionExplanationResponse:
+        from app.services.llm_explanation_service import (
+            llm_explanation_service
+        )
+
+        evidence = self.create_llm_evidence(
+            district,
+            input_date
+        )
+
+        llm_explanation = llm_explanation_service.explain(
+            evidence
+        )
+
+        return PredictionExplanationResponse(
+
+            prediction=PredictionInfo(
+
+                district=evidence.district,
+
+                date=evidence.date,
+
+                predicted_price=evidence.predicted_price,
+
+                previous_price=evidence.previous_price,
+
+                currency="LKR/kg"
+            ),
+
+            market=MarketInfo(
+
+                trend=evidence.trend,
+
+                confidence=evidence.confidence,
+
+                risk_level=evidence.risk_level,
+
+                outlook=evidence.market_outlook,
+
+                recommendation=evidence.recommendation
+            ),
+
+            explanation=ExplanationInfo(
+
+                headline=llm_explanation.headline,
+
+                explanation=llm_explanation.explanation,
+
+                key_factors=llm_explanation.key_factors,
+
+                generated_by=llm_explanation.generated_by
+            ),
+
+            technical={
+
+                "top_features": evidence.top_features,
+
+                "shap_reasons": evidence.shap_reasons
+
+            }
+        )
 
 explanation_service = ExplanationService()

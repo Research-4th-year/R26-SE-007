@@ -12,6 +12,13 @@ from app.schemas.prediction import (
     ForecastRequest,
     ForecastResponse
 )
+from app.services.llm_explanation_service import (
+    llm_explanation_service
+)
+from app.schemas.llm_api_response import LLMExplanationAPIResponse
+from app.schemas.prediction_explanation import (
+    PredictionExplanationResponse
+)
 
 router = APIRouter()
 
@@ -106,3 +113,46 @@ def test_features():
     )
 
     return features.to_dict(orient="records")[0]
+
+@router.post("/explanation/evidence")
+def explanation_evidence(request: PredictionRequest):
+
+    evidence = explanation_service.create_llm_evidence(
+        request.district,
+        request.date
+    )
+
+    return evidence
+
+@router.post(
+    "/explanation/llm",
+    response_model=LLMExplanationAPIResponse
+)
+def llm_explanation(request: PredictionRequest):
+
+    evidence = explanation_service.create_llm_evidence(
+        request.district,
+        request.date
+    )
+
+    explanation = llm_explanation_service.explain(
+        evidence
+    )
+
+    return {
+        "evidence": evidence,
+        "llm_explanation": explanation
+    }
+
+@router.post(
+    "/prediction/explanation",
+    response_model=PredictionExplanationResponse
+)
+def prediction_explanation(
+    request: PredictionRequest
+):
+
+    return explanation_service.create_combined_explanation(
+        request.district,
+        request.date
+    )
