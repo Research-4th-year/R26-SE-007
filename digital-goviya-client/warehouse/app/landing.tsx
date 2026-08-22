@@ -1,10 +1,10 @@
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useRef, useEffect } from "react";
 import {
   View,
   Text,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   Animated,
   Image,
   ScrollView,
@@ -39,8 +39,8 @@ const COMPONENTS = [
     icon: "leaf",
     color: "#0369A1",
     bg: "#E0F2FE",
-    route: "/(c02-farming)",
-    ready: false,
+    route: "/(c02-farming)/home",
+    ready: true,
   },
   {
     id: "marketplace",
