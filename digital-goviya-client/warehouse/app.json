@@ -13,7 +13,8 @@
     },
     "scheme": "paddywarehouse",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.nerandadilhara.paddy-warehouse"
     },
     "android": {
       "adaptiveIcon": {

@@ -16,7 +16,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useFarmingAuth } from "@/contexts/FarmingAuthContext";
 import districtData from "./districtData.json";
 
-const API_URL = "http://192.168.8.105:8000";
+import { API_URL } from "./config/apiConfig";
 const DISTRICTS = Object.keys(districtData);
 
 // Simple inline picker
@@ -101,16 +101,20 @@ export default function RegisterScreen() {
         farm_unit: farmUnit,
       };
 
-      await fetch(`${API_URL}/api/profile`, {
+      const res = await fetch(`${API_URL}/api/profile`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(profileData),
       });
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.detail || "Failed to save profile");
+      }
 
       // 3. Navigate to home (AuthGuard will handle the rest)
       router.replace("/(c02-farming)/home" as any);
     } catch (err: any) {
-      setError(friendlyError(err.code));
+      setError(friendlyError(err.code || err.message));
     } finally {
       setLoading(false);
     }

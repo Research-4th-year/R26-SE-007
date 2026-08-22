@@ -13,13 +13,13 @@ import {
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { authService } from "@/services/shared/auth.service";
+import { useFarmingAuth } from "@/contexts/FarmingAuthContext";
 import data from "./fertilizer.json";
 
 const rawData = (data as any).default || data;
 const fertilizerData: any[] = Array.isArray(rawData) ? rawData : (rawData.recommendations || []);
 
-const API_URL = "http://127.0.0.1:8000";
+import { API_URL } from "./config/apiConfig";
 
 const ZONES = ["Dry Zone", "Wet Zone", "Intermediate Zone"];
 const DURATIONS = ["3 Month", "3 1/2 Month", "4 Month", "4 1/2 Month"];
@@ -64,6 +64,8 @@ function CustomSelect({ label, value, options, onSelect }: any) {
 }
 
 export default function FertilizerGuideScreen() {
+  const { currentUser } = useFarmingAuth();
+
   const [formData, setFormData] = useState({
     Zone: "Dry Zone",
     Irrigation: "Irrigated paddy fields",
@@ -110,32 +112,34 @@ export default function FertilizerGuideScreen() {
     if (!durationData) return;
     setSaveStatus('Saving...');
     try {
-      const user = await authService.getStoredUser();
-      
+      // multiplier converts base per-hectare rates to the user's land size
       const payload = {
-        user_id: user?.id || 'mobile_user',
+        user_id: currentUser?.uid || 'mobile_user',
         agro_zone: formData.Zone,
         irrigation: formData.Irrigation,
         crop_duration: formData.Duration,
-        total_urea: parseFloat(durationData.total.urea || 0),
-        total_tsp: parseFloat(durationData.total.tsp || 0),
-        total_mop: parseFloat(durationData.total.mop || 0),
-        total_zinc: parseFloat(durationData.total.zinc_sulphate || 0)
+        total_urea: parseFloat((durationData.total.urea * multiplier).toFixed(2)),
+        total_tsp: parseFloat((durationData.total.tsp * multiplier).toFixed(2)),
+        total_mop: parseFloat((durationData.total.mop * multiplier).toFixed(2)),
+        total_zinc: parseFloat(((durationData.total.zinc_sulphate || 0) * multiplier).toFixed(2))
       };
 
-      const res = await fetch(`${API_URL}/api/history/fertilizer`, {
+      const res = await fetch(`${API_URL}/api/fertilizer_history`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
 
       if (res.ok) {
-        setSaveStatus('Saved to Profile');
+        setSaveStatus('Saved to Profile ✓');
         setTimeout(() => setSaveStatus(''), 3000);
       } else {
+        const errText = await res.text();
+        console.error('Save fertilizer error:', errText);
         setSaveStatus('Failed to Save');
       }
     } catch (err) {
+      console.error('handleSaveToProfile error:', err);
       setSaveStatus('Failed to Save');
     }
   };

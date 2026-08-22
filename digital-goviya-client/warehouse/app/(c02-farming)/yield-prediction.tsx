@@ -15,9 +15,9 @@ import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import MapView, { Marker } from "react-native-maps";
-import { authService } from "@/services/shared/auth.service";
+import { useFarmingAuth } from "@/contexts/FarmingAuthContext";
 
-const API_URL = "http://127.0.0.1:8000";
+import { API_URL } from "./config/apiConfig";
 
 import rawDistrictData from './districtData.json';
 
@@ -88,6 +88,8 @@ function CustomSelect({ label, value, options, onSelect }: any) {
 }
 
 export default function YieldPredictionScreen() {
+  const { currentUser } = useFarmingAuth();
+
   const [formData, setFormData] = useState({
     District: "Anuradhapura",
     City: "Anuradhapura City",
@@ -225,33 +227,35 @@ export default function YieldPredictionScreen() {
     if (!result) return;
     setSaveStatus('Saving...');
     try {
-      const user = await authService.getStoredUser();
-      
       let convertedSize = parseFloat(formData.Total_Land_Size) || 0;
       if (formData.Land_Size_Unit === 'Perches') convertedSize = convertedSize * 0.00252929;
       else if (formData.Land_Size_Unit === 'Acres') convertedSize = convertedSize * 0.404686;
 
       const payload = {
-        user_id: user?.id || 'mobile_user',
+        user_id: currentUser?.uid || 'mobile_user',
         district: formData.District,
         land_size: convertedSize,
         paddy_type: formData.Paddy_Type,
-        estimated_yield: getTotalYieldKg(result.predicted_yield_kg_per_ha)
+        predicted_yield_kg_per_ha: result.predicted_yield_kg_per_ha,
+        total_yield_kg: getTotalYieldKg(result.predicted_yield_kg_per_ha)
       };
 
-      const res = await fetch(`${API_URL}/api/history/yield`, {
+      const res = await fetch(`${API_URL}/api/yield_history`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
 
       if (res.ok) {
-        setSaveStatus('Saved to Profile');
+        setSaveStatus('Saved to Profile ✓');
         setTimeout(() => setSaveStatus(''), 3000);
       } else {
+        const errText = await res.text();
+        console.error('Save yield error:', errText);
         setSaveStatus('Failed to Save');
       }
     } catch (err) {
+      console.error('handleSaveToProfile error:', err);
       setSaveStatus('Failed to Save');
     }
   };

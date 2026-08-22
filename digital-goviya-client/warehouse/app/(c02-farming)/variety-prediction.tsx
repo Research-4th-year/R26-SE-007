@@ -14,7 +14,7 @@ import {
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { authService } from "@/services/shared/auth.service";
+import { useFarmingAuth } from "@/contexts/FarmingAuthContext";
 import { Platform, Alert } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import FarmerGuidance from "@/components/FarmerGuidance";
@@ -28,7 +28,7 @@ if (Platform.OS !== 'web') {
   Marker = Maps.Marker;
 }
 
-const API_URL = "http://127.0.0.1:8000";
+import { API_URL } from "./config/apiConfig";
 
 const DISTRICTS = [
   "Ampara", "Anuradhapura", "Badulla", "Batticaloa", "Colombo", "Galle", "Gampaha",
@@ -114,6 +114,8 @@ const districtToZoneMap: Record<string, string> = {
 };
 
 export default function VarietyPredictionScreen() {
+  const { currentUser } = useFarmingAuth();
+
   const [formData, setFormData] = useState({
     District: "Anuradhapura",
     City: "Anuradhapura City",
@@ -186,12 +188,12 @@ export default function VarietyPredictionScreen() {
 
   const fetchHistory = async () => {
     try {
-      const user = await authService.getStoredUser();
-      if (!user) return;
-      const res = await fetch(`${API_URL}/api/history/${user.id}`);
+      const uid = currentUser?.uid;
+      if (!uid) return;
+      const res = await fetch(`${API_URL}/api/history/${uid}`);
       if (res.ok) {
         const data = await res.json();
-        setHistoryData(data.history || []);
+        setHistoryData(data || []);
       }
     } catch (err) {
       console.log("History fetch error", err);
@@ -200,7 +202,8 @@ export default function VarietyPredictionScreen() {
 
   const deleteHistory = async (recordId: string) => {
     try {
-      const res = await fetch(`${API_URL}/api/history/${recordId}`, { method: 'DELETE' });
+      const uid = currentUser?.uid || 'mobile_user';
+      const res = await fetch(`${API_URL}/api/history/${uid}/${recordId}`, { method: 'DELETE' });
       if (res.ok) fetchHistory();
     } catch (err) {
       console.log("Failed to delete record", err);
@@ -270,10 +273,13 @@ export default function VarietyPredictionScreen() {
     if (!result || !suitability) return;
     setSaveStatus('Saving...');
     try {
-      const user = await authService.getStoredUser();
       const payload = {
-        user_id: user?.id || 'mobile_user',
+        user_id: currentUser?.uid || 'mobile_user',
         field_id: formData.field_id,
+        district: formData.District,
+        city: formData.City,
+        zone: formData.Zone,
+        season: formData.Season,
         predicted_variety: result.predicted_variety_code,
         suitability_score: suitability.suitability_score || 0
       };

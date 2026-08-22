@@ -376,7 +376,10 @@ def get_latest_sensor_data():
     return default_data
 
 # Advisory History API
-from database import get_db_connection
+from services.firebase_service import (
+    save_user_history, get_user_history, delete_user_history,
+    save_farmer_profile, get_farmer_profile
+)
 # pyrefly: ignore [missing-import]
 from pydantic import BaseModel
 
@@ -401,82 +404,39 @@ class FarmerProfile(BaseModel):
 @app.post("/api/history")
 def save_history(item: AdvisoryHistoryItem):
     try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        
-        cursor.execute('SELECT id FROM advisory_history WHERE field_id = ? AND user_id = ?', (item.field_id, item.user_id))
-        existing_row = cursor.fetchone()
-        
-        if existing_row:
-            cursor.execute('''
-                UPDATE advisory_history 
-                SET district = ?, city = ?, zone = ?, season = ?, predicted_variety = ?, suitability_score = ?, created_at = CURRENT_TIMESTAMP
-                WHERE field_id = ? AND user_id = ?
-            ''', (item.district, item.city, item.zone, item.season, item.predicted_variety, item.suitability_score, item.field_id, item.user_id))
-            new_id = existing_row['id']
-            msg = "Updated successfully"
-        else:
-            cursor.execute('''
-                INSERT INTO advisory_history 
-                (user_id, field_id, district, city, zone, season, predicted_variety, suitability_score) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (item.user_id, item.field_id, item.district, item.city, item.zone, item.season, item.predicted_variety, item.suitability_score))
-            new_id = cursor.lastrowid
-            msg = "Saved successfully"
-            
-        conn.commit()
-        conn.close()
-        return {"message": msg, "id": new_id}
+        # Save to Firebase under advisory_history category
+        result = save_user_history(item.user_id, "advisory_history", item.dict())
+        if result:
+            return {"message": "Saved successfully", "id": result.get("id")}
+        raise HTTPException(status_code=500, detail="Failed to save to Firebase")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/history/{user_id}")
 def get_history(user_id: str):
     try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute('SELECT * FROM advisory_history WHERE user_id = ? ORDER BY id DESC', (user_id,))
-        rows = cursor.fetchall()
-        conn.close()
-        return [dict(row) for row in rows]
+        records = get_user_history(user_id, "advisory_history")
+        # Sort by created_at descending if exists
+        records.sort(key=lambda x: x.get('created_at', ''), reverse=True)
+        return records
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.put("/api/history/{id}")
-def update_history(id: int, field_id: str):
-    # For now, just updating the field_id as requested
+@app.delete("/api/history/{user_id}/{record_id}")
+def delete_history(user_id: str, record_id: str):
     try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute('UPDATE advisory_history SET field_id = ? WHERE id = ?', (field_id, id))
-        conn.commit()
-        conn.close()
-        return {"message": "Updated successfully"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.delete("/api/history/{id}")
-def delete_history(id: int):
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute('DELETE FROM advisory_history WHERE id = ?', (id,))
-        conn.commit()
-        conn.close()
-        return {"message": "Deleted successfully"}
+        if delete_user_history(user_id, "advisory_history", record_id):
+            return {"message": "Deleted successfully"}
+        raise HTTPException(status_code=500, detail="Failed to delete from Firebase")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/profile/{user_id}")
 def get_profile(user_id: str):
     try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute('SELECT * FROM farmer_profiles WHERE user_id = ?', (user_id,))
-        row = cursor.fetchone()
-        conn.close()
-        if row:
-            return dict(row)
+        profile = get_farmer_profile(user_id)
+        if profile:
+            return profile
         return {"message": "Profile not found"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -484,40 +444,21 @@ def get_profile(user_id: str):
 @app.post("/api/profile")
 def save_profile(profile: FarmerProfile):
     try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        
-        cursor.execute('SELECT user_id FROM farmer_profiles WHERE user_id = ?', (profile.user_id,))
-        existing = cursor.fetchone()
-        
-        if existing:
-            cursor.execute('''
-                UPDATE farmer_profiles 
-                SET name = ?, phone = ?, location = ?, farm_size = ?, farm_unit = ?
-                WHERE user_id = ?
-            ''', (profile.name, profile.phone, profile.location, profile.farm_size, profile.farm_unit, profile.user_id))
-        else:
-            cursor.execute('''
-                INSERT INTO farmer_profiles (user_id, name, phone, location, farm_size, farm_unit)
-                VALUES (?, ?, ?, ?, ?, ?)
-            ''', (profile.user_id, profile.name, profile.phone, profile.location, profile.farm_size, profile.farm_unit))
-            
-        conn.commit()
-        conn.close()
-        return {"message": "Profile saved successfully"}
+        result = save_farmer_profile(profile.user_id, profile.dict())
+        if result:
+            return {"message": "Profile saved successfully"}
+        raise HTTPException(status_code=500, detail="Failed to save profile")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.delete("/api/profile/{user_id}")
 def delete_profile(user_id: str):
+    # In a full setup, we would delete the entire user node. 
+    # For now, just delete the profile object.
+    from services.firebase_service import FIREBASE_RTDB_URL
+    import requests
     try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute('DELETE FROM farmer_profiles WHERE user_id = ?', (user_id,))
-        # Also delete associated history
-        cursor.execute('DELETE FROM advisory_history WHERE user_id = ?', (user_id,))
-        conn.commit()
-        conn.close()
+        requests.delete(f"{FIREBASE_RTDB_URL}/users/{user_id}.json")
         return {"message": "Profile and associated history deleted"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -535,40 +476,28 @@ class YieldHistoryItem(BaseModel):
 @app.post("/api/yield_history")
 def save_yield_history(item: YieldHistoryItem):
     try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute('''
-            INSERT INTO yield_history 
-            (user_id, district, land_size, paddy_type, predicted_yield_kg_per_ha, total_yield_kg) 
-            VALUES (?, ?, ?, ?, ?, ?)
-        ''', (item.user_id, item.district, item.land_size, item.paddy_type, item.predicted_yield_kg_per_ha, item.total_yield_kg))
-        conn.commit()
-        conn.close()
-        return {"message": "Yield history saved successfully"}
+        result = save_user_history(item.user_id, "yield_history", item.dict())
+        if result:
+            return {"message": "Yield history saved successfully"}
+        raise HTTPException(status_code=500, detail="Failed to save yield history")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/yield_history/{user_id}")
-def get_yield_history(user_id: str):
+def get_yield_history_endpoint(user_id: str):
     try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute('SELECT * FROM yield_history WHERE user_id = ? ORDER BY id DESC', (user_id,))
-        rows = cursor.fetchall()
-        conn.close()
-        return [dict(row) for row in rows]
+        records = get_user_history(user_id, "yield_history")
+        records.sort(key=lambda x: x.get('created_at', ''), reverse=True)
+        return records
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.delete("/api/yield_history/{id}")
-def delete_yield_history(id: int):
+@app.delete("/api/yield_history/{user_id}/{record_id}")
+def delete_yield_history_endpoint(user_id: str, record_id: str):
     try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute('DELETE FROM yield_history WHERE id = ?', (id,))
-        conn.commit()
-        conn.close()
-        return {"message": "Deleted successfully"}
+        if delete_user_history(user_id, "yield_history", record_id):
+            return {"message": "Deleted successfully"}
+        raise HTTPException(status_code=500, detail="Failed to delete from Firebase")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -583,40 +512,28 @@ class DiseaseHistoryItem(BaseModel):
 @app.post("/api/disease_history")
 def save_disease_history(item: DiseaseHistoryItem):
     try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute('''
-            INSERT INTO disease_history 
-            (user_id, disease_name, disease_type, confidence) 
-            VALUES (?, ?, ?, ?)
-        ''', (item.user_id, item.disease_name, item.disease_type, item.confidence))
-        conn.commit()
-        conn.close()
-        return {"message": "Disease history saved successfully"}
+        result = save_user_history(item.user_id, "disease_history", item.dict())
+        if result:
+            return {"message": "Disease history saved successfully"}
+        raise HTTPException(status_code=500, detail="Failed to save disease history")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/disease_history/{user_id}")
-def get_disease_history(user_id: str):
+def get_disease_history_endpoint(user_id: str):
     try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute('SELECT * FROM disease_history WHERE user_id = ? ORDER BY id DESC', (user_id,))
-        rows = cursor.fetchall()
-        conn.close()
-        return [dict(row) for row in rows]
+        records = get_user_history(user_id, "disease_history")
+        records.sort(key=lambda x: x.get('created_at', ''), reverse=True)
+        return records
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.delete("/api/disease_history/{id}")
-def delete_disease_history(id: int):
+@app.delete("/api/disease_history/{user_id}/{record_id}")
+def delete_disease_history_endpoint(user_id: str, record_id: str):
     try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute('DELETE FROM disease_history WHERE id = ?', (id,))
-        conn.commit()
-        conn.close()
-        return {"message": "Deleted successfully"}
+        if delete_user_history(user_id, "disease_history", record_id):
+            return {"message": "Deleted successfully"}
+        raise HTTPException(status_code=500, detail="Failed to delete from Firebase")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -635,39 +552,27 @@ class FertilizerHistoryItem(BaseModel):
 @app.post("/api/fertilizer_history")
 def save_fertilizer_history(item: FertilizerHistoryItem):
     try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute('''
-            INSERT INTO fertilizer_history 
-            (user_id, agro_zone, irrigation, crop_duration, total_urea, total_tsp, total_mop, total_zinc) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (item.user_id, item.agro_zone, item.irrigation, item.crop_duration, item.total_urea, item.total_tsp, item.total_mop, item.total_zinc))
-        conn.commit()
-        conn.close()
-        return {"message": "Fertilizer history saved successfully"}
+        result = save_user_history(item.user_id, "fertilizer_history", item.dict())
+        if result:
+            return {"message": "Fertilizer history saved successfully"}
+        raise HTTPException(status_code=500, detail="Failed to save fertilizer history")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/fertilizer_history/{user_id}")
-def get_fertilizer_history(user_id: str):
+def get_fertilizer_history_endpoint(user_id: str):
     try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute('SELECT * FROM fertilizer_history WHERE user_id = ? ORDER BY id DESC', (user_id,))
-        rows = cursor.fetchall()
-        conn.close()
-        return [dict(row) for row in rows]
+        records = get_user_history(user_id, "fertilizer_history")
+        records.sort(key=lambda x: x.get('created_at', ''), reverse=True)
+        return records
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.delete("/api/fertilizer_history/{id}")
-def delete_fertilizer_history(id: int):
+@app.delete("/api/fertilizer_history/{user_id}/{record_id}")
+def delete_fertilizer_history_endpoint(user_id: str, record_id: str):
     try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute('DELETE FROM fertilizer_history WHERE id = ?', (id,))
-        conn.commit()
-        conn.close()
-        return {"message": "Deleted successfully"}
+        if delete_user_history(user_id, "fertilizer_history", record_id):
+            return {"message": "Deleted successfully"}
+        raise HTTPException(status_code=500, detail="Failed to delete from Firebase")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

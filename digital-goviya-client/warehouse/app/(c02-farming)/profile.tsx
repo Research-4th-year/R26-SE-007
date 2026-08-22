@@ -16,7 +16,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useFarmingAuth } from "@/contexts/FarmingAuthContext";
 import districtData from "./districtData.json";
 
-const API_URL = "http://192.168.8.105:8000";
+import { API_URL } from "./config/apiConfig";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type Tab = "settings" | "advisory" | "yield" | "disease" | "fertilizer";
@@ -213,10 +213,10 @@ export default function ProfileScreen() {
   }
 
   // ─── Delete record ──────────────────────────────────────────────────────────
-  function handleDeleteRecord<T extends { id: number }>(
+  function handleDeleteRecord<T extends { id: number | string }>(
     endpoint: string,
-    id: number,
-    setter: (d: T[]) => void,
+    id: number | string,
+    setter: React.Dispatch<React.SetStateAction<T[]>>,
     list: T[]
   ) {
     Alert.alert("Delete Record", "Are you sure you want to delete this record?", [
@@ -226,7 +226,7 @@ export default function ProfileScreen() {
         style: "destructive",
         onPress: async () => {
           try {
-            const res = await fetch(`${API_URL}/api/${endpoint}/${id}`, { method: "DELETE" });
+            const res = await fetch(`${API_URL}/api/${endpoint}/${userId}/${id}`, { method: "DELETE" });
             if (res.ok) setter(list.filter((item) => item.id !== id));
           } catch (err) {
             console.error(err);
