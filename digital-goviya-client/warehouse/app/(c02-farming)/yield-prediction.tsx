@@ -17,7 +17,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import MapView, { Marker } from "react-native-maps";
 import { useFarmingAuth } from "@/contexts/FarmingAuthContext";
 
-import { API_URL } from "./config/apiConfig";
+import { API_URL } from "@/services/c02-farming/apiConfig";
 
 import rawDistrictData from './districtData.json';
 

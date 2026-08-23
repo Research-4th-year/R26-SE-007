@@ -28,7 +28,7 @@ if (Platform.OS !== 'web') {
   Marker = Maps.Marker;
 }
 
-import { API_URL } from "./config/apiConfig";
+import { API_URL } from "@/services/c02-farming/apiConfig";
 
 const DISTRICTS = [
   "Ampara", "Anuradhapura", "Badulla", "Batticaloa", "Colombo", "Galle", "Gampaha",

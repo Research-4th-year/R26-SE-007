@@ -19,7 +19,7 @@ import data from "./fertilizer.json";
 const rawData = (data as any).default || data;
 const fertilizerData: any[] = Array.isArray(rawData) ? rawData : (rawData.recommendations || []);
 
-import { API_URL } from "./config/apiConfig";
+import { API_URL } from "@/services/c02-farming/apiConfig";
 
 const ZONES = ["Dry Zone", "Wet Zone", "Intermediate Zone"];
 const DURATIONS = ["3 Month", "3 1/2 Month", "4 Month", "4 1/2 Month"];

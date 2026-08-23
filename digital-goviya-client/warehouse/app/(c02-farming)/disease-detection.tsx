@@ -22,7 +22,7 @@ import { useFarmingAuth } from "@/contexts/FarmingAuthContext";
 //    – Physical device:  http://<your‑local‑ip> 192.168.8.105
 // const API_URL = "http://127.0.0.1:8000";
 // const API_URL = "http://localhost:8000";
-import { API_URL } from "./config/apiConfig";
+import { API_URL } from "@/services/c02-farming/apiConfig";
 
 
 export default function DiseaseDetectionScreen() {

@@ -1,6 +1,7 @@
 import { initializeApp, getApps } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import { initializeAuth, getAuth, getReactNativePersistence } from "firebase/auth";
 import { getDatabase } from "firebase/database";
+import ReactNativeAsyncStorage from "@react-native-async-storage/async-storage";
 
 // Same Firebase project as the React web frontend
 const firebaseConfig = {
@@ -16,5 +17,12 @@ const firebaseConfig = {
 // Avoid duplicate app initialisation in Expo's Fast Refresh
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 
-export const auth = getAuth(app);
+// Use initializeAuth (not getAuth) to wire up AsyncStorage persistence
+// @react-native-async-storage/async-storage v2 uses default import
+export const auth =
+  getApps().length === 1
+    ? initializeAuth(app, {
+        persistence: getReactNativePersistence(ReactNativeAsyncStorage),
+      })
+    : getAuth(app);
 export const database = getDatabase(app);

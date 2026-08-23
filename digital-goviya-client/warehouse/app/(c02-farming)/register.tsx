@@ -16,7 +16,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useFarmingAuth } from "@/contexts/FarmingAuthContext";
 import districtData from "./districtData.json";
 
-import { API_URL } from "./config/apiConfig";
+import { API_URL } from "@/services/c02-farming/apiConfig";
 const DISTRICTS = Object.keys(districtData);
 
 // Simple inline picker
