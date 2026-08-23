@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import {
   View,
   Text,
@@ -18,35 +18,31 @@ import {
   Poppins_600SemiBold,
   Poppins_500Medium,
 } from "@expo-google-fonts/poppins";
+import type { PredictionApiResponse } from "./prediction-result";
 
-type PredictionResponse = {
-  district: string;
-  date: string;
-  prediction: number;
-  trend: string;
-  confidence: string;
-  market_outlook: string;
-  recommendation: string;
-  risk_level: string;
-  summary: string;
-  top_features: { Feature: string; Value: number; Contribution: number }[];
-  reasons: string[];
-};
-
-type TabKey = "summary" | "factors" | "explanation" | "recommendation";
+type TabKey = "market" | "technical";
 
 const TABS: { key: TabKey; label: string; icon: string }[] = [
-  { key: "summary", label: "Summary", icon: "document-text-outline" },
-  { key: "factors", label: "Key Factors", icon: "layers-outline" },
-  { key: "explanation", label: "AI Explanation", icon: "bulb-outline" },
-  { key: "recommendation", label: "Recommendation", icon: "compass-outline" },
+  { key: "market", label: "Market Overview", icon: "bar-chart-outline" },
+  { key: "technical", label: "Technical Details", icon: "layers-outline" },
 ];
 
-const FARMER_TIPS = [
-  "Monitor weekly market prices.",
-  "Avoid panic selling.",
-  "Compare with future forecasts.",
-];
+function chipTone(kind: "trend" | "confidence" | "risk", value: string) {
+  const v = value.toLowerCase();
+  if (kind === "trend") {
+    if (v.includes("rising") || v.includes("up")) return { bg: "#DCFCE7", fg: "#15803D", icon: "trending-up" };
+    if (v.includes("falling") || v.includes("down")) return { bg: "#FEE2E2", fg: "#DC2626", icon: "trending-down" };
+    return { bg: "#E0F2FE", fg: "#0369A1", icon: "remove-outline" };
+  }
+  if (kind === "confidence") {
+    if (v === "high") return { bg: "#DCFCE7", fg: "#15803D", icon: "shield-checkmark" };
+    if (v === "medium") return { bg: "#FEF3C7", fg: "#B45309", icon: "shield-half" };
+    return { bg: "#FEE2E2", fg: "#DC2626", icon: "shield-outline" };
+  }
+  if (v === "low") return { bg: "#DCFCE7", fg: "#15803D", icon: "checkmark-circle" };
+  if (v === "medium") return { bg: "#FEF3C7", fg: "#B45309", icon: "alert-circle" };
+  return { bg: "#FEE2E2", fg: "#DC2626", icon: "warning" };
+}
 
 function humanizeFeature(key: string) {
   const overrides: Record<string, string> = {
@@ -61,18 +57,11 @@ function humanizeFeature(key: string) {
     .join(" ");
 }
 
-function riskTone(value: string) {
-  const v = value.toLowerCase();
-  if (v === "low") return { bg: "#DCFCE7", fg: "#15803D" };
-  if (v === "medium") return { bg: "#FEF3C7", fg: "#B45309" };
-  return { bg: "#FEE2E2", fg: "#DC2626" };
-}
-
 export default function DetailedAnalysisScreen() {
   const { data } = useLocalSearchParams<{ data: string }>();
-  const result: PredictionResponse | null = data ? JSON.parse(data) : null;
+  const result: PredictionApiResponse | null = data ? JSON.parse(data) : null;
 
-  const [activeTab, setActiveTab] = useState<TabKey>("summary");
+  const [activeTab, setActiveTab] = useState<TabKey>("market");
 
   const [fontsLoaded] = useFonts({
     Poppins_800ExtraBold,
@@ -92,7 +81,10 @@ export default function DetailedAnalysisScreen() {
 
   if (!fontsLoaded || !result) return null;
 
-  const risk = riskTone(result.risk_level);
+  const { market, technical, prediction } = result;
+  const trendTone = chipTone("trend", market.trend);
+  const confTone = chipTone("confidence", market.confidence);
+  const riskTone = chipTone("risk", market.risk_level);
 
   return (
     <View style={styles.screen}>
@@ -115,11 +107,11 @@ export default function DetailedAnalysisScreen() {
           </TouchableOpacity>
           <View style={styles.eyebrowPill}>
             <Ionicons name="analytics" size={11} color="#F5C542" />
-            <Text style={styles.eyebrow}>DETAILED ANALYSIS</Text>
+            <Text style={styles.eyebrow}>ADVANCED DETAILS</Text>
           </View>
           <Text style={styles.heroTitle}>Behind the Prediction</Text>
           <Text style={styles.heroSub}>
-            {result.district} · {result.date}
+            {prediction.district} · {prediction.date}
           </Text>
         </View>
 
@@ -128,11 +120,7 @@ export default function DetailedAnalysisScreen() {
           <View style={styles.sheetHandle} />
 
           {/* Tab bar */}
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.tabBar}
-          >
+          <View style={styles.tabBar}>
             {TABS.map((tab) => {
               const active = tab.key === activeTab;
               return (
@@ -144,7 +132,7 @@ export default function DetailedAnalysisScreen() {
                 >
                   <Ionicons
                     name={tab.icon as any}
-                    size={14}
+                    size={15}
                     color={active ? "#0B3B22" : "#9CA3AF"}
                   />
                   <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>
@@ -153,7 +141,7 @@ export default function DetailedAnalysisScreen() {
                 </TouchableOpacity>
               );
             })}
-          </ScrollView>
+          </View>
 
           <Animated.View style={{ flex: 1, opacity: fade }}>
             <ScrollView
@@ -161,19 +149,30 @@ export default function DetailedAnalysisScreen() {
               contentContainerStyle={styles.scrollContent}
               showsVerticalScrollIndicator={false}
             >
-              {activeTab === "summary" && (
+              {activeTab === "market" && (
                 <View>
-                  <View style={styles.summaryCard}>
-                    <SummaryRow label="District" value={result.district} />
-                    <SummaryRow label="Date" value={result.date} />
-                    <SummaryRow
-                      label="Predicted Price"
-                      value={`${result.prediction.toFixed(2)} LKR/kg`}
-                      emphasis
-                    />
-                    <SummaryRow label="Trend" value={result.trend} />
-                    <SummaryRow label="Confidence" value={result.confidence} />
-                    <SummaryRow label="Risk Level" value={result.risk_level} last />
+                  <View style={styles.chipRow}>
+                    <View style={[styles.statusChip, { backgroundColor: trendTone.bg }]}>
+                      <Ionicons name={trendTone.icon as any} size={16} color={trendTone.fg} />
+                      <Text style={[styles.statusChipLabel, { color: trendTone.fg }]}>Trend</Text>
+                      <Text style={[styles.statusChipValue, { color: trendTone.fg }]}>
+                        {market.trend}
+                      </Text>
+                    </View>
+                    <View style={[styles.statusChip, { backgroundColor: confTone.bg }]}>
+                      <Ionicons name={confTone.icon as any} size={16} color={confTone.fg} />
+                      <Text style={[styles.statusChipLabel, { color: confTone.fg }]}>Confidence</Text>
+                      <Text style={[styles.statusChipValue, { color: confTone.fg }]}>
+                        {market.confidence}
+                      </Text>
+                    </View>
+                    <View style={[styles.statusChip, { backgroundColor: riskTone.bg }]}>
+                      <Ionicons name={riskTone.icon as any} size={16} color={riskTone.fg} />
+                      <Text style={[styles.statusChipLabel, { color: riskTone.fg }]}>Risk</Text>
+                      <Text style={[styles.statusChipValue, { color: riskTone.fg }]}>
+                        {market.risk_level}
+                      </Text>
+                    </View>
                   </View>
 
                   <View style={styles.infoCard}>
@@ -183,22 +182,32 @@ export default function DetailedAnalysisScreen() {
                       </View>
                       <Text style={styles.infoCardTitle}>Market Outlook</Text>
                     </View>
-                    <Text style={styles.infoCardText}>{result.market_outlook}</Text>
+                    <Text style={styles.infoCardText}>{market.outlook}</Text>
+                  </View>
+
+                  <View style={styles.infoCard}>
+                    <View style={styles.infoCardHeader}>
+                      <View style={[styles.infoIconBox, { backgroundColor: "#DCFCE7" }]}>
+                        <Ionicons name="compass" size={16} color="#15803D" />
+                      </View>
+                      <Text style={styles.infoCardTitle}>Recommendation</Text>
+                    </View>
+                    <Text style={styles.infoCardText}>{market.recommendation}</Text>
                   </View>
                 </View>
               )}
 
-              {activeTab === "factors" && (
+              {activeTab === "technical" && (
                 <View>
                   <Text style={styles.sectionIntro}>
                     These are the factors that influenced this prediction most.
                   </Text>
-                  {result.top_features.map((f, i) => {
-                    const positive = f.Contribution >= 0;
+                  {technical.top_features.map((f, i) => {
+                    const positive = f.contribution >= 0;
                     return (
                       <View key={i} style={styles.factorCard}>
                         <View style={styles.factorHeader}>
-                          <Text style={styles.factorTitle}>{humanizeFeature(f.Feature)}</Text>
+                          <Text style={styles.factorTitle}>{humanizeFeature(f.feature)}</Text>
                           <View
                             style={[
                               styles.contributionPill,
@@ -217,31 +226,29 @@ export default function DetailedAnalysisScreen() {
                               ]}
                             >
                               {positive ? "+" : ""}
-                              {f.Contribution.toFixed(2)} LKR
+                              {f.contribution.toFixed(2)} LKR
                             </Text>
                           </View>
                         </View>
                         <Text style={styles.factorValue}>
-                          Current Value: <Text style={styles.factorValueBold}>{f.Value} LKR/kg</Text>
+                          Current Value: <Text style={styles.factorValueBold}>{f.value} LKR/kg</Text>
                         </Text>
                       </View>
                     );
                   })}
-                </View>
-              )}
 
-              {activeTab === "explanation" && (
-                <View>
-                  <Text style={styles.sectionIntro}>
-                    Here's how the AI arrived at this prediction, step by step.
+                  <Text style={[styles.sectionIntro, { marginTop: 6 }]}>
+                    Step-by-step model reasoning (SHAP).
                   </Text>
-                  {result.reasons.map((reason, i) => (
+                  {technical.shap_reasons.map((reason, i) => (
                     <View key={i} style={styles.timelineRow}>
                       <View style={styles.timelineMarkerCol}>
                         <View style={styles.timelineDot}>
                           <Text style={styles.timelineDotText}>{i + 1}</Text>
                         </View>
-                        {i < result.reasons.length - 1 && <View style={styles.timelineLine} />}
+                        {i < technical.shap_reasons.length - 1 && (
+                          <View style={styles.timelineLine} />
+                        )}
                       </View>
                       <View style={styles.timelineCard}>
                         <Text style={styles.timelineText}>{reason}</Text>
@@ -250,71 +257,10 @@ export default function DetailedAnalysisScreen() {
                   ))}
                 </View>
               )}
-
-              {activeTab === "recommendation" && (
-                <View>
-                  <View style={[styles.riskCard, { backgroundColor: risk.bg }]}>
-                    <Ionicons
-                      name={
-                        result.risk_level.toLowerCase() === "low"
-                          ? "checkmark-circle"
-                          : "alert-circle"
-                      }
-                      size={22}
-                      color={risk.fg}
-                    />
-                    <View style={{ flex: 1 }}>
-                      <Text style={[styles.riskLabel, { color: risk.fg }]}>Risk Level</Text>
-                      <Text style={[styles.riskValue, { color: risk.fg }]}>
-                        {result.risk_level}
-                      </Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.infoCard}>
-                    <View style={styles.infoCardHeader}>
-                      <View style={[styles.infoIconBox, { backgroundColor: "#DCFCE7" }]}>
-                        <Ionicons name="bulb" size={16} color="#15803D" />
-                      </View>
-                      <Text style={styles.infoCardTitle}>Advice</Text>
-                    </View>
-                    <Text style={styles.infoCardText}>{result.recommendation}</Text>
-                  </View>
-
-                  <View style={styles.tipsCard}>
-                    <Text style={styles.tipsTitle}>Farmer Tips</Text>
-                    {FARMER_TIPS.map((tip, i) => (
-                      <View key={i} style={styles.tipRow}>
-                        <Ionicons name="leaf" size={14} color="#15803D" />
-                        <Text style={styles.tipText}>{tip}</Text>
-                      </View>
-                    ))}
-                  </View>
-                </View>
-              )}
             </ScrollView>
           </Animated.View>
         </View>
       </SafeAreaView>
-    </View>
-  );
-}
-
-function SummaryRow({
-  label,
-  value,
-  emphasis,
-  last,
-}: {
-  label: string;
-  value: string;
-  emphasis?: boolean;
-  last?: boolean;
-}) {
-  return (
-    <View style={[styles.summaryRow, !last && styles.summaryRowBorder]}>
-      <Text style={styles.summaryLabel}>{label}</Text>
-      <Text style={[styles.summaryValue, emphasis && styles.summaryValueEmphasis]}>{value}</Text>
     </View>
   );
 }
@@ -392,16 +338,18 @@ const styles = StyleSheet.create({
   },
 
   tabBar: {
+    flexDirection: "row",
     paddingHorizontal: 20,
     gap: 8,
     paddingBottom: 14,
   },
   tabChip: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
     gap: 6,
-    paddingHorizontal: 14,
-    paddingVertical: 9,
+    paddingVertical: 10,
     borderRadius: 999,
     backgroundColor: "white",
     borderWidth: 1.2,
@@ -420,32 +368,25 @@ const styles = StyleSheet.create({
 
   scrollContent: { paddingHorizontal: 20, paddingBottom: 28 },
 
-  summaryCard: {
-    backgroundColor: "white",
-    borderRadius: 18,
-    paddingHorizontal: 16,
-    marginBottom: 14,
-    borderWidth: 1,
-    borderColor: "#F1F1EF",
-  },
-  summaryRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+  chipRow: { flexDirection: "row", gap: 10, marginBottom: 16 },
+  statusChip: {
+    flex: 1,
+    borderRadius: 16,
+    padding: 12,
     alignItems: "center",
-    paddingVertical: 13,
+    gap: 4,
   },
-  summaryRowBorder: { borderBottomWidth: 1, borderBottomColor: "#F3F4F6" },
-  summaryLabel: {
+  statusChipLabel: {
+    fontSize: 9.5,
+    fontFamily: "Poppins_600SemiBold",
+    letterSpacing: 0.3,
+    textTransform: "uppercase",
+    opacity: 0.8,
+  },
+  statusChipValue: {
     fontSize: 12.5,
-    fontFamily: "Poppins_500Medium",
-    color: "#6B7280",
-  },
-  summaryValue: {
-    fontSize: 13.5,
     fontFamily: "Poppins_700Bold",
-    color: "#1F2937",
   },
-  summaryValueEmphasis: { color: "#B45309", fontSize: 15 },
 
   infoCard: {
     backgroundColor: "white",
@@ -532,42 +473,5 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     color: "#374151",
     fontFamily: "Poppins_500Medium",
-  },
-
-  riskCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    borderRadius: 18,
-    padding: 16,
-    marginBottom: 14,
-  },
-  riskLabel: {
-    fontSize: 10.5,
-    fontFamily: "Poppins_600SemiBold",
-    letterSpacing: 0.4,
-    textTransform: "uppercase",
-    opacity: 0.85,
-  },
-  riskValue: { fontSize: 17, fontFamily: "Poppins_800ExtraBold", marginTop: 1 },
-
-  tipsCard: {
-    backgroundColor: "#F0FDF4",
-    borderRadius: 18,
-    padding: 16,
-    gap: 10,
-  },
-  tipsTitle: {
-    fontSize: 13.5,
-    fontFamily: "Poppins_700Bold",
-    color: "#15803D",
-    marginBottom: 2,
-  },
-  tipRow: { flexDirection: "row", alignItems: "center", gap: 8 },
-  tipText: {
-    fontSize: 12.5,
-    fontFamily: "Poppins_500Medium",
-    color: "#166534",
-    flex: 1,
   },
 });
