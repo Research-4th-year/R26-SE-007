@@ -20,9 +20,8 @@ import {
   Poppins_500Medium,
 } from "@expo-google-fonts/poppins";
 
-// If your tsconfig doesn't have the "@/*" path alias set up, swap this for a
-// relative import instead, e.g. require("../../../assets/logo.png")
-const APP_LOGO = require("@/assets/logo.png");
+
+const APP_LOGO = require("@/assets/logo2.png");
 
 const API_BASE = "http://127.0.0.1:8000";
 const PREDICT_ENDPOINT = `${API_BASE}/prediction/explanation`;
@@ -30,7 +29,7 @@ const PREDICT_ENDPOINT = `${API_BASE}/prediction/explanation`;
 const EXPLANATION_ROUTE = "/(c04-analytics)/price-prediction/prediction-explanation";
 const ADVANCED_DETAILS_ROUTE = "/(c04-analytics)/price-prediction/detailed-analysis";
 
-// ---- Types matching the new nested API schema ----
+
 export type PredictionSection = {
   district: string;
   date: string;

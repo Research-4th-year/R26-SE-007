@@ -6,8 +6,8 @@ import {
   StyleSheet,
   SafeAreaView,
   Animated,
+  Easing,
   ScrollView,
-  ActivityIndicator,
   Dimensions,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
@@ -28,6 +28,9 @@ import {
   Poppins_600SemiBold,
   Poppins_500Medium,
 } from "@expo-google-fonts/poppins";
+
+
+const APP_LOGO = require("@/assets/logo2.png");
 
 const API_BASE = "http://127.0.0.1:8000";
 const WEEKLY_BREAKDOWN_ROUTE = "/(c04-analytics)/price-forecasting/weekly-breakdown";
@@ -100,6 +103,61 @@ function ForecastLineChart({ points }: { points: ForecastPoint[] }) {
         <Circle key={i} cx={c.x} cy={c.y} r={4} fill="#D97706" stroke="white" strokeWidth={1.5} />
       ))}
     </Svg>
+  );
+}
+
+function LogoLoadingState({ label }: { label: string }) {
+  const spin = useRef(new Animated.Value(0)).current;
+  const pulse = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    const spinLoop = Animated.loop(
+      Animated.timing(spin, {
+        toValue: 1,
+        duration: 2200,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      })
+    );
+    const pulseLoop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulse, {
+          toValue: 1.08,
+          duration: 850,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulse, {
+          toValue: 1,
+          duration: 850,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    spinLoop.start();
+    pulseLoop.start();
+    return () => {
+      spinLoop.stop();
+      pulseLoop.stop();
+    };
+  }, []);
+
+  const rotate = spin.interpolate({ inputRange: [0, 1], outputRange: ["0deg", "360deg"] });
+
+  return (
+    <View style={styles.centerState}>
+      <View style={styles.logoLoadingWrap}>
+        <Animated.View style={[styles.logoRing, { transform: [{ rotate }] }]} />
+        <Animated.Image
+          source={APP_LOGO}
+          resizeMode="contain"
+          style={[styles.logoImage, { transform: [{ scale: pulse }] }]}
+        />
+      </View>
+      <Text style={styles.centerStateTitle}>Crunching the numbers…</Text>
+      <Text style={styles.centerStateText}>{label}</Text>
+    </View>
   );
 }
 
@@ -220,12 +278,7 @@ export default function ForecastResultScreen() {
         <Animated.View style={styles.sheet}>
           <View style={styles.sheetHandle} />
 
-          {loading && (
-            <View style={styles.centerState}>
-              <ActivityIndicator size="large" color="#15803D" />
-              <Text style={styles.centerStateText}>Generating your forecast…</Text>
-            </View>
-          )}
+          {loading && <LogoLoadingState label="Generating your forecast…" />}
 
           {!loading && error && (
             <View style={styles.centerState}>
@@ -409,7 +462,33 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 10,
     paddingHorizontal: 30,
-    paddingTop: 60,
+    paddingTop: 50,
+  },
+  logoLoadingWrap: {
+    width: 96,
+    height: 96,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 6,
+  },
+  logoRing: {
+    position: "absolute",
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    borderWidth: 3,
+    borderColor: "#DCFCE7",
+    borderTopColor: "#15803D",
+  },
+  logoImage: {
+    width: 54,
+    height: 54,
+  },
+  centerStateTitle: {
+    fontSize: 14.5,
+    fontFamily: "Poppins_700Bold",
+    color: "#1F2937",
+    marginTop: 4,
   },
   centerStateText: {
     fontSize: 13,
