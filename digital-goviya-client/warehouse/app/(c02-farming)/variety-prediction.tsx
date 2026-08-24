@@ -501,11 +501,56 @@ export default function VarietyPredictionScreen() {
                 </View>
               </View>
 
-              <View style={{ alignItems: 'center', marginBottom: 20 }}>
-                <Text style={{ fontSize: 40, fontWeight: 'bold', color: suitability.suitability_score <= 2 ? '#10B981' : (suitability.suitability_score <= 3 ? '#F59E0B' : '#EF4444') }}>
-                  {suitability.suitability_score} / 5
-                </Text>
-                <Text style={{ fontSize: 14, color: '#64748B', marginTop: 5 }}>Suitability Score</Text>
+              <View style={{ alignItems: 'center', marginBottom: 25, marginTop: 10 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 15 }}>
+                  {[1, 2, 3, 4, 5].map((level) => {
+                    const score = suitability.suitability_score;
+                    const blocksToFill = 6 - score; // Score 1 -> 5 blocks, Score 5 -> 1 block
+                    const isActive = level <= blocksToFill;
+                    
+                    let activeColor = '#10B981'; // Default Green (for 1 and 2)
+                    if (score === 1) activeColor = '#10B981'; // Green
+                    else if (score === 2) activeColor = '#84CC16'; // Light Green
+                    else if (score === 3) activeColor = '#F59E0B'; // Yellow/Orange
+                    else if (score === 4) activeColor = '#F97316'; // Orange
+                    else if (score === 5) activeColor = '#EF4444'; // Red
+                    
+                    return (
+                      <View key={level} style={{
+                        width: 45, 
+                        height: 12, 
+                        borderRadius: 6, 
+                        backgroundColor: isActive ? activeColor : '#E2E8F0',
+                        marginHorizontal: 4,
+                        shadowColor: isActive ? activeColor : 'transparent',
+                        shadowOffset: { width: 0, height: 2 },
+                        shadowOpacity: isActive ? 0.4 : 0,
+                        shadowRadius: 4,
+                        elevation: isActive ? 4 : 0,
+                      }} />
+                    )
+                  })}
+                </View>
+                
+                {(() => {
+                  const s = suitability.suitability_score;
+                  const labels = {
+                    1: { text: "Excellent", desc: "Optimal conditions for maximum yield", color: "#10B981" },
+                    2: { text: "Good", desc: "Good conditions with minor limitations", color: "#84CC16" },
+                    3: { text: "Moderate", desc: "Fair conditions, requires management", color: "#F59E0B" },
+                    4: { text: "Poor", desc: "Severe limitations present", color: "#F97316" },
+                    5: { text: "Very Poor", desc: "Conditions not suitable for this crop", color: "#EF4444" }
+                  };
+                  const current = labels[s as keyof typeof labels] || labels[1];
+                  return (
+                    <View style={{ alignItems: 'center' }}>
+                      <Text style={{ fontSize: 24, fontFamily: 'Poppins_700Bold', color: current.color }}>
+                        {s}/5 {current.text}
+                      </Text>
+                      <Text style={{ fontSize: 13, color: '#64748B', fontFamily: 'Poppins_500Medium', marginTop: 2 }}>{current.desc}</Text>
+                    </View>
+                  );
+                })()}
               </View>
 
               <View style={{ backgroundColor: 'rgba(255,255,255,0.7)', padding: 15, borderRadius: 12, borderWidth: 1, borderColor: '#E2E8F0', marginBottom: 15 }}>
@@ -627,11 +672,21 @@ export default function VarietyPredictionScreen() {
                   <Text style={{ color: '#10B981', fontSize: 24, fontFamily: 'Poppins_700Bold' }}>{selectedHistory.predicted_variety}</Text>
                 </View>
 
-                <View style={{ backgroundColor: '#F8FAFC', padding: 15, borderRadius: 8, borderWidth: 1, borderColor: '#E2E8F0', marginBottom: 15 }}>
-                  <Text style={{ color: '#64748B', fontSize: 12, fontFamily: 'Poppins_500Medium' }}>Field Suitability Score (1-5)</Text>
-                  <Text style={{ color: selectedHistory.suitability_score <= 2 ? '#10B981' : (selectedHistory.suitability_score <= 3 ? '#F59E0B' : '#EF4444'), fontSize: 24, fontFamily: 'Poppins_700Bold' }}>
-                    {selectedHistory.suitability_score}
-                  </Text>
+                <View style={{ alignItems: 'flex-end' }}>
+                  <Text style={{ color: '#64748B', fontSize: 12, fontFamily: 'Poppins_500Medium' }}>Field Suitability</Text>
+                  {(() => {
+                    const s = selectedHistory.suitability_score;
+                    const c = s === 1 ? '#10B981' : s === 2 ? '#84CC16' : s === 3 ? '#F59E0B' : s === 4 ? '#F97316' : '#EF4444';
+                    const t = s === 1 ? 'Excellent' : s === 2 ? 'Good' : s === 3 ? 'Moderate' : s === 4 ? 'Poor' : 'Very Poor';
+                    return (
+                      <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
+                        <Text style={{ color: c, fontSize: 16, fontFamily: 'Poppins_700Bold', marginRight: 6 }}>{t}</Text>
+                        <View style={{ backgroundColor: c, width: 22, height: 22, borderRadius: 11, justifyContent: 'center', alignItems: 'center' }}>
+                          <Text style={{ color: 'white', fontFamily: 'Poppins_700Bold', fontSize: 12 }}>{s}/5</Text>
+                        </View>
+                      </View>
+                    )
+                  })()}
                 </View>
 
                 {selectedHistory.created_at && (
