@@ -2,28 +2,16 @@
     "models": [
         {
             "name": "XGBoost",
-            "metrics": {
-                "mae": 733.6532796223959,
-                "rmse": 910.4630737856766,
-                "r2": 0.4070061279491427
-            }
+            "accuracy": 0.989010989010989
         },
         {
-            "name": "Random Forest Regressor",
-            "metrics": {
-                "mae": 774.7535185185186,
-                "rmse": 959.0540311344221,
-                "r2": 0.34202153078939
-            }
+            "name": "Random Forest",
+            "accuracy": 0.9963369963369964
         },
         {
-            "name": "Linear Regression",
-            "metrics": {
-                "mae": 932.0226962998642,
-                "rmse": 1114.5550067255367,
-                "r2": 0.11135449883308335
-            }
+            "name": "Decision Tree",
+            "accuracy": 0.9963369963369964
         }
     ],
-    "best_model": "XGBoost"
+    "best_model": "Random Forest"
 }

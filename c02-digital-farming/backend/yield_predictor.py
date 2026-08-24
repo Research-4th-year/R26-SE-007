@@ -9,9 +9,16 @@ from services.weather_api import fetch_forecast_weather
 
 MODEL_PATH = os.path.join(os.path.dirname(__file__), 'models', 'yield_predictor.pkl')
 
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.tree import DecisionTreeClassifier
+import json
+
 def train_and_save_model(csv_path):
     """
-    Trains the XGBoost model using historical dataset and saves it to disk.
+    Trains multiple models (XGBoost, Random Forest, Decision Tree) using historical dataset,
+    selects the best one based on accuracy, saves it to disk, and saves a comparison JSON.
     """
     print("Preprocessing data for training...")
     df = preprocess_historical_weather(csv_path)
@@ -19,23 +26,50 @@ def train_and_save_model(csv_path):
     # Features we will train on
     features = ['temp_mean', 'humidity_mean', 'soil_moisture_7']
     X = df[features]
-    y = df['suitability_score'] - 1 # XGBoost needs labels to start at 0 (so 0 to 4 instead of 1 to 5)
+    y = df['suitability_score'] - 1 # ML models often prefer labels to start at 0 (0 to 4 instead of 1 to 5)
 
-    print("Training XGBoost Model...")
-    model = xgb.XGBClassifier(
-        n_estimators=100, 
-        learning_rate=0.1,
-        max_depth=5, 
-        use_label_encoder=False, 
-        eval_metric='mlogloss'
-    )
-    model.fit(X, y)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
+    print("Training Models...")
+    classifiers = {
+        "XGBoost": xgb.XGBClassifier(n_estimators=100, learning_rate=0.1, max_depth=5, use_label_encoder=False, eval_metric='mlogloss', random_state=42),
+        "Random Forest": RandomForestClassifier(n_estimators=100, random_state=42),
+        "Decision Tree": DecisionTreeClassifier(random_state=42)
+    }
+
+    results = []
+    best_model = None
+    best_acc = 0
+    best_name = ""
+
+    for name, clf in classifiers.items():
+        print(f"Training {name}...")
+        clf.fit(X_train, y_train)
+        y_pred = clf.predict(X_test)
+        acc = accuracy_score(y_test, y_pred)
+        
+        results.append({"name": name, "accuracy": float(acc)})
+        print(f"{name} Accuracy: {acc:.4f}")
+        
+        if acc > best_acc:
+            best_acc = acc
+            best_model = clf
+            best_name = name
+
+    print(f"\nBest Model selected: {best_name} with Accuracy: {best_acc:.4f}")
+
+    # Save the best model
     os.makedirs(os.path.dirname(MODEL_PATH), exist_ok=True)
     with open(MODEL_PATH, 'wb') as f:
-        pickle.dump(model, f)
+        pickle.dump(best_model, f)
     
     print(f"Model saved to {MODEL_PATH}")
+
+    # Save comparison to json
+    comparison_path = os.path.join(os.path.dirname(MODEL_PATH), 'yield_model_comparison.json')
+    with open(comparison_path, 'w') as f:
+        json.dump({"models": results, "best_model": best_name}, f, indent=4)
+    print(f"Comparison saved to {comparison_path}")
 
 def load_model():
     if not os.path.exists(MODEL_PATH):

@@ -41,7 +41,7 @@ def train_and_save_model():
     
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
     
-    # Create preprocessing and training pipeline
+    # Convert text into numbers - dataset contains categorical, ML algo generally need numerical
     categorical_transformer = OneHotEncoder(handle_unknown='ignore')
     
     preprocessor = ColumnTransformer(
@@ -49,10 +49,14 @@ def train_and_save_model():
             ('cat', categorical_transformer, features)
         ])
         
+    # 100 decision trees inside the Random Forest - make the model more stable
+    # 42 - Controls randomness - can get the same results when training again with the same data
     classifiers = {
         "Random Forest": RandomForestClassifier(n_estimators=100, random_state=42),
-        "Decision Tree": DecisionTreeClassifier(random_state=42),
-        "Logistic Regression": LogisticRegression(max_iter=1000, random_state=42)
+        # builds one decision tree and uses 42 to make the result reproducible. No bagging or randomness.
+        "Decision Tree": DecisionTreeClassifier(random_state=42), 
+        #allowed up to 1000 training iterations and uses fixed randomness
+        "Logistic Regression": LogisticRegression(max_iter=1000, random_state=42) 
     }
     
     results = []
