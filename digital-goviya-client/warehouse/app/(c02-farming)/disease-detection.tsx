@@ -93,19 +93,19 @@ export default function DiseaseDetectionScreen() {
       let mimeType = match ? `image/${match[1]}` : `image/jpeg`;
       if (mimeType === 'image/jpg') mimeType = 'image/jpeg';
 
-      // Fetch the image as a blob first to avoid "Unsupported FormDataPart"
-      // error caused by Hermes rejecting plain { uri, name, type } objects.
-      const imageResponse = await fetch(imageUri);
-      const blob = await imageResponse.blob();
-
       const formData = new FormData();
-      // @ts-ignore – React Native FormData accepts Blob with a filename
-      formData.append('file', blob, filename);
+      // Standard React Native way to append files to FormData
+      formData.append('file', {
+        uri: imageUri,
+        name: filename,
+        type: mimeType
+      } as any);
 
       const response = await fetch(`${API_URL}/predict_disease`, {
         method: 'POST',
         headers: {
           'Accept': 'application/json',
+          'Content-Type': 'multipart/form-data',
         },
         body: formData,
       });
