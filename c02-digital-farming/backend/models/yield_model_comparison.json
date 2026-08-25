@@ -1,0 +1,17 @@
+{
+    "models": [
+        {
+            "name": "XGBoost",
+            "accuracy": 0.989010989010989
+        },
+        {
+            "name": "Random Forest",
+            "accuracy": 0.9963369963369964
+        },
+        {
+            "name": "Decision Tree",
+            "accuracy": 0.9963369963369964
+        }
+    ],
+    "best_model": "Random Forest"
+}

@@ -1,0 +1,41 @@
+Variety_Code,Category,Age_Group,Grain_Type,Grain_Color,Salinity_Tolerance,Iron_Toxicity_Tolerance,Dominant_Zones
+Bg 352,New Improved,3.5 Months,Long Grain (Nadu),White,No,No,"Dry Zone, Intermediate Zone"
+At 362,New Improved,3.5 Months,Long Grain (Nadu),Red,No,No,"Dry Zone, Wet Zone, Intermediate Zone"
+Bg 300,New Improved,3 Months,Long Grain (Nadu),White,No,No,"Dry Zone, Wet Zone, Intermediate Zone"
+Bg 366,New Improved,3.5 Months,Long Grain (Nadu),White,No,No,"Dry Zone, Wet Zone, Intermediate Zone"
+Bg 360,New Improved,3.5 Months,Short Grain (Samba),White,No,No,"Dry Zone, Intermediate Zone"
+At 307,New Improved,3 Months,Long Grain (Nadu),White,No,No,"Dry Zone, Intermediate Zone"
+Bw 367,New Improved,3.5 Months,Short Grain (Samba),White,No,Yes,"Wet Zone, Intermediate Zone, Dry Zone"
+Bg 374,New Improved,3.5 Months,Long Grain (Nadu),White,No,No,"Intermediate Zone, Wet Zone"
+Bg 359,New Improved,3.5 Months,Long Grain (Nadu),White,No,No,"Wet Zone, Intermediate Zone"
+Bg 358,New Improved,3.5 Months,Short Grain (Samba),White,No,No,"Dry Zone, Intermediate Zone"
+Bg 94-1,New Improved,3.5 Months,Long Grain (Nadu),White,No,No,"Dry Zone, Wet Zone"
+Bg 310,New Improved,3 Months,Long Grain (Nadu),White,Yes,No,"Dry Zone, Intermediate Zone"
+At 353,New Improved,3.5 Months,Long Grain (Nadu),Red,Yes,No,Dry Zone
+At 354,New Improved,3.5 Months,Long Grain (Nadu),White,Yes,No,"Wet Zone, Dry Zone"
+Bg 369,New Improved,3.5 Months,Long Grain (Nadu),White,Yes,No,"Dry Zone, Wet Zone"
+Bw 400,New Improved,4-4.5 Months,Long Grain (Nadu),Red,Yes,Yes,"Intermediate Zone, Wet Zone"
+Bw 312,New Improved,3 Months,Long Grain (Nadu),Red,No,Yes,"Wet Zone, Dry Zone"
+Bw 361,New Improved,3.5 Months,Long Grain (Nadu),Red,No,Yes,"Wet Zone, Dry Zone"
+Bw 363,New Improved,3.5 Months,Long Grain (Nadu),White,No,Yes,Wet Zone
+Bw 364,New Improved,3.5 Months,Long Grain (Nadu),Red,No,Yes,Wet Zone
+Bw 372,New Improved,3.5 Months,Long Grain (Nadu),Red,No,Yes,Wet Zone
+Ld 368,New Improved,3.5 Months,Short Grain (Samba),Red,No,No,Wet Zone
+Bg 250,New Improved,2.5 Months,Long Grain (Nadu),White,No,No,"Wet Zone, Intermediate Zone"
+Bg 251,New Improved,2.5 Months,Long Grain (Nadu),White,No,No,General
+Bg 252,New Improved,2.5 Months,Short Grain (Samba),Red,No,No,General
+Ld 253,New Improved,2.5 Months,Long Grain (Nadu),White,No,No,General
+Bg 379-2,New Improved,4-4.5 Months,Long Grain (Nadu),White,No,No,"Wet Zone, Dry Zone"
+Bg 403,New Improved,4-4.5 Months,Long Grain (Nadu),White,No,No,Wet Zone
+Bg 406,New Improved,4-4.5 Months,Long Grain (Nadu),Red,No,No,Dry Zone
+Bg 450,New Improved,4-4.5 Months,Short Grain (Samba),White,No,No,General
+Attakkari,Old Improved,4-4.5 Months,Long Grain (Nadu),Red,No,No,Dry Zone
+H4,Old Improved,4-4.5 Months,Long Grain (Nadu),Red,No,No,General
+Suwandel,Traditional,3.5 Months,Short Grain (Samba),White,No,No,General
+Kalu Heenati,Traditional,3.5 Months,Long Grain (Nadu),Red,No,No,General
+Pachchaperumal,Traditional,3 Months,Long Grain (Nadu),Red,No,No,General
+Kuruluthuda,Traditional,4-4.5 Months,Long Grain (Nadu),Red,No,No,General
+Moddaikaruppan,Traditional,4-4.5 Months,Long Grain (Nadu),Red,No,No,Dry Zone
+Pokkali,Traditional,3.5 Months,Long Grain (Nadu),Red,Yes,No,Wet/Coastal Zone
+Maa Wee,Traditional,5-6 Months,Long Grain (Nadu),Red,No,No,Wet Zone
+Murungakayan,Traditional,5-6 Months,Long Grain (Nadu),Red,No,No,General

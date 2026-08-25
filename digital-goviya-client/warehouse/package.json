@@ -6,7 +6,8 @@
     "@expo-google-fonts/poppins": "^0.4.1",
     "@expo/vector-icons": "^15.1.1",
     "@react-native-async-storage/async-storage": "2.2.0",
-    "@react-native-community/datetimepicker": "9.1.0",
+    "@react-native-community/datetimepicker": "8.4.4",
+    "@react-native-picker/picker": "2.11.1",
     "@tanstack/react-query": "^5.101.2",
     "axios": "^1.18.1",
     "babel-preset-expo": "^57.0.1",
@@ -18,7 +19,6 @@
     "expo-linking": "~57.0.1",
     "expo-location": "~57.0.2",
     "expo-router": "~57.0.3",
-    "expo-secure-store": "~57.0.1",
     "expo-status-bar": "~57.0.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
@@ -27,7 +27,7 @@
     "react-native-screens": "4.25.2",
     "react-native-svg": "15.15.4",
     "react-native-web": "^0.21.2",
-    "react-native-worklets": "^0.10.1"
+    "react-native-worklets": "0.5.1"
   },
   "devDependencies": {
     "@types/react": "~19.2.2",
@@ -35,8 +35,8 @@
   },
   "scripts": {
     "start": "expo start",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
     "web": "expo start --web"
   },
   "private": true
