@@ -25,6 +25,8 @@ import { saveMarketplaceSession } from "@/services/c03-marketplace/session-stora
 
 import { useMarketplaceAuth } from "@/hooks/c03-marketplace/useMarketplaceAuth";
 
+import { useLanguage } from "@/contexts/LanguageContext";
+
 /* ------------------------------------------------------------------ */
 /*  Small animation helpers — purely presentational, no logic changes  */
 /* ------------------------------------------------------------------ */
@@ -97,6 +99,8 @@ function getPasswordChecks(value: string) {
 export default function ChangePasswordScreen() {
   const { user, refreshCurrentUser } = useMarketplaceAuth();
 
+  const { t } = useLanguage();
+
   const [currentPassword, setCurrentPassword] = useState("");
 
   const [newPassword, setNewPassword] = useState("");
@@ -109,16 +113,22 @@ export default function ChangePasswordScreen() {
 
   async function handleChangePassword() {
     if (!currentPassword || !newPassword || !confirmPassword) {
-      Alert.alert("Missing information", "Complete all password fields.");
+  Alert.alert(
+    t.changePassword.missingInformation,
+    t.changePassword.completeAllFields
+  );
 
-      return;
-    }
+  return;
+}
 
     if (newPassword !== confirmPassword) {
-      Alert.alert("Passwords do not match", "Confirm your new password again.");
+  Alert.alert(
+    t.changePassword.passwordsDoNotMatch,
+    t.changePassword.confirmPasswordAgain
+  );
 
-      return;
-    }
+  return;
+}
 
     try {
       setSubmitting(true);
@@ -140,7 +150,10 @@ export default function ChangePasswordScreen() {
        */
       await refreshCurrentUser();
 
-      Alert.alert("Password updated", "Your new password is now active.");
+      Alert.alert(
+        t.changePassword.passwordUpdated,
+        t.changePassword.passwordUpdatedMessage,
+      );
 
       if (session.user.role === "farmer") {
         router.replace("/(c03-marketplace)/(farmer)/home");
@@ -151,8 +164,8 @@ export default function ChangePasswordScreen() {
       router.replace("/(c03-marketplace)/(miller)/home");
     } catch (error) {
       Alert.alert(
-        "Password change failed",
-        error instanceof Error ? error.message : "Unable to change password.",
+        t.changePassword.passwordChangeFailed,
+        error instanceof Error ? error.message : t.changePassword.unableToChangePassword
       );
     } finally {
       setSubmitting(false);
@@ -230,17 +243,10 @@ export default function ChangePasswordScreen() {
                   <Ionicons name="key-outline" size={30} color="#FFFFFF" />
                 </View>
 
-                <View
-                  style={[
-                    styles.iconBadge,
-                    { backgroundColor: accent },
-                  ]}
-                >
+                <View style={[styles.iconBadge, { backgroundColor: accent }]}>
                   <Ionicons
                     name={
-                      isForcedPasswordChange
-                        ? "sparkles"
-                        : "shield-checkmark"
+                      isForcedPasswordChange ? "sparkles" : "shield-checkmark"
                     }
                     size={13}
                     color={isMiller ? "#78350F" : "#14532D"}
@@ -250,14 +256,14 @@ export default function ChangePasswordScreen() {
 
               <Text style={styles.title}>
                 {isForcedPasswordChange
-                  ? "Create your new password"
-                  : "Change your password"}
+                  ? t.changePassword.createNewPassword
+                  : t.changePassword.changeYourPassword}
               </Text>
 
               <Text style={styles.subtitle}>
                 {isForcedPasswordChange
-                  ? "Your account was created with a temporary password. Create a new private password before using the marketplace."
-                  : "Enter your current password and choose a new password for your marketplace account."}
+                  ? t.changePassword.forcedPasswordSubtitle
+                  : t.changePassword.changePasswordSubtitle}
               </Text>
             </Animated.View>
 
@@ -267,9 +273,7 @@ export default function ChangePasswordScreen() {
                   style={[
                     styles.cardHeaderIcon,
                     {
-                      backgroundColor: isMiller
-                        ? "#FEF3C7"
-                        : "#DCFCE7",
+                      backgroundColor: isMiller ? "#FEF3C7" : "#DCFCE7",
                     },
                   ]}
                 >
@@ -282,10 +286,10 @@ export default function ChangePasswordScreen() {
 
                 <View style={styles.cardHeaderTextArea}>
                   <Text style={styles.cardHeaderTitle}>
-                    Account security
+                    {t.changePassword.accountSecurity}
                   </Text>
                   <Text style={styles.cardHeaderSubtitle}>
-                    Keep your marketplace account protected
+                    {t.changePassword.accountSecuritySubtitle}
                   </Text>
                 </View>
               </View>
@@ -293,7 +297,7 @@ export default function ChangePasswordScreen() {
               <View style={styles.divider} />
 
               <PasswordField
-                label="Temporary password"
+                label={t.changePassword.temporaryPassword}
                 icon="key-outline"
                 value={currentPassword}
                 onChangeText={setCurrentPassword}
@@ -301,7 +305,7 @@ export default function ChangePasswordScreen() {
               />
 
               <PasswordField
-                label="New password"
+                label={t.changePassword.newPassword}
                 icon="lock-closed-outline"
                 value={newPassword}
                 onChangeText={setNewPassword}
@@ -309,7 +313,7 @@ export default function ChangePasswordScreen() {
               />
 
               <PasswordField
-                label="Confirm new password"
+                label={t.changePassword.confirmNewPassword}
                 icon="checkmark-circle-outline"
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
@@ -318,15 +322,15 @@ export default function ChangePasswordScreen() {
                   passwordsMatch
                     ? "checkmark-circle"
                     : passwordsMismatch
-                    ? "close-circle"
-                    : undefined
+                      ? "close-circle"
+                      : undefined
                 }
                 statusColor={
                   passwordsMatch
                     ? "#16A34A"
                     : passwordsMismatch
-                    ? "#DC2626"
-                    : undefined
+                      ? "#DC2626"
+                      : undefined
                 }
               />
 
@@ -346,7 +350,9 @@ export default function ChangePasswordScreen() {
                 />
 
                 <Text style={styles.showText}>
-                  {showPasswords ? "Hide passwords" : "Show passwords"}
+                  {showPasswords
+                    ? t.changePassword.hidePasswords
+                    : t.changePassword.showPasswords}
                 </Text>
               </AnimatedPressable>
 
@@ -358,27 +364,24 @@ export default function ChangePasswordScreen() {
                     color="#92400E"
                   />
                   <Text style={styles.requirementTitle}>
-                    Password requirements
+                    {t.changePassword.passwordRequirements}
                   </Text>
                 </View>
 
                 <View style={styles.requirementChecklist}>
                   <RequirementRow
                     met={checks.length}
-                    label="At least 8 characters"
+                    label={t.changePassword.atLeast8Characters}
                   />
                   <RequirementRow
                     met={checks.upper}
-                    label="One uppercase letter"
+                    label={t.changePassword.oneUppercaseLetter}
                   />
                   <RequirementRow
                     met={checks.lower}
-                    label="One lowercase letter"
+                    label={t.changePassword.oneLowercaseLetter}
                   />
-                  <RequirementRow
-                    met={checks.number}
-                    label="One number"
-                  />
+                  <RequirementRow met={checks.number} label={t.changePassword.oneNumber} />
                 </View>
               </View>
 
@@ -396,18 +399,21 @@ export default function ChangePasswordScreen() {
                   colors={colors}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
-                  style={[
-                    styles.button,
-                    submitting && styles.disabled,
-                  ]}
+                  style={[styles.button, submitting && styles.disabled]}
                 >
                   {submitting ? (
                     <ActivityIndicator color="#FFFFFF" />
                   ) : (
                     <>
-                      <Text style={styles.buttonText}>Save New Password</Text>
+                      <Text style={styles.buttonText}>
+                        {t.changePassword.saveNewPassword}
+                      </Text>
 
-                      <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
+                      <Ionicons
+                        name="arrow-forward"
+                        size={18}
+                        color="#FFFFFF"
+                      />
                     </>
                   )}
                 </LinearGradient>
@@ -420,7 +426,7 @@ export default function ChangePasswordScreen() {
                   color="#94A3B8"
                 />
                 <Text style={styles.footerNoteText}>
-                  Your password is encrypted and never shared.
+                  {t.changePassword.securityNote}
                 </Text>
               </View>
             </Animated.View>
@@ -482,6 +488,8 @@ function PasswordField({
   statusIcon?: keyof typeof Ionicons.glyphMap;
   statusColor?: string;
 }) {
+
+    const { t } = useLanguage();
   return (
     <View style={styles.fieldWrap}>
       <Text style={styles.label}>{label}</Text>
@@ -496,7 +504,7 @@ function PasswordField({
           onChangeText={onChangeText}
           secureTextEntry={!visible}
           style={styles.input}
-          placeholder="Enter password"
+          placeholder={t.changePassword.enterPassword}
           placeholderTextColor="#B4BEC9"
         />
 

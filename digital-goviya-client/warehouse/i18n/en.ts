@@ -1,4 +1,6 @@
 const en = {
+
+  //Common Pages
   common: {
     getStarted: "Get Started",
     cancel: "Cancel",
@@ -87,6 +89,107 @@ const en = {
     phone: "Phone Number",
     password: "Password",
     confirmPassword: "Confirm Password",
+  },
+
+
+
+
+  // C3 Marketplace
+  c3login: {
+    eyebrow: "DIGITAL GOVIYA MARKETPLACE",
+    heading: "Welcome back",
+    description:
+      "Sign in using the marketplace username assigned to your account.",
+
+    selectAccount: "Select your account",
+
+    farmer: {
+      title: "Farmer",
+      subtitle: "Sell paddy",
+    },
+
+    miller: {
+      title: "Miller",
+      subtitle: "Purchase paddy",
+    },
+
+    username: "Username",
+    usernamePlaceholder: "Enter username",
+
+    password: "Password",
+    passwordPlaceholder: "Enter password",
+
+    accountInfo:
+      "Imported Miller accounts must change the temporary password after their first login.",
+
+    continueAs: "Continue as",
+
+    missingInformation: "Missing information",
+    missingInformationMessage:
+      "Enter your username and password.",
+
+    loginFailed: "Login failed",
+    unableToSignIn: "Unable to sign in.",
+
+    footer: "Digital Goviya v1.0 · SLIIT Research 2026",
+  },
+
+  changePassword: {
+    createNewPassword: "Create your new password",
+    changeYourPassword: "Change your password",
+
+    forcedPasswordSubtitle:
+      "Your account was created with a temporary password. Create a new private password before using the marketplace.",
+
+    changePasswordSubtitle:
+      "Enter your current password and choose a new password for your marketplace account.",
+
+    accountSecurity: "Account security",
+
+    accountSecuritySubtitle:
+      "Keep your marketplace account protected",
+
+    temporaryPassword: "Temporary password",
+    newPassword: "New password",
+    confirmNewPassword: "Confirm new password",
+
+    enterPassword: "Enter password",
+
+    showPasswords: "Show passwords",
+    hidePasswords: "Hide passwords",
+
+    passwordRequirements: "Password requirements",
+
+    atLeast8Characters: "At least 8 characters",
+    oneUppercaseLetter: "One uppercase letter",
+    oneLowercaseLetter: "One lowercase letter",
+    oneNumber: "One number",
+
+    saveNewPassword: "Save New Password",
+
+    securityNote:
+      "Your password is encrypted and never shared.",
+
+    missingInformation: "Missing information",
+    completeAllFields:
+      "Complete all password fields.",
+
+    passwordsDoNotMatch:
+      "Passwords do not match",
+
+    confirmPasswordAgain:
+      "Confirm your new password again.",
+
+    passwordUpdated: "Password updated",
+
+    passwordUpdatedMessage:
+      "Your new password is now active.",
+
+    passwordChangeFailed:
+      "Password change failed",
+
+    unableToChangePassword:
+      "Unable to change password.",
   },
 };
 

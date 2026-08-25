@@ -33,6 +33,8 @@ import type {
   MarketplaceUserRole,
 } from "@/types/c03-marketplace/auth.types";
 
+import { useLanguage } from "@/contexts/LanguageContext";
+
 type LoginTheme = {
   backgroundGradient: [
     string,
@@ -112,6 +114,7 @@ const MILLER_THEME:
   };
 
 export default function MarketplaceLoginScreen() {
+  const { t } = useLanguage();
   const {
     signIn,
   } =
@@ -186,8 +189,8 @@ export default function MarketplaceLoginScreen() {
       !password.trim()
     ) {
       Alert.alert(
-        "Missing information",
-        "Enter your username and password."
+        t.c3login.missingInformation,
+        t.c3login.missingInformationMessage,
       );
 
       return;
@@ -232,14 +235,9 @@ export default function MarketplaceLoginScreen() {
       );
     } catch (error) {
       const message =
-        error instanceof Error
-          ? error.message
-          : "Unable to sign in.";
+        error instanceof Error ? error.message : t.c3login.unableToSignIn;
 
-      Alert.alert(
-        "Login failed",
-        message
-      );
+      Alert.alert(t.c3login.loginFailed, message);
     } finally {
       setIsSubmitting(
         false
@@ -255,9 +253,7 @@ export default function MarketplaceLoginScreen() {
 
   return (
     <LinearGradient
-      colors={
-        theme.backgroundGradient
-      }
+      colors={theme.backgroundGradient}
       start={{
         x: 0,
         y: 0,
@@ -266,365 +262,175 @@ export default function MarketplaceLoginScreen() {
         x: 0,
         y: 1,
       }}
-      style={
-        styles.screen
-      }
+      style={styles.screen}
     >
-      <SafeAreaView
-        style={
-          styles.safeArea
-        }
-      >
+      <SafeAreaView style={styles.safeArea}>
         <KeyboardAvoidingView
-          style={
-            styles.flex
-          }
-          behavior={
-            Platform.OS ===
-            "ios"
-              ? "padding"
-              : undefined
-          }
+          style={styles.flex}
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
         >
           <ScrollView
-            contentContainerStyle={
-              styles.scrollContent
-            }
+            contentContainerStyle={styles.scrollContent}
             keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={
-              false
-            }
+            showsVerticalScrollIndicator={false}
           >
             <Pressable
-              style={
-                styles.backButton
-              }
-              onPress={() =>
-                router.replace(
-                  "/landing"
-                )
-              }
+              style={styles.backButton}
+              onPress={() => router.replace("/landing")}
             >
-              <Ionicons
-                name="arrow-back"
-                size={20}
-                color="#FFFFFF"
-              />
+              <Ionicons name="arrow-back" size={20} color="#FFFFFF" />
             </Pressable>
 
-            <View
-              style={
-                styles.hero
-              }
-            >
+            <View style={styles.hero}>
               <View
                 style={[
                   styles.logoRing,
 
                   {
-                    backgroundColor:
-                      theme.ringBackground,
+                    backgroundColor: theme.ringBackground,
 
-                    borderColor:
-                      theme.ringBorder,
+                    borderColor: theme.ringBorder,
                   },
                 ]}
               >
-                <View
-                  style={
-                    styles.logoCircle
-                  }
-                >
-                  <Ionicons
-                    name="storefront"
-                    size={30}
-                    color={
-                      theme.accent
-                    }
-                  />
+                <View style={styles.logoCircle}>
+                  <Ionicons name="storefront" size={30} color={theme.accent} />
                 </View>
               </View>
 
-              <View
-                style={
-                  styles.eyebrowPill
-                }
-              >
-                <Ionicons
-                  name="sparkles"
-                  size={11}
-                  color="#F5C542"
-                />
+              <View style={styles.eyebrowPill}>
+                <Ionicons name="sparkles" size={11} color="#F5C542" />
 
-                <Text
-                  style={
-                    styles.eyebrow
-                  }
-                >
-                  DIGITAL GOVIYA MARKETPLACE
-                </Text>
+                <Text style={styles.eyebrow}>{t.c3login.eyebrow}</Text>
               </View>
 
-              <Text
-                style={
-                  styles.heading
-                }
-              >
-                Welcome back
-              </Text>
+              <Text style={styles.heading}>{t.c3login.heading}</Text>
 
-              <Text
-                style={
-                  styles.description
-                }
-              >
-                Sign in using the
-                marketplace username
-                assigned to your
-                account.
-              </Text>
+              <Text style={styles.description}>{t.c3login.description}</Text>
             </View>
 
-            <View
-              style={
-                styles.sheet
-              }
-            >
-              <View
-                style={
-                  styles.sheetHandle
-                }
-              />
+            <View style={styles.sheet}>
+              <View style={styles.sheetHandle} />
 
-              <Text
-                style={
-                  styles.sectionTitle
-                }
-              >
-                Select your account
-              </Text>
+              <Text style={styles.sectionTitle}>{t.c3login.selectAccount}</Text>
 
-              <View
-                style={
-                  styles.roleRow
-                }
-              >
+              <View style={styles.roleRow}>
                 <RoleCard
-                  title="Farmer"
-                  subtitle="Sell paddy"
+                  title={t.c3login.farmer.title}
+                  subtitle={t.c3login.farmer.subtitle}
                   icon="leaf"
-                  selected={
-                    role ===
-                    "farmer"
-                  }
-                  accent={
-                    FARMER_THEME.accent
-                  }
-                  accentSoft={
-                    FARMER_THEME.accentSoft
-                  }
-                  onPress={() =>
-                    selectRole(
-                      "farmer"
-                    )
-                  }
+                  selected={role === "farmer"}
+                  accent={FARMER_THEME.accent}
+                  accentSoft={FARMER_THEME.accentSoft}
+                  onPress={() => selectRole("farmer")}
                 />
 
                 <RoleCard
-                  title="Miller"
-                  subtitle="Purchase paddy"
+                  title={t.c3login.miller.title}
+                  subtitle={t.c3login.miller.subtitle}
                   icon="business"
-                  selected={
-                    role ===
-                    "miller"
-                  }
-                  accent={
-                    MILLER_THEME.accent
-                  }
-                  accentSoft={
-                    MILLER_THEME.accentSoft
-                  }
-                  onPress={() =>
-                    selectRole(
-                      "miller"
-                    )
-                  }
+                  selected={role === "miller"}
+                  accent={MILLER_THEME.accent}
+                  accentSoft={MILLER_THEME.accentSoft}
+                  onPress={() => selectRole("miller")}
                 />
               </View>
 
-              <Text
-                style={
-                  styles.label
-                }
-              >
-                Username
-              </Text>
+              <Text style={styles.label}>{t.c3login.username}</Text>
 
-              <View
-                style={
-                  styles.inputContainer
-                }
-              >
+              <View style={styles.inputContainer}>
                 <View
                   style={[
                     styles.inputIconBox,
                     {
-                      backgroundColor:
-                        theme.accentSoft,
+                      backgroundColor: theme.accentSoft,
                     },
                   ]}
                 >
                   <Ionicons
                     name="person-outline"
                     size={17}
-                    color={
-                      theme.accent
-                    }
+                    color={theme.accent}
                   />
                 </View>
 
                 <TextInput
-                  style={
-                    styles.input
-                  }
-                  value={
-                    username
-                  }
-                  onChangeText={
-                    setUsername
-                  }
-                  placeholder="Enter username"
+                  style={styles.input}
+                  value={username}
+                  onChangeText={setUsername}
+                  placeholder={t.c3login.usernamePlaceholder}
                   placeholderTextColor="#9CA3AF"
                   autoCapitalize="none"
-                  autoCorrect={
-                    false
-                  }
+                  autoCorrect={false}
                 />
               </View>
 
-              <Text
-                style={
-                  styles.label
-                }
-              >
-                Password
-              </Text>
+              <Text style={styles.label}>{t.c3login.password}</Text>
 
-              <View
-                style={
-                  styles.inputContainer
-                }
-              >
+              <View style={styles.inputContainer}>
                 <View
                   style={[
                     styles.inputIconBox,
                     {
-                      backgroundColor:
-                        theme.accentSoft,
+                      backgroundColor: theme.accentSoft,
                     },
                   ]}
                 >
                   <Ionicons
                     name="lock-closed-outline"
                     size={17}
-                    color={
-                      theme.accent
-                    }
+                    color={theme.accent}
                   />
                 </View>
 
                 <TextInput
-                  style={
-                    styles.input
-                  }
-                  value={
-                    password
-                  }
-                  onChangeText={
-                    setPassword
-                  }
-                  placeholder="Enter password"
+                  style={styles.input}
+                  value={password}
+                  onChangeText={setPassword}
+                  placeholder={t.c3login.passwordPlaceholder}
                   placeholderTextColor="#9CA3AF"
-                  secureTextEntry={
-                    !showPassword
-                  }
+                  secureTextEntry={!showPassword}
                 />
 
                 <Pressable
                   hitSlop={8}
-                  onPress={() =>
-                    setShowPassword(
-                      (
-                        current
-                      ) =>
-                        !current
-                    )
-                  }
+                  onPress={() => setShowPassword((current) => !current)}
                 >
                   <Ionicons
-                    name={
-                      showPassword
-                        ? "eye-off-outline"
-                        : "eye-outline"
-                    }
+                    name={showPassword ? "eye-off-outline" : "eye-outline"}
                     size={19}
                     color="#9CA3AF"
                   />
                 </Pressable>
               </View>
 
-              <View
-                style={
-                  styles.infoBox
-                }
-              >
+              <View style={styles.infoBox}>
                 <Ionicons
                   name="shield-checkmark-outline"
                   size={17}
                   color="#B45309"
                 />
 
-                <Text
-                  style={
-                    styles.infoText
-                  }
-                >
-                  Imported Miller
-                  accounts must change
-                  the temporary password
-                  after their first
-                  login.
-                </Text>
+                <Text style={styles.infoText}>{t.c3login.accountInfo}</Text>
               </View>
 
               <Pressable
-                onPress={
-                  handleLogin
-                }
-                disabled={
-                  isSubmitting
-                }
-                style={({
-                  pressed,
-                }) => [
+                onPress={handleLogin}
+                disabled={isSubmitting}
+                style={({ pressed }) => [
                   styles.loginShadow,
 
                   {
-                    shadowColor:
-                      theme.buttonShadow,
+                    shadowColor: theme.buttonShadow,
                   },
 
-                  pressed &&
-                    styles.loginPressed,
+                  pressed && styles.loginPressed,
 
-                  isSubmitting &&
-                    styles.loginDisabled,
+                  isSubmitting && styles.loginDisabled,
                 ]}
               >
                 <LinearGradient
-                  colors={
-                    theme.buttonGradient
-                  }
+                  colors={theme.buttonGradient}
                   start={{
                     x: 0,
                     y: 0,
@@ -633,26 +439,18 @@ export default function MarketplaceLoginScreen() {
                     x: 1,
                     y: 0,
                   }}
-                  style={
-                    styles.loginButton
-                  }
+                  style={styles.loginButton}
                 >
                   {isSubmitting ? (
-                    <ActivityIndicator
-                      color="#0B3B22"
-                    />
+                    <ActivityIndicator color="#0B3B22" />
                   ) : (
                     <>
-                      <Text
-                        style={
-                          styles.loginButtonText
-                        }
-                      >
-                        Continue as{" "}
-                        {role ===
-                        "farmer"
-                          ? "Farmer"
-                          : "Miller"}
+                      <Text style={styles.loginButtonText}>
+                        
+                        {role === "farmer"
+                          ? t.c3login.farmer.title
+                          : t.c3login.miller.title}
+                          {" "}{t.c3login.continueAs}
                       </Text>
 
                       <Ionicons
@@ -666,13 +464,8 @@ export default function MarketplaceLoginScreen() {
               </Pressable>
             </View>
 
-            <Text
-              style={
-                styles.footer
-              }
-            >
-              Digital Goviya v1.0 ·
-              SLIIT Research 2026
+            <Text style={styles.footer}>
+              {t.c3login.footer}
             </Text>
           </ScrollView>
         </KeyboardAvoidingView>
@@ -895,6 +688,7 @@ const styles =
         "Poppins_800ExtraBold",
       marginTop: 6,
       textAlign: "center",
+      lineHeight: 36,
     },
 
     description: {
@@ -941,6 +735,7 @@ const styles =
       fontFamily:
         "Poppins_700Bold",
       marginBottom: 13,
+      lineHeight: 21,
     },
 
     roleRow: {
@@ -978,6 +773,7 @@ const styles =
       fontSize: 13.5,
       fontFamily:
         "Poppins_700Bold",
+        lineHeight: 19,
     },
 
     roleSubtitle: {
@@ -986,6 +782,7 @@ const styles =
       fontFamily:
         "Poppins_500Medium",
       marginTop: 2,
+      lineHeight: 15,
     },
 
     selectedCheck: {
