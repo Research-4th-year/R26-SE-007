@@ -323,12 +323,17 @@ def predict_disease(file: UploadFile = File(...)):
         # predicted_class = disease_class_names[predicted_class_index]
         score = predictions[0]
 
+        # If the model outputs logits (values > 1 or < 0), apply softmax to get probabilities
+        if tf.reduce_max(score) > 1.01 or tf.reduce_min(score) < -0.01:
+            score = tf.nn.softmax(score)
+
         max_confidence = float(tf.reduce_max(score))
         predicted_class_index = int(tf.argmax(score))
         predicted_class = disease_class_names[predicted_class_index]
         
-        # Safety net: if confidence is extremely low (<50%), fallback to "Another Type"
-        if max_confidence < 0.50:
+        # Safety net: Models with few classes often output 60-80% confidence for random noise.
+        # A higher threshold (e.g., 85%) ensures unrelated images are classified as "Another Type".
+        if max_confidence < 0.85:
             final_disease = "Another Type"
             disease_type = "Unknown"
         else:
