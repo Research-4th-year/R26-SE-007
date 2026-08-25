@@ -1,0 +1,35 @@
+{
+    "models": [
+        {
+            "name": "MobileNetV2",
+            "best_epoch": 10,
+            "train_accuracy": 0.8557142615318298,
+            "val_accuracy": 0.8664772510528564,
+            "val_loss": 0.3604769706726074,
+            "parameters": 2263108,
+            "training_time": 326.5336718559265,
+            "model_path": "/Users/nerandadilhara/Desktop/SLIIT/4Y1S/Research/ResearchImplementation/R26-SE-007/c02-digital-farming/backend/models/mobilenetv2_disease_prediction_model.keras"
+        },
+        {
+            "name": "EfficientNetB0",
+            "best_epoch": 10,
+            "train_accuracy": 0.883571445941925,
+            "val_accuracy": 0.8778409361839294,
+            "val_loss": 0.3664829134941101,
+            "parameters": 4054695,
+            "training_time": 1120.2784209251404,
+            "model_path": "/Users/nerandadilhara/Desktop/SLIIT/4Y1S/Research/ResearchImplementation/R26-SE-007/c02-digital-farming/backend/models/efficientnetb0_disease_prediction_model.keras"
+        },
+        {
+            "name": "ResNet50",
+            "best_epoch": 10,
+            "train_accuracy": 0.9164285659790039,
+            "val_accuracy": 0.9090909361839294,
+            "val_loss": 0.20753882825374603,
+            "parameters": 23595908,
+            "training_time": 1489.8487601280212,
+            "model_path": "/Users/nerandadilhara/Desktop/SLIIT/4Y1S/Research/ResearchImplementation/R26-SE-007/c02-digital-farming/backend/models/resnet50_disease_prediction_model.keras"
+        }
+    ],
+    "best_model": "ResNet50"
+}

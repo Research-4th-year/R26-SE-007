@@ -6,7 +6,6 @@
     "paths": {
       "@/*": ["./*"]
     },
-    "ignoreDeprecations": "6.0"
   },
   "include": [
     "**/*.ts",
