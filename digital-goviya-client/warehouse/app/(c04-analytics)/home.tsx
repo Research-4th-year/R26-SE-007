@@ -19,10 +19,6 @@ import {
   Poppins_500Medium,
 } from "@expo-google-fonts/poppins";
 
-// -----------------------------------------------------------------
-// Adjust these routes to match your actual (c04-analytics) file
-// structure once the Prediction and Forecast screens exist.
-// -----------------------------------------------------------------
 const ROUTES = {
   prediction: "/(c04-analytics)/price-prediction/prediction-input",
   forecast: "/(c04-analytics)/price-forecasting/forecast-input",
@@ -65,7 +61,15 @@ export default function AnalyticsHomeScreen() {
         <View style={styles.hero}>
           <TouchableOpacity
             style={styles.backBtn}
-            onPress={() => router.back()}
+            onPress={() => {
+              if (router.canGoBack()) {
+                router.back();
+              } else {
+                router.replace(
+                  "/landing" as any
+                );
+              }
+            }}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
             <Ionicons name="chevron-back" size={20} color="white" />
@@ -95,7 +99,7 @@ export default function AnalyticsHomeScreen() {
           >
             <Text style={styles.welcomeText}>
               Get an instant price estimate, or see how prices may move over
-              the next few weeks — powered by AI trained on real market data.
+              the next few weeks.
             </Text>
 
             {/* Predict card */}

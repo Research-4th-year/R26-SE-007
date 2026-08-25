@@ -47,10 +47,7 @@ const LANGUAGES = [
   },
 ];
 
-// ---------------------------------------------------------
-// Hero backdrop — sunrise over a paddy field, sits behind
-// the content and fades into the white sheet below.
-// ---------------------------------------------------------
+
 function PaddyBackdrop() {
   const h = 350;
   return (
