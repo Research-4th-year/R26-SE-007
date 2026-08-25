@@ -191,6 +191,75 @@ const en = {
     unableToChangePassword:
       "Unable to change password.",
   },
+
+
+    // C3 Marketplace - Farmer Home
+  c3farmerHome: {
+    greeting: "Good evening",
+    farmer: "Farmer",
+    sriLanka: "Sri Lanka",
+
+    openNotifications: "Open notifications",
+    openProfile: "Open profile",
+
+    aiMarketplace: "AI MARKETPLACE",
+    farmerMarketplace: "FARMER MARKETPLACE",
+
+    heroTitle: "Sell paddy at a fair market price",
+    heroDescription:
+      "Receive AI price guidance, publish harvests and connect with suitable millers.",
+
+    addNewHarvest: "Add New Harvest",
+
+    marketplaceAnalytics: "Marketplace analytics",
+    liveOverview: "Live overview of your harvests",
+    live: "LIVE",
+
+    analyticsUnavailable: "Analytics unavailable",
+    tapToRetry: "Tap to retry.",
+
+    totalHarvests: "Total harvests",
+    totalQuantity: "Total quantity",
+    averageAiPrice: "Average AI price",
+
+    available: "Available",
+    matched: "Matched",
+    averageScore: "Average score",
+
+    latestAiInsight: "LATEST AI INSIGHT",
+    reviewLatestAi:
+      "Review the latest AI price and market analysis.",
+
+    quickActions: "Quick actions",
+
+    addHarvest: "Add Harvest",
+    addHarvestSubtitle: "Get AI price guidance",
+
+    myHarvests: "My Harvests",
+    myHarvestsSubtitle: "View submitted harvests",
+
+    matchRequests: "Match Requests",
+    matchRequestsSubtitle: "Track Miller responses",
+
+    aiAssistant: "AI Assistant",
+    aiAssistantSubtitle: "Ask market questions",
+
+    farmerSessionActive: "Farmer session active",
+    signedInAs: "Signed in as",
+  },
+
+  c3districts: {
+  Ampara: "Ampara",
+  Badulla: "Badulla",
+  Kandy: "Kandy",
+  Monaragala: "Monaragala",
+},
+
+c3paddyTypes: {
+  Samba: "Samba",
+  Nadu: "Nadu",
+  KeeriSamba: "Keeri Samba",
+},
 };
 
 export default en;

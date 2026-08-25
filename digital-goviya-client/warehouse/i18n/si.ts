@@ -210,6 +210,75 @@ const si = {
     unableToChangePassword:
       "මුරපදය වෙනස් කිරීමට නොහැක.",
   },
+
+    // C3 Marketplace - Farmer Home
+  c3farmerHome: {
+    greeting: "සුබ උදෑසනක් !",
+    farmer: "ගොවියා",
+    sriLanka: "ශ්‍රී ලංකාව",
+
+    openNotifications: "දැනුම්දීම් විවෘත කරන්න",
+    openProfile: "පැතිකඩ විවෘත කරන්න",
+
+    aiMarketplace: "AI වෙළඳපොළ",
+    farmerMarketplace: "ගොවි වෙළඳපොළ",
+
+    heroTitle: "සාධාරණ වෙළඳපොළ මිලකට වී අලෙවි කරන්න",
+    heroDescription:
+      "AI මිල මාර්ගෝපදේශ ලබා ගන්න, ඔබගේ අස්වැන්න ප්‍රකාශයට පත් කරන්න සහ සුදුසු මෝල් හිමියන් සමඟ සම්බන්ධ වන්න.",
+
+    addNewHarvest: "නව අස්වැන්නක් එක් කරන්න",
+
+    marketplaceAnalytics: "වෙළඳපොළ විශ්ලේෂණ",
+    liveOverview: "ඔබගේ අස්වැන්‍න පිළිබඳ සජීවී සාරාංශය",
+    live: "සජීවී",
+
+    analyticsUnavailable: "විශ්ලේෂණ ලබාගත නොහැක",
+    tapToRetry: "නැවත උත්සාහ කිරීමට තට්ටු කරන්න.",
+
+    totalHarvests: "මුළු අස්වැන්න (වාර)",
+    totalQuantity: "මුළු ප්‍රමාණය (කිලෝග්‍රෑම්)",
+    averageAiPrice: "සාමාන්‍ය AI මිල (රුපියල්)",
+
+    available: "අලෙවි කල හැකි",
+    matched: "ගැළපුම් කල",
+    averageScore: "සාරාංශිත ලකුණු",
+
+    latestAiInsight: "නවතම AI තොරතුරු",
+    reviewLatestAi:
+      "නවතම AI මිල සහ වෙළඳපොළ විශ්ලේෂණය පරීක්ෂා කරන්න.",
+
+    quickActions: "ඉක්මන් ක්‍රියා",
+
+    addHarvest: "අස්වැන්න එක් කරන්න",
+    addHarvestSubtitle: "AI මිල මාර්ගෝපදේශ ලබා ගන්න",
+
+    myHarvests: "මගේ අස්වැන්න",
+    myHarvestsSubtitle: "ඉදිරිපත් කළ අස්වැන්‍න බලන්න",
+
+    matchRequests: "ගැළපීම් ඉල්ලීම්",
+    matchRequestsSubtitle: "මෝල් හිමියන්ගේ ප්‍රතිචාර නිරීක්ෂණය කරන්න",
+
+    aiAssistant: "AI සහායක",
+    aiAssistantSubtitle: "වෙළඳපොළ පිළිබඳ ප්‍රශ්න අසන්න",
+
+    farmerSessionActive: "ගොවි සැසිය සක්‍රීයයි",
+    signedInAs: "පිවිසී ඇත්තේ",
+  },
+
+  c3districts: {
+  Ampara: "අම්පාර",
+  Badulla: "බදුල්ල",
+  Kandy: "මහනුවර",
+  Monaragala: "මොනරාගල"
+},
+
+c3paddyTypes: {
+  Samba: "සම්බා",
+  Nadu: "නාඩු",
+  KeeriSamba: "කීරි සම්බා",
+},
+
 };
 
 export default si;
