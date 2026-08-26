@@ -512,6 +512,279 @@ harvestResult: {
 
   goBack: "Go back",
 },
+c3MatchedMillers: {
+  title: "Matched Millers",
+  subtitle: "Explainable AI recommendations",
+
+  loadingTitle: "Finding suitable millers",
+  loadingDescription:
+    "Comparing location, paddy type, quantity and AI-predicted prices.",
+
+  selectedHarvest: "SELECTED HARVEST",
+  aiPrice: "AI price",
+  matches: "matches",
+
+  rankedRecommendations: "Ranked recommendations",
+  selectUpToFive: "Select up to five",
+
+  matchingScore: "Matching score",
+  location: "Location",
+  paddyType: "Paddy type",
+  price: "Price",
+  quantity: "Quantity",
+
+  aiMarketPrice: "AI market price",
+  millerOffer: "Miller offer",
+
+  hideAiExplanation: "Hide AI explanation",
+  whyRecommended: "Why was this miller recommended?",
+
+  selected: "Selected",
+  selectThisMiller: "Select this Miller",
+
+  millerSelected: "miller selected",
+  millersSelected: "millers selected",
+  sendMatchRequests: "Send Match Requests",
+
+  highlyRecommended: "Highly Recommended",
+  recommended: "Recommended",
+  moderateMatch: "Moderate Match",
+
+  unableToLoad: "Unable to load matches",
+  tryAgain: "Try Again",
+
+  noCompatibleMillers: "No compatible millers yet",
+  noCompatibleMillersDescription:
+    "There are currently no open miller demands for this paddy type. Try refreshing later.",
+
+  harvestUnavailable: "Harvest unavailable",
+  harvestUnavailableDescription:
+    "The selected harvest could not be identified.",
+
+  selectMiller: "Select a miller",
+  selectMillerDescription:
+    "Please select at least one miller before sending requests.",
+
+  unableToSendRequests: "Unable to send requests",
+},
+
+c3myMatchRequests: {
+  title: "My Match Requests",
+  subtitle: "Track your farmer–miller matching activity",
+
+  overviewTitle: "Matching Overview",
+  overviewSubtitle:
+    "Keep track of your latest miller connections and negotiations.",
+
+  pending: "Pending",
+  ready: "Ready",
+  total: "Total",
+
+  activityTitle: "Matching Activity",
+  activitySubtitle: "Your latest requests",
+  pullToRefresh: "Pull to refresh",
+
+  millerRequest: "MILLER REQUEST",
+  sentRequest: "SENT REQUEST",
+
+  statusWaiting: "Waiting",
+  statusNegotiationReady: "Negotiation Ready",
+  statusRejected: "Rejected",
+  statusCancelled: "Cancelled",
+  statusUnknown: "Unknown",
+
+  miller: "Miller",
+  riceMill: "Rice Mill",
+
+  aiMatchingScore: "AI Matching Score",
+  scoreDescription:
+    "Compatibility based on your requirements",
+
+  matchDetails: "Match Details",
+  paddy: "Paddy",
+  quantity: "Quantity",
+  millerOffer: "Miller Offer",
+  district: "District",
+
+  requestActivity: "Request Activity",
+  received: "Received",
+  sent: "Sent",
+
+  reject: "Reject",
+  acceptMatch: "Accept Match",
+
+  startAiNegotiation: "Start AI Negotiation",
+  negotiationSubtext:
+    "Find a fair price with AI assistance",
+
+  loadingTitle: "Loading match requests",
+  loadingText:
+    "Retrieving your latest matching activity...",
+
+  emptyTitle: "No Match Requests Yet",
+  emptyText:
+    "Select one of your available harvests and find suitable millers to send your first matching request.",
+  viewMyHarvests: "View My Harvests",
+
+  errorTitle: "Unable to Load Requests",
+  tryAgain: "Try Again",
+
+  matchAccepted: "Match Accepted",
+  matchRejected: "Match Rejected",
+  updateErrorTitle: "Unable to Update Request",
+},
+
+c3assistant: {
+  title: "Market Assistant",
+  subtitle: "RAG-powered agricultural guidance",
+
+  growerKnowledgeAssistant: "GROWER KNOWLEDGE ASSISTANT",
+  millerKnowledgeAssistant: "MILLER KNOWLEDGE ASSISTANT",
+
+  askAboutPaddyMarkets: "Ask about paddy markets",
+  heroDescription:
+    "Answers are generated using retrieved agricultural data and marketplace knowledge.",
+
+  suggestedQuestions: "Suggested questions",
+  conversation: "Conversation",
+
+  inputPlaceholder:
+    "Ask about prices, quality or trading...",
+
+  disclaimer:
+    "AI answers should be reviewed before making financial or trading decisions.",
+
+  pleaseEnterValidQuestion:
+    "Please enter a valid question.",
+
+  retrievingAgriculturalInformation:
+    "Retrieving agricultural information...",
+
+  viewRetrievedInformation:
+    "View retrieved information",
+
+  hideRetrievedInformation:
+    "Hide retrieved information",
+
+  retrievedContext: "Retrieved context",
+  retrievedResults: "Retrieved results",
+
+  retrievedResult: "Retrieved result",
+
+  answerNotGenerated:
+    "I found relevant information, but an answer could not be generated.",
+
+  assistantError:
+    "Something went wrong while processing your question.",
+
+  goBack: "Go back",
+  clearConversation: "Clear conversation",
+  sendQuestion: "Send question",
+
+  farmerWelcome:
+    "Hello. I can help you understand paddy prices, selling requirements, market conditions and fair trading decisions.",
+
+  millerWelcome:
+    "Hello. I can help you understand paddy prices, quality requirements, market conditions and purchasing decisions.",
+
+  suggestedQuestion1:
+    "What is the current price of Nadu paddy?",
+
+  suggestedQuestion2:
+    "What are the quality requirements for selling paddy?",
+
+  suggestedQuestion3:
+    "Explain the difference between Maha and Yala seasons.",
+
+  suggestedQuestion4:
+    "How should I evaluate a miller's offered price?",
+},
+
+c3profile: {
+  title: "Farmer Profile",
+  verifiedFarmer: "VERIFIED FARMER",
+
+  personalInformation: "Personal information",
+
+  phone: "Phone",
+  district: "District",
+  location: "Location",
+  farm: "Farm",
+  farmSize: "Farm size",
+  mainVariety: "Main variety",
+
+  notProvided: "Not provided",
+  acres: "acres",
+
+  accountSecurity: "Account & security",
+
+  changePassword: "Change password",
+  changePasswordDescription:
+    "Update your marketplace account password",
+
+  signOut: "Sign out",
+
+  logoutFailed: "Logout failed",
+  logoutFailedMessage:
+    "The session could not be removed. Please try again.",
+
+  goBack: "Go back",
+},
+c3MillerHome: {
+  greeting: "Good evening,",
+  defaultUserName: "Miller",
+  defaultLocation: "Sri Lanka",
+
+  openNotifications: "Open notifications",
+  openProfile: "Open profile",
+
+  activeBuyer: "ACTIVE BUYER",
+  millerMarketplace: "MILLER MARKETPLACE",
+
+  heroTitle: "Find quality paddy from trusted farmers",
+  heroDescription:
+    "Publish purchasing requirements, discover compatible harvests and use AI agents for fair negotiation.",
+
+  createPaddyDemand: "Create Paddy Demand",
+
+  marketplaceAnalytics: "Marketplace analytics",
+  liveOverview: "Live overview of purchasing demand",
+  live: "LIVE",
+
+  analyticsUnavailable: "Analytics unavailable",
+  tapToRetry: "Tap to retry.",
+
+  totalDemands: "Total demands",
+  requiredQuantity: "Required quantity",
+  averageOffer: "Average offer",
+
+  open: "Open",
+  ready: "Ready",
+  pending: "Pending",
+
+  purchasingOverview: "PURCHASING OVERVIEW",
+  openDemand: "open demand",
+  openDemands: "open demands",
+  openDemandsDescription:
+    "Open demands are available for AI-based harvest matching.",
+
+  quickActions: "Quick actions",
+
+  createDemand: "Create Demand",
+  createDemandSubtitle: "Publish paddy requirement",
+
+  myDemands: "My Demands",
+  myDemandsSubtitle: "View active requirements",
+
+  matchRequests: "Match Requests",
+  matchRequestsSubtitle: "Review Farmer requests",
+
+  aiAssistant: "AI Assistant",
+  aiAssistantSubtitle: "Ask market questions",
+
+  millerSessionActive: "Miller session active",
+  signedInAs: "Signed in as",
+},
 };
 
 export default en;

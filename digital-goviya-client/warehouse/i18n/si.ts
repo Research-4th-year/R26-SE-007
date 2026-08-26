@@ -569,7 +569,299 @@ harvestResult: {
 
   goBack: "ආපසු යන්න",
 },
+c3MatchedMillers: {
+  title: "ගැළපෙන මෝල්කරුවන්",
+  subtitle: "පැහැදිලි කළ හැකි AI නිර්දේශ",
 
+  loadingTitle: "සුදුසු මෝල්කරුවන් සොයමින්",
+  loadingDescription:
+    "ස්ථානය, වී වර්ගය, ප්‍රමාණය සහ AI මඟින් පුරෝකථනය කළ මිල සංසන්දනය කරමින්.",
+
+  selectedHarvest: "තෝරාගත් අස්වැන්න",
+  aiPrice: "AI මිල",
+  matches: "ගැළපීම්",
+
+  rankedRecommendations: "ශ්‍රේණිගත නිර්දේශ",
+  selectUpToFive: "පස් දෙනෙකු දක්වා තෝරන්න",
+
+  matchingScore: "ගැළපුම් ලකුණු",
+  location: "ස්ථානය",
+  paddyType: "වී වර්ගය",
+  price: "මිල",
+  quantity: "ප්‍රමාණය",
+
+  aiMarketPrice: "AI වෙළඳපොළ මිල",
+  millerOffer: "මෝල්කරුගේ ඉදිරිපත් කළ මිල",
+
+  hideAiExplanation: "AI පැහැදිලි කිරීම සඟවන්න",
+  whyRecommended: "මෙම මෝල්කරු නිර්දේශ කළේ ඇයි?",
+
+  selected: "තෝරා ඇත",
+  selectThisMiller: "මෙම මෝල්කරු තෝරන්න",
+
+  millerSelected: "මෝල්කරුවෙකු තෝරා ඇත",
+  millersSelected: "මෝල්කරුවන් තෝරා ඇත",
+  sendMatchRequests: "ගැළපුම් ඉල්ලීම් යවන්න",
+
+  highlyRecommended: "ඉතා නිර්දේශිතයි",
+  recommended: "නිර්දේශිතයි",
+  moderateMatch: "මධ්‍යම ගැළපීම",
+
+  unableToLoad: "ගැළපීම් පූරණය කළ නොහැක",
+  tryAgain: "නැවත උත්සාහ කරන්න",
+
+  noCompatibleMillers: "තවමත් ගැළපෙන මෝල්කරුවන් නොමැත",
+  noCompatibleMillersDescription:
+    "මෙම වී වර්ගය සඳහා දැනට විවෘත මෝල්කරු ඉල්ලීම් නොමැත. පසුව නැවත නැවුම් කර බලන්න.",
+
+  harvestUnavailable: "අස්වැන්න ලබාගත නොහැක",
+  harvestUnavailableDescription:
+    "තෝරාගත් අස්වැන්න හඳුනාගත නොහැක.",
+
+  selectMiller: "මෝල්කරුවෙකු තෝරන්න",
+  selectMillerDescription:
+    "ඉල්ලීම් යැවීමට පෙර අවම වශයෙන් එක් මෝල්කරුවෙකු තෝරන්න.",
+
+  unableToSendRequests: "ඉල්ලීම් යැවිය නොහැක",
+},
+
+c3myMatchRequests: {
+  title: "මගේ ගැළපීම් ඉල්ලීම්",
+  subtitle: "ඔබගේ ගොවී–මෝල් හිමි ගැළපීම් ක්‍රියාකාරකම් නිරීක්ෂණය කරන්න",
+
+  overviewTitle: "ගැළපීම් සාරාංශය",
+  overviewSubtitle:
+    "ඔබගේ නවතම මෝල් සම්බන්ධතා සහ සාකච්ඡා පිළිබඳව නිරීක්ෂණය කරන්න.",
+
+  pending: "බලාපොරොත්තුවෙන්",
+  ready: "සූදානම්",
+  total: "මුළු",
+
+  activityTitle: "ගැළපීම් ක්‍රියාකාරකම්",
+  activitySubtitle: "ඔබගේ නවතම ඉල්ලීම්",
+  pullToRefresh: "නැවුම් කිරීමට පහළට අදින්න",
+
+  millerRequest: "මෝල් හිමි ඉල්ලීම",
+  sentRequest: "යැවූ ඉල්ලීම",
+
+  statusWaiting: "බලාපොරොත්තුවෙන්",
+  statusNegotiationReady: "සාකච්ඡාවට සූදානම්",
+  statusRejected: "ප්‍රතික්ෂේප කළා",
+  statusCancelled: "අවලංගු කළා",
+  statusUnknown: "නොදන්නා",
+
+  miller: "මෝල් හිමි",
+  riceMill: "සහල් මෝල",
+
+  aiMatchingScore: "AI ගැළපීම් ලකුණු",
+  scoreDescription:
+    "ඔබගේ අවශ්‍යතා මත පදනම් වූ ගැළපීම",
+
+  matchDetails: "ගැළපීම් විස්තර",
+  paddy: "වී වර්ගය",
+  quantity: "ප්‍රමාණය",
+  millerOffer: "මෝල් හිමි ඉදිරිපත් කළ මිල",
+  district: "දිස්ත්‍රික්කය",
+
+  requestActivity: "ඉල්ලීම් ක්‍රියාකාරකම",
+  received: "ලැබුණේ",
+  sent: "යැවූයේ",
+
+  reject: "ප්‍රතික්ෂේප කරන්න",
+  acceptMatch: "ගැළපීම පිළිගන්න",
+
+  startAiNegotiation: "AI සාකච්ඡාව ආරම්භ කරන්න",
+  negotiationSubtext:
+    "AI සහාය සමඟ සාධාරණ මිලක් සොයා ගන්න",
+
+  loadingTitle: "ගැළපීම් ඉල්ලීම් පූරණය වෙමින්",
+  loadingText:
+    "ඔබගේ නවතම ගැළපීම් ක්‍රියාකාරකම් ලබා ගනිමින්...",
+
+  emptyTitle: "තවමත් ගැළපීම් ඉල්ලීම් නොමැත",
+  emptyText:
+    "ඔබගේ ලබා ගත හැකි අස්වැන්නක් තෝරා සුදුසු මෝල් හිමියන් සොයා ඔබගේ පළමු ගැළපීම් ඉල්ලීම යවන්න.",
+  viewMyHarvests: "මගේ අස්වැන්න බලන්න",
+
+  errorTitle: "ඉල්ලීම් පූරණය කළ නොහැක",
+  tryAgain: "නැවත උත්සාහ කරන්න",
+
+  matchAccepted: "ගැළපීම පිළිගන්නා ලදී",
+  matchRejected: "ගැළපීම ප්‍රතික්ෂේප කරන ලදී",
+  updateErrorTitle: "ඉල්ලීම යාවත්කාලීන කළ නොහැක",
+},
+
+
+c3assistant: {
+  title: "වෙළඳපොළ සහායක",
+
+  subtitle: "RAG මත පදනම් වූ කෘෂිකාර්මික මාර්ගෝපදේශය",
+
+  growerKnowledgeAssistant:
+    "ගොවීන් සඳහා දැනුම් සහායක",
+
+  millerKnowledgeAssistant:
+    "මෝල් හිමියන් සඳහා දැනුම් සහායක",
+
+  askAboutPaddyMarkets:
+    "වී වෙළඳපොළ පිළිබඳ විමසන්න",
+
+  heroDescription:
+    "ලබාගත් කෘෂිකාර්මික දත්ත සහ වෙළඳපොළ දැනුම භාවිතයෙන් පිළිතුරු ජනනය කරනු ලැබේ.",
+
+  suggestedQuestions:
+    "යෝජිත ප්‍රශ්න",
+
+  conversation:
+    "සංවාදය",
+
+  inputPlaceholder:
+    "මිල, ගුණාත්මකභාවය හෝ වෙළඳාම පිළිබඳ විමසන්න...",
+
+  disclaimer:
+    "මූල්‍ය හෝ වෙළඳ තීරණ ගැනීමට පෙර AI මඟින් ලබාදෙන පිළිතුරු පරීක්ෂා කරන්න.",
+
+  pleaseEnterValidQuestion:
+    "කරුණාකර වලංගු ප්‍රශ්නයක් ඇතුළත් කරන්න.",
+
+  retrievingAgriculturalInformation:
+    "කෘෂිකාර්මික තොරතුරු ලබාගනිමින්...",
+
+  viewRetrievedInformation:
+    "ලබාගත් තොරතුරු බලන්න",
+
+  hideRetrievedInformation:
+    "ලබාගත් තොරතුරු සඟවන්න",
+
+  retrievedContext:
+    "ලබාගත් සන්දර්භය",
+
+  retrievedResults:
+    "ලබාගත් ප්‍රතිඵල",
+
+  retrievedResult:
+    "ලබාගත් ප්‍රතිඵලය",
+
+  answerNotGenerated:
+    "අදාළ තොරතුරු සොයාගත් නමුත් පිළිතුරක් ජනනය කිරීමට නොහැකි විය.",
+
+  assistantError:
+    "ඔබගේ ප්‍රශ්නය සැකසීමේදී දෝෂයක් ඇති විය.",
+
+  goBack:
+    "ආපසු යන්න",
+
+  clearConversation:
+    "සංවාදය හිස් කරන්න",
+
+  sendQuestion:
+    "ප්‍රශ්නය යවන්න",
+
+  farmerWelcome:
+    "ආයුබෝවන්. වී මිල, විකිණීමේ අවශ්‍යතා, වෙළඳපොළ තත්ත්වයන් සහ සාධාරණ වෙළඳ තීරණ පිළිබඳව ඔබට අවබෝධ කරගැනීමට මට සහාය විය හැකිය.",
+
+  millerWelcome:
+    "ආයුබෝවන්. වී මිල, ගුණාත්මක අවශ්‍යතා, වෙළඳපොළ තත්ත්වයන් සහ මිලදී ගැනීමේ තීරණ පිළිබඳව ඔබට අවබෝධ කරගැනීමට මට සහාය විය හැකිය.",
+
+  suggestedQuestion1:
+    "නාඩු වී සඳහා වර්තමාන මිල කීයද?",
+
+  suggestedQuestion2:
+    "වී විකිණීම සඳහා අවශ්‍ය ගුණාත්මක ප්‍රමිතීන් මොනවාද?",
+
+  suggestedQuestion3:
+    "මහ සහ යල කන්න අතර වෙනස පැහැදිලි කරන්න.",
+
+  suggestedQuestion4:
+    "මෝල් හිමියෙකු ලබා දෙන මිලක් ඇගයීමට මා කටයුතු කළ යුත්තේ කෙසේද?",
+},
+
+c3profile: {
+  title: "ගොවි පැතිකඩ",
+  verifiedFarmer: "තහවුරු කළ ගොවියා",
+
+  personalInformation: "පුද්ගලික තොරතුරු",
+
+  phone: "දුරකථනය",
+  district: "දිස්ත්‍රික්කය",
+  location: "ස්ථානය",
+  farm: "ගොවිපළ",
+  farmSize: "ගොවිපළේ ප්‍රමාණය",
+  mainVariety: "ප්‍රධාන වී වර්ගය",
+
+  notProvided: "සපයා නොමැත",
+  acres: "අක්කර",
+
+  accountSecurity: "ගිණුම සහ ආරක්ෂාව",
+
+  changePassword: "මුරපදය වෙනස් කරන්න",
+  changePasswordDescription:
+    "ඔබගේ වෙළඳපොළ ගිණුමේ මුරපදය යාවත්කාලීන කරන්න",
+
+  signOut: "ඉවත් වන්න",
+
+  logoutFailed: "ඉවත් වීම අසාර්ථකයි",
+  logoutFailedMessage:
+    "සැසිය ඉවත් කළ නොහැක. කරුණාකර නැවත උත්සාහ කරන්න.",
+
+  goBack: "ආපසු යන්න",
+},
+
+c3MillerHome: {
+  greeting: "සුබ සන්ධ්‍යාවක්,",
+  defaultUserName: "මෝල් හිමියා",
+  defaultLocation: "ශ්‍රී ලංකාව",
+
+  openNotifications: "දැනුම්දීම් විවෘත කරන්න",
+  openProfile: "පැතිකඩ විවෘත කරන්න",
+
+  activeBuyer: "සක්‍රීය ගැනුම්කරු",
+  millerMarketplace: "මෝල් වෙළඳපොළ",
+
+  heroTitle: "විශ්වාසදායක ගොවීන්ගෙන් ගුණාත්මක වී සොයාගන්න",
+  heroDescription:
+    "මිලදී ගැනීමේ අවශ්‍යතා ප්‍රකාශ කරන්න, ගැළපෙන අස්වනු සොයාගන්න සහ සාධාරණ සාකච්ඡා සඳහා AI නියෝජිතයන් භාවිතා කරන්න.",
+
+  createPaddyDemand: "වී ඉල්ලුමක් සාදන්න",
+
+  marketplaceAnalytics: "වෙළඳපොළ විශ්ලේෂණ",
+  liveOverview: "මිලදී ගැනීමේ ඉල්ලුමේ සජීවී දළ විශ්ලේෂණය",
+  live: "සජීවී",
+
+  analyticsUnavailable: "විශ්ලේෂණ ලබාගත නොහැක",
+  tapToRetry: "නැවත උත්සාහ කිරීමට තට්ටු කරන්න.",
+
+  totalDemands: "මුළු ඉල්ලීම්",
+  requiredQuantity: "අවශ්‍ය ප්‍රමාණය",
+  averageOffer: "සාමාන්‍ය මිල ඉදිරිපත් කිරීම",
+
+  open: "විවෘත",
+  ready: "සූදානම්",
+  pending: "පොරොත්තුවෙන්",
+
+  purchasingOverview: "මිලදී ගැනීමේ දළ විශ්ලේෂණය",
+  openDemand: "විවෘත ඉල්ලීම",
+  openDemands: "විවෘත ඉල්ලීම්",
+  openDemandsDescription:
+    "AI මත පදනම් වූ අස්වනු ගැළපීම සඳහා විවෘත ඉල්ලීම් ලබා ගත හැක.",
+
+  quickActions: "ඉක්මන් ක්‍රියා",
+
+  createDemand: "ඉල්ලීමක් සාදන්න",
+  createDemandSubtitle: "වී අවශ්‍යතාව ප්‍රකාශ කරන්න",
+
+  myDemands: "මගේ ඉල්ලීම්",
+  myDemandsSubtitle: "සක්‍රීය අවශ්‍යතා බලන්න",
+
+  matchRequests: "ගැළපුම් ඉල්ලීම්",
+  matchRequestsSubtitle: "ගොවීන්ගේ ඉල්ලීම් සමාලෝචනය කරන්න",
+
+  aiAssistant: "AI සහායක",
+  aiAssistantSubtitle: "වෙළඳපොළ පිළිබඳ ප්‍රශ්න අසන්න",
+
+  millerSessionActive: "මෝල් හිමියාගේ සැසිය සක්‍රීයයි",
+  signedInAs: "පුරනය වී ඇත්තේ",
+},
 };
 
 export default si;

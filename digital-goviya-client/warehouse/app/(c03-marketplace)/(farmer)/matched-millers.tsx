@@ -38,7 +38,11 @@ import type {
   MatchingResponse,
 } from "@/types/c03-marketplace/matching.types";
 
+import { useLanguage } from "@/contexts/LanguageContext";
+
 export default function MatchedMillersScreen() {
+  const { t, language } = useLanguage();
+
   const rawParams = useLocalSearchParams();
 
   const harvestId = Array.isArray(
@@ -80,7 +84,7 @@ export default function MatchedMillersScreen() {
   ): Promise<void> => {
     if (!harvestId) {
       setErrorMessage(
-        "A harvest was not selected."
+        t.c3MatchedMillers.harvestUnavailable
       );
       setLoading(false);
       return;
@@ -147,16 +151,16 @@ export default function MatchedMillersScreen() {
 
     if (!harvestId) {
       Alert.alert(
-        "Harvest unavailable",
-        "The selected harvest could not be identified.",
+        t.c3MatchedMillers.harvestUnavailable,
+        t.c3MatchedMillers.harvestUnavailableDescription
       );
       return;
     }
 
     if (selectedDemandIds.length === 0) {
       Alert.alert(
-        "Select a miller",
-        "Please select at least one miller before sending requests.",
+        t.c3MatchedMillers.selectMiller,
+        t.c3MatchedMillers.selectMillerDescription
       );
       return;
     }
@@ -164,21 +168,34 @@ export default function MatchedMillersScreen() {
     try {
       setSubmitting(true);
 
-      const response = await matchingService.createSelections({
-        harvestId,
-        demandIds: selectedDemandIds,
-      });
+      const response =
+        await matchingService.createSelections({
+          harvestId,
+          demandIds: selectedDemandIds,
+        });
 
       console.log(
         "Match selections created:",
-        JSON.stringify(response.data, null, 2),
+        JSON.stringify(
+          response.data,
+          null,
+          2
+        )
       );
 
-      router.replace("/(c03-marketplace)/(farmer)/my-match-requests" as any);
+      router.replace(
+        "/(c03-marketplace)/(farmer)/my-match-requests" as any
+      );
     } catch (error) {
-      console.error("Create match selections failed:", error);
+      console.error(
+        "Create match selections failed:",
+        error
+      );
 
-      Alert.alert("Unable to send requests", getApiErrorMessage(error));
+      Alert.alert(
+        t.c3MatchedMillers.unableToSendRequests,
+        getApiErrorMessage(error)
+      );
     } finally {
       setSubmitting(false);
     }
@@ -196,12 +213,11 @@ export default function MatchedMillersScreen() {
           </View>
 
           <Text style={styles.stateTitle}>
-            Finding suitable millers
+            {t.c3MatchedMillers.loadingTitle}
           </Text>
 
           <Text style={styles.stateText}>
-            Comparing location, paddy type,
-            quantity and AI-predicted prices.
+            {t.c3MatchedMillers.loadingDescription}
           </Text>
         </View>
       </SafeAreaView>
@@ -227,11 +243,11 @@ export default function MatchedMillersScreen() {
 
         <View style={styles.headerText}>
           <Text style={styles.headerTitle}>
-            Matched Millers
+            {t.c3MatchedMillers.title}
           </Text>
 
           <Text style={styles.headerSubtitle}>
-            Explainable AI recommendations
+            {t.c3MatchedMillers.subtitle}
           </Text>
         </View>
 
@@ -264,9 +280,10 @@ export default function MatchedMillersScreen() {
             onRetry={() =>
               void loadMatches()
             }
+            t={t}
           />
         ) : matches.length === 0 ? (
-          <EmptyState />
+          <EmptyState t={t} />
         ) : (
           <Animated.View
             style={{
@@ -293,7 +310,7 @@ export default function MatchedMillersScreen() {
                     styles.harvestEyebrow
                   }
                 >
-                  SELECTED HARVEST
+                  {t.c3MatchedMillers.selectedHarvest}
                 </Text>
 
                 <Text
@@ -314,7 +331,7 @@ export default function MatchedMillersScreen() {
                     matchingData?.harvest
                       .quantity ?? 0
                   )}{" "}
-                  kg · AI price Rs.
+                  kg · {t.c3MatchedMillers.aiPrice} Rs.{" "}
                   {matchingData?.harvest
                     .aiPredictedPrice?.toFixed(
                       2
@@ -336,18 +353,18 @@ export default function MatchedMillersScreen() {
                     styles.matchCountLabel
                   }
                 >
-                  matches
+                  {t.c3MatchedMillers.matches}
                 </Text>
               </View>
             </View>
 
             <View style={styles.sectionHeading}>
               <Text style={styles.sectionTitle}>
-                Ranked recommendations
+                {t.c3MatchedMillers.rankedRecommendations}
               </Text>
 
               <Text style={styles.sectionHint}>
-                Select up to five
+                {t.c3MatchedMillers.selectUpToFive}
               </Text>
             </View>
 
@@ -366,6 +383,7 @@ export default function MatchedMillersScreen() {
                         match.demand._id
                       )
                     }
+                    t={t}
                   />
                 )
               )}
@@ -391,16 +409,20 @@ export default function MatchedMillersScreen() {
                 styles.selectionLabel
               }
             >
-              miller
-              {selectedDemandIds.length === 1
-                ? ""
-                : "s"}{" "}
-              selected
+              {language === "si"
+                ? selectedDemandIds.length === 1
+                  ? t.c3MatchedMillers.millerSelected
+                  : t.c3MatchedMillers.millersSelected
+                : selectedDemandIds.length === 1
+                ? t.c3MatchedMillers.millerSelected
+                : t.c3MatchedMillers.millersSelected}
             </Text>
           </View>
 
           <MarketplaceButton
-            title="Send Match Requests"
+            title={
+              t.c3MatchedMillers.sendMatchRequests
+            }
             onPress={submitSelections}
             loading={submitting}
             disabled={
@@ -419,6 +441,7 @@ interface MatchCardProps {
   rank: number;
   selected: boolean;
   onSelect: () => void;
+  t: any;
 }
 
 function MatchCard({
@@ -426,18 +449,23 @@ function MatchCard({
   rank,
   selected,
   onSelect,
+  t,
 }: MatchCardProps) {
   const [expanded, setExpanded] =
     useState(false);
 
   const priority =
-    getPriorityDisplay(match.priority);
+    getPriorityDisplay(
+      match.priority,
+      t
+    );
 
   return (
     <View
       style={[
         styles.matchCard,
-        selected && styles.matchCardSelected,
+        selected &&
+          styles.matchCardSelected,
       ]}
     >
       <View style={styles.matchHeader}>
@@ -482,7 +510,7 @@ function MatchCard({
       <View style={styles.scoreSection}>
         <View style={styles.scoreTop}>
           <Text style={styles.scoreLabel}>
-            Matching score
+            {t.c3MatchedMillers.matchingScore}
           </Text>
 
           <Text style={styles.scoreValue}>
@@ -510,7 +538,7 @@ function MatchCard({
       <View style={styles.metricGrid}>
         <MatchMetric
           icon="location-outline"
-          label="Location"
+          label={t.c3MatchedMillers.location}
           score={
             match.scoreBreakdown.location
           }
@@ -519,7 +547,7 @@ function MatchCard({
 
         <MatchMetric
           icon="leaf-outline"
-          label="Paddy type"
+          label={t.c3MatchedMillers.paddyType}
           score={
             match.scoreBreakdown.paddyType
           }
@@ -528,7 +556,7 @@ function MatchCard({
 
         <MatchMetric
           icon="cash-outline"
-          label="Price"
+          label={t.c3MatchedMillers.price}
           score={
             match.scoreBreakdown
               .priceCompatibility
@@ -538,7 +566,7 @@ function MatchCard({
 
         <MatchMetric
           icon="cube-outline"
-          label="Quantity"
+          label={t.c3MatchedMillers.quantity}
           score={
             match.scoreBreakdown
               .quantityCompatibility
@@ -549,7 +577,9 @@ function MatchCard({
 
       <View style={styles.priceCard}>
         <PriceItem
-          label="AI market price"
+          label={
+            t.c3MatchedMillers.aiMarketPrice
+          }
           value={
             match.priceAnalysis
               .aiPredictedPrice
@@ -563,7 +593,9 @@ function MatchCard({
         />
 
         <PriceItem
-          label="Miller offer"
+          label={
+            t.c3MatchedMillers.millerOffer
+          }
           value={
             match.priceAnalysis
               .millerOfferedPrice
@@ -603,8 +635,8 @@ function MatchCard({
           }
         >
           {expanded
-            ? "Hide AI explanation"
-            : "Why was this miller recommended?"}
+            ? t.c3MatchedMillers.hideAiExplanation
+            : t.c3MatchedMillers.whyRecommended}
         </Text>
 
         <Ionicons
@@ -701,8 +733,8 @@ function MatchCard({
           ]}
         >
           {selected
-            ? "Selected"
-            : "Select this Miller"}
+            ? t.c3MatchedMillers.selected
+            : t.c3MatchedMillers.selectThisMiller}
         </Text>
       </Pressable>
     </View>
@@ -770,9 +802,11 @@ function PriceItem({
 function ErrorState({
   message,
   onRetry,
+  t,
 }: {
   message: string;
   onRetry: () => void;
+  t: any;
 }) {
   return (
     <View style={styles.centerState}>
@@ -783,7 +817,7 @@ function ErrorState({
       />
 
       <Text style={styles.stateTitle}>
-        Unable to load matches
+        {t.c3MatchedMillers.unableToLoad}
       </Text>
 
       <Text style={styles.stateText}>
@@ -791,14 +825,18 @@ function ErrorState({
       </Text>
 
       <MarketplaceButton
-        title="Try Again"
+        title={t.c3MatchedMillers.tryAgain}
         onPress={onRetry}
       />
     </View>
   );
 }
 
-function EmptyState() {
+function EmptyState({
+  t,
+}: {
+  t: any;
+}) {
   return (
     <View style={styles.centerState}>
       <View style={styles.emptyIcon}>
@@ -810,39 +848,41 @@ function EmptyState() {
       </View>
 
       <Text style={styles.stateTitle}>
-        No compatible millers yet
+        {t.c3MatchedMillers.noCompatibleMillers}
       </Text>
 
       <Text style={styles.stateText}>
-        There are currently no open miller
-        demands for this paddy type. Try
-        refreshing later.
+        {t.c3MatchedMillers.noCompatibleMillersDescription}
       </Text>
     </View>
   );
 }
 
 function getPriorityDisplay(
-  priority: HarvestMatch["priority"]
+  priority: HarvestMatch["priority"],
+  t: any
 ) {
   switch (priority) {
     case "HIGHLY_RECOMMENDED":
       return {
-        label: "Highly Recommended",
+        label:
+          t.c3MatchedMillers.highlyRecommended,
         background: "#DCFCE7",
         color: "#166534",
       };
 
     case "RECOMMENDED":
       return {
-        label: "Recommended",
+        label:
+          t.c3MatchedMillers.recommended,
         background: "#DBEAFE",
         color: "#1D4ED8",
       };
 
     default:
       return {
-        label: "Moderate Match",
+        label:
+          t.c3MatchedMillers.moderateMatch,
         background: "#FEF3C7",
         color: "#92400E",
       };
@@ -865,7 +905,6 @@ function formatNumber(value: number) {
     "en-LK"
   ).format(value);
 }
-
 const styles = StyleSheet.create({
   screen: {
     flex: 1,

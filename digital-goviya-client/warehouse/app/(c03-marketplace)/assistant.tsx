@@ -47,11 +47,17 @@ import type {
   RagChatMessage,
 } from "@/types/c03-marketplace/rag.types";
 
-const SUGGESTED_QUESTIONS = [
-  "What is the current price of Nadu paddy?",
-  "What are the quality requirements for selling paddy?",
-  "Explain the difference between Maha and Yala seasons.",
-  "How should I evaluate a miller's offered price?",
+import {
+  useLanguage,
+} from "@/contexts/LanguageContext";
+
+const SUGGESTED_QUESTIONS = (
+  t: any
+) => [
+  t.c3assistant.suggestedQuestion1,
+  t.c3assistant.suggestedQuestion2,
+  t.c3assistant.suggestedQuestion3,
+  t.c3assistant.suggestedQuestion4,
 ];
 
 // ---------------------------------------------------------------------------
@@ -93,6 +99,8 @@ const MILLER_THEME: RoleTheme = {
 export default function MarketplaceAssistantScreen() {
   const { user } = useMarketplaceAuth();
 
+  const { t, language } = useLanguage();
+
   const listRef =
     useRef<FlatList<RagChatMessage>>(null);
 
@@ -117,8 +125,16 @@ export default function MarketplaceAssistantScreen() {
 
   const theme: RoleTheme =
     user?.role === "miller"
-      ? MILLER_THEME
-      : FARMER_THEME;
+      ? {
+          ...MILLER_THEME,
+          eyebrow:
+            t.c3assistant.millerKnowledgeAssistant,
+        }
+      : {
+          ...FARMER_THEME,
+          eyebrow:
+            t.c3assistant.growerKnowledgeAssistant,
+        };
 
   // Kept for backwards-compatible naming used deeper in the tree.
   const accent = theme.accent;
@@ -130,11 +146,15 @@ export default function MarketplaceAssistantScreen() {
       sender: "assistant",
       text:
         user?.role === "miller"
-          ? "Hello. I can help you understand paddy prices, quality requirements, market conditions and purchasing decisions."
-          : "Hello. I can help you understand paddy prices, selling requirements, market conditions and fair trading decisions.",
+          ? t.c3assistant.millerWelcome
+          : t.c3assistant.farmerWelcome,
       createdAt: Date.now(),
     }),
-    [user?.role]
+    [
+      user?.role,
+      language,
+      t,
+    ]
   );
 
   const displayedMessages =
@@ -163,7 +183,7 @@ export default function MarketplaceAssistantScreen() {
 
     if (cleanedQuestion.length < 2) {
       setInputError(
-        "Please enter a valid question."
+        t.c3assistant.pleaseEnterValidQuestion
       );
       return;
     }
@@ -194,7 +214,7 @@ export default function MarketplaceAssistantScreen() {
 
       const answer =
         response.data.answer?.trim() ||
-        "I found relevant information, but an answer could not be generated.";
+        t.c3assistant.answerNotGenerated;
 
       const assistantMessage: RagChatMessage = {
         id: `assistant-${Date.now()}`,
@@ -256,7 +276,9 @@ export default function MarketplaceAssistantScreen() {
         >
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Go back"
+            accessibilityLabel={
+              t.c3assistant.goBack
+            }
             onPress={() => router.back()}
             style={({ pressed }) => [
               styles.headerButton,
@@ -285,7 +307,7 @@ export default function MarketplaceAssistantScreen() {
 
           <View style={styles.headerText}>
             <Text style={styles.headerTitle}>
-              Market Assistant
+              {t.c3assistant.title}
             </Text>
 
             <View style={styles.onlineRow}>
@@ -299,14 +321,16 @@ export default function MarketplaceAssistantScreen() {
               />
 
               <Text style={styles.headerSubtitle}>
-                RAG-powered agricultural guidance
+                {t.c3assistant.subtitle}
               </Text>
             </View>
           </View>
 
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Clear conversation"
+            accessibilityLabel={
+              t.c3assistant.clearConversation
+            }
             onPress={() => {
               setMessages([]);
               setQuestion("");
@@ -333,6 +357,7 @@ export default function MarketplaceAssistantScreen() {
             <ChatMessage
               message={item}
               theme={theme}
+              translations={t.c3assistant}
             />
           )}
           ListHeaderComponent={
@@ -369,7 +394,7 @@ export default function MarketplaceAssistantScreen() {
                   </Text>
 
                   <Text style={styles.heroTitle}>
-                    Ask about paddy markets
+                    {t.c3assistant.askAboutPaddyMarkets}
                   </Text>
 
                   <Text
@@ -377,21 +402,19 @@ export default function MarketplaceAssistantScreen() {
                       styles.heroDescription
                     }
                   >
-                    Answers are generated using
-                    retrieved agricultural data and
-                    marketplace knowledge.
+                    {t.c3assistant.heroDescription}
                   </Text>
                 </View>
               </View>
 
               <Text style={styles.suggestionTitle}>
-                Suggested questions
+                {t.c3assistant.suggestedQuestions}
               </Text>
 
               <View
                 style={styles.suggestionContainer}
               >
-                {SUGGESTED_QUESTIONS.map(
+                {SUGGESTED_QUESTIONS(t).map(
                   (item) => (
                     <SuggestionChip
                       key={item}
@@ -407,15 +430,23 @@ export default function MarketplaceAssistantScreen() {
               </View>
 
               <Text style={styles.conversationTitle}>
-                Conversation
+                {t.c3assistant.conversation}
               </Text>
             </View>
           }
           ListFooterComponent={
             submitting ? (
-              <TypingIndicator theme={theme} />
+              <TypingIndicator
+                theme={theme}
+                text={
+                  t.c3assistant
+                    .retrievingAgriculturalInformation
+                }
+              />
             ) : (
-              <View style={styles.listBottomSpace} />
+              <View
+                style={styles.listBottomSpace}
+              />
             )
           }
           contentContainerStyle={
@@ -450,7 +481,9 @@ export default function MarketplaceAssistantScreen() {
                   setInputError(null);
                 }
               }}
-              placeholder="Ask about prices, quality or trading..."
+              placeholder={
+                t.c3assistant.inputPlaceholder
+              }
               placeholderTextColor="#94A3B8"
               multiline
               maxLength={500}
@@ -472,6 +505,9 @@ export default function MarketplaceAssistantScreen() {
                 question.trim().length < 2
               }
               submitting={submitting}
+              accessibilityLabel={
+                t.c3assistant.sendQuestion
+              }
               onPress={() =>
                 void submitQuestion()
               }
@@ -479,8 +515,7 @@ export default function MarketplaceAssistantScreen() {
           </View>
 
           <Text style={styles.disclaimer}>
-            AI answers should be reviewed before
-            making financial or trading decisions.
+            {t.c3assistant.disclaimer}
           </Text>
         </View>
       </KeyboardAvoidingView>
@@ -504,7 +539,9 @@ function SuggestionChip({
   disabled,
   onPress,
 }: SuggestionChipProps) {
-  const scale = useRef(new Animated.Value(1)).current;
+  const scale = useRef(
+    new Animated.Value(1)
+  ).current;
 
   const animateTo = (value: number) => {
     Animated.spring(scale, {
@@ -517,7 +554,9 @@ function SuggestionChip({
 
   return (
     <Animated.View
-      style={{ transform: [{ scale }] }}
+      style={{
+        transform: [{ scale }],
+      }}
     >
       <Pressable
         disabled={disabled}
@@ -526,14 +565,19 @@ function SuggestionChip({
         onPress={onPress}
         style={[
           styles.suggestionChip,
-          { borderColor: theme.accentSoft },
+          {
+            borderColor: theme.accentSoft,
+          },
           disabled && styles.disabled,
         ]}
       >
         <View
           style={[
             styles.suggestionIconDot,
-            { backgroundColor: theme.accentSoft },
+            {
+              backgroundColor:
+                theme.accentSoft,
+            },
           ]}
         >
           <Ionicons
@@ -564,6 +608,7 @@ interface SendButtonProps {
   theme: RoleTheme;
   disabled: boolean;
   submitting: boolean;
+  accessibilityLabel: string;
   onPress: () => void;
 }
 
@@ -571,9 +616,12 @@ function SendButton({
   theme,
   disabled,
   submitting,
+  accessibilityLabel,
   onPress,
 }: SendButtonProps) {
-  const scale = useRef(new Animated.Value(1)).current;
+  const scale = useRef(
+    new Animated.Value(1)
+  ).current;
 
   const animateTo = (value: number) => {
     Animated.spring(scale, {
@@ -586,11 +634,13 @@ function SendButton({
 
   return (
     <Animated.View
-      style={{ transform: [{ scale }] }}
+      style={{
+        transform: [{ scale }],
+      }}
     >
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Send question"
+        accessibilityLabel={accessibilityLabel}
         disabled={disabled}
         onPressIn={() => animateTo(0.94)}
         onPressOut={() => animateTo(1)}
@@ -629,17 +679,24 @@ function SendButton({
 interface ChatMessageProps {
   message: RagChatMessage;
   theme: RoleTheme;
+  translations: any;
 }
 
 function ChatMessage({
   message,
   theme,
+  translations,
 }: ChatMessageProps) {
   const [showSources, setShowSources] =
     useState(false);
 
-  const opacity = useRef(new Animated.Value(0)).current;
-  const translateY = useRef(new Animated.Value(8)).current;
+  const opacity = useRef(
+    new Animated.Value(0)
+  ).current;
+
+  const translateY = useRef(
+    new Animated.Value(8)
+  ).current;
 
   useEffect(() => {
     Animated.parallel([
@@ -655,6 +712,7 @@ function ChatMessage({
         useNativeDriver: true,
       }),
     ]).start();
+
     // Runs once when the bubble mounts.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -739,7 +797,9 @@ function ChatMessage({
                 styles.userMessageTime,
               ]}
             >
-              {formatTime(message.createdAt)}
+              {formatTime(
+                message.createdAt
+              )}
             </Text>
           </LinearGradient>
         ) : (
@@ -781,12 +841,16 @@ function ChatMessage({
                   <Text
                     style={[
                       styles.sourceButtonText,
-                      { color: theme.accent },
+                      {
+                        color: theme.accent,
+                      },
                     ]}
                   >
                     {showSources
-                      ? "Hide retrieved information"
-                      : "View retrieved information"}
+                      ? translations
+                          .hideRetrievedInformation
+                      : translations
+                          .viewRetrievedInformation}
                   </Text>
 
                   <Ionicons
@@ -804,7 +868,10 @@ function ChatMessage({
                   <View
                     style={[
                       styles.sourceContainer,
-                      { backgroundColor: theme.accentSoft },
+                      {
+                        backgroundColor:
+                          theme.accentSoft,
+                      },
                     ]}
                   >
                     {message.context?.trim() ? (
@@ -812,14 +879,21 @@ function ChatMessage({
                         <Text
                           style={[
                             styles.sourceTitle,
-                            { color: theme.accentDark },
+                            {
+                              color:
+                                theme.accentDark,
+                            },
                           ]}
                         >
-                          Retrieved context
+                          {
+                            translations.retrievedContext
+                          }
                         </Text>
 
                         <Text
-                          style={styles.sourceText}
+                          style={
+                            styles.sourceText
+                          }
                         >
                           {message.context}
                         </Text>
@@ -832,14 +906,22 @@ function ChatMessage({
                           style={[
                             styles.sourceTitle,
                             styles.resultsTitle,
-                            { color: theme.accentDark },
+                            {
+                              color:
+                                theme.accentDark,
+                            },
                           ]}
                         >
-                          Retrieved results
+                          {
+                            translations.retrievedResults
+                          }
                         </Text>
 
                         {message.results.map(
-                          (result, index) => (
+                          (
+                            result,
+                            index
+                          ) => (
                             <View
                               key={`${message.id}-${index}`}
                               style={
@@ -858,7 +940,10 @@ function ChatMessage({
                                 <Text
                                   style={[
                                     styles.resultNumberText,
-                                    { color: theme.accent },
+                                    {
+                                      color:
+                                        theme.accent,
+                                    },
                                   ]}
                                 >
                                   {index + 1}
@@ -885,7 +970,9 @@ function ChatMessage({
             ) : null}
 
             <Text style={styles.messageTime}>
-              {formatTime(message.createdAt)}
+              {formatTime(
+                message.createdAt
+              )}
             </Text>
           </View>
         )}
@@ -899,12 +986,24 @@ function ChatMessage({
 // ---------------------------------------------------------------------------
 interface TypingIndicatorProps {
   theme: RoleTheme;
+  text: string;
 }
 
-function TypingIndicator({ theme }: TypingIndicatorProps) {
-  const dot1 = useRef(new Animated.Value(0)).current;
-  const dot2 = useRef(new Animated.Value(0)).current;
-  const dot3 = useRef(new Animated.Value(0)).current;
+function TypingIndicator({
+  theme,
+  text,
+}: TypingIndicatorProps) {
+  const dot1 = useRef(
+    new Animated.Value(0)
+  ).current;
+
+  const dot2 = useRef(
+    new Animated.Value(0)
+  ).current;
+
+  const dot3 = useRef(
+    new Animated.Value(0)
+  ).current;
 
   useEffect(() => {
     const makeLoop = (
@@ -934,16 +1033,24 @@ function TypingIndicator({ theme }: TypingIndicatorProps) {
       makeLoop(dot3, 240),
     ];
 
-    loops.forEach((loop) => loop.start());
+    loops.forEach((loop) =>
+      loop.start()
+    );
 
-    return () => loops.forEach((loop) => loop.stop());
+    return () =>
+      loops.forEach((loop) =>
+        loop.stop()
+      );
   }, [dot1, dot2, dot3]);
 
-  const dotStyle = (value: Animated.Value) => ({
+  const dotStyle = (
+    value: Animated.Value
+  ) => ({
     opacity: value.interpolate({
       inputRange: [0, 1],
       outputRange: [0.35, 1],
     }),
+
     transform: [
       {
         translateY: value.interpolate({
@@ -955,14 +1062,26 @@ function TypingIndicator({ theme }: TypingIndicatorProps) {
   });
 
   return (
-    <View style={[styles.messageRow, styles.assistantMessageRow]}>
+    <View
+      style={[
+        styles.messageRow,
+        styles.assistantMessageRow,
+      ]}
+    >
       <View
         style={[
           styles.avatar,
-          { backgroundColor: theme.accentSoft },
+          {
+            backgroundColor:
+              theme.accentSoft,
+          },
         ]}
       >
-        <Ionicons name={theme.icon} size={16} color={theme.accent} />
+        <Ionicons
+          name={theme.icon}
+          size={16}
+          color={theme.accent}
+        />
       </View>
 
       <View
@@ -978,28 +1097,39 @@ function TypingIndicator({ theme }: TypingIndicatorProps) {
           <Animated.View
             style={[
               styles.typingDot,
-              { backgroundColor: theme.accent },
+              {
+                backgroundColor:
+                  theme.accent,
+              },
               dotStyle(dot1),
             ]}
           />
+
           <Animated.View
             style={[
               styles.typingDot,
-              { backgroundColor: theme.accent },
+              {
+                backgroundColor:
+                  theme.accent,
+              },
               dotStyle(dot2),
             ]}
           />
+
           <Animated.View
             style={[
               styles.typingDot,
-              { backgroundColor: theme.accent },
+              {
+                backgroundColor:
+                  theme.accent,
+              },
               dotStyle(dot3),
             ]}
           />
         </View>
 
         <Text style={styles.typingText}>
-          Retrieving agricultural information...
+          {text}
         </Text>
       </View>
     </View>
@@ -1076,7 +1206,8 @@ const styles = StyleSheet.create({
     borderRadius: 13,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(255,255,255,0.6)",
+    backgroundColor:
+      "rgba(255,255,255,0.6)",
   },
 
   headerIcon: {
@@ -1086,7 +1217,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 3 },
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
     shadowOpacity: 0.14,
     shadowRadius: 6,
     elevation: 3,
@@ -1099,7 +1233,8 @@ const styles = StyleSheet.create({
   headerTitle: {
     color: "#1F2937",
     fontSize: 16,
-    fontFamily: "Poppins_700Bold",
+    fontFamily:
+      "Poppins_700Bold",
   },
 
   onlineRow: {
@@ -1118,7 +1253,8 @@ const styles = StyleSheet.create({
   headerSubtitle: {
     color: "#6B7280",
     fontSize: 8.5,
-    fontFamily: "Poppins_500Medium",
+    fontFamily:
+      "Poppins_500Medium",
   },
 
   messageList: {
@@ -1139,7 +1275,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     marginBottom: 20,
     shadowColor: "#0F172A",
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
     shadowOpacity: 0.05,
     shadowRadius: 10,
     elevation: 1,
@@ -1152,7 +1291,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 3 },
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
     shadowOpacity: 0.16,
     shadowRadius: 6,
     elevation: 3,
@@ -1164,14 +1306,16 @@ const styles = StyleSheet.create({
 
   heroEyebrow: {
     fontSize: 8,
-    fontFamily: "Poppins_700Bold",
+    fontFamily:
+      "Poppins_700Bold",
     letterSpacing: 0.8,
   },
 
   heroTitle: {
     color: "#1F2937",
     fontSize: 14,
-    fontFamily: "Poppins_800ExtraBold",
+    fontFamily:
+      "Poppins_800ExtraBold",
     marginTop: 3,
   },
 
@@ -1179,14 +1323,16 @@ const styles = StyleSheet.create({
     color: "#6B7280",
     fontSize: 9.5,
     lineHeight: 15,
-    fontFamily: "Poppins_500Medium",
+    fontFamily:
+      "Poppins_500Medium",
     marginTop: 4,
   },
 
   suggestionTitle: {
     color: "#1F2937",
     fontSize: 13,
-    fontFamily: "Poppins_700Bold",
+    fontFamily:
+      "Poppins_700Bold",
     marginBottom: 10,
   },
 
@@ -1206,7 +1352,10 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     borderWidth: 1,
     shadowColor: "#0F172A",
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
     shadowOpacity: 0.04,
     shadowRadius: 6,
     elevation: 1,
@@ -1225,13 +1374,15 @@ const styles = StyleSheet.create({
     color: "#475569",
     fontSize: 10,
     lineHeight: 15,
-    fontFamily: "Poppins_500Medium",
+    fontFamily:
+      "Poppins_500Medium",
   },
 
   conversationTitle: {
     color: "#1F2937",
     fontSize: 13,
-    fontFamily: "Poppins_700Bold",
+    fontFamily:
+      "Poppins_700Bold",
     marginBottom: 12,
   },
 
@@ -1270,7 +1421,10 @@ const styles = StyleSheet.create({
 
   userBubbleShadow: {
     shadowColor: "#0F172A",
-    shadowOffset: { width: 0, height: 3 },
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
     shadowOpacity: 0.12,
     shadowRadius: 8,
     elevation: 2,
@@ -1278,7 +1432,10 @@ const styles = StyleSheet.create({
 
   assistantBubbleShadow: {
     shadowColor: "#0F172A",
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
     shadowOpacity: 0.04,
     shadowRadius: 6,
     elevation: 1,
@@ -1305,7 +1462,8 @@ const styles = StyleSheet.create({
   messageText: {
     fontSize: 11,
     lineHeight: 18,
-    fontFamily: "Poppins_500Medium",
+    fontFamily:
+      "Poppins_500Medium",
   },
 
   userMessageText: {
@@ -1323,13 +1481,15 @@ const styles = StyleSheet.create({
   messageTime: {
     color: "#94A3B8",
     fontSize: 7.5,
-    fontFamily: "Poppins_500Medium",
+    fontFamily:
+      "Poppins_500Medium",
     marginTop: 7,
     textAlign: "right",
   },
 
   userMessageTime: {
-    color: "rgba(255,255,255,0.68)",
+    color:
+      "rgba(255,255,255,0.68)",
   },
 
   sourceButton: {
@@ -1345,7 +1505,8 @@ const styles = StyleSheet.create({
   sourceButtonText: {
     flex: 1,
     fontSize: 9,
-    fontFamily: "Poppins_600SemiBold",
+    fontFamily:
+      "Poppins_600SemiBold",
   },
 
   sourceContainer: {
@@ -1356,14 +1517,16 @@ const styles = StyleSheet.create({
 
   sourceTitle: {
     fontSize: 9,
-    fontFamily: "Poppins_700Bold",
+    fontFamily:
+      "Poppins_700Bold",
   },
 
   sourceText: {
     color: "#64748B",
     fontSize: 8.5,
     lineHeight: 15,
-    fontFamily: "Poppins_500Medium",
+    fontFamily:
+      "Poppins_500Medium",
     marginTop: 5,
   },
 
@@ -1388,7 +1551,8 @@ const styles = StyleSheet.create({
 
   resultNumberText: {
     fontSize: 8,
-    fontFamily: "Poppins_700Bold",
+    fontFamily:
+      "Poppins_700Bold",
   },
 
   resultText: {
@@ -1396,7 +1560,8 @@ const styles = StyleSheet.create({
     color: "#64748B",
     fontSize: 8.5,
     lineHeight: 14,
-    fontFamily: "Poppins_500Medium",
+    fontFamily:
+      "Poppins_500Medium",
   },
 
   typingBubble: {
@@ -1419,7 +1584,8 @@ const styles = StyleSheet.create({
   typingText: {
     color: "#64748B",
     fontSize: 9.5,
-    fontFamily: "Poppins_500Medium",
+    fontFamily:
+      "Poppins_500Medium",
   },
 
   listBottomSpace: {
@@ -1430,7 +1596,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingTop: 10,
     paddingBottom:
-    Platform.OS === "ios" ? 100 : 96,
+      Platform.OS === "ios"
+        ? 100
+        : 96,
     backgroundColor: "#FFFFFF",
     borderTopWidth: 1,
     borderTopColor: "#E5E7EB",
@@ -1462,7 +1630,8 @@ const styles = StyleSheet.create({
     color: "#0F172A",
     fontSize: 11,
     lineHeight: 17,
-    fontFamily: "Poppins_500Medium",
+    fontFamily:
+      "Poppins_500Medium",
     paddingTop: 10,
     paddingBottom: 8,
     textAlignVertical: "top",
@@ -1475,7 +1644,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 3 },
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
     shadowOpacity: 0.18,
     shadowRadius: 6,
     elevation: 3,
@@ -1484,7 +1656,8 @@ const styles = StyleSheet.create({
   inputError: {
     color: "#DC2626",
     fontSize: 9,
-    fontFamily: "Poppins_500Medium",
+    fontFamily:
+      "Poppins_500Medium",
     marginBottom: 5,
     marginLeft: 4,
   },
@@ -1493,13 +1666,18 @@ const styles = StyleSheet.create({
     color: "#94A3B8",
     fontSize: 7.5,
     textAlign: "center",
-    fontFamily: "Poppins_500Medium",
+    fontFamily:
+      "Poppins_500Medium",
     marginTop: 7,
   },
 
   pressed: {
     opacity: 0.82,
-    transform: [{ scale: 0.98 }],
+    transform: [
+      {
+        scale: 0.98,
+      },
+    ],
   },
 
   disabled: {

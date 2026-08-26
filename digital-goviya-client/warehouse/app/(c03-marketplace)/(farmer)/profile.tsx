@@ -24,8 +24,12 @@ import type { FarmerProfile } from "@/types/c03-marketplace/auth.types";
 
 import { useMarketplaceAuth } from "@/hooks/c03-marketplace/useMarketplaceAuth";
 
+import { useLanguage } from "@/contexts/LanguageContext";
+
 export default function FarmerProfileScreen() {
   const { user, profile, signOut } = useMarketplaceAuth();
+
+  const { t, language } = useLanguage();
 
   const farmerProfile =
     user?.role === "farmer" ? (profile as FarmerProfile) : null;
@@ -39,8 +43,8 @@ export default function FarmerProfileScreen() {
       console.error("Farmer logout failed:", error);
 
       Alert.alert(
-        "Logout failed",
-        "The session could not be removed. Please try again.",
+        t.c3profile.logoutFailed,
+        t.c3profile.logoutFailedMessage,
       );
     }
   }
@@ -58,6 +62,7 @@ export default function FarmerProfileScreen() {
 
   useEffect(() => {
     if (!fontsLoaded) return;
+
     Animated.parallel([
       Animated.timing(fade, {
         toValue: 1,
@@ -79,20 +84,31 @@ export default function FarmerProfileScreen() {
       <Animated.ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
-        style={{ opacity: fade, transform: [{ translateY: rise }] }}
+        style={{
+          opacity: fade,
+          transform: [{ translateY: rise }],
+        }}
       >
         <View style={styles.header}>
           <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t.c3profile.goBack}
             style={({ pressed }) => [
               styles.headerButton,
               pressed && styles.pressed,
             ]}
             onPress={() => router.back()}
           >
-            <Ionicons name="arrow-back" size={21} color="#1F2937" />
+            <Ionicons
+              name="arrow-back"
+              size={21}
+              color="#1F2937"
+            />
           </Pressable>
 
-          <Text style={styles.headerTitle}>Farmer Profile</Text>
+          <Text style={styles.headerTitle}>
+            {t.c3profile.title}
+          </Text>
 
           <View style={styles.headerPlaceholder} />
         </View>
@@ -106,63 +122,100 @@ export default function FarmerProfileScreen() {
           >
             <View style={styles.avatarRing}>
               <View style={styles.avatar}>
-                <Ionicons name="leaf" size={30} color="#FFFFFF" />
+                <Ionicons
+                  name="leaf"
+                  size={30}
+                  color="#FFFFFF"
+                />
               </View>
             </View>
 
-            <Text style={styles.name}>{user?.fullName}</Text>
+            <Text style={styles.name}>
+              {user?.fullName}
+            </Text>
 
             <View style={styles.roleBadge}>
-              <Ionicons name="shield-checkmark" size={11} color="#854D0E" />
-              <Text style={styles.roleText}>VERIFIED FARMER</Text>
+              <Ionicons
+                name="shield-checkmark"
+                size={11}
+                color="#854D0E"
+              />
+
+              <Text style={styles.roleText}>
+                {t.c3profile.verifiedFarmer}
+              </Text>
             </View>
 
-            <Text style={styles.email}>{user?.username}</Text>
+            <Text style={styles.email}>
+              {user?.username}
+            </Text>
           </LinearGradient>
         </View>
 
         <View style={styles.sectionHeaderRow}>
           <View style={styles.sectionIconBox}>
-            <Ionicons name="person-outline" size={16} color="#15803D" />
+            <Ionicons
+              name="person-outline"
+              size={16}
+              color="#15803D"
+            />
           </View>
-          <Text style={styles.sectionTitle}>Personal information</Text>
+
+          <Text style={styles.sectionTitle}>
+            {t.c3profile.personalInformation}
+          </Text>
         </View>
 
         <View style={styles.detailsCard}>
           <ProfileRow
             icon="call-outline"
-            label="Phone"
-            value={user?.phone ?? "Not provided"}
+            label={t.c3profile.phone}
+            value={
+              user?.phone ??
+              t.c3profile.notProvided
+            }
           />
 
           <ProfileRow
             icon="location-outline"
-            label="District"
-            value={farmerProfile?.district ?? "Not provided"}
+            label={t.c3profile.district}
+            value={
+              farmerProfile?.district ??
+              t.c3profile.notProvided
+            }
           />
 
           <ProfileRow
             icon="navigate-outline"
-            label="Location"
-            value={farmerProfile?.location ?? "Not provided"}
+            label={t.c3profile.location}
+            value={
+              farmerProfile?.location ??
+              t.c3profile.notProvided
+            }
           />
 
           <ProfileRow
             icon="business-outline"
-            label="Farm"
-            value={farmerProfile?.farmName ?? "Not provided"}
+            label={t.c3profile.farm}
+            value={
+              farmerProfile?.farmName ??
+              t.c3profile.notProvided
+            }
           />
 
           <ProfileRow
             icon="resize-outline"
-            label="Farm size"
-            value={`${farmerProfile?.farmSizeAcres ?? 0} acres`}
+            label={t.c3profile.farmSize}
+            value={`${farmerProfile?.farmSizeAcres ?? 0} ${t.c3profile.acres}`}
           />
 
           <ProfileRow
             icon="leaf-outline"
-            label="Main variety"
-            value={farmerProfile?.mainPaddyVariety ?? "Not provided"}
+            label={t.c3profile.mainVariety}
+            value={
+              farmerProfile?.mainPaddyVariety ??
+              t.c3profile.notProvided
+            }
             isLast
           />
         </View>
@@ -176,7 +229,9 @@ export default function FarmerProfileScreen() {
             />
           </View>
 
-          <Text style={styles.sectionTitle}>Account & security</Text>
+          <Text style={styles.sectionTitle}>
+            {t.c3profile.accountSecurity}
+          </Text>
         </View>
 
         <View style={styles.securityCard}>
@@ -186,22 +241,34 @@ export default function FarmerProfileScreen() {
               pressed && styles.pressed,
             ]}
             onPress={() =>
-              router.push("/(c03-marketplace)/(auth)/change-password")
+              router.push(
+                "/(c03-marketplace)/(auth)/change-password",
+              )
             }
           >
             <View style={styles.securityActionIcon}>
-              <Ionicons name="key-outline" size={20} color="#15803D" />
+              <Ionicons
+                name="key-outline"
+                size={20}
+                color="#15803D"
+              />
             </View>
 
             <View style={styles.securityActionText}>
-              <Text style={styles.securityActionTitle}>Change password</Text>
+              <Text style={styles.securityActionTitle}>
+                {t.c3profile.changePassword}
+              </Text>
 
               <Text style={styles.securityActionSubtitle}>
-                Update your marketplace account password
+                {t.c3profile.changePasswordDescription}
               </Text>
             </View>
 
-            <Ionicons name="chevron-forward" size={19} color="#94A3B8" />
+            <Ionicons
+              name="chevron-forward"
+              size={19}
+              color="#94A3B8"
+            />
           </Pressable>
         </View>
 
@@ -212,9 +279,15 @@ export default function FarmerProfileScreen() {
           ]}
           onPress={handleLogout}
         >
-          <Ionicons name="log-out-outline" size={20} color="#B91C1C" />
+          <Ionicons
+            name="log-out-outline"
+            size={20}
+            color="#B91C1C"
+          />
 
-          <Text style={styles.logoutText}>Sign out</Text>
+          <Text style={styles.logoutText}>
+            {t.c3profile.signOut}
+          </Text>
         </Pressable>
       </Animated.ScrollView>
     </SafeAreaView>
@@ -228,16 +301,35 @@ interface ProfileRowProps {
   isLast?: boolean;
 }
 
-function ProfileRow({ icon, label, value, isLast }: ProfileRowProps) {
+function ProfileRow({
+  icon,
+  label,
+  value,
+  isLast,
+}: ProfileRowProps) {
   return (
-    <View style={[styles.profileRow, isLast && styles.profileRowLast]}>
+    <View
+      style={[
+        styles.profileRow,
+        isLast && styles.profileRowLast,
+      ]}
+    >
       <View style={styles.rowIcon}>
-        <Ionicons name={icon} size={19} color="#15803D" />
+        <Ionicons
+          name={icon}
+          size={19}
+          color="#15803D"
+        />
       </View>
 
       <View style={styles.rowText}>
-        <Text style={styles.rowLabel}>{label}</Text>
-        <Text style={styles.rowValue}>{value}</Text>
+        <Text style={styles.rowLabel}>
+          {label}
+        </Text>
+
+        <Text style={styles.rowValue}>
+          {value}
+        </Text>
       </View>
     </View>
   );
@@ -271,7 +363,10 @@ const styles = StyleSheet.create({
     shadowColor: "#000",
     shadowOpacity: 0.06,
     shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
     elevation: 2,
   },
 
@@ -291,7 +386,10 @@ const styles = StyleSheet.create({
     shadowColor: "#14532D",
     shadowOpacity: 0.3,
     shadowRadius: 16,
-    shadowOffset: { width: 0, height: 8 },
+    shadowOffset: {
+      width: 0,
+      height: 8,
+    },
     elevation: 6,
   },
 
@@ -385,7 +483,10 @@ const styles = StyleSheet.create({
     shadowColor: "#000",
     shadowOpacity: 0.05,
     shadowRadius: 12,
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
     elevation: 2,
   },
 
