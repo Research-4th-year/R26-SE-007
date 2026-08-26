@@ -266,6 +266,96 @@ const si = {
     signedInAs: "පිවිසී ඇත්තේ",
   },
 
+    // C3 Marketplace - My Harvests
+  c3myHarvests: {
+    title: "මගේ අස්වැන්න",
+    submitted: "ඉදිරිපත් කර ඇත",
+
+    addHarvest: "අස්වැන්න එක් කරන්න",
+
+    portfolioEyebrow: "අස්වැන්න කළඹ",
+    portfolioTitle: "ඔබගේ සියලුම ලැයිස්තුගත කිරීම් එකම ස්ථානයක නිරීක්ෂණය කරන්න",
+
+    total: "මුළු",
+    available: "ලබා ගත හැකි",
+    matched: "ගැළපුම් කළ",
+    sold: "අලෙවි කළ",
+
+    searchPlaceholder: "වී වර්ගය, කන්නය, තත්ත්වය සොයන්න...",
+
+    refineResults: "ප්‍රතිඵල පිරිපහදු කරන්න",
+    varietyAndSorting: "වී වර්ගය සහ වර්ග කිරීමේ විකල්ප",
+
+    clearAll: "සියල්ල ඉවත් කරන්න",
+
+    paddyVariety: "වී වර්ගය",
+
+    allVarieties: "සියලුම වර්ග",
+    nadu: "නාඩු",
+    samba: "සම්බා",
+    keeriSamba: "කීරි සම්බා",
+
+    sortBy: "වර්ග කරන්න",
+
+    newest: "නවතම",
+    oldest: "පැරණිතම",
+    highestQuantity: "වැඩිම ප්‍රමාණය",
+    lowestQuantity: "අඩුම ප්‍රමාණය",
+    highestAiScore: "වැඩිම AI ලකුණ",
+
+    harvests: "අස්වැන්න",
+    shown: "පෙන්වා ඇත",
+
+    cardView: "කාඩ්පත් දසුන",
+    compactListView: "සංක්ෂිප්ත ලැයිස්තු දසුන",
+
+    quantity: "ප්‍රමාණය",
+    season: "කන්නය",
+    expected: "අපේක්ෂිත",
+    aiPrice: "AI මිල",
+    kg: "කිලෝග්‍රෑම්",
+
+    pending: "පොරොත්තුවෙන්",
+
+    comparedWithExpected: "ඔබගේ අපේක්ෂිත මිල සමඟ සසඳන විට",
+
+    harvestScore: "අස්වැන්න ලකුණ",
+
+    aiDetails: "AI විස්තර",
+    findMillers: "මෝල් හිමියන් සොයන්න",
+    viewDetails: "විස්තර බලන්න",
+
+    score: "ලකුණු",
+    ai: "AI",
+    marketReview: "වෙළඳපොළ සමාලෝචනය",
+    of: "න්",
+    
+
+    loadingHarvests: "අස්වැන්න පූරණය වෙමින්",
+    loadingDescription:
+      "ඔබගේ නවතම වෙළඳපොළ දත්ත ලබා ගනිමින්.",
+
+    unableToLoad: "අස්වැන්න ලබාගත නොහැක",
+    tryAgain: "නැවත උත්සාහ කරන්න",
+
+    noHarvests: "තවමත් අස්වැන්න නොමැත",
+    noHarvestsDescription:
+      "AI මගින් ජනනය කරන ලද මිල නිර්දේශයක් ලබා ගැනීමට ඔබගේ පළමු වී අස්වැන්න එක් කරන්න.",
+
+    addFirstHarvest: "පළමු අස්වැන්න එක් කරන්න",
+
+    noMatchingHarvests: "ගැළපෙන අස්වැන්නක් නොමැත",
+    noMatchingHarvestsDescription:
+      "ඔබගේ සෙවුම් හෝ පෙරහන් විකල්ප වෙනස් කර බලන්න.",
+
+    clearFilters: "පෙරහන් ඉවත් කරන්න",
+
+    notSpecified: "සඳහන් කර නොමැත",
+    dateUnavailable: "දිනය ලබාගත නොහැක",
+
+    back: "ආපසු යන්න",
+  },
+
   c3districts: {
   Ampara: "අම්පාර",
   Badulla: "බදුල්ල",

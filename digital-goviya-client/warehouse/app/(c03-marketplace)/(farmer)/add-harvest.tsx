@@ -5,6 +5,7 @@ import {
   Animated,
   KeyboardAvoidingView,
   Platform,
+  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -335,20 +336,21 @@ export default function AddHarvestScreen() {
       : null;
 
   return (
-    <KeyboardAvoidingView
-      style={styles.flex}
-      behavior={
-        Platform.OS === "ios"
-          ? "padding"
-          : undefined
-      }
-    >
-      <ScrollView
-        style={styles.screen}
-        contentContainerStyle={styles.content}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
+    <SafeAreaView style={styles.safeArea}>
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={
+          Platform.OS === "ios"
+            ? "padding"
+            : undefined
+        }
       >
+        <ScrollView
+          style={styles.screen}
+          contentContainerStyle={styles.content}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
         {/* Hero */}
         <LinearGradient
           colors={["#1B5E3A", "#0F3D26"]}
@@ -621,8 +623,9 @@ export default function AddHarvestScreen() {
             </LinearGradient>
           </TouchableOpacity>
         </Animated.View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
@@ -704,6 +707,11 @@ const INK = "#16241C";
 const INK_MUTED = "#7A7364";
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: CREAM,
+  },
+
   flex: {
     flex: 1,
   },
@@ -715,6 +723,7 @@ const styles = StyleSheet.create({
 
   content: {
     paddingHorizontal: 18,
+    paddingTop: 8,
     paddingBottom: 120,
     gap: 0,
   },

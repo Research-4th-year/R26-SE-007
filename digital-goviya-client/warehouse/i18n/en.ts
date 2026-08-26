@@ -248,6 +248,92 @@ const en = {
     signedInAs: "Signed in as",
   },
 
+    // C3 Marketplace - My Harvests
+  c3myHarvests: {
+    title: "My Harvests",
+    submitted: "submitted",
+
+    addHarvest: "Add harvest",
+
+    portfolioEyebrow: "HARVEST PORTFOLIO",
+    portfolioTitle: "Track every listing in one place",
+
+    total: "Total",
+    available: "Available",
+    matched: "Matched",
+    sold: "Sold",
+    filterHarvestsBy: "Filter harvests by",
+    of: "of",
+
+    searchPlaceholder: "Search paddy, season, status...",
+
+    refineResults: "Refine results",
+    varietyAndSorting: "Variety and sorting options",
+    clearAll: "Clear all",
+
+    paddyVariety: "Paddy variety",
+
+    allVarieties: "All varieties",
+    nadu: "Nadu",
+    samba: "Samba",
+    keeriSamba: "Keeri Samba",
+
+    sortBy: "Sort by",
+    newest: "Newest",
+    oldest: "Oldest",
+    highestQuantity: "Highest quantity",
+    lowestQuantity: "Lowest quantity",
+    highestAiScore: "Highest AI score",
+
+    harvests: "Harvests",
+    shown: "shown",
+    cardView: "Card view",
+    compactListView: "Compact list view",
+
+    quantity: "Quantity",
+    season: "Season",
+    expected: "Expected",
+    aiPrice: "AI price",
+
+    pending: "Pending",
+
+    comparedWithExpected: "compared with your expected price",
+
+    harvestScore: "Harvest score",
+
+    aiDetails: "AI Details",
+    findMillers: "Find Millers",
+    viewDetails: "View Details",
+
+    marketReview: "Market review",
+    score: "Score",
+    ai: "AI",
+    kg: "kg",
+
+    loadingHarvests: "Loading harvests",
+    loadingDescription: "Retrieving your latest marketplace data.",
+
+    unableToLoad: "Unable to load harvests",
+    tryAgain: "Try again",
+
+    noHarvests: "No harvests yet",
+    noHarvestsDescription:
+      "Add your first paddy harvest to receive an AI-generated price recommendation.",
+
+    addFirstHarvest: "Add First Harvest",
+
+    noMatchingHarvests: "No matching harvests",
+    noMatchingHarvestsDescription:
+      "Try changing your search or filter options.",
+
+    clearFilters: "Clear filters",
+
+    notSpecified: "Not specified",
+    dateUnavailable: "Date unavailable",
+
+    back: "Go back",
+  },
+
   c3districts: {
   Ampara: "Ampara",
   Badulla: "Badulla",
