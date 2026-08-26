@@ -23,7 +23,7 @@ import {
 
 const APP_LOGO = require("@/assets/logo2.png");
 
-const API_BASE = "http://127.0.0.1:8000";
+const API_BASE = process.env.EXPO_PUBLIC_API_URL;
 const PREDICT_ENDPOINT = `${API_BASE}/prediction/explanation`;
 
 const EXPLANATION_ROUTE = "/(c04-analytics)/price-prediction/prediction-explanation";
