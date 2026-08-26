@@ -76,6 +76,7 @@ export function MarketplaceBottomNav() {
     pathname.includes(
       "/change-password"
     ) ||
+    pathname.includes("/assistant") ||
     user.mustChangePassword
   ) {
     return null;
