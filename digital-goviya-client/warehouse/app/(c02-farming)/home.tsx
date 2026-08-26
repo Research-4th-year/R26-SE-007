@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Animated,
   ScrollView,
+  Image,
 } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -106,8 +107,8 @@ export default function FarmingHomeScreen() {
 
             {/* IoT Dashboard card */}
             <View style={styles.featureCard}>
-              <View style={[styles.featureIconBox, { backgroundColor: "#E0F2FE" }]}>
-                <Ionicons name="hardware-chip" size={26} color="#0369A1" />
+              <View style={[styles.featureIconBox, { backgroundColor: "#E0F2FE", padding: 8 }]}>
+                <Image source={require("../../assets/farming-icons/iotsensors.png")} style={{ width: 32, height: 32 }} resizeMode="contain" />
               </View>
               <Text style={styles.featureTitle}>IoT Dashboard</Text>
               <Text style={styles.featureDesc}>
@@ -132,8 +133,8 @@ export default function FarmingHomeScreen() {
 
             {/* Advisory card */}
             <View style={styles.featureCard}>
-              <View style={[styles.featureIconBox, { backgroundColor: "#DCFCE7" }]}>
-                <Ionicons name="leaf" size={26} color="#15803D" />
+              <View style={[styles.featureIconBox, { backgroundColor: "#DCFCE7", padding: 8 }]}>
+                <Image source={require("../../assets/farming-icons/wheat.png")} style={{ width: 32, height: 32 }} resizeMode="contain" />
               </View>
               <Text style={styles.featureTitle}>Variety Prediction & Suitability</Text>
               <Text style={styles.featureDesc}>
@@ -158,8 +159,8 @@ export default function FarmingHomeScreen() {
 
             {/* Yield card */}
             <View style={styles.featureCard}>
-              <View style={[styles.featureIconBox, { backgroundColor: "#E0F2FE" }]}>
-                <Ionicons name="stats-chart" size={26} color="#0369A1" />
+              <View style={[styles.featureIconBox, { backgroundColor: "#E0F2FE", padding: 8 }]}>
+                <Image source={require("../../assets/farming-icons/yield.png")} style={{ width: 32, height: 32 }} resizeMode="contain" />
               </View>
               <Text style={styles.featureTitle}>Yield Prediction</Text>
               <Text style={styles.featureDesc}>
@@ -177,8 +178,8 @@ export default function FarmingHomeScreen() {
             
             {/* Disease card */}
             <View style={styles.featureCard}>
-              <View style={[styles.featureIconBox, { backgroundColor: "#FEE2E2" }]}>
-                <Ionicons name="scan" size={26} color="#B91C1C" />
+              <View style={[styles.featureIconBox, { backgroundColor: "#FEE2E2", padding: 8 }]}>
+                <Image source={require("../../assets/farming-icons/paddy2.png")} style={{ width: 32, height: 32 }} resizeMode="contain" />
               </View>
               <Text style={styles.featureTitle}>Disease Detection</Text>
               <Text style={styles.featureDesc}>
@@ -196,8 +197,8 @@ export default function FarmingHomeScreen() {
 
             {/* Fertilizer card */}
             <View style={styles.featureCard}>
-              <View style={[styles.featureIconBox, { backgroundColor: "#DCFCE7" }]}>
-                <Ionicons name="leaf" size={26} color="#15803D" />
+              <View style={[styles.featureIconBox, { backgroundColor: "#DCFCE7", padding: 8 }]}>
+                <Image source={require("../../assets/farming-icons/fertilizer.png")} style={{ width: 32, height: 32 }} resizeMode="contain" />
               </View>
               <Text style={styles.featureTitle}>Fertilizer Guide</Text>
               <Text style={styles.featureDesc}>
@@ -215,8 +216,8 @@ export default function FarmingHomeScreen() {
             
             {/* Profile card */}
             <View style={styles.featureCard}>
-              <View style={[styles.featureIconBox, { backgroundColor: "#EDE9FE" }]}>
-                <Ionicons name="person" size={26} color="#7C3AED" />
+              <View style={[styles.featureIconBox, { backgroundColor: "#EDE9FE", padding: 8 }]}>
+                <Image source={require("../../assets/farming-icons/settings.png")} style={{ width: 32, height: 32 }} resizeMode="contain" />
               </View>
               <Text style={styles.featureTitle}>Farmer Profile</Text>
               <Text style={styles.featureDesc}>

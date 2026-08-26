@@ -13,6 +13,7 @@ import {
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import Svg, { Circle } from "react-native-svg";
 import { database } from "@/services/c02-farming/firebase";
 import { ref, onValue, off } from "firebase/database";
 
@@ -166,8 +167,8 @@ function SensorCard({
   );
 }
 
-// ─── Device Status Banner ─────────────────────────────────────────────────────
-function DeviceStatusBanner({
+// ─── Device Status Card ───────────────────────────────────────────────────────
+function DeviceStatusCard({
   timestamp,
   isOnline,
 }: {
@@ -175,66 +176,99 @@ function DeviceStatusBanner({
   isOnline: boolean;
 }) {
   return (
-    <View style={styles.deviceBanner}>
-      {/* Status row */}
-      <View style={styles.deviceRow}>
-        <View style={styles.deviceLeft}>
-          <View style={[styles.statusDot, { backgroundColor: isOnline ? "#22C55E" : "#EF4444" }]} />
-          <View>
-            <Text style={styles.deviceName}>ESP32 IoT Board</Text>
-            <Text style={styles.deviceSubtext}>
-              {isOnline ? "Online — Streaming data" : "Offline — No recent data"}
-            </Text>
+    <View style={[styles.sensorCard, { width: CARD_WIDTH }]}>
+      <LinearGradient
+        colors={isOnline ? ["rgba(34,197,94,0.15)", "rgba(34,197,94,0.08)"] : ["rgba(239,68,68,0.15)", "rgba(239,68,68,0.08)"]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={[styles.sensorCardGradient, { flex: 1, justifyContent: "space-between" }]}
+      >
+        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }}>
+          <View style={[styles.sensorIconCircle, { backgroundColor: isOnline ? "#22C55E" : "#EF4444" }]}>
+            <Ionicons name="hardware-chip" size={18} color="white" />
           </View>
+          <View style={[styles.liveDotSmall, { backgroundColor: isOnline ? "#22C55E" : "#EF4444", marginTop: 8 }]} />
         </View>
-      </View>
-
-      {/* Status pills */}
-      <View style={styles.pillRow}>
-        {/* Online / Offline */}
-        <View style={[styles.pill, { backgroundColor: isOnline ? "#DCFCE7" : "#FEE2E2" }]}>
-          <Ionicons
-            name={isOnline ? "radio" : "radio-outline"}
-            size={13}
-            color={isOnline ? "#15803D" : "#DC2626"}
-          />
-          <Text style={[styles.pillText, { color: isOnline ? "#15803D" : "#DC2626" }]}>
+        <View style={{ marginTop: 10 }}>
+          <Text style={styles.sensorLabel}>ESP32 Board</Text>
+          <Text style={[styles.sensorValue, { fontSize: 18, color: isOnline ? "#BBF7D0" : "#FECACA" }]}>
             {isOnline ? "Online" : "Offline"}
           </Text>
-        </View>
-
-        {/* WiFi */}
-        <View style={[styles.pill, { backgroundColor: isOnline ? "#DBEAFE" : "#F3F4F6" }]}>
-          <Ionicons
-            name="wifi"
-            size={13}
-            color={isOnline ? "#2563EB" : "#9CA3AF"}
-          />
-          <Text style={[styles.pillText, { color: isOnline ? "#2563EB" : "#9CA3AF" }]}>
-            {isOnline ? "WiFi" : "Disconnected"}
+          <Text style={styles.sensorUnit} numberOfLines={1}>
+            {timestamp ? timestamp.split(' ')[1] || timestamp : "No Data"}
           </Text>
         </View>
+      </LinearGradient>
+    </View>
+  );
+}
 
-        {/* Battery */}
-        <View style={[styles.pill, { backgroundColor: isOnline ? "#F0FDF4" : "#F3F4F6" }]}>
-          <Ionicons
-            name={isOnline ? "battery-full" : "battery-dead"}
-            size={13}
-            color={isOnline ? "#16A34A" : "#9CA3AF"}
-          />
-          <Text style={[styles.pillText, { color: isOnline ? "#16A34A" : "#9CA3AF" }]}>
-            {isOnline ? "Powered" : "N/A"}
-          </Text>
-        </View>
-      </View>
+// ─── Temperature Dial Card ────────────────────────────────────────────────────
+function TemperatureDialCard({
+  value,
+  config
+}: {
+  value: number | undefined;
+  config: SensorCardConfig;
+}) {
+  const size = CARD_WIDTH - 32; // minus padding
+  const strokeWidth = 8;
+  const radius = (size - strokeWidth) / 2;
+  const circumference = radius * 2 * Math.PI;
+  const angle = 270; // 3/4 circle
+  const arcLength = (circumference * angle) / 360;
+  
+  const min = config.min || 0;
+  const max = config.max || 50;
+  const val = value !== undefined ? Math.min(max, Math.max(min, value)) : 0;
+  const progress = value !== undefined ? ((val - min) / (max - min)) * 100 : 0;
+  const strokeDashoffset = arcLength - (arcLength * progress) / 100;
 
-      {/* Last sync */}
-      {timestamp && (
-        <View style={styles.syncRow}>
-          <Ionicons name="time-outline" size={12} color="#9CA3AF" />
-          <Text style={styles.syncText}>Last synced: {timestamp}</Text>
+  return (
+    <View style={[styles.sensorCard, { width: CARD_WIDTH }]}>
+      <LinearGradient
+        colors={config.gradientColors}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={[styles.sensorCardGradient, { alignItems: "center", justifyContent: "center", flex: 1 }]}
+      >
+        <View style={{ width: "100%", flexDirection: "row", justifyContent: "space-between" }}>
+          <Text style={styles.sensorLabel}>{config.label}</Text>
+          <Ionicons name={config.icon as any} size={14} color={config.iconBg} />
         </View>
-      )}
+        
+        <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center', marginVertical: 12 }}>
+          <Svg width={size} height={size} style={{ position: 'absolute', transform: [{ rotate: '135deg' }] }}>
+            <Circle
+              cx={size / 2}
+              cy={size / 2}
+              r={radius}
+              stroke="rgba(255,255,255,0.1)"
+              strokeWidth={strokeWidth}
+              strokeDasharray={`${arcLength} ${circumference}`}
+              strokeLinecap="round"
+              fill="none"
+            />
+            <Circle
+              cx={size / 2}
+              cy={size / 2}
+              r={radius}
+              stroke={config.iconBg}
+              strokeWidth={strokeWidth}
+              strokeDasharray={`${arcLength} ${circumference}`}
+              strokeDashoffset={strokeDashoffset}
+              strokeLinecap="round"
+              fill="none"
+            />
+          </Svg>
+          <View style={{ alignItems: 'center', marginTop: 10 }}>
+            <Text style={[styles.sensorValue, { marginBottom: -4, fontSize: 26 }]}>
+              {value !== undefined ? (typeof value === "number" ? value.toFixed(1) : value) : "—"}
+            </Text>
+            <Text style={[styles.sensorUnit, { fontSize: 12 }]}>{config.unit}</Text>
+          </View>
+        </View>
+      </LinearGradient>
     </View>
   );
 }
@@ -350,8 +384,14 @@ export default function IoTDashboardScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#F5C542" />
         }
       >
-        {/* Device Status Banner */}
-        <DeviceStatusBanner timestamp={sensorData?.timestamp} isOnline={isOnline} />
+        {/* Top Row: Device Status & Temperature Dial */}
+        <View style={[styles.cardsGrid, { marginBottom: 16 }]}>
+          <DeviceStatusCard timestamp={sensorData?.timestamp} isOnline={isOnline} />
+          <TemperatureDialCard 
+            value={sensorData?.temperature} 
+            config={SENSOR_CARDS.find(c => c.key === 'temperature')!} 
+          />
+        </View>
 
         {/* Error state */}
         {error && (
@@ -363,16 +403,16 @@ export default function IoTDashboardScreen() {
 
         {/* Section title */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Sensor Readings</Text>
+          <Text style={styles.sectionTitle}>Other Sensors</Text>
           <View style={styles.liveBadge}>
             <View style={styles.liveDotSmall} />
             <Text style={styles.liveBadgeText}>LIVE</Text>
           </View>
         </View>
 
-        {/* Sensor cards grid */}
+        {/* Other Sensor cards grid */}
         <View style={styles.cardsGrid}>
-          {SENSOR_CARDS.map((config, index) => (
+          {SENSOR_CARDS.filter(c => c.key !== 'temperature').map((config, index) => (
             <SensorCard
               key={config.key}
               config={config}
