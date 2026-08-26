@@ -369,6 +369,207 @@ c3paddyTypes: {
   KeeriSamba: "කීරි සම්බා",
 },
 
+c3addHarvest: {
+  eyebrow: "ගොවි වෙළඳපොළ",
+
+  title: "නව අස්වැන්න ඇතුළත් කිරීම",
+
+
+  subtitle:
+    "ඔබ වගා කළ දේ අපට කියන්න — අපි එය සජීවී ඉල්ලුම සමඟ ගළපා සාධාරණ මිලක් යෝජනා කරන්නෙමු.",
+
+  aiPriceInsight:
+    "AI මිල තොරතුරු ඇතුළත්",
+
+  harvestDetails:
+    "අස්වැන්න පිළිබඳ විස්තර",
+
+  paddyType:
+    "වී වර්ගය",
+
+  nadu:
+    "නාඩු",
+
+  samba:
+    "සම්බා",
+
+  keeriSamba:
+    "කීරි සම්බා",
+
+  mostCommon:
+    "වඩාත් ප්‍රචලිත",
+
+  premiumGrain:
+    "උසස් තත්ත්වයේ වී",
+
+  fineGrain:
+    "සිහින් ධාන්‍ය",
+
+  season:
+    "කන්නය",
+
+  maha:
+    "මහ",
+
+  yala:
+    "යල",
+
+  mahaRange:
+    "ඔක් – මාර්තු",
+
+  yalaRange:
+    "මැයි – අගෝස්තු",
+
+  mahaDescription:
+    "ප්‍රධාන මෝසම් වැසි මත පදනම් වූ වගා කන්නය.",
+
+  yalaDescription:
+    "වාරිමාර්ග මත පදනම් වූ දෙවන වගා කන්නය.",
+
+  pricing:
+    "මිල ගණන්",
+
+  pricingDescription:
+    "ඔබගේ ප්‍රමාණය සහ අපේක්ෂිත මිල ඇතුළත් කරන්න — ඔබ ටයිප් කරන අතරතුර ඇස්තමේන්තුගත වටිනාකම ගණනය කරන්නෙමු.",
+
+  quantity:
+    "ප්‍රමාණය",
+
+  quantityPlaceholder:
+    "1000",
+
+  kg:
+    "කිලෝග්‍රෑම්",
+
+  quantityHelper:
+    "ප්‍රමාණය කිලෝග්‍රෑම් වලින් ඇතුළත් කරන්න.",
+
+  expectedPrice:
+    "කිලෝග්‍රෑමයකට අපේක්ෂිත මිල",
+
+  expectedPricePlaceholder:
+    "125",
+
+  lkrPerKg:
+    "රු./කිලෝග්‍රෑම්",
+
+  expectedPriceHelper:
+    "ශ්‍රී ලංකා රුපියල් වලින් මුදල ඇතුළත් කරන්න.",
+
+  minimumAcceptablePrice:
+    "කිලෝග්‍රෑමයකට පිළිගත හැකි අවම මිල",
+
+  minimumAcceptablePricePlaceholder:
+    "120",
+
+  minimumAcceptablePriceHelper:
+    "පුද්ගලිකයි: සාකච්ඡා කිරීමේදී ඔබගේ Farmer AI නියෝජිතයා විසින් පමණක් භාවිතා කරයි.",
+
+  estimatedHarvestValue:
+    "ඇස්තමේන්තුගත අස්වැන්න වටිනාකම",
+
+  getAiRecommendation:
+    "AI නිර්දේශය ලබා ගන්න",
+
+  validation: {
+    quantityRequired:
+      "කරුණාකර අස්වැන්න ප්‍රමාණය ඇතුළත් කරන්න.",
+
+    quantityGreaterThanZero:
+      "ප්‍රමාණය ශුන්‍යයට වඩා වැඩි විය යුතුය.",
+
+    expectedPriceRequired:
+      "කරුණාකර ඔබගේ අපේක්ෂිත මිල ඇතුළත් කරන්න.",
+
+    expectedPriceGreaterThanZero:
+      "අපේක්ෂිත මිල ශුන්‍යයට වඩා වැඩි විය යුතුය.",
+
+    minimumPriceRequired:
+      "කරුණාකර ඔබට පිළිගත හැකි අවම මිල ඇතුළත් කරන්න.",
+
+    minimumPriceGreaterThanZero:
+      "පිළිගත හැකි අවම මිල ශුන්‍යයට වඩා වැඩි විය යුතුය.",
+
+    minimumPriceCannotExceedExpected:
+      "පිළිගත හැකි අවම මිල, අපේක්ෂිත මිලට වඩා වැඩි විය නොහැක.",
+  },
+
+  unableToAddHarvest:
+    "අස්වැන්න එක් කළ නොහැක",
+},
+
+harvestResult: {
+  title: "AI අස්වනු ප්‍රතිඵලය",
+  subtitle: "වෙළඳපොළ මිල නිර්දේශය",
+
+  aiGenerated: "AI මගින් ජනනය කරන ලදී",
+  recommendedMarketPrice: "නිර්දේශිත වෙළඳපොළ මිල",
+  perKilogram: "කිලෝග්‍රෑමයකට",
+  predictionPending: "අනාවැකිය සැකසෙමින් පවතී",
+
+  expectedPriceAbove:
+    "ඔබේ අපේක්ෂිත මිල AI ඇස්තමේන්තුවට වඩා {{amount}} කින් වැඩිය",
+  expectedPriceBelow:
+    "ඔබේ අපේක්ෂිත මිල AI ඇස්තමේන්තුවට වඩා {{amount}} කින් අඩුය",
+
+  harvestSummary: "අස්වනු සාරාංශය",
+  paddyType: "වී වර්ගය",
+  season: "කන්නය",
+  quantity: "ප්‍රමාණය",
+  expectedPrice: "අපේක්ෂිත මිල",
+  submittedDate: "ඉදිරිපත් කළ දිනය",
+  notAvailable: "ලබා ගත නොහැක",
+
+  harvestScore: "අස්වනු ලකුණු",
+  marketReadiness: "වෙළඳපොළ සූදානම",
+  scoreDescription:
+    "මිල සහ වත්මන් ඉල්ලුම් තත්ත්වයන් මත පදනම්ව.",
+
+  excellentMarketReadiness: "විශිෂ්ට වෙළඳපොළ සූදානම",
+  goodMarketReadiness: "හොඳ වෙළඳපොළ සූදානම",
+  moderateMarketReadiness: "මධ්‍යස්ථ වෙළඳපොළ සූදානම",
+  marketConditionsNeedImprovement:
+    "වෙළඳපොළ තත්ත්වයන් වැඩිදියුණු විය යුතුය",
+
+  aiRecommendation: "AI නිර්දේශය",
+  suggestedAction: "යෝජිත ක්‍රියාමාර්ගය",
+  aiMarketGuidance: "AI වෙළඳපොළ මාර්ගෝපදේශය",
+
+  predictionProcessing:
+    "AI අනාවැකිය තවමත් සැකසෙමින් පවතී. වෙළඳපොළ විශ්ලේෂණය සම්පූර්ණ වූ පසු මෙම අස්වනු ප්‍රතිඵලය නැවත පරීක්ෂා කරන්න.",
+
+  predictedPriceHigher:
+    "පුරෝකථනය කළ වෙළඳපොළ මිල ඔබේ අපේක්ෂිත මිලට වඩා වැඩිය. සාකච්ඡා කිරීම සඳහා සුළු මිල පරාසයක් ඉඩ දෙමින් AI මගින් නිර්දේශිත මිලට ආසන්නව ලැයිස්තුගත කිරීම සලකා බලන්න.",
+
+  expectedPriceHigher:
+    "ඔබේ අපේක්ෂිත මිල වත්මන් AI ඇස්තමේන්තුවට වඩා වැඩිය. වත්මන් ඉල්ලුම නැවත සලකා බැලීම හෝ වඩා හොඳ වෙළඳපොළ තත්ත්වයන් ඇති වන තෙක් බලා සිටීම සලකා බලන්න.",
+
+  priceCloseToEstimate:
+    "ඔබේ අපේක්ෂිත මිල AI වෙළඳපොළ ඇස්තමේන්තුවට ආසන්නය. සුදුසු මෝල් හිමියන් සමඟ ගැළපීම සඳහා මෙය තරඟකාරී මිලකි.",
+
+  matchingOpportunitiesFound: "ගැළපෙන අවස්ථා හමු විය",
+
+  openMillerDemandsMatch:
+    "විවෘත මෝල් ඉල්ලීම් {{count}}ක් මෙම අස්වනු සමඟ ගැළපේ",
+
+  openMillerDemandsMatchPlural:
+    "විවෘත මෝල් ඉල්ලීම් {{count}}ක් මෙම අස්වනු සමඟ ගැළපේ",
+
+  searchCurrentMillerDemands:
+    "මෙම අස්වනු සමඟ ගැළපෙන වත්මන් මෝල් ඉල්ලීම් සොයන්න",
+
+  inYourDistrict: "ඔබේ දිස්ත්‍රික්කයේ",
+
+  findMatchingMillers: "ගැළපෙන මෝල් හිමියන් සොයන්න",
+
+  marketStatus: "වෙළඳපොළ තත්ත්වය",
+
+  viewAllHarvests: "සියලුම අස්වනු බලන්න",
+  addAnotherHarvest: "තවත් අස්වනු එක් කරන්න",
+
+  goBack: "ආපසු යන්න",
+},
+
 };
 
 export default si;

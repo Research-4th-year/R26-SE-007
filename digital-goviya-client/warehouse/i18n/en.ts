@@ -346,6 +346,172 @@ c3paddyTypes: {
   Nadu: "Nadu",
   KeeriSamba: "Keeri Samba",
 },
+
+c3addHarvest: {
+  eyebrow: "FARMER MARKETPLACE",
+  title: "New Harvest Entry",
+
+  subtitle:
+    "Tell us what you've grown — we'll match it against live demand and suggest a fair price.",
+
+  aiPriceInsight: "AI price insight included",
+
+  harvestDetails: "Harvest details",
+
+  paddyType: "Paddy type",
+
+  nadu: "Nadu",
+  samba: "Samba",
+  keeriSamba: "Keeri Samba",
+
+  mostCommon: "Most common",
+  premiumGrain: "Premium grain",
+  fineGrain: "Fine grain",
+
+  season: "Season",
+
+  maha: "Maha",
+  yala: "Yala",
+
+  mahaRange: "Oct – Mar",
+  yalaRange: "May – Aug",
+
+  mahaDescription:
+    "The main monsoon-fed growing season.",
+
+  yalaDescription:
+    "The secondary, irrigation-fed season.",
+
+  pricing: "Pricing",
+
+  pricingDescription:
+    "Set your quantity and expected price — we'll work out the estimated value as you type.",
+
+  quantity: "Quantity",
+  quantityPlaceholder: "1000",
+  kg: "kg",
+
+  quantityHelper:
+    "Enter quantity in kilograms.",
+
+  expectedPrice: "Expected price per kilogram",
+  expectedPricePlaceholder: "125",
+  lkrPerKg: "LKR/kg",
+
+  expectedPriceHelper:
+    "Enter the amount in Sri Lankan Rupees.",
+
+  minimumAcceptablePrice:
+    "Minimum acceptable price per kilogram",
+
+  minimumAcceptablePricePlaceholder:
+    "120",
+
+  minimumAcceptablePriceHelper:
+    "Private: used only by your Farmer AI agent during negotiation.",
+
+  estimatedHarvestValue:
+    "Estimated harvest value",
+
+  getAiRecommendation:
+    "Get AI Recommendation",
+
+  validation: {
+    quantityRequired:
+      "Please enter the harvest quantity.",
+
+    quantityGreaterThanZero:
+      "Quantity must be greater than zero.",
+
+    expectedPriceRequired:
+      "Please enter your expected price.",
+
+    expectedPriceGreaterThanZero:
+      "Expected price must be greater than zero.",
+
+    minimumPriceRequired:
+      "Please enter your minimum acceptable price.",
+
+    minimumPriceGreaterThanZero:
+      "Minimum acceptable price must be greater than zero.",
+
+    minimumPriceCannotExceedExpected:
+      "Minimum acceptable price cannot exceed your expected price.",
+  },
+
+  unableToAddHarvest:
+    "Unable to add harvest",
+},
+
+harvestResult: {
+  title: "AI Harvest Result",
+  subtitle: "Market price recommendation",
+
+  aiGenerated: "AI GENERATED",
+  recommendedMarketPrice: "Recommended market price",
+  perKilogram: "per kilogram",
+  predictionPending: "Prediction pending",
+
+  expectedPriceAbove: "Your expected price is {{amount}} above the AI estimate",
+  expectedPriceBelow: "Your expected price is {{amount}} below the AI estimate",
+
+  harvestSummary: "Harvest summary",
+  paddyType: "Paddy type",
+  season: "Season",
+  quantity: "Quantity",
+  expectedPrice: "Expected price",
+  submittedDate: "Submitted date",
+  notAvailable: "Not available",
+
+  harvestScore: "Harvest score",
+  marketReadiness: "Market readiness",
+  scoreDescription:
+    "Based on price and current demand conditions.",
+
+  excellentMarketReadiness: "Excellent market readiness",
+  goodMarketReadiness: "Good market readiness",
+  moderateMarketReadiness: "Moderate market readiness",
+  marketConditionsNeedImprovement:
+    "Market conditions may need improvement",
+
+  aiRecommendation: "AI recommendation",
+  suggestedAction: "Suggested action",
+  aiMarketGuidance: "AI MARKET GUIDANCE",
+
+  predictionProcessing:
+    "The AI prediction is still being processed. Review this harvest again after the market analysis is complete.",
+
+  predictedPriceHigher:
+    "The predicted market price is higher than your expected price. Consider listing near the AI recommended price while allowing a small range for negotiation.",
+
+  expectedPriceHigher:
+    "Your expected price is higher than the current AI estimate. Consider reviewing current demand or waiting for stronger market conditions before accepting an offer.",
+
+  priceCloseToEstimate:
+    "Your expected price is close to the AI market estimate. This is a competitive price for matching with suitable millers.",
+
+  matchingOpportunitiesFound: "Matching opportunities found",
+
+  openMillerDemandsMatch:
+    "{{count}} open Miller demand currently matches this harvest",
+
+  openMillerDemandsMatchPlural:
+    "{{count}} open Miller demands currently match this harvest",
+
+  searchCurrentMillerDemands:
+    "Search current Miller demands that match this harvest",
+
+  inYourDistrict: "in your district",
+
+  findMatchingMillers: "Find Matching Millers",
+
+  marketStatus: "Market status",
+
+  viewAllHarvests: "View All Harvests",
+  addAnotherHarvest: "Add Another Harvest",
+
+  goBack: "Go back",
+},
 };
 
 export default en;

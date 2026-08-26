@@ -24,63 +24,16 @@ import {
   Poppins_500Medium,
 } from "@expo-google-fonts/poppins";
 
-import { harvestService } from
-  "@/services/c03-marketplace/harvest.service";
+import { harvestService } from "@/services/c03-marketplace/harvest.service";
 
-import { getApiErrorMessage } from
-  "@/utils/c03-marketplace/getApiErrorMessage";
+import { getApiErrorMessage } from "@/utils/c03-marketplace/getApiErrorMessage";
 
 import type {
   PaddySeason,
   PaddyType,
 } from "@/types/c03-marketplace/harvest.types";
 
-const PADDY_OPTIONS: {
-  label: string;
-  value: PaddyType;
-}[] = [
-  { label: "Nadu", value: "nadu" },
-  { label: "Samba", value: "samba" },
-  {
-    label: "Keeri Samba",
-    value: "keeri samba",
-  },
-];
-
-const SEASON_OPTIONS: {
-  label: string;
-  value: PaddySeason;
-}[] = [
-  { label: "Maha", value: "maha" },
-  { label: "Yala", value: "yala" },
-];
-
-// Presentation-only metadata for the redesigned selectors.
-// Does not affect PADDY_OPTIONS / SEASON_OPTIONS or form logic.
-const PADDY_META: Record<
-  PaddyType,
-  { icon: keyof typeof Ionicons.glyphMap; tag: string }
-> = {
-  nadu: { icon: "leaf-outline", tag: "Most common" },
-  samba: { icon: "flower-outline", tag: "Premium grain" },
-  "keeri samba": { icon: "sparkles-outline", tag: "Fine grain" },
-};
-
-const SEASON_META: Record<
-  PaddySeason,
-  { icon: keyof typeof Ionicons.glyphMap; range: string; desc: string }
-> = {
-  maha: {
-    icon: "rainy-outline",
-    range: "Oct – Mar",
-    desc: "The main monsoon-fed growing season.",
-  },
-  yala: {
-    icon: "sunny-outline",
-    range: "May – Aug",
-    desc: "The secondary, irrigation-fed season.",
-  },
-};
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface FormErrors {
   quantity?: string;
@@ -89,6 +42,8 @@ interface FormErrors {
 }
 
 export default function AddHarvestScreen() {
+  const { t, language } = useLanguage();
+
   const [paddyType, setPaddyType] =
     useState<PaddyType>("nadu");
 
@@ -96,6 +51,7 @@ export default function AddHarvestScreen() {
     useState<PaddySeason>("maha");
 
   const [quantity, setQuantity] = useState("");
+
   const [expectedPrice, setExpectedPrice] =
     useState("");
 
@@ -117,18 +73,22 @@ export default function AddHarvestScreen() {
     Poppins_500Medium,
   });
 
-  // Entrance animation — presentation only.
-  const cardsFade = useRef(new Animated.Value(0)).current;
-  const cardsRise = useRef(new Animated.Value(16)).current;
+  const cardsFade =
+    useRef(new Animated.Value(0)).current;
+
+  const cardsRise =
+    useRef(new Animated.Value(16)).current;
 
   useEffect(() => {
     if (!fontsLoaded) return;
+
     Animated.parallel([
       Animated.timing(cardsFade, {
         toValue: 1,
         duration: 420,
         useNativeDriver: true,
       }),
+
       Animated.timing(cardsRise, {
         toValue: 0,
         duration: 420,
@@ -137,10 +97,13 @@ export default function AddHarvestScreen() {
     ]).start();
   }, [fontsLoaded]);
 
-  // Season segmented-toggle animation — presentation only, does not affect `season` state/logic.
-  const [seasonToggleWidth, setSeasonToggleWidth] = useState(0);
+  const [seasonToggleWidth, setSeasonToggleWidth] =
+    useState(0);
+
   const seasonAnim = useRef(
-    new Animated.Value(season === "maha" ? 0 : 1)
+    new Animated.Value(
+      season === "maha" ? 0 : 1,
+    ),
   ).current;
 
   useEffect(() => {
@@ -152,17 +115,74 @@ export default function AddHarvestScreen() {
   }, [season]);
 
   const seasonSegmentWidth =
-    seasonToggleWidth > 0 ? (seasonToggleWidth - 8) / 2 : 0;
+    seasonToggleWidth > 0
+      ? (seasonToggleWidth - 8) / 2
+      : 0;
 
-  const seasonIndicatorTranslate = seasonAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, seasonSegmentWidth],
-  });
+  const seasonIndicatorTranslate =
+    seasonAnim.interpolate({
+      inputRange: [0, 1],
+      outputRange: [
+        0,
+        seasonSegmentWidth,
+      ],
+    });
+
+  const paddyOptions: {
+    label: string;
+    value: PaddyType;
+    icon: keyof typeof Ionicons.glyphMap;
+    tag: string;
+  }[] = [
+    {
+      label: t.c3addHarvest.nadu,
+      value: "nadu",
+      icon: "leaf-outline",
+      tag: t.c3addHarvest.mostCommon,
+    },
+    {
+      label: t.c3addHarvest.samba,
+      value: "samba",
+      icon: "flower-outline",
+      tag: t.c3addHarvest.premiumGrain,
+    },
+    {
+      label: t.c3addHarvest.keeriSamba,
+      value: "keeri samba",
+      icon: "sparkles-outline",
+      tag: t.c3addHarvest.fineGrain,
+    },
+  ];
+
+  const seasonOptions: {
+    label: string;
+    value: PaddySeason;
+    icon: keyof typeof Ionicons.glyphMap;
+    range: string;
+    desc: string;
+  }[] = [
+    {
+      label: t.c3addHarvest.maha,
+      value: "maha",
+      icon: "rainy-outline",
+      range: t.c3addHarvest.mahaRange,
+      desc: t.c3addHarvest.mahaDescription,
+    },
+    {
+      label: t.c3addHarvest.yala,
+      value: "yala",
+      icon: "sunny-outline",
+      range: t.c3addHarvest.yalaRange,
+      desc: t.c3addHarvest.yalaDescription,
+    },
+  ];
 
   const validateForm = (): boolean => {
     const nextErrors: FormErrors = {};
 
-    const parsedQuantity = Number(quantity);
+    const parsedQuantity =
+      Number(quantity);
+
     const parsedExpectedPrice =
       Number(expectedPrice);
 
@@ -171,168 +191,212 @@ export default function AddHarvestScreen() {
 
     if (!quantity.trim()) {
       nextErrors.quantity =
-        "Please enter the harvest quantity.";
+        t.c3addHarvest.validation.quantityRequired;
     } else if (
       !Number.isFinite(parsedQuantity) ||
       parsedQuantity <= 0
     ) {
       nextErrors.quantity =
-        "Quantity must be greater than zero.";
+        t.c3addHarvest.validation.quantityGreaterThanZero;
     }
 
     if (!expectedPrice.trim()) {
       nextErrors.expectedPrice =
-        "Please enter your expected price.";
+        t.c3addHarvest.validation.expectedPriceRequired;
     } else if (
       !Number.isFinite(parsedExpectedPrice) ||
       parsedExpectedPrice <= 0
     ) {
       nextErrors.expectedPrice =
-        "Expected price must be greater than zero.";
+        t.c3addHarvest.validation.expectedPriceGreaterThanZero;
     }
 
     if (!minimumAcceptablePrice.trim()) {
       nextErrors.minimumAcceptablePrice =
-        "Please enter your minimum acceptable price.";
+        t.c3addHarvest.validation.minimumPriceRequired;
     } else if (
-      !Number.isFinite(parsedMinimumAcceptablePrice) ||
+      !Number.isFinite(
+        parsedMinimumAcceptablePrice,
+      ) ||
       parsedMinimumAcceptablePrice <= 0
     ) {
       nextErrors.minimumAcceptablePrice =
-        "Minimum acceptable price must be greater than zero.";
+        t.c3addHarvest.validation.minimumPriceGreaterThanZero;
     } else if (
       Number.isFinite(parsedExpectedPrice) &&
-      parsedMinimumAcceptablePrice > parsedExpectedPrice
+      parsedMinimumAcceptablePrice >
+        parsedExpectedPrice
     ) {
       nextErrors.minimumAcceptablePrice =
-        "Minimum acceptable price cannot exceed your expected price.";
+        t.c3addHarvest.validation.minimumPriceCannotExceedExpected;
     }
 
     setErrors(nextErrors);
 
-    return Object.keys(nextErrors).length === 0;
+    return (
+      Object.keys(nextErrors).length === 0
+    );
   };
 
   const handleSubmit = async () => {
-  if (submitting) {
-    return;
-  }
+    if (submitting) {
+      return;
+    }
 
-  if (!validateForm()) {
-    console.log("Harvest form validation failed.");
-    return;
-  }
+    if (!validateForm()) {
+      console.log(
+        "Harvest form validation failed.",
+      );
+      return;
+    }
 
-  const payload = {
-    paddyType,
-    season,
-    quantity: Number(quantity),
-    expectedPrice: Number(expectedPrice),
-    minimumAcceptablePrice: Number(
-      minimumAcceptablePrice
-    ),
-  };
-
-  console.log("Submitting harvest:", payload);
-
-  try {
-  setSubmitting(true);
-
-  const response =
-    await harvestService.createHarvest({
+    const payload = {
       paddyType,
       season,
       quantity: Number(quantity),
       expectedPrice: Number(expectedPrice),
       minimumAcceptablePrice: Number(
-        minimumAcceptablePrice
+        minimumAcceptablePrice,
       ),
-    });
+    };
 
-  console.log(
-    "Create harvest response:",
-    JSON.stringify(response, null, 2)
-  );
+    console.log(
+      "Submitting harvest:",
+      payload,
+    );
 
-  const result = response.data;
-  const harvest = result.harvest;
+    try {
+      setSubmitting(true);
 
-  router.replace({
-    pathname:
-      "/(c03-marketplace)/(farmer)/harvest-result",
+      const response =
+        await harvestService.createHarvest(
+          payload,
+        );
 
-    params: {
-      harvestId: harvest._id,
-      paddyType: harvest.paddyType,
-      season: harvest.season,
-      quantity: String(harvest.quantity),
-      expectedPrice: String(
-        harvest.expectedPrice
-      ),
-      aiPredictedPrice: String(
-        harvest.aiPredictedPrice
-      ),
-      priceDifference: String(
-        harvest.priceDifference
-      ),
-      priceLevel: harvest.priceLevel,
-      harvestScore: String(
-        harvest.harvestScore
-      ),
-      marketStatus: harvest.marketStatus,
-      recommendedAction:
-        harvest.recommendedAction,
+      console.log(
+        "Create harvest response:",
+        JSON.stringify(
+          response,
+          null,
+          2,
+        ),
+      );
 
-      recommendationEnglish:
-        harvest.recommendation.english,
+      const result = response.data;
 
-      recommendationSinhala:
-        harvest.recommendation.sinhala,
+      const harvest = result.harvest;
 
-      matchingPaddyDemands: String(
-        result.demandSummary
-          .matchingPaddyDemands
-      ),
+      router.replace({
+        pathname:
+          "/(c03-marketplace)/(farmer)/harvest-result",
 
-      quantityCompatibleDemands: String(
-        result.demandSummary
-          .quantityCompatibleDemands
-      ),
+        params: {
+          harvestId: harvest._id,
 
-      sameDistrictDemands: String(
-        result.demandSummary
-          .sameDistrictDemands
-      ),
+          paddyType:
+            harvest.paddyType,
 
-      createdAt: harvest.createdAt,
-    },
-  });
-} catch (error) {
-  console.error(
-    "Create harvest failed:",
-    error
-  );
+          season:
+            harvest.season,
 
-  Alert.alert(
-    "Unable to add harvest",
-    getApiErrorMessage(error)
-  );
-} finally {
-  setSubmitting(false);
-}
-};
+          quantity:
+            String(harvest.quantity),
 
-  if (!fontsLoaded) return null;
+          expectedPrice:
+            String(
+              harvest.expectedPrice,
+            ),
 
-  // Derived, display-only estimate — does not affect submission logic.
-  const parsedQuantityPreview = Number(quantity);
-  const parsedPricePreview = Number(expectedPrice);
+          aiPredictedPrice:
+            String(
+              harvest.aiPredictedPrice,
+            ),
+
+          priceDifference:
+            String(
+              harvest.priceDifference,
+            ),
+
+          priceLevel:
+            harvest.priceLevel,
+
+          harvestScore:
+            String(
+              harvest.harvestScore,
+            ),
+
+          marketStatus:
+            harvest.marketStatus,
+
+          recommendedAction:
+            harvest.recommendedAction,
+
+          recommendationEnglish:
+            harvest.recommendation
+              .english,
+
+          recommendationSinhala:
+            harvest.recommendation
+              .sinhala,
+
+          matchingPaddyDemands:
+            String(
+              result.demandSummary
+                .matchingPaddyDemands,
+            ),
+
+          quantityCompatibleDemands:
+            String(
+              result.demandSummary
+                .quantityCompatibleDemands,
+            ),
+
+          sameDistrictDemands:
+            String(
+              result.demandSummary
+                .sameDistrictDemands,
+            ),
+
+          createdAt:
+            harvest.createdAt,
+        },
+      });
+    } catch (error) {
+      console.error(
+        "Create harvest failed:",
+        error,
+      );
+
+      Alert.alert(
+        t.c3addHarvest.unableToAddHarvest,
+        getApiErrorMessage(error),
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (!fontsLoaded) {
+    return null;
+  }
+
+  const parsedQuantityPreview =
+    Number(quantity);
+
+  const parsedPricePreview =
+    Number(expectedPrice);
+
   const estimatedValue =
-    Number.isFinite(parsedQuantityPreview) &&
+    Number.isFinite(
+      parsedQuantityPreview,
+    ) &&
     parsedQuantityPreview > 0 &&
-    Number.isFinite(parsedPricePreview) &&
+    Number.isFinite(
+      parsedPricePreview,
+    ) &&
     parsedPricePreview > 0
-      ? parsedQuantityPreview * parsedPricePreview
+      ? parsedQuantityPreview *
+        parsedPricePreview
       : null;
 
   return (
@@ -347,282 +411,645 @@ export default function AddHarvestScreen() {
       >
         <ScrollView
           style={styles.screen}
-          contentContainerStyle={styles.content}
+          contentContainerStyle={
+            styles.content
+          }
           keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
+          showsVerticalScrollIndicator={
+            false
+          }
         >
-        {/* Hero */}
-        <LinearGradient
-          colors={["#1B5E3A", "#0F3D26"]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.hero}
-        >
-          <View style={styles.heroGrainRow}>
-            <Ionicons name="leaf" size={12} color="#BBF7D0" />
-            <Text style={styles.heroEyebrow}>FARMER MARKETPLACE</Text>
-          </View>
+          {/* Hero */}
+          <LinearGradient
+            colors={[
+              "#1B5E3A",
+              "#0F3D26",
+            ]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.hero}
+          >
+            <View
+              style={styles.heroGrainRow}
+            >
+              <Ionicons
+                name="leaf"
+                size={12}
+                color="#BBF7D0"
+              />
 
-          <Text style={styles.heroTitle}>New Harvest{"\n"}Entry</Text>
-
-          <Text style={styles.heroSubtitle}>
-            Tell us what you've grown — we'll match it against
-            live demand and suggest a fair price.
-          </Text>
-
-          <View style={styles.heroBadge}>
-            <Ionicons name="sparkles" size={13} color="#0B3B22" />
-            <Text style={styles.heroBadgeText}>AI price insight included</Text>
-          </View>
-        </LinearGradient>
-
-        {/* Ticket perforation between hero and form */}
-        <View style={styles.perforationRow}>
-          <View style={styles.perforationNotchLeft} />
-          <View style={styles.perforationLine} />
-          <View style={styles.perforationNotchRight} />
-        </View>
-
-        <Animated.View
-          style={{
-            opacity: cardsFade,
-            transform: [{ translateY: cardsRise }],
-          }}
-        >
-          {/* Harvest details */}
-          <View style={styles.formCard}>
-            <View style={styles.cardSectionLabelRow}>
-              <View style={styles.cardSectionIconBox}>
-                <Ionicons name="leaf-outline" size={15} color="#166534" />
-              </View>
-              <Text style={styles.cardSectionLabel}>Harvest details</Text>
-            </View>
-
-            <View style={styles.fieldBlock}>
-              <Text style={styles.fieldLabel}>Paddy type</Text>
-
-              <View style={styles.paddyGrid}>
-                {PADDY_OPTIONS.map((option) => {
-                  const active = paddyType === option.value;
-                  const meta = PADDY_META[option.value];
-
-                  return (
-                    <TouchableOpacity
-                      key={option.value}
-                      activeOpacity={0.85}
-                      onPress={() => setPaddyType(option.value)}
-                      style={[styles.paddyCard, active && styles.paddyCardActive]}
-                    >
-                      {active ? (
-                        <View style={styles.paddyCheck}>
-                          <Ionicons name="checkmark-circle" size={16} color="#166534" />
-                        </View>
-                      ) : null}
-
-                      <View
-                        style={[
-                          styles.paddyIconBox,
-                          active && styles.paddyIconBoxActive,
-                        ]}
-                      >
-                        <Ionicons
-                          name={meta.icon}
-                          size={19}
-                          color={active ? "#FFFFFF" : "#166534"}
-                        />
-                      </View>
-
-                      <Text
-                        style={[
-                          styles.paddyLabel,
-                          active && styles.paddyLabelActive,
-                        ]}
-                      >
-                        {option.label}
-                      </Text>
-
-                      <Text
-                        style={[
-                          styles.paddyTag,
-                          active && styles.paddyTagActive,
-                        ]}
-                      >
-                        {meta.tag}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-            </View>
-
-            <View style={styles.fieldBlock}>
-              <View style={styles.fieldLabelRow}>
-                <Text style={styles.fieldLabel}>Season</Text>
-                <Text style={styles.fieldHint}>{SEASON_META[season].range}</Text>
-              </View>
-
-              {/* Segmented toggle replaces the old two-card grid */}
-              <View
-                style={styles.seasonToggle}
-                onLayout={(event) =>
-                  setSeasonToggleWidth(event.nativeEvent.layout.width)
-                }
+              <Text
+                style={styles.heroEyebrow}
               >
-                {seasonSegmentWidth > 0 ? (
-                  <Animated.View
-                    style={[
-                      styles.seasonIndicator,
-                      {
-                        width: seasonSegmentWidth,
-                        transform: [{ translateX: seasonIndicatorTranslate }],
-                      },
-                    ]}
-                  />
-                ) : null}
-
-                {SEASON_OPTIONS.map((option) => {
-                  const active = season === option.value;
-                  const meta = SEASON_META[option.value];
-
-                  return (
-                    <TouchableOpacity
-                      key={option.value}
-                      activeOpacity={0.8}
-                      onPress={() => setSeason(option.value)}
-                      style={styles.seasonSegment}
-                    >
-                      <Ionicons
-                        name={meta.icon}
-                        size={16}
-                        color={active ? "#FFFFFF" : "#166534"}
-                      />
-                      <Text
-                        style={[
-                          styles.seasonSegmentText,
-                          active && styles.seasonSegmentTextActive,
-                        ]}
-                      >
-                        {option.label}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-
-              <Text style={styles.fieldDescription}>
-                {SEASON_META[season].desc}
+                {t.c3addHarvest.eyebrow}
               </Text>
             </View>
-          </View>
 
-          {/* Pricing */}
-          <View style={styles.formCard}>
-            <View style={styles.cardSectionLabelRow}>
-              <View style={styles.cardSectionIconBox}>
-                <Ionicons name="cash-outline" size={15} color="#166534" />
-              </View>
-              <Text style={styles.cardSectionLabel}>Pricing</Text>
-            </View>
-
-            <Text style={styles.cardSectionDescription}>
-              Set your quantity and expected price — we'll work out the
-              estimated value as you type.
+            <Text
+              style={styles.heroTitle}
+            >
+              {t.c3addHarvest.title}
             </Text>
 
-            <NumericField
-              label="Quantity"
-              value={quantity}
-              onChangeText={(value) => {
-                setQuantity(value);
-                setErrors((current) => ({
-                  ...current,
-                  quantity: undefined,
-                }));
-              }}
-              placeholder="  1000"
-              unit="kg"
-              icon="cube-outline"
-              error={errors.quantity}
-              helper="Enter quantity in kilograms."
+            <Text
+              style={styles.heroSubtitle}
+            >
+              {t.c3addHarvest.subtitle}
+            </Text>
+
+            <View
+              style={styles.heroBadge}
+            >
+              <Ionicons
+                name="sparkles"
+                size={13}
+                color="#0B3B22"
+              />
+
+              <Text
+                style={styles.heroBadgeText}
+              >
+                {t.c3addHarvest.aiPriceInsight}
+              </Text>
+            </View>
+          </LinearGradient>
+
+          {/* Ticket perforation */}
+          <View
+            style={
+              styles.perforationRow
+            }
+          >
+            <View
+              style={
+                styles.perforationNotchLeft
+              }
             />
 
-            <NumericField
-              label="Expected price per kilogram"
-              value={expectedPrice}
-              onChangeText={(value) => {
-                setExpectedPrice(value);
-                setErrors((current) => ({
-                  ...current,
-                  expectedPrice: undefined,
-                }));
-              }}
-              placeholder="  125"
-              unit="LKR/kg"
-              icon="pricetag-outline"
-              error={errors.expectedPrice}
-              helper="Enter the amount in Sri Lankan Rupees."
+            <View
+              style={
+                styles.perforationLine
+              }
             />
 
-            <NumericField
-              label="Minimum acceptable price per kilogram"
-              value={minimumAcceptablePrice}
-              onChangeText={(value) => {
-                setMinimumAcceptablePrice(value);
-                setErrors((current) => ({
-                  ...current,
-                  minimumAcceptablePrice: undefined,
-                }));
-              }}
-              placeholder="  120"
-              unit="LKR/kg"
-              icon="shield-checkmark-outline"
-              error={errors.minimumAcceptablePrice}
-              helper="Private: used only by your Farmer AI agent during negotiation."
+            <View
+              style={
+                styles.perforationNotchRight
+              }
             />
-
-            {estimatedValue !== null ? (
-              <View style={styles.estimateStub}>
-                <View style={styles.estimateStubNotchLeft} />
-                <View style={styles.estimateStubNotchRight} />
-
-                <View style={styles.estimateRow}>
-                  <View style={styles.estimateIconBox}>
-                    <Ionicons name="calculator-outline" size={18} color="#B45309" />
-                  </View>
-                  <View style={styles.estimateTextArea}>
-                    <Text style={styles.estimateLabel}>Estimated harvest value</Text>
-                    <Text style={styles.estimateValue}>
-                      {formatCurrency(estimatedValue)}
-                    </Text>
-                  </View>
-                </View>
-              </View>
-            ) : null}
           </View>
 
-          <TouchableOpacity
-            activeOpacity={0.9}
-            onPress={handleSubmit}
-            disabled={submitting}
-            style={styles.submitShadow}
+          <Animated.View
+            style={{
+              opacity: cardsFade,
+              transform: [
+                {
+                  translateY: cardsRise,
+                },
+              ],
+            }}
           >
-            <LinearGradient
-              colors={["#F5C542", "#D97706"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.submitButton}
+            {/* Harvest details */}
+            <View
+              style={styles.formCard}
             >
-              {submitting ? (
-                <ActivityIndicator color="#0B3B22" />
-              ) : (
-                <>
-                  <Ionicons name="sparkles" size={18} color="#0B3B22" />
-                  <Text style={styles.submitText}>Get AI Recommendation</Text>
-                </>
-              )}
-            </LinearGradient>
-          </TouchableOpacity>
-        </Animated.View>
+              <View
+                style={
+                  styles.cardSectionLabelRow
+                }
+              >
+                <View
+                  style={
+                    styles.cardSectionIconBox
+                  }
+                >
+                  <Ionicons
+                    name="leaf-outline"
+                    size={15}
+                    color="#166534"
+                  />
+                </View>
+
+                <Text
+                  style={
+                    styles.cardSectionLabel
+                  }
+                >
+                  {
+                    t.c3addHarvest
+                      .harvestDetails
+                  }
+                </Text>
+              </View>
+
+              {/* Paddy type */}
+              <View
+                style={styles.fieldBlock}
+              >
+                <Text
+                  style={styles.fieldLabel}
+                >
+                  {
+                    t.c3addHarvest
+                      .paddyType
+                  }
+                </Text>
+
+                <View
+                  style={styles.paddyGrid}
+                >
+                  {paddyOptions.map(
+                    (option) => {
+                      const active =
+                        paddyType ===
+                        option.value;
+
+                      return (
+                        <TouchableOpacity
+                          key={
+                            option.value
+                          }
+                          activeOpacity={
+                            0.85
+                          }
+                          onPress={() =>
+                            setPaddyType(
+                              option.value,
+                            )
+                          }
+                          style={[
+                            styles.paddyCard,
+                            active &&
+                              styles.paddyCardActive,
+                          ]}
+                        >
+                          {active ? (
+                            <View
+                              style={
+                                styles.paddyCheck
+                              }
+                            >
+                              <Ionicons
+                                name="checkmark-circle"
+                                size={16}
+                                color="#166534"
+                              />
+                            </View>
+                          ) : null}
+
+                          <View
+                            style={[
+                              styles.paddyIconBox,
+                              active &&
+                                styles.paddyIconBoxActive,
+                            ]}
+                          >
+                            <Ionicons
+                              name={
+                                option.icon
+                              }
+                              size={19}
+                              color={
+                                active
+                                  ? "#FFFFFF"
+                                  : "#166534"
+                              }
+                            />
+                          </View>
+
+                          <Text
+                            style={[
+                              styles.paddyLabel,
+                              active &&
+                                styles.paddyLabelActive,
+                            ]}
+                          >
+                            {
+                              option.label
+                            }
+                          </Text>
+
+                          <Text
+                            style={[
+                              styles.paddyTag,
+                              active &&
+                                styles.paddyTagActive,
+                            ]}
+                          >
+                            {option.tag}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    },
+                  )}
+                </View>
+              </View>
+
+              {/* Season */}
+              <View
+                style={styles.fieldBlock}
+              >
+                <View
+                  style={
+                    styles.fieldLabelRow
+                  }
+                >
+                  <Text
+                    style={
+                      styles.fieldLabel
+                    }
+                  >
+                    {
+                      t.c3addHarvest
+                        .season
+                    }
+                  </Text>
+
+                  <Text
+                    style={
+                      styles.fieldHint
+                    }
+                  >
+                    {
+                      seasonOptions.find(
+                        (option) =>
+                          option.value ===
+                          season,
+                      )?.range
+                    }
+                  </Text>
+                </View>
+
+                <View
+                  style={
+                    styles.seasonToggle
+                  }
+                  onLayout={(event) =>
+                    setSeasonToggleWidth(
+                      event.nativeEvent
+                        .layout.width,
+                    )
+                  }
+                >
+                  {seasonSegmentWidth >
+                  0 ? (
+                    <Animated.View
+                      style={[
+                        styles.seasonIndicator,
+                        {
+                          width:
+                            seasonSegmentWidth,
+
+                          transform: [
+                            {
+                              translateX:
+                                seasonIndicatorTranslate,
+                            },
+                          ],
+                        },
+                      ]}
+                    />
+                  ) : null}
+
+                  {seasonOptions.map(
+                    (option) => {
+                      const active =
+                        season ===
+                        option.value;
+
+                      return (
+                        <TouchableOpacity
+                          key={
+                            option.value
+                          }
+                          activeOpacity={
+                            0.8
+                          }
+                          onPress={() =>
+                            setSeason(
+                              option.value,
+                            )
+                          }
+                          style={
+                            styles.seasonSegment
+                          }
+                        >
+                          <Ionicons
+                            name={
+                              option.icon
+                            }
+                            size={16}
+                            color={
+                              active
+                                ? "#FFFFFF"
+                                : "#166534"
+                            }
+                          />
+
+                          <Text
+                            style={[
+                              styles.seasonSegmentText,
+                              active &&
+                                styles.seasonSegmentTextActive,
+                            ]}
+                          >
+                            {
+                              option.label
+                            }
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    },
+                  )}
+                </View>
+
+                <Text
+                  style={
+                    styles.fieldDescription
+                  }
+                >
+                  {
+                    seasonOptions.find(
+                      (option) =>
+                        option.value ===
+                        season,
+                    )?.desc
+                  }
+                </Text>
+              </View>
+            </View>
+
+            {/* Pricing */}
+            <View
+              style={styles.formCard}
+            >
+              <View
+                style={
+                  styles.cardSectionLabelRow
+                }
+              >
+                <View
+                  style={
+                    styles.cardSectionIconBox
+                  }
+                >
+                  <Ionicons
+                    name="cash-outline"
+                    size={15}
+                    color="#166534"
+                  />
+                </View>
+
+                <Text
+                  style={
+                    styles.cardSectionLabel
+                  }
+                >
+                  {t.c3addHarvest.pricing}
+                </Text>
+              </View>
+
+              <Text
+                style={
+                  styles.cardSectionDescription
+                }
+              >
+                {
+                  t.c3addHarvest
+                    .pricingDescription
+                }
+              </Text>
+
+              <NumericField
+                label={
+                  t.c3addHarvest.quantity
+                }
+                value={quantity}
+                onChangeText={(value) => {
+                  setQuantity(value);
+
+                  setErrors(
+                    (current) => ({
+                      ...current,
+                      quantity:
+                        undefined,
+                    }),
+                  );
+                }}
+                placeholder={
+                  t.c3addHarvest
+                    .quantityPlaceholder
+                }
+                unit={
+                  t.c3addHarvest.kg
+                }
+                icon="cube-outline"
+                error={
+                  errors.quantity
+                }
+                helper={
+                  t.c3addHarvest
+                    .quantityHelper
+                }
+              />
+
+              <NumericField
+                label={
+                  t.c3addHarvest
+                    .expectedPrice
+                }
+                value={expectedPrice}
+                onChangeText={(value) => {
+                  setExpectedPrice(
+                    value,
+                  );
+
+                  setErrors(
+                    (current) => ({
+                      ...current,
+                      expectedPrice:
+                        undefined,
+                    }),
+                  );
+                }}
+                placeholder={
+                  t.c3addHarvest
+                    .expectedPricePlaceholder
+                }
+                unit={
+                  t.c3addHarvest
+                    .lkrPerKg
+                }
+                icon="pricetag-outline"
+                error={
+                  errors.expectedPrice
+                }
+                helper={
+                  t.c3addHarvest
+                    .expectedPriceHelper
+                }
+              />
+
+              <NumericField
+                label={
+                  t.c3addHarvest
+                    .minimumAcceptablePrice
+                }
+                value={
+                  minimumAcceptablePrice
+                }
+                onChangeText={(value) => {
+                  setMinimumAcceptablePrice(
+                    value,
+                  );
+
+                  setErrors(
+                    (current) => ({
+                      ...current,
+                      minimumAcceptablePrice:
+                        undefined,
+                    }),
+                  );
+                }}
+                placeholder={
+                  t.c3addHarvest
+                    .minimumAcceptablePricePlaceholder
+                }
+                unit={
+                  t.c3addHarvest
+                    .lkrPerKg
+                }
+                icon="shield-checkmark-outline"
+                error={
+                  errors.minimumAcceptablePrice
+                }
+                helper={
+                  t.c3addHarvest
+                    .minimumAcceptablePriceHelper
+                }
+              />
+
+              {estimatedValue !==
+              null ? (
+                <View
+                  style={
+                    styles.estimateStub
+                  }
+                >
+                  <View
+                    style={
+                      styles.estimateStubNotchLeft
+                    }
+                  />
+
+                  <View
+                    style={
+                      styles.estimateStubNotchRight
+                    }
+                  />
+
+                  <View
+                    style={
+                      styles.estimateRow
+                    }
+                  >
+                    <View
+                      style={
+                        styles.estimateIconBox
+                      }
+                    >
+                      <Ionicons
+                        name="calculator-outline"
+                        size={18}
+                        color="#B45309"
+                      />
+                    </View>
+
+                    <View
+                      style={
+                        styles.estimateTextArea
+                      }
+                    >
+                      <Text
+                        style={
+                          styles.estimateLabel
+                        }
+                      >
+                        {
+                          t.c3addHarvest
+                            .estimatedHarvestValue
+                        }
+                      </Text>
+
+                      <Text
+                        style={
+                          styles.estimateValue
+                        }
+                      >
+                        {formatCurrency(
+                          estimatedValue,
+                          language,
+                        )}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              ) : null}
+            </View>
+
+            {/* Submit */}
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={handleSubmit}
+              disabled={submitting}
+              style={
+                styles.submitShadow
+              }
+            >
+              <LinearGradient
+                colors={[
+                  "#F5C542",
+                  "#D97706",
+                ]}
+                start={{
+                  x: 0,
+                  y: 0,
+                }}
+                end={{
+                  x: 1,
+                  y: 0,
+                }}
+                style={
+                  styles.submitButton
+                }
+              >
+                {submitting ? (
+                  <ActivityIndicator
+                    color="#0B3B22"
+                  />
+                ) : (
+                  <>
+                    <Ionicons
+                      name="sparkles"
+                      size={18}
+                      color="#0B3B22"
+                    />
+
+                    <Text
+                      style={
+                        styles.submitText
+                      }
+                    >
+                      {
+                        t.c3addHarvest
+                          .getAiRecommendation
+                      }
+                    </Text>
+                  </>
+                )}
+              </LinearGradient>
+            </TouchableOpacity>
+          </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -632,7 +1059,9 @@ export default function AddHarvestScreen() {
 interface NumericFieldProps {
   label: string;
   value: string;
-  onChangeText: (value: string) => void;
+  onChangeText: (
+    value: string,
+  ) => void;
   placeholder: string;
   unit: string;
   icon: keyof typeof Ionicons.glyphMap;
@@ -652,25 +1081,55 @@ function NumericField({
 }: NumericFieldProps) {
   return (
     <View style={styles.fieldBlock}>
-      <Text style={styles.fieldLabel}>{label}</Text>
+      <Text
+        style={styles.fieldLabel}
+      >
+        {label}
+      </Text>
 
-      <View style={[styles.inputRow, error && styles.inputRowError]}>
-        <View style={[styles.inputIconBox, error && styles.inputIconBoxError]}>
-          <Ionicons name={icon} size={17} color={error ? "#DC2626" : "#166534"} />
+      <View
+        style={[
+          styles.inputRow,
+          error &&
+            styles.inputRowError,
+        ]}
+      >
+        <View
+          style={[
+            styles.inputIconBox,
+            error &&
+              styles.inputIconBoxError,
+          ]}
+        >
+          <Ionicons
+            name={icon}
+            size={17}
+            color={
+              error
+                ? "#DC2626"
+                : "#166534"
+            }
+          />
         </View>
 
         <TextInput
           style={styles.input}
           value={value}
-          onChangeText={onChangeText}
+          onChangeText={
+            onChangeText
+          }
           placeholder={placeholder}
           placeholderTextColor="#B7AF9C"
           keyboardType="decimal-pad"
         />
 
-        <View style={styles.unitChip}>
+        <View
+          style={styles.unitChip}
+        >
           <Text
-            style={styles.unitChipText}
+            style={
+              styles.unitChipText
+            }
             numberOfLines={1}
             adjustsFontSizeToFit
           >
@@ -680,25 +1139,64 @@ function NumericField({
       </View>
 
       {error ? (
-        <View style={styles.messageRow}>
-          <Ionicons name="alert-circle" size={12} color="#DC2626" />
-          <Text style={styles.errorText}>{error}</Text>
+        <View
+          style={
+            styles.messageRow
+          }
+        >
+          <Ionicons
+            name="alert-circle"
+            size={12}
+            color="#DC2626"
+          />
+
+          <Text
+            style={styles.errorText}
+          >
+            {error}
+          </Text>
         </View>
       ) : (
-        <View style={styles.messageRow}>
-          <Ionicons name="information-circle-outline" size={12} color="#9C9280" />
-          <Text style={styles.helper}>{helper}</Text>
+        <View
+          style={
+            styles.messageRow
+          }
+        >
+          <Ionicons
+            name="information-circle-outline"
+            size={12}
+            color="#9C9280"
+          />
+
+          <Text
+            style={styles.helper}
+          >
+            {helper}
+          </Text>
         </View>
       )}
     </View>
   );
 }
 
-function formatCurrency(value: number): string {
-  return `LKR ${new Intl.NumberFormat("en-LK", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(value)}`;
+function formatCurrency(
+  value: number,
+  language: string,
+): string {
+  const formatted =
+    new Intl.NumberFormat(
+      language === "si"
+        ? "si-LK"
+        : "en-LK",
+      {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      },
+    ).format(value);
+
+  return language === "si"
+    ? `රු. ${formatted}`
+    : `LKR ${formatted}`;
 }
 
 const CREAM = "#FBF8F1";
@@ -728,7 +1226,6 @@ const styles = StyleSheet.create({
     gap: 0,
   },
 
-  // Hero
   hero: {
     borderRadius: 26,
     paddingHorizontal: 22,
@@ -747,7 +1244,8 @@ const styles = StyleSheet.create({
   heroEyebrow: {
     color: "#BBF7D0",
     fontSize: 10.5,
-    fontFamily: "Poppins_700Bold",
+    fontFamily:
+      "Poppins_700Bold",
     letterSpacing: 1.4,
   },
 
@@ -755,7 +1253,8 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 30,
     lineHeight: 34,
-    fontFamily: "Poppins_800ExtraBold",
+    fontFamily:
+      "Poppins_800ExtraBold",
     marginTop: 2,
   },
 
@@ -763,7 +1262,8 @@ const styles = StyleSheet.create({
     color: "#DCEFE1",
     fontSize: 13,
     lineHeight: 19,
-    fontFamily: "Poppins_500Medium",
+    fontFamily:
+      "Poppins_500Medium",
     maxWidth: "92%",
   },
 
@@ -782,10 +1282,10 @@ const styles = StyleSheet.create({
   heroBadgeText: {
     color: "#0B3B22",
     fontSize: 11,
-    fontFamily: "Poppins_700Bold",
+    fontFamily:
+      "Poppins_700Bold",
   },
 
-  // Ticket perforation between hero and cards — the signature motif
   perforationRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -828,7 +1328,10 @@ const styles = StyleSheet.create({
     shadowColor: "#5C4A24",
     shadowOpacity: 0.06,
     shadowRadius: 14,
-    shadowOffset: { width: 0, height: 6 },
+    shadowOffset: {
+      width: 0,
+      height: 6,
+    },
     elevation: 2,
   },
 
@@ -850,7 +1353,8 @@ const styles = StyleSheet.create({
   cardSectionLabel: {
     color: "#166534",
     fontSize: 12,
-    fontFamily: "Poppins_700Bold",
+    fontFamily:
+      "Poppins_700Bold",
     letterSpacing: 0.5,
     textTransform: "uppercase",
   },
@@ -859,7 +1363,8 @@ const styles = StyleSheet.create({
     color: INK_MUTED,
     fontSize: 12,
     lineHeight: 17,
-    fontFamily: "Poppins_500Medium",
+    fontFamily:
+      "Poppins_500Medium",
     marginTop: -8,
   },
 
@@ -870,30 +1375,33 @@ const styles = StyleSheet.create({
   fieldLabelRow: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
+    justifyContent:
+      "space-between",
   },
 
   fieldLabel: {
     color: INK,
     fontSize: 12.5,
-    fontFamily: "Poppins_600SemiBold",
+    fontFamily:
+      "Poppins_600SemiBold",
   },
 
   fieldHint: {
     color: "#166534",
     fontSize: 11,
-    fontFamily: "Poppins_600SemiBold",
+    fontFamily:
+      "Poppins_600SemiBold",
   },
 
   fieldDescription: {
     color: INK_MUTED,
     fontSize: 11.5,
     lineHeight: 16,
-    fontFamily: "Poppins_500Medium",
+    fontFamily:
+      "Poppins_500Medium",
     marginTop: -2,
   },
 
-  // Paddy type cards
   paddyGrid: {
     flexDirection: "row",
     gap: 10,
@@ -940,7 +1448,8 @@ const styles = StyleSheet.create({
   paddyLabel: {
     color: INK,
     fontSize: 12.5,
-    fontFamily: "Poppins_700Bold",
+    fontFamily:
+      "Poppins_700Bold",
     textAlign: "center",
   },
 
@@ -951,7 +1460,8 @@ const styles = StyleSheet.create({
   paddyTag: {
     color: INK_MUTED,
     fontSize: 9,
-    fontFamily: "Poppins_500Medium",
+    fontFamily:
+      "Poppins_500Medium",
     textAlign: "center",
   },
 
@@ -959,7 +1469,6 @@ const styles = StyleSheet.create({
     color: "#166534",
   },
 
-  // Season segmented toggle — replaces the old two-card grid
   seasonToggle: {
     flexDirection: "row",
     backgroundColor: "#F0FDF4",
@@ -994,14 +1503,14 @@ const styles = StyleSheet.create({
   seasonSegmentText: {
     color: "#166534",
     fontSize: 13,
-    fontFamily: "Poppins_700Bold",
+    fontFamily:
+      "Poppins_700Bold",
   },
 
   seasonSegmentTextActive: {
     color: "#FFFFFF",
   },
 
-  // Numeric field
   inputRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -1038,14 +1547,15 @@ const styles = StyleSheet.create({
     minWidth: 0,
     flexShrink: 1,
     fontSize: 16,
-    fontFamily: "Poppins_700Bold",
+    fontFamily:
+      "Poppins_700Bold",
     color: INK,
     paddingVertical: 10,
   },
 
   unitChip: {
     flexShrink: 0,
-    maxWidth: 78,
+    maxWidth: 90,
     backgroundColor: "#EFEADA",
     borderRadius: 999,
     paddingHorizontal: 9,
@@ -1055,7 +1565,8 @@ const styles = StyleSheet.create({
   unitChipText: {
     color: "#5C5540",
     fontSize: 10,
-    fontFamily: "Poppins_700Bold",
+    fontFamily:
+      "Poppins_700Bold",
   },
 
   messageRow: {
@@ -1065,18 +1576,21 @@ const styles = StyleSheet.create({
   },
 
   helper: {
+    flex: 1,
     color: INK_MUTED,
     fontSize: 11.5,
-    fontFamily: "Poppins_500Medium",
+    fontFamily:
+      "Poppins_500Medium",
   },
 
   errorText: {
+    flex: 1,
     color: "#DC2626",
     fontSize: 11.5,
-    fontFamily: "Poppins_600SemiBold",
+    fontFamily:
+      "Poppins_600SemiBold",
   },
 
-  // Estimate — styled like a receipt stub torn from the form
   estimateStub: {
     position: "relative",
     borderRadius: 16,
@@ -1135,24 +1649,28 @@ const styles = StyleSheet.create({
   estimateLabel: {
     color: "#92400E",
     fontSize: 10.5,
-    fontFamily: "Poppins_600SemiBold",
+    fontFamily:
+      "Poppins_600SemiBold",
   },
 
   estimateValue: {
     color: "#78350F",
     fontSize: 18,
-    fontFamily: "Poppins_800ExtraBold",
+    fontFamily:
+      "Poppins_800ExtraBold",
     marginTop: 2,
   },
 
-  // Submit
   submitShadow: {
     borderRadius: 16,
     marginTop: 22,
     shadowColor: "#D97706",
     shadowOpacity: 0.32,
     shadowRadius: 12,
-    shadowOffset: { width: 0, height: 6 },
+    shadowOffset: {
+      width: 0,
+      height: 6,
+    },
     elevation: 6,
   },
 
@@ -1168,6 +1686,7 @@ const styles = StyleSheet.create({
   submitText: {
     color: "#0B3B22",
     fontSize: 15,
-    fontFamily: "Poppins_800ExtraBold",
+    fontFamily:
+      "Poppins_800ExtraBold",
   },
 });
