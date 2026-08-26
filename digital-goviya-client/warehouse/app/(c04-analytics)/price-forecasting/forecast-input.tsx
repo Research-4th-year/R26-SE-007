@@ -19,6 +19,7 @@ import {
   Poppins_600SemiBold,
   Poppins_500Medium,
 } from "@expo-google-fonts/poppins";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const RESULT_ROUTE =
   "/(c04-analytics)/price-forecasting/forecast-result";
