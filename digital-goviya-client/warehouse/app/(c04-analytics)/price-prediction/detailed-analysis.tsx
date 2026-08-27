@@ -18,6 +18,7 @@ import {
   Poppins_500Medium,
 } from "@expo-google-fonts/poppins";
 import type { PredictionApiResponse } from "./prediction-result";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 type TabKey = "market" | "technical";
 
