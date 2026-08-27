@@ -51,6 +51,18 @@ export default function MatchedMillersScreen() {
     ? rawParams.harvestId[0]
     : rawParams.harvestId;
 
+  const focusMillerId = Array.isArray(
+    rawParams.focusMillerId
+  )
+    ? rawParams.focusMillerId[0]
+    : rawParams.focusMillerId;
+
+  const focusDemandId = Array.isArray(
+    rawParams.focusDemandId
+  )
+    ? rawParams.focusDemandId[0]
+    : rawParams.focusDemandId;
+
   const [matchingData, setMatchingData] =
     useState<MatchingResponse["data"] | null>(
       null
@@ -101,7 +113,10 @@ export default function MatchedMillersScreen() {
 
       const response =
         await matchingService
-          .getHarvestMatches(harvestId);
+          .getHarvestMatches(harvestId, {
+            focusMillerId,
+            focusDemandId,
+          });
 
       setMatchingData(response.data);
 
@@ -130,7 +145,7 @@ export default function MatchedMillersScreen() {
 
   useEffect(() => {
     void loadMatches();
-  }, [harvestId]);
+  }, [harvestId, focusMillerId, focusDemandId]);
 
   const toggleSelection = (
     demandId: string

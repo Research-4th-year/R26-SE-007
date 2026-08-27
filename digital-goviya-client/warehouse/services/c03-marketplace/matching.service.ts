@@ -15,10 +15,24 @@ import type {
 export const matchingService = {
   async getHarvestMatches(
     harvestId: string,
+    options?: {
+      focusMillerId?: string;
+      focusDemandId?: string;
+    },
   ): Promise<MatchingResponse> {
     const response =
       await marketplaceApiClient.get<MatchingResponse>(
         `/matching/harvest/${harvestId}`,
+        {
+          params: {
+            ...(options?.focusMillerId
+              ? { focusMillerId: options.focusMillerId }
+              : {}),
+            ...(options?.focusDemandId
+              ? { focusDemandId: options.focusDemandId }
+              : {}),
+          },
+        },
       );
 
     return response.data;
@@ -26,6 +40,10 @@ export const matchingService = {
 
   async getDemandMatches(
     demandId: string,
+    options?: {
+      focusFarmerId?: string;
+      focusHarvestId?: string;
+    },
   ): Promise<MillerMatchingResponse> {
     console.log(
       "GET Farmer matches for demand:",
@@ -35,6 +53,16 @@ export const matchingService = {
     const response =
       await marketplaceApiClient.get<MillerMatchingResponse>(
         `/matching/demand/${demandId}`,
+        {
+          params: {
+            ...(options?.focusFarmerId
+              ? { focusFarmerId: options.focusFarmerId }
+              : {}),
+            ...(options?.focusHarvestId
+              ? { focusHarvestId: options.focusHarvestId }
+              : {}),
+          },
+        },
       );
 
     console.log(
