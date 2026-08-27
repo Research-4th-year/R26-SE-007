@@ -44,6 +44,8 @@ import type {
   MillerDemand,
 } from "@/types/c03-marketplace/demand.types";
 
+import { useLanguage } from "@/contexts/LanguageContext";
+
 interface FarmerSummary {
   _id: string;
   farmerName: string;
@@ -110,6 +112,8 @@ function useEntrance(delay = 0) {
 }
 
 export default function ReceivedMatchRequestsScreen() {
+  const { t } = useLanguage();
+
   const [selections, setSelections] =
     useState<MatchSelection[]>([]);
 
@@ -245,13 +249,13 @@ export default function ReceivedMatchRequestsScreen() {
 
       Alert.alert(
         decision === "accepted"
-          ? "Match accepted"
-          : "Match rejected",
+          ? t.c3receivedMatchRequests.matchAccepted
+          : t.c3receivedMatchRequests.matchRejected,
         response.message
       );
     } catch (error) {
       Alert.alert(
-        "Unable to update request",
+        t.c3receivedMatchRequests.updateErrorTitle,
         getApiErrorMessage(error)
       );
     } finally {
@@ -311,7 +315,7 @@ export default function ReceivedMatchRequestsScreen() {
 
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>
-                Matching activity
+                {t.c3receivedMatchRequests.activityTitle}
               </Text>
 
               <View style={styles.refreshHintRow}>
@@ -321,7 +325,7 @@ export default function ReceivedMatchRequestsScreen() {
                   color="#B5AB92"
                 />
                 <Text style={styles.refreshHint}>
-                  Pull to refresh
+                  {t.c3receivedMatchRequests.pullToRefresh}
                 </Text>
               </View>
             </View>
@@ -369,6 +373,7 @@ export default function ReceivedMatchRequestsScreen() {
 /* ------------------------------------------------------------------ */
 
 function Header() {
+  const { t } = useLanguage();
   const { scale, onPressIn, onPressOut } =
     usePressScale(0.9);
 
@@ -405,11 +410,11 @@ function Header() {
 
       <View style={styles.headerText}>
         <Text style={styles.headerTitle}>
-          Match Requests
+          {t.c3receivedMatchRequests.title}
         </Text>
 
         <Text style={styles.headerSubtitle}>
-          Farmer harvest requests
+          {t.c3receivedMatchRequests.subtitle}
         </Text>
       </View>
 
@@ -452,6 +457,7 @@ function SummaryStrip({
   readyCount: number;
   totalCount: number;
 }) {
+  const { t } = useLanguage();
   const entrance = useEntrance(40);
 
   return (
@@ -459,7 +465,7 @@ function SummaryStrip({
       style={[styles.summaryCard, entrance]}
     >
       <SummaryMetric
-        label="Pending"
+        label={t.c3receivedMatchRequests.pending}
         value={pendingCount}
         icon="time-outline"
         tint="#B45309"
@@ -468,7 +474,7 @@ function SummaryStrip({
       <View style={styles.summaryDivider} />
 
       <SummaryMetric
-        label="Ready"
+        label={t.c3receivedMatchRequests.ready}
         value={readyCount}
         icon="checkmark-circle-outline"
         tint="#166534"
@@ -477,7 +483,7 @@ function SummaryStrip({
       <View style={styles.summaryDivider} />
 
       <SummaryMetric
-        label="Total"
+        label={t.c3receivedMatchRequests.total}
         value={totalCount}
         icon="documents-outline"
         tint="#78350F"
@@ -556,6 +562,7 @@ function RequestTypeToggle({
   receivedCount: number;
   sentCount: number;
 }) {
+  const { t } = useLanguage();
   const entrance = useEntrance(80);
 
   const receivedActive = value === "received";
@@ -568,7 +575,7 @@ function RequestTypeToggle({
       <Pressable
         onPress={() => onChange("received")}
         accessibilityRole="button"
-        accessibilityLabel="Show received requests"
+        accessibilityLabel={t.c3receivedMatchRequests.showReceived}
         style={[
           styles.typeToggleHalf,
           receivedActive &&
@@ -592,7 +599,7 @@ function RequestTypeToggle({
               styles.typeToggleTextActive,
           ]}
         >
-          Received
+          {t.c3receivedMatchRequests.received}
         </Text>
 
         <View
@@ -617,7 +624,7 @@ function RequestTypeToggle({
       <Pressable
         onPress={() => onChange("sent")}
         accessibilityRole="button"
-        accessibilityLabel="Show sent requests"
+        accessibilityLabel={t.c3receivedMatchRequests.showSent}
         style={[
           styles.typeToggleHalf,
           sentActive &&
@@ -641,7 +648,7 @@ function RequestTypeToggle({
               styles.typeToggleTextActive,
           ]}
         >
-          Sent
+          {t.c3receivedMatchRequests.sent}
         </Text>
 
         <View
@@ -683,6 +690,7 @@ function MillerRequestCard({
   onAccept: () => void;
   onReject: () => void;
 }) {
+  const { t } = useLanguage();
   const harvest = getHarvest(
     selection.harvestId
   );
@@ -696,7 +704,7 @@ function MillerRequestCard({
   );
 
   const status =
-    getStatusDisplay(selection.status);
+    getStatusDisplay(selection.status, t);
 
   const isIncoming =
     selection.initiatedBy === "farmer";
@@ -779,8 +787,8 @@ function MillerRequestCard({
           ]}
         >
           {isIncoming
-            ? "FARMER REQUEST"
-            : "SENT REQUEST"}
+            ? t.c3receivedMatchRequests.farmerRequest
+            : t.c3receivedMatchRequests.sentRequest}
         </Text>
       </View>
 
@@ -791,13 +799,17 @@ function MillerRequestCard({
 
         <View style={styles.requestTitleArea}>
           <Text style={styles.farmerName}>
-            {farmer?.farmerName ?? "Farmer"}
+            {farmer?.farmerName ?? t.c3receivedMatchRequests.farmer}
           </Text>
 
           <Text style={styles.locationText}>
             {farmer
-              ? `${farmer.location}, ${farmer.district}`
-              : "Location unavailable"}
+              ? `${farmer.location}, ${translateDistrict(
+                  farmer.district,
+                  t.c3districts,
+                  farmer.district,
+                )}`
+              : t.c3receivedMatchRequests.locationUnavailable}
           </Text>
         </View>
 
@@ -843,33 +855,35 @@ function MillerRequestCard({
           </View>
 
           <View>
-            <Text style={styles.harvestEyebrow}>FARMER HARVEST</Text>
+            <Text style={styles.harvestEyebrow}>
+              {t.c3receivedMatchRequests.farmerHarvest}
+            </Text>
 
             <Text style={styles.harvestTitle}>
-              {formatLabel(harvest?.paddyType ?? "-")}
+              {translatePaddyType(harvest?.paddyType ?? "", t)}
             </Text>
           </View>
         </View>
 
         <View style={styles.detailsGrid}>
           <DetailItem
-            label="Quantity"
-            value={harvest ? `${formatNumber(harvest.quantity)} kg` : "-"}
+            label={t.c3receivedMatchRequests.quantity}
+            value={harvest ? `${formatNumber(harvest.quantity)} ${t.c3receivedMatchRequests.kg}` : "-"}
           />
 
           <DetailItem
-            label="Expected"
+            label={t.c3receivedMatchRequests.expected}
             value={harvest ? `Rs.${harvest.expectedPrice.toFixed(2)}` : "-"}
           />
 
           <DetailItem
-            label="AI price"
+            label={t.c3receivedMatchRequests.aiPrice}
             value={harvest ? `Rs.${harvest.aiPredictedPrice.toFixed(2)}` : "-"}
             emphasized
           />
 
           <DetailItem
-            label="Your offer"
+            label={t.c3receivedMatchRequests.yourOffer}
             value={demand ? `Rs.${demand.offeredPrice.toFixed(2)}` : "-"}
             emphasized
           />
@@ -880,7 +894,7 @@ function MillerRequestCard({
         <Ionicons name="time-outline" size={15} color="#8A8371" />
 
         <Text style={styles.dateText}>
-          {isIncoming ? "Received" : "Sent"}{" "}
+          {isIncoming ? t.c3receivedMatchRequests.received : t.c3receivedMatchRequests.sent}{" "}
           {formatDate(selection.createdAt)}
         </Text>
       </View>
@@ -899,7 +913,9 @@ function MillerRequestCard({
             ]}
           >
             <Ionicons name="close-circle-outline" size={18} color="#B91C1C" />
-            <Text style={styles.rejectText}>Reject</Text>
+            <Text style={styles.rejectText}>
+              {t.c3receivedMatchRequests.reject}
+            </Text>
           </AnimatedPressable>
 
           <AnimatedPressable
@@ -922,7 +938,9 @@ function MillerRequestCard({
                   size={18}
                   color="#FFFFFF"
                 />
-                <Text style={styles.acceptText}>Accept</Text>
+                <Text style={styles.acceptText}>
+                  {t.c3receivedMatchRequests.accept}
+                </Text>
               </>
             )}
           </AnimatedPressable>
@@ -966,7 +984,9 @@ function MillerRequestCard({
           ]}
         >
           <Ionicons name="sparkles" size={18} color="#FFFFFF" />
-          <Text style={styles.negotiationButtonText}>Start AI Negotiation</Text>
+          <Text style={styles.negotiationButtonText}>
+            {t.c3receivedMatchRequests.startAiNegotiation}
+          </Text>
         </AnimatedPressable>
       ) : null}
     </Animated.View>
@@ -974,6 +994,7 @@ function MillerRequestCard({
 }
 
 function MatchScoreBar({ score }: { score: number }) {
+  const { t } = useLanguage();
   const [display, setDisplay] = useState(0);
   const anim = useRef(new Animated.Value(0)).current;
 
@@ -1004,9 +1025,11 @@ function MatchScoreBar({ score }: { score: number }) {
     <View style={styles.matchScoreCard}>
       <View style={styles.matchScoreTopRow}>
         <View>
-          <Text style={styles.matchScoreLabel}>AI match score</Text>
+          <Text style={styles.matchScoreLabel}>
+            {t.c3receivedMatchRequests.aiMatchScore}
+          </Text>
           <Text style={styles.matchScoreDescription}>
-            Harvest-demand compatibility
+            {t.c3receivedMatchRequests.scoreDescription}
           </Text>
         </View>
 
@@ -1055,6 +1078,7 @@ function DetailItem({
 /* ------------------------------------------------------------------ */
 
 function LoadingState() {
+  const { t } = useLanguage();
   const shimmer = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -1111,7 +1135,7 @@ function LoadingState() {
         <View style={styles.loadingCaption}>
           <ActivityIndicator size="small" color="#B45309" />
           <Text style={styles.loadingCaptionText}>
-            Retrieving farmer matching requests
+            {t.c3receivedMatchRequests.loadingText}
           </Text>
         </View>
       </View>
@@ -1120,6 +1144,7 @@ function LoadingState() {
 }
 
 function EmptyState() {
+  const { t } = useLanguage();
   const entrance = useEntrance(0);
 
   return (
@@ -1133,12 +1158,11 @@ function EmptyState() {
       </View>
 
       <Text style={styles.stateTitle}>
-        No match requests yet
+        {t.c3receivedMatchRequests.emptyTitle}
       </Text>
 
       <Text style={styles.stateText}>
-        Farmer requests matching one of your
-        open demands will appear here.
+        {t.c3receivedMatchRequests.emptyText}
       </Text>
     </Animated.View>
   );
@@ -1149,6 +1173,7 @@ function FilteredEmptyState({
 }: {
   type: RequestTypeFilter;
 }) {
+  const { t } = useLanguage();
   const entrance = useEntrance(0);
 
   return (
@@ -1168,14 +1193,15 @@ function FilteredEmptyState({
       </View>
 
       <Text style={styles.filteredEmptyTitle}>
-        No {type === "received" ? "received" : "sent"}{" "}
-        requests
+        {type === "received"
+          ? t.c3receivedMatchRequests.noReceivedRequests
+          : t.c3receivedMatchRequests.noSentRequests}
       </Text>
 
       <Text style={styles.filteredEmptyText}>
         {type === "received"
-          ? "Requests farmers send you will show up here."
-          : "Requests you send to farmers will show up here."}
+          ? t.c3receivedMatchRequests.noReceivedRequestsText
+          : t.c3receivedMatchRequests.noSentRequestsText}
       </Text>
     </Animated.View>
   );
@@ -1188,6 +1214,7 @@ function ErrorState({
   message: string;
   onRetry: () => void;
 }) {
+  const { t } = useLanguage();
   const retry = usePressScale(0.96);
   const entrance = useEntrance(0);
 
@@ -1202,7 +1229,7 @@ function ErrorState({
       </View>
 
       <Text style={styles.stateTitle}>
-        Unable to load requests
+        {t.c3receivedMatchRequests.errorTitle}
       </Text>
 
       <Text style={styles.stateText}>
@@ -1225,7 +1252,7 @@ function ErrorState({
         />
 
         <Text style={styles.retryText}>
-          Try Again
+          {t.c3receivedMatchRequests.tryAgain}
         </Text>
       </AnimatedPressable>
     </Animated.View>
@@ -1276,37 +1303,80 @@ function getDemand(
 }
 
 function getStatusDisplay(
-  status: MatchSelection["status"]
+  status: MatchSelection["status"],
+  t: any,
 ) {
   switch (status) {
     case "pending":
       return {
-        label: "New Request",
+        label: t.c3receivedMatchRequests.statusNewRequest,
         color: "#B45309",
         background: "#FEF3C7",
       };
 
     case "negotiation_ready":
       return {
-        label: "Negotiation Ready",
+        label: t.c3receivedMatchRequests.statusNegotiationReady,
         color: "#166534",
         background: "#DCFCE7",
       };
 
     case "rejected":
       return {
-        label: "Rejected",
+        label: t.c3receivedMatchRequests.statusRejected,
         color: "#B91C1C",
         background: "#FEE2E2",
       };
 
     case "cancelled":
       return {
-        label: "Cancelled",
+        label: t.c3receivedMatchRequests.statusCancelled,
         color: "#475569",
         background: "#E2E8F0",
       };
   }
+}
+
+function translatePaddyType(value: string, t: any): string {
+  const normalized = value.trim().toLowerCase();
+
+  if (normalized === "nadu") {
+    return t.c3paddyTypes.Nadu;
+  }
+
+  if (normalized === "samba") {
+    return t.c3paddyTypes.Samba;
+  }
+
+  if (normalized === "keeri samba" || normalized === "keerisamba") {
+    return t.c3paddyTypes.KeeriSamba;
+  }
+
+  return formatLabel(value || "-");
+}
+
+function translateDistrict(
+  district: string | undefined,
+  translations: {
+    Ampara: string;
+    Badulla: string;
+    Kandy: string;
+    Monaragala: string;
+  },
+  fallback: string,
+): string {
+  if (!district) {
+    return fallback;
+  }
+
+  const districtMap: Record<string, string> = {
+    Ampara: translations.Ampara,
+    Badulla: translations.Badulla,
+    Kandy: translations.Kandy,
+    Monaragala: translations.Monaragala,
+  };
+
+  return districtMap[district.trim()] ?? district.trim();
 }
 
 function formatLabel(

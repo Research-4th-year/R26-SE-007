@@ -29,7 +29,7 @@ import type { MillerDashboardData } from "@/types/c03-marketplace/dashboard.type
 
 export default function MillerHomeScreen() {
   const { user } = useMarketplaceAuth();
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
 
   const [dashboard, setDashboard] = useState<MillerDashboardData | null>(null);
 
@@ -122,9 +122,11 @@ export default function MillerHomeScreen() {
               />
 
               <Text style={styles.locationText}>
-                {dashboard?.miller.district ??
-                  user?.district ??
-                  t.c3MillerHome.defaultLocation}
+                {translateDistrict(
+                  dashboard?.miller.district ?? user?.district,
+                  t.c3districts,
+                  t.c3MillerHome.defaultLocation,
+                )}
               </Text>
             </View>
           </View>
@@ -585,6 +587,30 @@ function ActionCard({
       />
     </Pressable>
   );
+}
+
+function translateDistrict(
+  district: string | undefined,
+  translations: {
+    Ampara: string;
+    Badulla: string;
+    Kandy: string;
+    Monaragala: string;
+  },
+  fallback: string,
+): string {
+  if (!district) {
+    return fallback;
+  }
+
+  const districtMap: Record<string, string> = {
+    Ampara: translations.Ampara,
+    Badulla: translations.Badulla,
+    Kandy: translations.Kandy,
+    Monaragala: translations.Monaragala,
+  };
+
+  return districtMap[district.trim()] ?? district.trim();
 }
 
 function formatQuantity(value: number): string {

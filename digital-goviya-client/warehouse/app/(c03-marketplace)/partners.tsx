@@ -30,6 +30,7 @@ import {
   View,
 } from "react-native";
 
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useMarketplaceAuth } from "@/hooks/c03-marketplace/useMarketplaceAuth";
 import { partnerService } from "@/services/c03-marketplace/partner.service";
 import { connectionService } from "@/services/c03-marketplace/connection.service";
@@ -59,28 +60,25 @@ type Theme = {
 
 const TAB_CONFIG: {
   key: PartnerTab;
-  label: string;
   icon: keyof typeof Ionicons.glyphMap;
 }[] = [
   {
     key: "connected",
-    label: "Connected",
     icon: "people-outline",
   },
   {
     key: "requests",
-    label: "Requests",
     icon: "mail-unread-outline",
   },
   {
     key: "trade",
-    label: "Trade",
     icon: "receipt-outline",
   },
 ];
 
 export default function PartnersScreen() {
   const { user } = useMarketplaceAuth();
+  const { t } = useLanguage();
 
   const [fontsLoaded] = useFonts({
     Poppins_400Regular,
@@ -203,15 +201,18 @@ export default function PartnersScreen() {
 
       if (decision === "accepted") {
         Alert.alert(
-          "Connection accepted",
-          `${item.partner.name} is now in your marketplace network.`
+          t.c3partners.connectionAccepted,
+          t.c3partners.connectionAcceptedMessage.replace(
+            "{{name}}",
+            item.partner.name
+          )
         );
       }
 
       await loadAll();
     } catch (error) {
       Alert.alert(
-        "Unable to respond",
+        t.c3partners.unableToRespond,
         getApiErrorMessage(error)
       );
     } finally {
@@ -237,15 +238,18 @@ export default function PartnersScreen() {
       setSelectedOutgoingRequest(null);
 
       Alert.alert(
-        "Request cancelled",
-        `Your connection request to ${partnerName} has been cancelled.`
+        t.c3partners.requestCancelled,
+        t.c3partners.requestCancelledMessage.replace(
+          "{{name}}",
+          partnerName
+        )
       );
 
       await loadAll();
     } catch (error) {
       console.log("CANCEL REQUEST FAILED:", error);
       Alert.alert(
-        "Unable to cancel request",
+        t.c3partners.unableToCancel,
         getApiErrorMessage(error)
       );
     } finally {
@@ -478,13 +482,13 @@ export default function PartnersScreen() {
                 ]}
               />
 
-              <Text style={styles.headerEyebrow}>MARKETPLACE NETWORK</Text>
+              <Text style={styles.headerEyebrow}>{t.c3partners.eyebrow}</Text>
             </View>
 
-            <Text style={styles.headerTitle}>Partners</Text>
+            <Text style={styles.headerTitle}>{t.c3partners.title}</Text>
 
             <Text style={styles.headerSubtitle}>
-              Build trusted connections and manage your trading relationships.
+              {t.c3partners.subtitle}
             </Text>
           </View>
 
@@ -504,7 +508,7 @@ export default function PartnersScreen() {
             />
 
             <Text style={[styles.headerRoleText, { color: theme.primary }]}>
-              {isFarmer ? "Farmer" : "Miller"}
+              {isFarmer ? t.c3partners.farmer : t.c3partners.miller}
             </Text>
           </View>
         </View>
@@ -544,38 +548,37 @@ export default function PartnersScreen() {
             </View>
 
             <View style={{ flex: 1 }}>
-              <Text style={styles.heroEyebrow}>TRUSTED NETWORK</Text>
+              <Text style={styles.heroEyebrow}>{t.c3partners.trustedNetwork}</Text>
 
-              <Text style={styles.heroTitle}>Your trading relationships</Text>
+              <Text style={styles.heroTitle}>{t.c3partners.heroTitle}</Text>
 
               <Text style={styles.heroDescription}>
-                Connect, collaborate and trade with verified marketplace
-                partners.
+                {t.c3partners.heroDescription}
               </Text>
             </View>
           </View>
 
           <View style={styles.statsRow}>
             <Stat
-              label="Connected"
+              label={t.c3partners.connected}
               value={connections.length}
               icon="people-outline"
             />
 
             <Stat
-              label="Requests"
+              label={t.c3partners.requests}
               value={requests.length}
               icon="mail-outline"
             />
 
             <Stat
-              label="Incoming"
+              label={t.c3partners.incoming}
               value={incomingCount}
               icon="arrow-down-outline"
             />
 
             <Stat
-              label="Trade partners"
+              label={t.c3partners.tradePartners}
               value={tradePartners.length}
               icon="swap-horizontal-outline"
             />
@@ -599,8 +602,15 @@ export default function PartnersScreen() {
               ]}
             />
 
-            {TAB_CONFIG.map(({ key, label, icon }) => {
+            {TAB_CONFIG.map(({ key, icon }) => {
               const selected = activeTab === key;
+
+              const label =
+                key === "connected"
+                  ? t.c3partners.connected
+                  : key === "requests"
+                    ? t.c3partners.requests
+                    : t.c3partners.trade;
 
               const badge =
                 key === "connected"
@@ -703,8 +713,8 @@ export default function PartnersScreen() {
             onBlur={() => setSearchFocused(false)}
             placeholder={
               isFarmer
-                ? "Search miller, district or location..."
-                : "Search farmer, district or location..."
+                ? t.c3partners.searchMiller
+                : t.c3partners.searchFarmer
             }
             placeholderTextColor="#94A3B8"
             style={styles.searchInput}
@@ -735,7 +745,7 @@ export default function PartnersScreen() {
             </View>
 
             <View style={{ flex: 1 }}>
-              <Text style={styles.errorTitle}>Unable to load network</Text>
+              <Text style={styles.errorTitle}>{t.c3partners.unableToLoad}</Text>
 
               <Text style={styles.errorText}>{errorMessage}</Text>
             </View>
@@ -826,10 +836,12 @@ export default function PartnersScreen() {
                   </View>
 
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.popupTitle}>Connection request</Text>
+                    <Text style={styles.popupTitle}>
+                      {t.c3partners.connectionRequest}
+                    </Text>
 
                     <Text style={styles.popupSubtitle}>
-                      Waiting for response
+                      {t.c3partners.waitingForResponse}
                     </Text>
                   </View>
 
@@ -859,10 +871,14 @@ export default function PartnersScreen() {
                   </View>
 
                   <Text style={styles.popupInfoText}>
-                    Your request was sent on{" "}
-                    {formatDate(selectedOutgoingRequest.requestedAt)}. The other
-                    party has not responded yet. You can cancel the request
-                    while it is pending.
+                    {t.c3partners.requestSentOn.replace(
+                      "{{date}}",
+                      formatDate(
+                        selectedOutgoingRequest.requestedAt,
+                        t.c3partners.noDate,
+                        t.c3partners.dateUnavailable
+                      )
+                    )}
                   </Text>
                 </View>
 
@@ -877,7 +893,9 @@ export default function PartnersScreen() {
                 >
                   <Ionicons name="person-outline" size={18} color="#FFFFFF" />
 
-                  <Text style={styles.popupPrimaryText}>View Profile</Text>
+                  <Text style={styles.popupPrimaryText}>
+                    {t.c3partners.viewProfile}
+                  </Text>
 
                   <Ionicons name="arrow-forward" size={16} color="#FFFFFF" />
                 </PressableScale>
@@ -891,7 +909,10 @@ export default function PartnersScreen() {
                   onPress={() => {
                     if (Platform.OS === "web") {
                       const confirmed = window.confirm(
-                        `Do you want to cancel your connection request to ${selectedOutgoingRequest?.partner.name}?`,
+                        t.c3partners.cancelRequestMessage.replace(
+                          "{{name}}",
+                          selectedOutgoingRequest?.partner.name
+                        ),
                       );
 
                       if (confirmed) {
@@ -902,15 +923,18 @@ export default function PartnersScreen() {
                     }
 
                     Alert.alert(
-                      "Cancel request?",
-                      `Do you want to cancel your connection request to ${selectedOutgoingRequest?.partner.name}?`,
+                      t.c3partners.cancelRequestTitle,
+                      t.c3partners.cancelRequestMessage.replace(
+                        "{{name}}",
+                        selectedOutgoingRequest?.partner.name
+                      ),
                       [
                         {
-                          text: "Keep request",
+                          text: t.c3partners.keepRequest,
                           style: "cancel",
                         },
                         {
-                          text: "Cancel request",
+                          text: t.c3partners.cancelRequest,
                           style: "destructive",
                           onPress: () => void cancelRequest(),
                         },
@@ -928,7 +952,9 @@ export default function PartnersScreen() {
                         color="#B91C1C"
                       />
 
-                      <Text style={styles.popupCancelText}>Cancel Request</Text>
+                      <Text style={styles.popupCancelText}>
+                        {t.c3partners.cancelRequestButton}
+                      </Text>
                     </>
                   )}
                 </PressableScale>
@@ -957,12 +983,16 @@ function ConnectedSection({
     id: string
   ) => void;
 }) {
+  const { t } = useLanguage();
+
   return (
     <View>
       <SectionHeader
-        title="Connected partners"
-        subtitle={`${items.length} marketplace connection${
-          items.length === 1 ? "" : "s"
+        title={t.c3partners.connectedPartners}
+        subtitle={`${items.length} ${
+          items.length === 1
+            ? t.c3partners.connectionSingular
+            : t.c3partners.connectionPlural
         }`}
         icon="people-outline"
         theme={theme}
@@ -971,8 +1001,8 @@ function ConnectedSection({
       {items.length === 0 ? (
         <EmptyState
           icon="people-outline"
-          title="No connections yet"
-          text="Use Search to discover Farmers or Millers and send a connection request."
+          title={t.c3partners.noConnections}
+          text={t.c3partners.noConnectionsText}
           theme={theme}
         />
       ) : (
@@ -1015,14 +1045,14 @@ function ConnectedSection({
                 <View style={styles.badgeRow}>
                   <Badge
                     icon="checkmark-circle"
-                    text="Connected"
+                    text={t.c3partners.connected}
                     background="#DCFCE7"
                     color="#166534"
                   />
 
                   <Badge
                     icon="call-outline"
-                    text="Contact unlocked"
+                    text={t.c3partners.contactUnlocked}
                     background="#EFF6FF"
                     color="#1D4ED8"
                   />
@@ -1035,7 +1065,7 @@ function ConnectedSection({
                         styles.cardFooterLabel
                       }
                     >
-                      CONNECTION SINCE
+                      {t.c3partners.connectionSince}
                     </Text>
 
                     <Text
@@ -1045,7 +1075,9 @@ function ConnectedSection({
                     >
                       {formatDate(
                         item.respondedAt ||
-                          item.requestedAt
+                          item.requestedAt,
+                        t.c3partners.noDate,
+                        t.c3partners.dateUnavailable
                       )}
                     </Text>
                   </View>
@@ -1068,7 +1100,7 @@ function ConnectedSection({
                         },
                       ]}
                     >
-                      View partner
+                      {t.c3partners.viewProfile}
                     </Text>
 
                     <Ionicons
@@ -1110,6 +1142,8 @@ function RequestsSection({
     item: MyConnectionItem
   ) => void;
 }) {
+  const { t } = useLanguage();
+
   const incoming = items.filter(
     (item) => item.direction === "incoming"
   );
@@ -1122,16 +1156,16 @@ function RequestsSection({
     return (
       <>
         <SectionHeader
-          title="Connection requests"
-          subtitle="Incoming and outgoing requests"
+          title={t.c3partners.connectionRequests}
+          subtitle={t.c3partners.requestsSubtitle}
           icon="mail-outline"
           theme={theme}
         />
 
         <EmptyState
           icon="mail-outline"
-          title="No pending requests"
-          text="New connection requests will appear here."
+          title={t.c3partners.noPendingRequests}
+          text={t.c3partners.noPendingRequestsText}
           theme={theme}
         />
       </>
@@ -1144,8 +1178,8 @@ function RequestsSection({
       {incoming.length > 0 ? (
         <>
           <SectionHeader
-            title="Incoming requests"
-            subtitle={`${incoming.length} waiting for your response`}
+            title={t.c3partners.incomingRequests}
+            subtitle={`${incoming.length} ${t.c3partners.waitingForResponse}`}
             icon="arrow-down-outline"
             theme={theme}
           />
@@ -1252,7 +1286,7 @@ function RequestsSection({
                         <Text
                           style={styles.rejectText}
                         >
-                          Reject
+                          {t.c3partners.reject}
                         </Text>
                       </PressableScale>
 
@@ -1292,7 +1326,7 @@ function RequestsSection({
                                 styles.acceptText
                               }
                             >
-                              Accept
+                              {t.c3partners.accept}
                             </Text>
                           </>
                         )}
@@ -1310,8 +1344,8 @@ function RequestsSection({
       {outgoing.length > 0 ? (
         <>
           <SectionHeader
-            title="Sent requests"
-            subtitle={`${outgoing.length} waiting for a response`}
+            title={t.c3partners.sentRequests}
+            subtitle={`${outgoing.length} ${t.c3partners.waitingForResponse}`}
             icon="paper-plane-outline"
             theme={theme}
           />
@@ -1368,7 +1402,7 @@ function RequestsSection({
                           styles.pendingTitle
                         }
                       >
-                        Request sent
+                        {t.c3partners.requestSent}
                       </Text>
 
                       <Text
@@ -1376,11 +1410,11 @@ function RequestsSection({
                           styles.pendingText
                         }
                       >
-                        Waiting for their
-                        response since{" "}
-                        {formatDate(
-                          item.requestedAt
-                        )}
+                        {`${t.c3partners.waitingSince} ${formatDate(
+                          item.requestedAt,
+                          t.c3partners.noDate,
+                          t.c3partners.dateUnavailable
+                        )}`}
                       </Text>
                     </View>
 
@@ -1418,11 +1452,13 @@ function TradeSection({
     id: string
   ) => void;
 }) {
+  const { t } = useLanguage();
+
   return (
     <View>
       <SectionHeader
-        title="Trade partners"
-        subtitle="Partners from successful AI negotiations"
+        title={t.c3partners.tradePartnersTitle}
+        subtitle={t.c3partners.tradePartnersSubtitle}
         icon="swap-horizontal-outline"
         theme={theme}
       />
@@ -1430,8 +1466,8 @@ function TradeSection({
       {items.length === 0 ? (
         <EmptyState
           icon="receipt-outline"
-          title="No trade partners yet"
-          text="Successful AI negotiations will automatically appear here."
+          title={t.c3partners.noTradePartners}
+          text={t.c3partners.noTradePartnersText}
           theme={theme}
         />
       ) : (
@@ -1475,7 +1511,7 @@ function TradeSection({
                   {item.relationship?.connected ? (
                     <Badge
                       icon="people"
-                      text="Connected"
+                      text={t.c3partners.connected}
                       background="#DCFCE7"
                       color="#166534"
                     />
@@ -1484,7 +1520,7 @@ function TradeSection({
                   {item.isFavorite ? (
                     <Badge
                       icon="star"
-                      text="Favourite"
+                      text={t.c3partners.favourite}
                       background="#FEF3C7"
                       color="#92400E"
                     />
@@ -1493,7 +1529,7 @@ function TradeSection({
 
                 <View style={styles.metrics}>
                   <Metric
-                    label="TOTAL TRADES"
+                    label={t.c3partners.totalTrades}
                     value={String(
                       item.summary
                         .totalAgreements
@@ -1502,16 +1538,16 @@ function TradeSection({
                   />
 
                   <Metric
-                    label="QUANTITY"
+                    label={t.c3partners.quantity}
                     value={`${formatNumber(
                       item.summary
                         .totalQuantityKg
-                    )} kg`}
+                    )} ${t.c3partners.kg}`}
                     icon="scale-outline"
                   />
 
                   <Metric
-                    label="AVG. PRICE"
+                    label={t.c3partners.avgPrice}
                     value={formatCurrency(
                       item.summary
                         .averageAgreedPrice
@@ -1527,7 +1563,7 @@ function TradeSection({
                         styles.cardFooterLabel
                       }
                     >
-                      LAST TRADE
+                      {t.c3partners.lastTrade}
                     </Text>
 
                     <Text
@@ -1537,7 +1573,9 @@ function TradeSection({
                     >
                       {formatDate(
                         item.summary
-                          .lastTransactionAt
+                          .lastTransactionAt,
+                        t.c3partners.noDate,
+                        t.c3partners.dateUnavailable
                       )}
                     </Text>
                   </View>
@@ -1560,7 +1598,7 @@ function TradeSection({
                         },
                       ]}
                     >
-                      View details
+                      {t.c3partners.viewDetails}
                     </Text>
 
                     <Ionicons
@@ -1597,6 +1635,8 @@ function PartnerIdentity({
   theme: Theme;
   showStatusDot?: boolean;
 }) {
+  const { t } = useLanguage();
+
   return (
     <View style={styles.partnerTop}>
       <View
@@ -1658,8 +1698,12 @@ function PartnerIdentity({
             style={styles.partnerLocation}
             numberOfLines={1}
           >
-            {partner.district} •{" "}
-            {partner.location}
+            {translateDistrict(
+              partner.district,
+              t.c3districts,
+              partner.district
+            )}{" "}
+            • {partner.location}
           </Text>
         </View>
       </View>
@@ -1694,8 +1738,8 @@ function PartnerIdentity({
           ]}
         >
           {partner.type === "miller"
-            ? "Miller"
-            : "Farmer"}
+            ? t.c3partners.miller
+            : t.c3partners.farmer}
         </Text>
       </View>
     </View>
@@ -2121,6 +2165,8 @@ function LoadingState({
 }: {
   theme: Theme;
 }) {
+  const { t } = useLanguage();
+
   return (
     <ScrollView
       showsVerticalScrollIndicator={false}
@@ -2213,7 +2259,7 @@ function LoadingState({
         <Text
           style={styles.loadingLabel}
         >
-          Loading your network…
+          {t.c3partners.loadingNetwork}
         </Text>
       </View>
     </ScrollView>
@@ -2246,17 +2292,43 @@ function matchesSearch(
     .includes(query);
 }
 
+function translateDistrict(
+  district: string | undefined,
+  translations: {
+    Ampara: string;
+    Badulla: string;
+    Kandy: string;
+    Monaragala: string;
+  },
+  fallback: string,
+): string {
+  if (!district) {
+    return fallback;
+  }
+
+  const districtMap: Record<string, string> = {
+    Ampara: translations.Ampara,
+    Badulla: translations.Badulla,
+    Kandy: translations.Kandy,
+    Monaragala: translations.Monaragala,
+  };
+
+  return districtMap[district.trim()] ?? district.trim();
+}
+
 function formatDate(
-  value: string | null | undefined
+  value: string | null | undefined,
+  noDate: string,
+  dateUnavailable: string,
 ) {
   if (!value) {
-    return "No date";
+    return noDate;
   }
 
   const date = new Date(value);
 
   if (Number.isNaN(date.getTime())) {
-    return "Date unavailable";
+    return dateUnavailable;
   }
 
   return new Intl.DateTimeFormat(

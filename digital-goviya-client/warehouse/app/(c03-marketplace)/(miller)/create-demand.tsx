@@ -27,26 +27,7 @@ import {
 import { demandService } from "@/services/c03-marketplace/demand.service";
 import { getApiErrorMessage } from "@/utils/c03-marketplace/getApiErrorMessage";
 import type { PaddyType } from "@/types/c03-marketplace/harvest.types";
-
-const PADDY_OPTIONS: Array<{
-  label: string;
-  value: PaddyType;
-}> = [
-  { label: "Nadu", value: "nadu" },
-  { label: "Samba", value: "samba" },
-  { label: "Keeri Samba", value: "keeri samba" },
-];
-
-// Presentation-only metadata for the paddy selector cards.
-// Does not affect PADDY_OPTIONS or form logic.
-const PADDY_META: Record<
-  PaddyType,
-  { icon: keyof typeof Ionicons.glyphMap; tag: string }
-> = {
-  nadu: { icon: "leaf-outline", tag: "Most common" },
-  samba: { icon: "flower-outline", tag: "Premium grain" },
-  "keeri samba": { icon: "sparkles-outline", tag: "Fine grain" },
-};
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface FormErrors {
   quantityNeeded?: string;
@@ -55,6 +36,8 @@ interface FormErrors {
 }
 
 export default function CreateDemandScreen() {
+  const { t } = useLanguage();
+
   const [paddyType, setPaddyType] = useState<PaddyType>("nadu");
   const [quantityNeeded, setQuantityNeeded] = useState("");
   const [offeredPrice, setOfferedPrice] = useState("");
@@ -89,6 +72,32 @@ export default function CreateDemandScreen() {
     ]).start();
   }, [fontsLoaded]);
 
+  const paddyOptions: {
+    label: string;
+    value: PaddyType;
+    icon: keyof typeof Ionicons.glyphMap;
+    tag: string;
+  }[] = [
+    {
+      label: t.c3createDemand.nadu,
+      value: "nadu",
+      icon: "leaf-outline",
+      tag: t.c3createDemand.mostCommon,
+    },
+    {
+      label: t.c3createDemand.samba,
+      value: "samba",
+      icon: "flower-outline",
+      tag: t.c3createDemand.premiumGrain,
+    },
+    {
+      label: t.c3createDemand.keeriSamba,
+      value: "keeri samba",
+      icon: "sparkles-outline",
+      tag: t.c3createDemand.fineGrain,
+    },
+  ];
+
   const validateForm = (): boolean => {
     const nextErrors: FormErrors = {};
 
@@ -97,32 +106,36 @@ export default function CreateDemandScreen() {
     const parsedMaximumBuyingPrice = Number(maximumBuyingPrice);
 
     if (!quantityNeeded.trim()) {
-      nextErrors.quantityNeeded = "Please enter the required quantity.";
+      nextErrors.quantityNeeded =
+        t.c3createDemand.validation.quantityRequired;
     } else if (!Number.isFinite(parsedQuantity) || parsedQuantity <= 0) {
-      nextErrors.quantityNeeded = "Quantity must be greater than zero.";
+      nextErrors.quantityNeeded =
+        t.c3createDemand.validation.quantityGreaterThanZero;
     }
 
     if (!offeredPrice.trim()) {
-      nextErrors.offeredPrice = "Please enter your offered price.";
+      nextErrors.offeredPrice =
+        t.c3createDemand.validation.offeredPriceRequired;
     } else if (!Number.isFinite(parsedPrice) || parsedPrice <= 0) {
-      nextErrors.offeredPrice = "Offered price must be greater than zero.";
+      nextErrors.offeredPrice =
+        t.c3createDemand.validation.offeredPriceGreaterThanZero;
     }
 
     if (!maximumBuyingPrice.trim()) {
       nextErrors.maximumBuyingPrice =
-        "Please enter your maximum buying price.";
+        t.c3createDemand.validation.maximumPriceRequired;
     } else if (
       !Number.isFinite(parsedMaximumBuyingPrice) ||
       parsedMaximumBuyingPrice <= 0
     ) {
       nextErrors.maximumBuyingPrice =
-        "Maximum buying price must be greater than zero.";
+        t.c3createDemand.validation.maximumPriceGreaterThanZero;
     } else if (
       Number.isFinite(parsedPrice) &&
       parsedMaximumBuyingPrice < parsedPrice
     ) {
       nextErrors.maximumBuyingPrice =
-        "Maximum buying price cannot be below your opening offer.";
+        t.c3createDemand.validation.maximumPriceCannotBeBelowOffer;
     }
 
     setErrors(nextErrors);
@@ -162,7 +175,10 @@ export default function CreateDemandScreen() {
       });
     } catch (error) {
       console.error("Demand creation failed:", error);
-      Alert.alert("Unable to create demand", getApiErrorMessage(error));
+      Alert.alert(
+        t.c3createDemand.unableToCreateDemand,
+        getApiErrorMessage(error),
+      );
     } finally {
       setSubmitting(false);
     }
@@ -195,7 +211,7 @@ export default function CreateDemandScreen() {
         {/* Back button */}
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Go back"
+          accessibilityLabel={t.c3createDemand.goBack}
           onPress={() => router.back()}
           style={({ pressed }) => [
             styles.backButton,
@@ -214,19 +230,22 @@ export default function CreateDemandScreen() {
         >
           <View style={styles.heroGrainRow}>
             <Ionicons name="business" size={12} color="#FDE68A" />
-            <Text style={styles.heroEyebrow}>MILLER MARKETPLACE</Text>
+            <Text style={styles.heroEyebrow}>
+              {t.c3createDemand.eyebrow}
+            </Text>
           </View>
 
-          <Text style={styles.heroTitle}>New Paddy{"\n"}Demand</Text>
+          <Text style={styles.heroTitle}>{t.c3createDemand.title}</Text>
 
           <Text style={styles.heroSubtitle}>
-            Publish your requirement — we'll match it against live
-            harvests from trusted farmers.
+            {t.c3createDemand.subtitle}
           </Text>
 
           <View style={styles.heroBadge}>
             <Ionicons name="sparkles" size={13} color="#78350F" />
-            <Text style={styles.heroBadgeText}>AI-based matching included</Text>
+            <Text style={styles.heroBadgeText}>
+              {t.c3createDemand.aiMatchingIncluded}
+            </Text>
           </View>
         </LinearGradient>
 
@@ -249,16 +268,19 @@ export default function CreateDemandScreen() {
               <View style={styles.cardSectionIconBox}>
                 <Ionicons name="document-text-outline" size={15} color="#92400E" />
               </View>
-              <Text style={styles.cardSectionLabel}>Demand details</Text>
+              <Text style={styles.cardSectionLabel}>
+                {t.c3createDemand.demandDetails}
+              </Text>
             </View>
 
             <View style={styles.fieldBlock}>
-              <Text style={styles.fieldLabel}>Paddy type</Text>
+              <Text style={styles.fieldLabel}>
+                {t.c3createDemand.paddyType}
+              </Text>
 
               <View style={styles.paddyGrid}>
-                {PADDY_OPTIONS.map((option) => {
+                {paddyOptions.map((option) => {
                   const active = paddyType === option.value;
-                  const meta = PADDY_META[option.value];
 
                   return (
                     <TouchableOpacity
@@ -280,7 +302,7 @@ export default function CreateDemandScreen() {
                         ]}
                       >
                         <Ionicons
-                          name={meta.icon}
+                          name={option.icon}
                           size={19}
                           color={active ? "#FFFFFF" : "#92400E"}
                         />
@@ -301,7 +323,7 @@ export default function CreateDemandScreen() {
                           active && styles.paddyTagActive,
                         ]}
                       >
-                        {meta.tag}
+                        {option.tag}
                       </Text>
                     </TouchableOpacity>
                   );
@@ -316,16 +338,17 @@ export default function CreateDemandScreen() {
               <View style={styles.cardSectionIconBox}>
                 <Ionicons name="cash-outline" size={15} color="#92400E" />
               </View>
-              <Text style={styles.cardSectionLabel}>Pricing</Text>
+              <Text style={styles.cardSectionLabel}>
+                {t.c3createDemand.pricing}
+              </Text>
             </View>
 
             <Text style={styles.cardSectionDescription}>
-              Set the quantity you need and your offered price — we'll work
-              out the estimated demand value as you type.
+              {t.c3createDemand.pricingDescription}
             </Text>
 
             <NumericField
-              label="Quantity needed"
+              label={t.c3createDemand.quantityNeeded}
               value={quantityNeeded}
               onChangeText={(value) => {
                 setQuantityNeeded(value);
@@ -334,15 +357,15 @@ export default function CreateDemandScreen() {
                   quantityNeeded: undefined,
                 }));
               }}
-              placeholder="  1500"
-              unit="kg"
+              placeholder={t.c3createDemand.quantityPlaceholder}
+              unit={t.c3createDemand.kg}
               icon="cube-outline"
               error={errors.quantityNeeded}
-              helper="Enter the required quantity in kilograms."
+              helper={t.c3createDemand.quantityHelper}
             />
 
             <NumericField
-              label="Offered price per kilogram"
+              label={t.c3createDemand.offeredPrice}
               value={offeredPrice}
               onChangeText={(value) => {
                 setOfferedPrice(value);
@@ -351,15 +374,15 @@ export default function CreateDemandScreen() {
                   offeredPrice: undefined,
                 }));
               }}
-              placeholder="  128"
-              unit="LKR/kg"
+              placeholder={t.c3createDemand.offeredPricePlaceholder}
+              unit={t.c3createDemand.lkrPerKg}
               icon="pricetag-outline"
               error={errors.offeredPrice}
-              helper="Enter the buying price in Sri Lankan Rupees."
+              helper={t.c3createDemand.offeredPriceHelper}
             />
 
             <NumericField
-              label="Maximum buying price per kilogram"
+              label={t.c3createDemand.maximumBuyingPrice}
               value={maximumBuyingPrice}
               onChangeText={(value) => {
                 setMaximumBuyingPrice(value);
@@ -368,11 +391,11 @@ export default function CreateDemandScreen() {
                   maximumBuyingPrice: undefined,
                 }));
               }}
-              placeholder="  136"
-              unit="LKR/kg"
+              placeholder={t.c3createDemand.maximumBuyingPricePlaceholder}
+              unit={t.c3createDemand.lkrPerKg}
               icon="shield-checkmark-outline"
               error={errors.maximumBuyingPrice}
-              helper="Private: used only by your Miller AI agent during negotiation."
+              helper={t.c3createDemand.maximumBuyingPriceHelper}
             />
 
             {estimatedValue !== null ? (
@@ -385,7 +408,9 @@ export default function CreateDemandScreen() {
                     <Ionicons name="calculator-outline" size={18} color="#B45309" />
                   </View>
                   <View style={styles.estimateTextArea}>
-                    <Text style={styles.estimateLabel}>Estimated demand value</Text>
+                    <Text style={styles.estimateLabel}>
+                      {t.c3createDemand.estimatedDemandValue}
+                    </Text>
                     <Text style={styles.estimateValue}>
                       {formatCurrency(estimatedValue)}
                     </Text>
@@ -397,8 +422,7 @@ export default function CreateDemandScreen() {
             <View style={styles.infoBox}>
               <Ionicons name="information-circle-outline" size={18} color="#92400E" />
               <Text style={styles.infoText}>
-                Your demand will be marked as Open and considered by the
-                AI-based matching system.
+                {t.c3createDemand.openDemandInfo}
               </Text>
             </View>
           </View>
@@ -420,7 +444,9 @@ export default function CreateDemandScreen() {
               ) : (
                 <>
                   <Ionicons name="add-circle-outline" size={18} color="#78350F" />
-                  <Text style={styles.submitText}>Publish Demand</Text>
+                  <Text style={styles.submitText}>
+                    {t.c3createDemand.publishDemand}
+                  </Text>
                 </>
               )}
             </LinearGradient>

@@ -22,6 +22,10 @@ import {
   useMarketplaceAuth,
 } from "@/hooks/c03-marketplace/useMarketplaceAuth";
 
+import {
+  useLanguage,
+} from "@/contexts/LanguageContext";
+
 interface NavigationItem {
   key:
     | "home"
@@ -51,6 +55,9 @@ export function MarketplaceBottomNav() {
     isLoading,
   } =
     useMarketplaceAuth();
+
+  const { t } =
+    useLanguage();
 
   const pathname =
     usePathname();
@@ -107,7 +114,7 @@ export function MarketplaceBottomNav() {
           "home",
 
         label:
-          "Home",
+          t.c3bottomNav.home,
 
         icon:
           "home-outline",
@@ -132,7 +139,7 @@ export function MarketplaceBottomNav() {
           "search",
 
         label:
-          "Search",
+          t.c3bottomNav.search,
 
         icon:
           "search-outline",
@@ -155,8 +162,8 @@ export function MarketplaceBottomNav() {
 
         label:
           isFarmer
-            ? "Harvests"
-            : "Demands",
+            ? t.c3bottomNav.harvests
+            : t.c3bottomNav.demands,
 
         icon:
           isFarmer
@@ -194,7 +201,7 @@ export function MarketplaceBottomNav() {
           "partners",
 
         label:
-          "Partners",
+          t.c3bottomNav.partners,
 
         icon:
           "people-outline",
@@ -216,7 +223,7 @@ export function MarketplaceBottomNav() {
           "profile",
 
         label:
-          "Profile",
+          t.c3bottomNav.profile,
 
         icon:
           "person-outline",

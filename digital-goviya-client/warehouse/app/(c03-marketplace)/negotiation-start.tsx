@@ -22,6 +22,8 @@ import {
   View,
 } from "react-native";
 
+import { useLanguage } from "@/contexts/LanguageContext";
+
 import {
   useMarketplaceAuth,
 } from "@/hooks/c03-marketplace/useMarketplaceAuth";
@@ -34,42 +36,14 @@ import {
   getApiErrorMessage,
 } from "@/utils/c03-marketplace/getApiErrorMessage";
 
-const NEGOTIATION_STAGES = [
-  {
-    title: "Initializing secure AI agents",
-    detail: "Creating protected Farmer and Miller agent sessions.",
-    icon: "shield-checkmark-outline" as const,
-  },
-  {
-    title: "Loading market intelligence",
-    detail: "Reading the FL reference price and matching confidence.",
-    icon: "analytics-outline" as const,
-  },
-  {
-    title: "Farmer AI is planning",
-    detail: "Evaluating the asking price and a safe concession strategy.",
-    icon: "leaf-outline" as const,
-  },
-  {
-    title: "Miller AI is evaluating",
-    detail: "Comparing offers while protecting the private buying limit.",
-    icon: "business-outline" as const,
-  },
-  {
-    title: "Agents are exchanging offers",
-    detail: "Checking counter-offers against negotiation guardrails.",
-    icon: "swap-horizontal-outline" as const,
-  },
-  {
-    title: "Measuring fairness",
-    detail: "Comparing the emerging price with the FL market reference.",
-    icon: "scale-outline" as const,
-  },
-  {
-    title: "Finalizing the outcome",
-    detail: "Validating the agreement and preparing the result.",
-    icon: "sparkles-outline" as const,
-  },
+const NEGOTIATION_STAGE_ICONS = [
+  "shield-checkmark-outline" as const,
+  "analytics-outline" as const,
+  "leaf-outline" as const,
+  "business-outline" as const,
+  "swap-horizontal-outline" as const,
+  "scale-outline" as const,
+  "sparkles-outline" as const,
 ];
 
 /* ------------------------------------------------------------------ */
@@ -131,6 +105,7 @@ function useEntrance(delay = 0) {
 
 export default function NegotiationStartScreen() {
   const { user } = useMarketplaceAuth();
+  const { t } = useLanguage();
 
   const rawParams = useLocalSearchParams();
 
@@ -191,6 +166,44 @@ export default function NegotiationStartScreen() {
     [isMiller]
   );
 
+  const negotiationStages = [
+    {
+      title: t.c3negotiationStart.stage1Title,
+      detail: t.c3negotiationStart.stage1Detail,
+      icon: NEGOTIATION_STAGE_ICONS[0],
+    },
+    {
+      title: t.c3negotiationStart.stage2Title,
+      detail: t.c3negotiationStart.stage2Detail,
+      icon: NEGOTIATION_STAGE_ICONS[1],
+    },
+    {
+      title: t.c3negotiationStart.stage3Title,
+      detail: t.c3negotiationStart.stage3Detail,
+      icon: NEGOTIATION_STAGE_ICONS[2],
+    },
+    {
+      title: t.c3negotiationStart.stage4Title,
+      detail: t.c3negotiationStart.stage4Detail,
+      icon: NEGOTIATION_STAGE_ICONS[3],
+    },
+    {
+      title: t.c3negotiationStart.stage5Title,
+      detail: t.c3negotiationStart.stage5Detail,
+      icon: NEGOTIATION_STAGE_ICONS[4],
+    },
+    {
+      title: t.c3negotiationStart.stage6Title,
+      detail: t.c3negotiationStart.stage6Detail,
+      icon: NEGOTIATION_STAGE_ICONS[5],
+    },
+    {
+      title: t.c3negotiationStart.stage7Title,
+      detail: t.c3negotiationStart.stage7Detail,
+      icon: NEGOTIATION_STAGE_ICONS[6],
+    },
+  ];
+
   useEffect(() => {
     if (!starting || completed) {
       return;
@@ -200,7 +213,7 @@ export default function NegotiationStartScreen() {
       setActiveStage((current) =>
         Math.min(
           current + 1,
-          NEGOTIATION_STAGES.length - 1
+          NEGOTIATION_STAGE_ICONS.length - 1
         )
       );
     }, 1700);
@@ -226,7 +239,7 @@ export default function NegotiationStartScreen() {
         });
 
       setActiveStage(
-        NEGOTIATION_STAGES.length - 1
+        NEGOTIATION_STAGE_ICONS.length - 1
       );
 
       setCompleted(true);
@@ -254,7 +267,7 @@ export default function NegotiationStartScreen() {
       setCompleted(false);
 
       Alert.alert(
-        "Unable to start negotiation",
+        t.c3negotiationStart.unableToStart,
         getApiErrorMessage(error)
       );
     }
@@ -306,14 +319,14 @@ export default function NegotiationStartScreen() {
             />
 
             <Text style={styles.headerTitle}>
-              AI Negotiation
+              {t.c3negotiationStart.title}
             </Text>
           </View>
 
           <Text
             style={styles.headerSubtitle}
           >
-            Autonomous Farmer and Miller agents
+            {t.c3negotiationStart.subtitle}
           </Text>
         </View>
 
@@ -345,6 +358,7 @@ export default function NegotiationStartScreen() {
           quantity={quantity}
           flReferencePrice={flReferencePrice}
           matchingScore={matchingScore}
+          stages={negotiationStages}
         />
       ) : (
         <ScrollView
@@ -359,7 +373,7 @@ export default function NegotiationStartScreen() {
 
           <View style={styles.sectionHeaderRow}>
             <Text style={styles.sectionTitle}>
-              Negotiation summary
+              {t.c3negotiationStart.summary}
             </Text>
 
             <View
@@ -382,9 +396,10 @@ export default function NegotiationStartScreen() {
             <SummaryRow
               index={0}
               icon="leaf-outline"
-              label="Paddy variety"
-              value={formatLabel(
-                paddyType || "-"
+              label={t.c3negotiationStart.paddyVariety}
+              value={translatePaddyType(
+                paddyType || "-",
+                t
               )}
               accent={theme.primary}
               soft={theme.soft}
@@ -393,10 +408,10 @@ export default function NegotiationStartScreen() {
             <SummaryRow
               index={1}
               icon="cube-outline"
-              label="Negotiation quantity"
+              label={t.c3negotiationStart.negotiationQuantity}
               value={`${formatNumber(
                 quantity
-              )} kg`}
+              )} ${t.c3negotiationStart.kg}`}
               accent={theme.primary}
               soft={theme.soft}
             />
@@ -404,7 +419,7 @@ export default function NegotiationStartScreen() {
             <SummaryRow
               index={2}
               icon="person-outline"
-              label="Farmer asking price"
+              label={t.c3negotiationStart.farmerAskingPrice}
               value={formatPrice(
                 farmerExpectedPrice
               )}
@@ -415,7 +430,7 @@ export default function NegotiationStartScreen() {
             <SummaryRow
               index={3}
               icon="business-outline"
-              label="Miller opening offer"
+              label={t.c3negotiationStart.millerOpeningOffer}
               value={formatPrice(
                 millerOffer
               )}
@@ -426,7 +441,7 @@ export default function NegotiationStartScreen() {
             <SummaryRow
               index={4}
               icon="analytics-outline"
-              label="FL market reference"
+              label={t.c3negotiationStart.flMarketReference}
               value={formatPrice(
                 flReferencePrice
               )}
@@ -437,7 +452,7 @@ export default function NegotiationStartScreen() {
             <SummaryRow
               index={5}
               icon="git-compare-outline"
-              label="Matching score"
+              label={t.c3negotiationStart.matchingScore}
               value={`${matchingScore.toFixed(
                 0
               )}%`}
@@ -456,14 +471,14 @@ export default function NegotiationStartScreen() {
             ]}
           >
             <Text style={styles.processTitle}>
-              What happens next?
+              {t.c3negotiationStart.whatHappensNext}
             </Text>
 
             <ProcessStep
               index={0}
               number="1"
-              title="Agents review the market"
-              description="The FL reference price and match score guide the negotiation."
+              title={t.c3negotiationStart.step1Title}
+              description={t.c3negotiationStart.step1Description}
               accent={theme.primary}
               soft={theme.soft}
             />
@@ -471,8 +486,8 @@ export default function NegotiationStartScreen() {
             <ProcessStep
               index={1}
               number="2"
-              title="Agents exchange offers"
-              description="Each agent accepts, counters or rejects according to its private constraints."
+              title={t.c3negotiationStart.step2Title}
+              description={t.c3negotiationStart.step2Description}
               accent={theme.primary}
               soft={theme.soft}
             />
@@ -480,8 +495,8 @@ export default function NegotiationStartScreen() {
             <ProcessStep
               index={2}
               number="3"
-              title="Fairness is evaluated"
-              description="The result is compared with the FL market reference."
+              title={t.c3negotiationStart.step3Title}
+              description={t.c3negotiationStart.step3Description}
               accent={theme.primary}
               soft={theme.soft}
               last
@@ -519,6 +534,7 @@ function IdleHero({
 }: {
   theme: LiveTheme;
 }) {
+  const { t } = useLanguage();
   const entrance = useEntrance(0);
 
   const breathe = useRef(
@@ -614,7 +630,7 @@ function IdleHero({
         >
           <AgentAvatar
             icon="leaf"
-            label="Farmer Agent"
+            label={t.c3negotiationStart.farmerAgent}
             background="#DCFCE7"
             color="#15803D"
           />
@@ -636,7 +652,7 @@ function IdleHero({
           </Animated.View>
 
           <Text style={styles.connectionText}>
-            AI TO AI
+            {t.c3negotiationStart.aiToAi}
           </Text>
         </View>
 
@@ -649,7 +665,7 @@ function IdleHero({
         >
           <AgentAvatar
             icon="business"
-            label="Miller Agent"
+            label={t.c3negotiationStart.millerAgent}
             background="#FEF3C7"
             color="#92400E"
           />
@@ -657,13 +673,11 @@ function IdleHero({
       </View>
 
       <Text style={styles.heroTitle}>
-        Ready to negotiate fairly
+        {t.c3negotiationStart.readyTitle}
       </Text>
 
       <Text style={styles.heroDescription}>
-        Both autonomous agents will exchange
-        offers while protecting each
-        participant’s private price limit.
+        {t.c3negotiationStart.readyDescription}
       </Text>
     </Animated.View>
   );
@@ -674,6 +688,7 @@ function PrivacyCard({
 }: {
   theme: LiveTheme;
 }) {
+  const { t } = useLanguage();
   const entrance = useEntrance(260);
 
   return (
@@ -711,13 +726,11 @@ function PrivacyCard({
             },
           ]}
         >
-          Private constraints protected
+          {t.c3negotiationStart.privacyTitle}
         </Text>
 
         <Text style={styles.privacyDescription}>
-          Minimum and maximum reservation prices are
-          securely used by the agents but are never
-          displayed or disclosed to the other participant.
+          {t.c3negotiationStart.privacyDescription}
         </Text>
       </View>
     </Animated.View>
@@ -735,6 +748,7 @@ function StartButton({
   theme: LiveTheme;
   onPress: () => void;
 }) {
+  const { t } = useLanguage();
   const press = usePressScale(0.97);
   const entrance = useEntrance(420);
 
@@ -809,7 +823,7 @@ function StartButton({
                 styles.startButtonText
               }
             >
-              AI agents are negotiating...
+              {t.c3negotiationStart.negotiating}
             </Text>
           </>
         ) : (
@@ -831,7 +845,7 @@ function StartButton({
                 styles.startButtonText
               }
             >
-              Start AI Negotiation
+              {t.c3negotiationStart.startButton}
             </Text>
 
             <Ionicons
@@ -854,6 +868,12 @@ interface LiveTheme {
   background: string;
 }
 
+type NegotiationStage = {
+  title: string;
+  detail: string;
+  icon: (typeof NEGOTIATION_STAGE_ICONS)[number];
+};
+
 function NegotiationLiveView({
   activeStage,
   completed,
@@ -862,6 +882,7 @@ function NegotiationLiveView({
   quantity,
   flReferencePrice,
   matchingScore,
+  stages,
 }: {
   activeStage: number;
   completed: boolean;
@@ -870,7 +891,9 @@ function NegotiationLiveView({
   quantity: number;
   flReferencePrice: number;
   matchingScore: number;
+  stages: NegotiationStage[];
 }) {
+  const { t } = useLanguage();
   const pulse = useRef(
     new Animated.Value(1)
   ).current;
@@ -1002,7 +1025,7 @@ function NegotiationLiveView({
         12,
         Math.round(
           ((activeStage + 1) /
-            (NEGOTIATION_STAGES.length + 1)) *
+            (stages.length + 1)) *
             100
         )
       );
@@ -1035,7 +1058,7 @@ function NegotiationLiveView({
   }, [progress]);
 
   const stage =
-    NEGOTIATION_STAGES[activeStage];
+    stages[activeStage];
 
   const spin = rotate.interpolate({
     inputRange: [0, 1],
@@ -1194,8 +1217,8 @@ function NegotiationLiveView({
             style={styles.liveEyebrow}
           >
             {completed
-              ? "NEGOTIATION COMPLETE"
-              : "LIVE AI NEGOTIATION"}
+              ? t.c3negotiationStart.completeEyebrow
+              : t.c3negotiationStart.liveEyebrow}
           </Text>
         </View>
 
@@ -1203,8 +1226,8 @@ function NegotiationLiveView({
           style={styles.liveHeroTitle}
         >
           {completed
-            ? "Outcome prepared"
-            : "Two agents are working for a fair deal"}
+            ? t.c3negotiationStart.completeTitle
+            : t.c3negotiationStart.liveTitle}
         </Text>
 
         <Text
@@ -1213,8 +1236,8 @@ function NegotiationLiveView({
           }
         >
           {completed
-            ? "The result has been validated and is ready to review."
-            : "Private limits remain protected while both agents evaluate offers and market fairness."}
+            ? t.c3negotiationStart.completeDescription
+            : t.c3negotiationStart.liveDescription}
         </Text>
       </View>
 
@@ -1231,7 +1254,7 @@ function NegotiationLiveView({
             <Text
               style={styles.progressLabel}
             >
-              Negotiation progress
+              {t.c3negotiationStart.progress}
             </Text>
 
             <Text
@@ -1239,7 +1262,7 @@ function NegotiationLiveView({
                 styles.progressSubLabel
               }
             >
-              Secure multi-agent processing
+              {t.c3negotiationStart.progressSub}
             </Text>
           </View>
 
@@ -1321,7 +1344,7 @@ function NegotiationLiveView({
               ]}
             >
               {completed
-                ? "Agreement analysis completed"
+                ? t.c3negotiationStart.analysisCompleted
                 : stage.title}
             </Text>
 
@@ -1331,7 +1354,7 @@ function NegotiationLiveView({
               }
             >
               {completed
-                ? "Opening the detailed agent conversation and fairness report."
+                ? t.c3negotiationStart.openingReport
                 : stage.detail}
             </Text>
           </View>
@@ -1357,7 +1380,7 @@ function NegotiationLiveView({
           <Text
             style={styles.snapshotTitle}
           >
-            Market context loaded
+            {t.c3negotiationStart.marketContext}
           </Text>
 
           <View
@@ -1395,9 +1418,10 @@ function NegotiationLiveView({
           <LiveMetric
             index={0}
             icon="leaf-outline"
-            label="Paddy"
-            value={formatLabel(
-              paddyType || "-"
+            label={t.c3negotiationStart.paddy}
+            value={translatePaddyType(
+              paddyType || "-",
+              t
             )}
             accent={theme.primary}
             soft={theme.soft}
@@ -1406,10 +1430,10 @@ function NegotiationLiveView({
           <LiveMetric
             index={1}
             icon="cube-outline"
-            label="Quantity"
+            label={t.c3negotiationStart.quantity}
             value={`${formatNumber(
               quantity
-            )} kg`}
+            )} ${t.c3negotiationStart.kg}`}
             accent={theme.primary}
             soft={theme.soft}
           />
@@ -1417,7 +1441,7 @@ function NegotiationLiveView({
           <LiveMetric
             index={2}
             icon="analytics-outline"
-            label="FL reference"
+            label={t.c3negotiationStart.flReference}
             value={formatPrice(
               flReferencePrice
             )}
@@ -1428,7 +1452,7 @@ function NegotiationLiveView({
           <LiveMetric
             index={3}
             icon="git-compare-outline"
-            label="Match score"
+            label={t.c3negotiationStart.matchScore}
             value={`${matchingScore.toFixed(
               0
             )}%`}
@@ -1452,7 +1476,7 @@ function NegotiationLiveView({
           AI analysis timeline
         </Text>
 
-        {NEGOTIATION_STAGES.map(
+        {stages.map(
           (item, index) => (
             <TimelineRow
               key={item.title}
@@ -1460,7 +1484,7 @@ function NegotiationLiveView({
               index={index}
               isLast={
                 index ===
-                NEGOTIATION_STAGES.length - 1
+                stages.length - 1
               }
               finished={
                 completed ||
@@ -1489,13 +1513,14 @@ function TimelineRow({
   active,
   theme,
 }: {
-  item: (typeof NEGOTIATION_STAGES)[number];
+  item: NegotiationStage;
   index: number;
   isLast: boolean;
   finished: boolean;
   active: boolean;
   theme: LiveTheme;
 }) {
+  const { t } = useLanguage();
   const entrance =
     useEntrance(index * 60);
 
@@ -1677,10 +1702,10 @@ function TimelineRow({
           }
         >
           {finished
-            ? "Completed securely"
+            ? t.c3negotiationStart.completedSecurely
             : active
               ? item.detail
-              : "Waiting for the previous analysis"}
+              : t.c3negotiationStart.waitingPrevious}
         </Text>
       </View>
     </Animated.View>
@@ -1692,6 +1717,7 @@ function LiveNotice({
 }: {
   theme: LiveTheme;
 }) {
+  const { t } = useLanguage();
   const entrance = useEntrance(120);
 
   return (
@@ -1716,10 +1742,7 @@ function LiveNotice({
       <Text
         style={styles.liveNoticeText}
       >
-        Stay on this screen while the local AI
-        agents finish. Your private reservation
-        prices are never shown to the other
-        participant.
+        {t.c3negotiationStart.liveNotice}
       </Text>
     </Animated.View>
   );
@@ -2003,6 +2026,24 @@ function formatNumber(
   return new Intl.NumberFormat(
     "en-LK"
   ).format(value);
+}
+
+function translatePaddyType(value: string, t: any): string {
+  const normalized = value.trim().toLowerCase();
+
+  if (normalized === "nadu") {
+    return t.c3paddyTypes.Nadu;
+  }
+
+  if (normalized === "samba") {
+    return t.c3paddyTypes.Samba;
+  }
+
+  if (normalized === "keeri samba" || normalized === "keerisamba") {
+    return t.c3paddyTypes.KeeriSamba;
+  }
+
+  return formatLabel(value);
 }
 
 function formatLabel(
