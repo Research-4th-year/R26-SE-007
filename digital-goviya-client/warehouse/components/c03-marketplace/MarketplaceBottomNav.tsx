@@ -1,6 +1,6 @@
 import {
   Ionicons,
-} from "@expo/vector-icons";
+} from "@/components/c03-marketplace/themed-native";
 
 import {
   router,
@@ -12,7 +12,7 @@ import {
   StyleSheet,
   Text,
   View,
-} from "react-native";
+} from "@/components/c03-marketplace/themed-native";
 
 import {
   useSafeAreaInsets,
@@ -25,6 +25,10 @@ import {
 import {
   useLanguage,
 } from "@/contexts/LanguageContext";
+
+import {
+  useMarketplaceAppearance,
+} from "@/contexts/c03-marketplace/MarketplaceAppearanceContext";
 
 interface NavigationItem {
   key:
@@ -58,6 +62,9 @@ export function MarketplaceBottomNav() {
 
   const { t } =
     useLanguage();
+
+  const { isDark } =
+    useMarketplaceAppearance();
 
   const pathname =
     usePathname();
@@ -272,9 +279,13 @@ export function MarketplaceBottomNav() {
       ]}
     >
       <View
-        style={
-          styles.navigationContainer
-        }
+        style={[
+          styles.navigationContainer,
+          isDark && {
+            backgroundColor: "#1E293B",
+            borderColor: "#334155",
+          },
+        ]}
       >
         {items.map(
           (item) => {
@@ -330,7 +341,9 @@ export function MarketplaceBottomNav() {
                     color={
                       active
                         ? primaryColor
-                        : "#8A9490"
+                        : isDark
+                          ? "#94A3B8"
+                          : "#8A9490"
                     }
                   />
                 </View>
@@ -346,6 +359,11 @@ export function MarketplaceBottomNav() {
                       color:
                         darkColor,
                     },
+
+                    !active &&
+                      isDark && {
+                        color: "#94A3B8",
+                      },
                   ]}
                 >
                   {item.label}
@@ -450,7 +468,7 @@ const styles =
       color:
         "#8A9490",
 
-      fontSize: 8,
+      fontSize: 10,
 
       fontWeight:
         "700",

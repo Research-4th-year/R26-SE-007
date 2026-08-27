@@ -1,4 +1,4 @@
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons } from "@/components/c03-marketplace/themed-native";
 import { router } from "expo-router";
 import {
   Alert,
@@ -9,7 +9,7 @@ import {
   StyleSheet,
   Text,
   View,
-} from "react-native";
+} from "@/components/c03-marketplace/themed-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useRef } from "react";
 import {
@@ -25,11 +25,14 @@ import type { FarmerProfile } from "@/types/c03-marketplace/auth.types";
 import { useMarketplaceAuth } from "@/hooks/c03-marketplace/useMarketplaceAuth";
 
 import { useLanguage } from "@/contexts/LanguageContext";
+import { MarketplaceAppearanceSettings } from "@/components/c03-marketplace/MarketplaceAppearanceSettings";
+import { useMarketplaceAppearance } from "@/contexts/c03-marketplace/MarketplaceAppearanceContext";
 
 export default function FarmerProfileScreen() {
   const { user, profile, signOut } = useMarketplaceAuth();
 
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
+  const { isDark } = useMarketplaceAppearance();
 
   const farmerProfile =
     user?.role === "farmer" ? (profile as FarmerProfile) : null;
@@ -80,7 +83,12 @@ export default function FarmerProfileScreen() {
   if (!fontsLoaded) return null;
 
   return (
-    <SafeAreaView style={styles.screen}>
+    <SafeAreaView
+      style={[
+        styles.screen,
+        isDark && { backgroundColor: "#0F172A" },
+      ]}
+    >
       <Animated.ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
@@ -95,6 +103,7 @@ export default function FarmerProfileScreen() {
             accessibilityLabel={t.c3profile.goBack}
             style={({ pressed }) => [
               styles.headerButton,
+              isDark && { backgroundColor: "#1E293B" },
               pressed && styles.pressed,
             ]}
             onPress={() => router.back()}
@@ -102,11 +111,16 @@ export default function FarmerProfileScreen() {
             <Ionicons
               name="arrow-back"
               size={21}
-              color="#1F2937"
+              color={isDark ? "#F8FAFC" : "#1F2937"}
             />
           </Pressable>
 
-          <Text style={styles.headerTitle}>
+          <Text
+            style={[
+              styles.headerTitle,
+              isDark && { color: "#F8FAFC" },
+            ]}
+          >
             {t.c3profile.title}
           </Text>
 
@@ -161,12 +175,25 @@ export default function FarmerProfileScreen() {
             />
           </View>
 
-          <Text style={styles.sectionTitle}>
+          <Text
+            style={[
+              styles.sectionTitle,
+              isDark && { color: "#F8FAFC" },
+            ]}
+          >
             {t.c3profile.personalInformation}
           </Text>
         </View>
 
-        <View style={styles.detailsCard}>
+        <View
+          style={[
+            styles.detailsCard,
+            isDark && {
+              backgroundColor: "#1E293B",
+              borderColor: "#334155",
+            },
+          ]}
+        >
           <ProfileRow
             icon="call-outline"
             label={t.c3profile.phone}
@@ -225,6 +252,11 @@ export default function FarmerProfileScreen() {
           />
         </View>
 
+        <MarketplaceAppearanceSettings
+          accent="#15803D"
+          accentSoft="#DCFCE7"
+        />
+
         <View style={styles.securityHeaderRow}>
           <View style={styles.securitySectionIcon}>
             <Ionicons
@@ -234,12 +266,25 @@ export default function FarmerProfileScreen() {
             />
           </View>
 
-          <Text style={styles.sectionTitle}>
+          <Text
+            style={[
+              styles.sectionTitle,
+              isDark && { color: "#F8FAFC" },
+            ]}
+          >
             {t.c3profile.accountSecurity}
           </Text>
         </View>
 
-        <View style={styles.securityCard}>
+        <View
+          style={[
+            styles.securityCard,
+            isDark && {
+              backgroundColor: "#1E293B",
+              borderColor: "#334155",
+            },
+          ]}
+        >
           <Pressable
             style={({ pressed }) => [
               styles.securityAction,
@@ -260,7 +305,12 @@ export default function FarmerProfileScreen() {
             </View>
 
             <View style={styles.securityActionText}>
-              <Text style={styles.securityActionTitle}>
+              <Text
+                style={[
+                  styles.securityActionTitle,
+                  isDark && { color: "#F8FAFC" },
+                ]}
+              >
                 {t.c3profile.changePassword}
               </Text>
 
@@ -357,6 +407,7 @@ function ProfileRow({
   value,
   isLast,
 }: ProfileRowProps) {
+  const { isDark } = useMarketplaceAppearance();
   return (
     <View
       style={[
@@ -373,11 +424,21 @@ function ProfileRow({
       </View>
 
       <View style={styles.rowText}>
-        <Text style={styles.rowLabel}>
+        <Text
+          style={[
+            styles.rowLabel,
+            isDark && { color: "#94A3B8" },
+          ]}
+        >
           {label}
         </Text>
 
-        <Text style={styles.rowValue}>
+        <Text
+          style={[
+            styles.rowValue,
+            isDark && { color: "#F8FAFC" },
+          ]}
+        >
           {value}
         </Text>
       </View>

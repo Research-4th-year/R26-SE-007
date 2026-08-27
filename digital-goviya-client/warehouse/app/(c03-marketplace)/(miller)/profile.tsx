@@ -1,4 +1,4 @@
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons } from "@/components/c03-marketplace/themed-native";
 import { router } from "expo-router";
 import {
   Alert,
@@ -9,7 +9,7 @@ import {
   StyleSheet,
   Text,
   View,
-} from "react-native";
+} from "@/components/c03-marketplace/themed-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useRef } from "react";
 import {
@@ -25,10 +25,13 @@ import type { MillerProfile } from "@/types/c03-marketplace/auth.types";
 import { useMarketplaceAuth } from "@/hooks/c03-marketplace/useMarketplaceAuth";
 
 import { useLanguage } from "@/contexts/LanguageContext";
+import { MarketplaceAppearanceSettings } from "@/components/c03-marketplace/MarketplaceAppearanceSettings";
+import { useMarketplaceAppearance } from "@/contexts/c03-marketplace/MarketplaceAppearanceContext";
 
 export default function MillerProfileScreen() {
   const { user, profile, signOut } = useMarketplaceAuth();
   const { t } = useLanguage();
+  const { isDark } = useMarketplaceAppearance();
 
   const millerProfile =
     user?.role === "miller" ? (profile as MillerProfile) : null;
@@ -78,7 +81,12 @@ export default function MillerProfileScreen() {
   if (!fontsLoaded) return null;
 
   return (
-    <SafeAreaView style={styles.screen}>
+    <SafeAreaView
+      style={[
+        styles.screen,
+        isDark && { backgroundColor: "#0F172A" },
+      ]}
+    >
       <Animated.ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
@@ -90,14 +98,26 @@ export default function MillerProfileScreen() {
             accessibilityLabel={t.c3millerProfile.goBack}
             style={({ pressed }) => [
               styles.headerButton,
+              isDark && { backgroundColor: "#1E293B" },
               pressed && styles.pressed,
             ]}
             onPress={() => router.back()}
           >
-            <Ionicons name="arrow-back" size={21} color="#16241C" />
+            <Ionicons
+              name="arrow-back"
+              size={21}
+              color={isDark ? "#F8FAFC" : "#16241C"}
+            />
           </Pressable>
 
-          <Text style={styles.headerTitle}>{t.c3millerProfile.title}</Text>
+          <Text
+            style={[
+              styles.headerTitle,
+              isDark && { color: "#F8FAFC" },
+            ]}
+          >
+            {t.c3millerProfile.title}
+          </Text>
 
           <View style={styles.headerPlaceholder} />
         </View>
@@ -132,12 +152,25 @@ export default function MillerProfileScreen() {
           <View style={styles.sectionIconBox}>
             <Ionicons name="person-outline" size={16} color="#92400E" />
           </View>
-          <Text style={styles.sectionTitle}>
+          <Text
+            style={[
+              styles.sectionTitle,
+              isDark && { color: "#F8FAFC" },
+            ]}
+          >
             {t.c3millerProfile.personalInformation}
           </Text>
         </View>
 
-        <View style={styles.detailsCard}>
+        <View
+          style={[
+            styles.detailsCard,
+            isDark && {
+              backgroundColor: "#1E293B",
+              borderColor: "#334155",
+            },
+          ]}
+        >
           <ProfileRow
             icon="call-outline"
             label={t.c3millerProfile.phone}
@@ -183,6 +216,11 @@ export default function MillerProfileScreen() {
           />
         </View>
 
+        <MarketplaceAppearanceSettings
+          accent="#92400E"
+          accentSoft="#FEF3C7"
+        />
+
         <View style={styles.securityHeaderRow}>
           <View style={styles.securitySectionIcon}>
             <Ionicons
@@ -192,12 +230,25 @@ export default function MillerProfileScreen() {
             />
           </View>
 
-          <Text style={styles.sectionTitle}>
+          <Text
+            style={[
+              styles.sectionTitle,
+              isDark && { color: "#F8FAFC" },
+            ]}
+          >
             {t.c3millerProfile.accountSecurity}
           </Text>
         </View>
 
-        <View style={styles.securityCard}>
+        <View
+          style={[
+            styles.securityCard,
+            isDark && {
+              backgroundColor: "#1E293B",
+              borderColor: "#334155",
+            },
+          ]}
+        >
           <Pressable
             style={({ pressed }) => [
               styles.securityAction,
@@ -212,7 +263,12 @@ export default function MillerProfileScreen() {
             </View>
 
             <View style={styles.securityActionText}>
-              <Text style={styles.securityActionTitle}>
+              <Text
+                style={[
+                  styles.securityActionTitle,
+                  isDark && { color: "#F8FAFC" },
+                ]}
+              >
                 {t.c3millerProfile.changePassword}
               </Text>
 
@@ -249,6 +305,8 @@ interface ProfileRowProps {
 }
 
 function ProfileRow({ icon, label, value, isLast }: ProfileRowProps) {
+  const { isDark } = useMarketplaceAppearance();
+
   return (
     <View style={[styles.profileRow, isLast && styles.profileRowLast]}>
       <View style={styles.rowIcon}>
@@ -256,8 +314,22 @@ function ProfileRow({ icon, label, value, isLast }: ProfileRowProps) {
       </View>
 
       <View style={styles.rowText}>
-        <Text style={styles.rowLabel}>{label}</Text>
-        <Text style={styles.rowValue}>{value}</Text>
+        <Text
+          style={[
+            styles.rowLabel,
+            isDark && { color: "#94A3B8" },
+          ]}
+        >
+          {label}
+        </Text>
+        <Text
+          style={[
+            styles.rowValue,
+            isDark && { color: "#F8FAFC" },
+          ]}
+        >
+          {value}
+        </Text>
       </View>
     </View>
   );

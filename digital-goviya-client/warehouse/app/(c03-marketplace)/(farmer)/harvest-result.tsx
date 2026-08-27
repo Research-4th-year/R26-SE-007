@@ -1,4 +1,4 @@
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons } from "@/components/c03-marketplace/themed-native";
 import { router, useLocalSearchParams } from "expo-router";
 import {
   Animated,
@@ -8,7 +8,7 @@ import {
   StyleSheet,
   Text,
   View,
-} from "react-native";
+} from "@/components/c03-marketplace/themed-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useRef } from "react";
 

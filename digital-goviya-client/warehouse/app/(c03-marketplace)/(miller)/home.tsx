@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons } from "@/components/c03-marketplace/themed-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect } from "expo-router";
 import {
@@ -11,7 +11,7 @@ import {
   StyleSheet,
   Text,
   View,
-} from "react-native";
+} from "@/components/c03-marketplace/themed-native";
 import {
   useFonts,
   Poppins_800ExtraBold,

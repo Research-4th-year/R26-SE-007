@@ -3,7 +3,7 @@ import {
   StyleSheet,
   Text,
   View,
-} from "react-native";
+} from "@/components/c03-marketplace/themed-native";
 
 interface Option<T extends string> {
   label: string;

@@ -1,6 +1,6 @@
 import {
   Ionicons,
-} from "@expo/vector-icons";
+} from "@/components/c03-marketplace/themed-native";
 
 import {
   LinearGradient,
@@ -27,7 +27,7 @@ import {
   StyleSheet,
   Text,
   View,
-} from "react-native";
+} from "@/components/c03-marketplace/themed-native";
 
 import {
   useFonts,

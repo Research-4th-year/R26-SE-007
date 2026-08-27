@@ -1,10 +1,10 @@
+import type { KeyboardTypeOptions } from "@/components/c03-marketplace/themed-native";
 import {
-  KeyboardTypeOptions,
   StyleSheet,
   Text,
   TextInput,
   View,
-} from "react-native";
+} from "@/components/c03-marketplace/themed-native";
 
 interface MarketplaceInputProps {
   label: string;

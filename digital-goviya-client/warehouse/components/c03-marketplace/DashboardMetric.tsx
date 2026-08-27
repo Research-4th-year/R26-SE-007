@@ -1,9 +1,9 @@
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons } from "@/components/c03-marketplace/themed-native";
 import {
   StyleSheet,
   Text,
   View,
-} from "react-native";
+} from "@/components/c03-marketplace/themed-native";
 
 interface DashboardMetricProps {
   icon: keyof typeof Ionicons.glyphMap;

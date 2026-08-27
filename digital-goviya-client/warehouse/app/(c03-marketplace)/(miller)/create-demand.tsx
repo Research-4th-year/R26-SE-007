@@ -12,9 +12,9 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-} from "react-native";
+} from "@/components/c03-marketplace/themed-native";
 import { router } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons } from "@/components/c03-marketplace/themed-native";
 import { LinearGradient } from "expo-linear-gradient";
 import {
   useFonts,
