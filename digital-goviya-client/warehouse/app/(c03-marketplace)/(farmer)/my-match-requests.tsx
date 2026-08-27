@@ -23,6 +23,8 @@ import {
   useFonts,
 } from "@expo-google-fonts/poppins";
 
+import { useLanguage } from "@/contexts/LanguageContext";
+
 import {
   matchingService,
 } from "@/services/c03-marketplace/matching.service";
@@ -45,6 +47,8 @@ import type {
 } from "@/types/c03-marketplace/demand.types";
 
 export default function MyMatchRequestsScreen() {
+  const { t, language } = useLanguage();
+
   const [fontsLoaded] = useFonts({
     Poppins_300Light,
     Poppins_400Regular,
@@ -137,7 +141,7 @@ export default function MyMatchRequestsScreen() {
     ).length;
 
   if (!fontsLoaded || loading) {
-    return <LoadingState />;
+    return <LoadingState t={t} />;
   }
 
   return (
@@ -160,11 +164,11 @@ export default function MyMatchRequestsScreen() {
 
         <View style={styles.headerText}>
           <Text style={styles.headerTitle}>
-            My Match Requests
+            {t.c3myMatchRequests.title}
           </Text>
 
           <Text style={styles.headerSubtitle}>
-            Track your farmer–miller matching activity
+            {t.c3myMatchRequests.subtitle}
           </Text>
         </View>
 
@@ -202,9 +206,10 @@ export default function MyMatchRequestsScreen() {
             onRetry={() =>
               void loadSelections()
             }
+            t={t}
           />
         ) : sortedSelections.length === 0 ? (
-          <EmptyState />
+          <EmptyState t={t} />
         ) : (
           <>
             {/* ================= WELCOME / OVERVIEW ================= */}
@@ -219,12 +224,11 @@ export default function MyMatchRequestsScreen() {
 
               <View style={styles.overviewText}>
                 <Text style={styles.overviewTitle}>
-                  Matching Overview
+                  {t.c3myMatchRequests.overviewTitle}
                 </Text>
 
                 <Text style={styles.overviewSubtitle}>
-                  Keep track of your latest miller
-                  connections and negotiations.
+                  {t.c3myMatchRequests.overviewSubtitle}
                 </Text>
               </View>
             </View>
@@ -233,7 +237,7 @@ export default function MyMatchRequestsScreen() {
             <View style={styles.summaryCard}>
               <SummaryMetric
                 icon="time-outline"
-                label="Pending"
+                label={t.c3myMatchRequests.pending}
                 value={pendingCount}
               />
 
@@ -241,7 +245,7 @@ export default function MyMatchRequestsScreen() {
 
               <SummaryMetric
                 icon="sparkles-outline"
-                label="Ready"
+                label={t.c3myMatchRequests.ready}
                 value={readyCount}
               />
 
@@ -249,7 +253,7 @@ export default function MyMatchRequestsScreen() {
 
               <SummaryMetric
                 icon="documents-outline"
-                label="Total"
+                label={t.c3myMatchRequests.total}
                 value={sortedSelections.length}
               />
             </View>
@@ -258,11 +262,11 @@ export default function MyMatchRequestsScreen() {
             <View style={styles.sectionHeader}>
               <View>
                 <Text style={styles.sectionTitle}>
-                  Matching Activity
+                  {t.c3myMatchRequests.activityTitle}
                 </Text>
 
                 <Text style={styles.sectionSubtitle}>
-                  Your latest requests
+                  {t.c3myMatchRequests.activitySubtitle}
                 </Text>
               </View>
 
@@ -274,7 +278,7 @@ export default function MyMatchRequestsScreen() {
                 />
 
                 <Text style={styles.refreshHint}>
-                  Pull to refresh
+                  {t.c3myMatchRequests.pullToRefresh}
                 </Text>
               </View>
             </View>
@@ -295,7 +299,8 @@ export default function MyMatchRequestsScreen() {
                         selection._id,
                         "accepted",
                         setProcessingId,
-                        setSelections
+                        setSelections,
+                        t
                       )
                     }
                     onReject={() =>
@@ -303,9 +308,12 @@ export default function MyMatchRequestsScreen() {
                         selection._id,
                         "rejected",
                         setProcessingId,
-                        setSelections
+                        setSelections,
+                        t
                       )
                     }
+                    t={t}
+                    language={language}
                   />
                 )
               )}
@@ -326,11 +334,15 @@ function FarmerRequestCard({
   processing,
   onAccept,
   onReject,
+  t,
+  language,
 }: {
   selection: MatchSelection;
   processing: boolean;
   onAccept: () => void;
   onReject: () => void;
+  t: any;
+  language: string;
 }) {
   const harvest = getHarvest(
     selection.harvestId
@@ -345,7 +357,10 @@ function FarmerRequestCard({
   );
 
   const status =
-    getStatusDisplay(selection.status);
+    getStatusDisplay(
+      selection.status,
+      t
+    );
 
   const isIncoming =
     selection.initiatedBy === "miller";
@@ -391,8 +406,8 @@ function FarmerRequestCard({
             ]}
           >
             {isIncoming
-              ? "MILLER REQUEST"
-              : "SENT REQUEST"}
+              ? t.c3myMatchRequests.millerRequest
+              : t.c3myMatchRequests.sentRequest}
           </Text>
         </View>
 
@@ -444,7 +459,8 @@ function FarmerRequestCard({
             style={styles.millerName}
             numberOfLines={1}
           >
-            {miller?.name ?? "Miller"}
+            {miller?.name ??
+              t.c3myMatchRequests.miller}
           </Text>
 
           <View style={styles.millLocationRow}>
@@ -458,7 +474,8 @@ function FarmerRequestCard({
               style={styles.millName}
               numberOfLines={1}
             >
-              {miller?.millName ?? "Rice Mill"}
+              {miller?.millName ??
+                t.c3myMatchRequests.riceMill}
             </Text>
           </View>
         </View>
@@ -477,12 +494,11 @@ function FarmerRequestCard({
 
           <View>
             <Text style={styles.scoreLabel}>
-              AI Matching Score
+              {t.c3myMatchRequests.aiMatchingScore}
             </Text>
 
             <Text style={styles.scoreDescription}>
-              Compatibility based on your
-              requirements
+              {t.c3myMatchRequests.scoreDescription}
             </Text>
           </View>
         </View>
@@ -501,25 +517,28 @@ function FarmerRequestCard({
       {/* ================= DETAILS ================= */}
       <View style={styles.detailsContainer}>
         <Text style={styles.detailsTitle}>
-          Match Details
+          {t.c3myMatchRequests.matchDetails}
         </Text>
 
         <View style={styles.detailsGrid}>
           <DetailItem
             icon="leaf-outline"
-            label="Paddy"
-            value={formatLabel(
-              harvest?.paddyType ?? "-"
+            label={t.c3myMatchRequests.paddy}
+            value={translatePaddyType(
+              harvest?.paddyType,
+              t,
+              "-"
             )}
           />
 
           <DetailItem
             icon="cube-outline"
-            label="Quantity"
+            label={t.c3myMatchRequests.quantity}
             value={
               harvest
                 ? `${formatNumber(
-                    harvest.quantity
+                    harvest.quantity,
+                    language
                   )} kg`
                 : "-"
             }
@@ -527,7 +546,7 @@ function FarmerRequestCard({
 
           <DetailItem
             icon="cash-outline"
-            label="Miller Offer"
+            label={t.c3myMatchRequests.millerOffer}
             value={
               demand
                 ? `Rs. ${demand.offeredPrice.toFixed(
@@ -539,10 +558,12 @@ function FarmerRequestCard({
 
           <DetailItem
             icon="location-outline"
-            label="District"
-            value={
-              miller?.district ?? "-"
-            }
+            label={t.c3myMatchRequests.district}
+            value={translateDistrict(
+              miller?.district,
+              t.c3districts,
+              "-"
+            )}
           />
         </View>
       </View>
@@ -559,15 +580,16 @@ function FarmerRequestCard({
 
         <View>
           <Text style={styles.timelineLabel}>
-            Request Activity
+            {t.c3myMatchRequests.requestActivity}
           </Text>
 
           <Text style={styles.timelineText}>
             {isIncoming
-              ? "Received"
-              : "Sent"}{" "}
+              ? t.c3myMatchRequests.received
+              : t.c3myMatchRequests.sent}{" "}
             {formatDate(
-              selection.createdAt
+              selection.createdAt,
+              language
             )}
           </Text>
         </View>
@@ -592,7 +614,7 @@ function FarmerRequestCard({
             />
 
             <Text style={styles.rejectText}>
-              Reject
+              {t.c3myMatchRequests.reject}
             </Text>
           </Pressable>
 
@@ -619,7 +641,7 @@ function FarmerRequestCard({
                 />
 
                 <Text style={styles.acceptText}>
-                  Accept Match
+                  {t.c3myMatchRequests.acceptMatch}
                 </Text>
               </>
             )}
@@ -695,13 +717,13 @@ function FarmerRequestCard({
                 styles.negotiationButtonText
               }
             >
-              Start AI Negotiation
+              {t.c3myMatchRequests.startAiNegotiation}
             </Text>
 
             <Text
               style={styles.negotiationSubtext}
             >
-              Find a fair price with AI assistance
+              {t.c3myMatchRequests.negotiationSubtext}
             </Text>
           </View>
 
@@ -793,7 +815,11 @@ function DetailItem({
    LOADING STATE
 ========================================================= */
 
-function LoadingState() {
+function LoadingState({
+  t,
+}: {
+  t: any;
+}) {
   return (
     <SafeAreaView style={styles.screen}>
       <View style={styles.loadingScreen}>
@@ -805,12 +831,11 @@ function LoadingState() {
         </View>
 
         <Text style={styles.stateTitle}>
-          Loading match requests
+          {t.c3myMatchRequests.loadingTitle}
         </Text>
 
         <Text style={styles.stateText}>
-          Retrieving your latest matching
-          activity...
+          {t.c3myMatchRequests.loadingText}
         </Text>
       </View>
     </SafeAreaView>
@@ -821,7 +846,11 @@ function LoadingState() {
    EMPTY STATE
 ========================================================= */
 
-function EmptyState() {
+function EmptyState({
+  t,
+}: {
+  t: any;
+}) {
   return (
     <View style={styles.centerState}>
       <View style={styles.emptyIcon}>
@@ -833,13 +862,11 @@ function EmptyState() {
       </View>
 
       <Text style={styles.stateTitle}>
-        No Match Requests Yet
+        {t.c3myMatchRequests.emptyTitle}
       </Text>
 
       <Text style={styles.stateText}>
-        Select one of your available harvests
-        and find suitable millers to send your
-        first matching request.
+        {t.c3myMatchRequests.emptyText}
       </Text>
 
       <Pressable
@@ -858,7 +885,7 @@ function EmptyState() {
         />
 
         <Text style={styles.emptyButtonText}>
-          View My Harvests
+          {t.c3myMatchRequests.viewMyHarvests}
         </Text>
 
         <Ionicons
@@ -878,9 +905,11 @@ function EmptyState() {
 function ErrorState({
   message,
   onRetry,
+  t,
 }: {
   message: string;
   onRetry: () => void;
+  t: any;
 }) {
   return (
     <View style={styles.centerState}>
@@ -893,7 +922,7 @@ function ErrorState({
       </View>
 
       <Text style={styles.stateTitle}>
-        Unable to Load Requests
+        {t.c3myMatchRequests.errorTitle}
       </Text>
 
       <Text style={styles.stateText}>
@@ -914,7 +943,7 @@ function ErrorState({
         />
 
         <Text style={styles.retryText}>
-          Try Again
+          {t.c3myMatchRequests.tryAgain}
         </Text>
       </Pressable>
     </View>
@@ -965,40 +994,42 @@ function getDemand(
 }
 
 function getStatusDisplay(
-  status: MatchSelection["status"]
+  status: MatchSelection["status"],
+  t: any
 ) {
   switch (status) {
     case "pending":
       return {
-        label: "Waiting",
+        label: t.c3myMatchRequests.statusWaiting,
         color: "#92400E",
         background: "#FEF3C7",
       };
 
     case "negotiation_ready":
       return {
-        label: "Negotiation Ready",
+        label:
+          t.c3myMatchRequests.statusNegotiationReady,
         color: "#166534",
         background: "#DCFCE7",
       };
 
     case "rejected":
       return {
-        label: "Rejected",
+        label: t.c3myMatchRequests.statusRejected,
         color: "#B91C1C",
         background: "#FEE2E2",
       };
 
     case "cancelled":
       return {
-        label: "Cancelled",
+        label: t.c3myMatchRequests.statusCancelled,
         color: "#475569",
         background: "#E2E8F0",
       };
 
     default:
       return {
-        label: "Unknown",
+        label: t.c3myMatchRequests.statusUnknown,
         color: "#475569",
         background: "#E2E8F0",
       };
@@ -1018,21 +1049,73 @@ function formatLabel(
     .join(" ");
 }
 
+function translatePaddyType(
+  value: string | undefined,
+  t: any,
+  fallback: string
+): string {
+  if (!value) {
+    return fallback;
+  }
+
+  const normalized = value.trim().toLowerCase();
+
+  if (normalized === "nadu") {
+    return t.c3paddyTypes.Nadu;
+  }
+
+  if (normalized === "samba") {
+    return t.c3paddyTypes.Samba;
+  }
+
+  if (normalized === "keeri samba" || normalized === "keerisamba") {
+    return t.c3paddyTypes.KeeriSamba;
+  }
+
+  return formatLabel(value);
+}
+
+function translateDistrict(
+  district: string | undefined,
+  translations: {
+    Ampara: string;
+    Badulla: string;
+    Kandy: string;
+    Monaragala: string;
+  },
+  fallback: string
+): string {
+  if (!district) {
+    return fallback;
+  }
+
+  const districtMap: Record<string, string> = {
+    Ampara: translations.Ampara,
+    Badulla: translations.Badulla,
+    Kandy: translations.Kandy,
+    Monaragala: translations.Monaragala,
+  };
+
+  return districtMap[district.trim()] ?? district.trim();
+}
+
 function formatNumber(
-  value: number
+  value: number,
+  language: string
 ): string {
   return new Intl.NumberFormat(
-    "en-LK"
+    language === "si" ? "si-LK" : "en-LK"
   ).format(value);
 }
 
 function formatDate(
-  value: string
+  value: string,
+  language: string
 ): string {
   const date = new Date(value);
 
   return new Intl.DateTimeFormat(
-    "en-LK",
+    language === "si" ? "si-LK" : "en-LK",
     {
       day: "numeric",
       month: "short",
@@ -1055,7 +1138,8 @@ async function respondToMatch(
   ) => void,
   setSelections: React.Dispatch<
     React.SetStateAction<MatchSelection[]>
-  >
+  >,
+  t: any
 ): Promise<void> {
   try {
     setProcessingId(selectionId);
@@ -1076,13 +1160,13 @@ async function respondToMatch(
 
     Alert.alert(
       decision === "accepted"
-        ? "Match Accepted"
-        : "Match Rejected",
+        ? t.c3myMatchRequests.matchAccepted
+        : t.c3myMatchRequests.matchRejected,
       response.message
     );
   } catch (error) {
     Alert.alert(
-      "Unable to Update Request",
+      t.c3myMatchRequests.updateErrorTitle,
       getApiErrorMessage(error)
     );
   } finally {
@@ -1784,8 +1868,6 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontFamily: "Poppins_700Bold",
   },
-
-  /* ================= PRESS ================= */
 
   pressed: {
     opacity: 0.82,

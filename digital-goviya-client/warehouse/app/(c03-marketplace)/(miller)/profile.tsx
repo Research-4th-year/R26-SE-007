@@ -24,8 +24,11 @@ import type { MillerProfile } from "@/types/c03-marketplace/auth.types";
 
 import { useMarketplaceAuth } from "@/hooks/c03-marketplace/useMarketplaceAuth";
 
+import { useLanguage } from "@/contexts/LanguageContext";
+
 export default function MillerProfileScreen() {
   const { user, profile, signOut } = useMarketplaceAuth();
+  const { t } = useLanguage();
 
   const millerProfile =
     user?.role === "miller" ? (profile as MillerProfile) : null;
@@ -39,8 +42,8 @@ export default function MillerProfileScreen() {
       console.error("Miller logout failed:", error);
 
       Alert.alert(
-        "Logout failed",
-        "The session could not be removed. Please try again.",
+        t.c3millerProfile.logoutFailed,
+        t.c3millerProfile.logoutFailedMessage,
       );
     }
   }
@@ -83,6 +86,8 @@ export default function MillerProfileScreen() {
       >
         <View style={styles.header}>
           <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t.c3millerProfile.goBack}
             style={({ pressed }) => [
               styles.headerButton,
               pressed && styles.pressed,
@@ -92,7 +97,7 @@ export default function MillerProfileScreen() {
             <Ionicons name="arrow-back" size={21} color="#16241C" />
           </Pressable>
 
-          <Text style={styles.headerTitle}>Miller Profile</Text>
+          <Text style={styles.headerTitle}>{t.c3millerProfile.title}</Text>
 
           <View style={styles.headerPlaceholder} />
         </View>
@@ -114,7 +119,9 @@ export default function MillerProfileScreen() {
 
             <View style={styles.roleBadge}>
               <Ionicons name="shield-checkmark" size={11} color="#78350F" />
-              <Text style={styles.roleText}>VERIFIED MILLER</Text>
+              <Text style={styles.roleText}>
+                {t.c3millerProfile.verifiedMiller}
+              </Text>
             </View>
 
             <Text style={styles.email}>{user?.username}</Text>
@@ -125,44 +132,53 @@ export default function MillerProfileScreen() {
           <View style={styles.sectionIconBox}>
             <Ionicons name="person-outline" size={16} color="#92400E" />
           </View>
-          <Text style={styles.sectionTitle}>Personal information</Text>
+          <Text style={styles.sectionTitle}>
+            {t.c3millerProfile.personalInformation}
+          </Text>
         </View>
 
         <View style={styles.detailsCard}>
           <ProfileRow
             icon="call-outline"
-            label="Phone"
-            value={user?.phone ?? "Not provided"}
+            label={t.c3millerProfile.phone}
+            value={user?.phone ?? t.c3millerProfile.notProvided}
           />
 
           <ProfileRow
             icon="location-outline"
-            label="District"
-            value={millerProfile?.district ?? "Not provided"}
+            label={t.c3millerProfile.district}
+            value={translateDistrict(
+              millerProfile?.district,
+              t.c3districts,
+              t.c3millerProfile.notProvided,
+            )}
           />
 
           <ProfileRow
             icon="navigate-outline"
-            label="Location"
-            value={millerProfile?.location ?? "Not provided"}
+            label={t.c3millerProfile.location}
+            value={millerProfile?.location ?? t.c3millerProfile.notProvided}
           />
 
           <ProfileRow
             icon="business-outline"
-            label="Rice mill"
-            value={millerProfile?.millName ?? "Not provided"}
+            label={t.c3millerProfile.riceMill}
+            value={millerProfile?.millName ?? t.c3millerProfile.notProvided}
           />
 
           <ProfileRow
             icon="document-text-outline"
-            label="Registration number"
-            value={millerProfile?.businessRegistrationNumber || "Not provided"}
+            label={t.c3millerProfile.registrationNumber}
+            value={
+              millerProfile?.businessRegistrationNumber ||
+              t.c3millerProfile.notProvided
+            }
           />
 
           <ProfileRow
             icon="scale-outline"
-            label="Purchasing capacity"
-            value={`${millerProfile?.purchasingCapacityKg ?? 0} kg`}
+            label={t.c3millerProfile.purchasingCapacity}
+            value={`${millerProfile?.purchasingCapacityKg ?? 0} ${t.c3millerProfile.kg}`}
             isLast
           />
         </View>
@@ -176,7 +192,9 @@ export default function MillerProfileScreen() {
             />
           </View>
 
-          <Text style={styles.sectionTitle}>Account & security</Text>
+          <Text style={styles.sectionTitle}>
+            {t.c3millerProfile.accountSecurity}
+          </Text>
         </View>
 
         <View style={styles.securityCard}>
@@ -194,10 +212,12 @@ export default function MillerProfileScreen() {
             </View>
 
             <View style={styles.securityActionText}>
-              <Text style={styles.securityActionTitle}>Change password</Text>
+              <Text style={styles.securityActionTitle}>
+                {t.c3millerProfile.changePassword}
+              </Text>
 
               <Text style={styles.securityActionSubtitle}>
-                Update your marketplace account password
+                {t.c3millerProfile.changePasswordDescription}
               </Text>
             </View>
 
@@ -214,7 +234,7 @@ export default function MillerProfileScreen() {
         >
           <Ionicons name="log-out-outline" size={20} color="#B91C1C" />
 
-          <Text style={styles.logoutText}>Sign out</Text>
+          <Text style={styles.logoutText}>{t.c3millerProfile.signOut}</Text>
         </Pressable>
       </Animated.ScrollView>
     </SafeAreaView>
@@ -241,6 +261,30 @@ function ProfileRow({ icon, label, value, isLast }: ProfileRowProps) {
       </View>
     </View>
   );
+}
+
+function translateDistrict(
+  district: string | undefined,
+  translations: {
+    Ampara: string;
+    Badulla: string;
+    Kandy: string;
+    Monaragala: string;
+  },
+  fallback: string,
+): string {
+  if (!district) {
+    return fallback;
+  }
+
+  const districtMap: Record<string, string> = {
+    Ampara: translations.Ampara,
+    Badulla: translations.Badulla,
+    Kandy: translations.Kandy,
+    Monaragala: translations.Monaragala,
+  };
+
+  return districtMap[district.trim()] ?? district.trim();
 }
 
 const CREAM = "#FBF8F1";

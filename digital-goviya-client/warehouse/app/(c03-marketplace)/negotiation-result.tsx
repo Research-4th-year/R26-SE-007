@@ -36,6 +36,8 @@ import {
   useMarketplaceAuth,
 } from "@/hooks/c03-marketplace/useMarketplaceAuth";
 
+import { useLanguage } from "@/contexts/LanguageContext";
+
 import {
   negotiationService,
 } from "@/services/c03-marketplace/negotiation.service";
@@ -131,6 +133,8 @@ export default function NegotiationResultScreen() {
   const { user } =
     useMarketplaceAuth();
 
+  const { t } = useLanguage();
+
   const params =
     useLocalSearchParams();
 
@@ -204,7 +208,7 @@ export default function NegotiationResultScreen() {
     const load = async () => {
       if (!negotiationId) {
         setErrorMessage(
-          "Negotiation ID is missing."
+          t.c3negotiationResult.missingId
         );
         setLoading(false);
         return;
@@ -246,6 +250,7 @@ export default function NegotiationResultScreen() {
     negotiationId,
     fade,
     rise,
+    t,
   ]);
 
   /* ---------------------------------------------------------------- */
@@ -451,8 +456,8 @@ export default function NegotiationResultScreen() {
 
           <SectionHeader
             icon="stats-chart-outline"
-            title="Negotiation Summary"
-            subtitle="Key results from the AI negotiation"
+            title={t.c3negotiationResult.summaryTitle}
+            subtitle={t.c3negotiationResult.summarySubtitle}
             theme={theme}
           />
 
@@ -462,7 +467,7 @@ export default function NegotiationResultScreen() {
             <MetricCard
               index={0}
               icon="repeat-outline"
-              label="ROUNDS"
+              label={t.c3negotiationResult.rounds}
               value={String(
                 negotiation.roundsCompleted
               )}
@@ -473,7 +478,7 @@ export default function NegotiationResultScreen() {
             <MetricCard
               index={1}
               icon="analytics-outline"
-              label="FL REFERENCE"
+              label={t.c3negotiationResult.flReference}
               value={`Rs.${negotiation.flReferencePrice.toFixed(
                 2
               )}`}
@@ -484,14 +489,14 @@ export default function NegotiationResultScreen() {
             <MetricCard
               index={2}
               icon="shield-checkmark-outline"
-              label="FAIRNESS"
+              label={t.c3negotiationResult.fairness}
               value={
                 negotiation.fairnessScore !==
                 null
                   ? `${negotiation.fairnessScore.toFixed(
                       1
                     )}%`
-                  : "N/A"
+                  : t.c3negotiationResult.notAvailable
               }
               accent={theme.primary}
               soft={theme.soft}
@@ -521,8 +526,8 @@ export default function NegotiationResultScreen() {
             <>
               <SectionHeader
                 icon="lock-open-outline"
-                title="Secure Contact"
-                subtitle="Connect after agreement"
+                title={t.c3negotiationResult.secureContact}
+                subtitle={t.c3negotiationResult.secureContactSubtitle}
                 theme={theme}
               />
 
@@ -557,8 +562,8 @@ export default function NegotiationResultScreen() {
 
           <SectionHeader
             icon="chatbubbles-outline"
-            title="Agent Conversation"
-            subtitle="How the farmer and miller agents negotiated"
+            title={t.c3negotiationResult.agentConversation}
+            subtitle={t.c3negotiationResult.agentConversationSubtitle}
             theme={theme}
           />
 
@@ -680,6 +685,8 @@ function Header({
   theme: ResultTheme;
   negotiation: Negotiation;
 }) {
+  const { t } = useLanguage();
+
   const { user } =
     useMarketplaceAuth();
 
@@ -726,7 +733,7 @@ function Header({
         <Text
           style={styles.headerTitle}
         >
-          Negotiation Result
+          {t.c3negotiationResult.title}
         </Text>
 
         <Text
@@ -765,6 +772,8 @@ function LoadingState({
 }: {
   theme: ResultTheme;
 }) {
+  const { t } = useLanguage();
+
   const pulse =
     useRef(
       new Animated.Value(1)
@@ -842,13 +851,13 @@ function LoadingState({
         <Text
           style={styles.stateTitle}
         >
-          Loading negotiation result
+          {t.c3negotiationResult.loadingTitle}
         </Text>
 
         <Text
           style={styles.stateText}
         >
-          Preparing your negotiation summary...
+          {t.c3negotiationResult.loadingText}
         </Text>
       </View>
     </SafeAreaView>
@@ -866,6 +875,8 @@ function ErrorState({
   theme: ResultTheme;
   message: string | null;
 }) {
+  const { t } = useLanguage();
+
   const entrance =
     useEntrance(0);
 
@@ -901,7 +912,7 @@ function ErrorState({
         <Text
           style={styles.stateTitle}
         >
-          Result unavailable
+          {t.c3negotiationResult.resultUnavailable}
         </Text>
 
         <Text
@@ -941,7 +952,7 @@ function ErrorState({
               styles.simpleButtonText
             }
           >
-            Go Back
+            {t.c3negotiationResult.goBack}
           </Text>
         </AnimatedPressable>
       </Animated.View>
@@ -962,6 +973,8 @@ function ResultHero({
   negotiation: Negotiation;
   theme: ResultTheme;
 }) {
+  const { t } = useLanguage();
+
   const iconScale =
     useRef(
       new Animated.Value(0)
@@ -1111,8 +1124,8 @@ function ResultHero({
           ]}
         >
           {agreed
-            ? "AGREEMENT REACHED"
-            : "NO AGREEMENT"}
+            ? t.c3negotiationResult.agreementReached
+            : t.c3negotiationResult.noAgreement}
         </Text>
       </View>
 
@@ -1124,8 +1137,8 @@ function ResultHero({
           null
           ? `Rs.${negotiation.agreedPrice.toFixed(
               2
-            )}/kg`
-          : "Negotiation closed"}
+            )}/${t.c3negotiationResult.kg}`
+          : t.c3negotiationResult.negotiationClosed}
       </Text>
 
       <Text
@@ -1330,6 +1343,8 @@ function HistoryCard({
   accent: string;
   soft: string;
 }) {
+  const { t } = useLanguage();
+
   const fromLeft =
     item.agent === "farmer";
 
@@ -1429,8 +1444,8 @@ function HistoryCard({
             >
               {item.agent ===
               "farmer"
-                ? "Farmer Agent"
-                : "Miller Agent"}
+                ? t.c3negotiationResult.farmerAgent
+                : t.c3negotiationResult.millerAgent}
             </Text>
 
             <Text
@@ -1537,6 +1552,8 @@ function ContactAccessCard({
   onAccept: () => void;
   onReject: () => void;
 }) {
+  const { t } = useLanguage();
+
   const entrance =
     useEntrance(390);
 
@@ -1547,8 +1564,8 @@ function ContactAccessCard({
 
   const otherPartyLabel =
     role === "miller"
-      ? "Farmer"
-      : "Miller";
+      ? t.c3negotiationResult.farmer
+      : t.c3negotiationResult.miller;
 
   const requesterIsMe =
     state?.request?.requestedBy ===
@@ -1576,7 +1593,7 @@ function ContactAccessCard({
         );
 
       const message =
-        "Hello, I am contacting you regarding our agreed paddy marketplace negotiation.";
+        t.c3negotiationResult.whatsappMessage;
 
       await Linking.openURL(
         `https://wa.me/${normalized}?text=${encodeURIComponent(
@@ -1638,7 +1655,7 @@ function ContactAccessCard({
               styles.contactDescription
             }
           >
-            Secure contact permissions are being verified.
+            {t.c3negotiationResult.verifyingPermissions}
           </Text>
         </View>
       </Animated.View>
@@ -1719,7 +1736,7 @@ function ContactAccessCard({
                   },
                 ]}
               >
-                CONTACT UNLOCKED
+                {t.c3negotiationResult.contactUnlocked}
               </Text>
             </View>
 
@@ -1732,7 +1749,10 @@ function ContactAccessCard({
                 },
               ]}
             >
-              {otherPartyLabel} contact is available
+              {t.c3negotiationResult.contactAvailable.replace(
+                "{{party}}",
+                otherPartyLabel
+              )}
             </Text>
 
             <Text
@@ -1740,7 +1760,7 @@ function ContactAccessCard({
                 styles.contactDescription
               }
             >
-              Both participants approved contact exchange after the successful AI negotiation.
+              {t.c3negotiationResult.contactApproved}
             </Text>
           </View>
         </View>
@@ -1847,7 +1867,7 @@ function ContactAccessCard({
                 styles.contactActionText
               }
             >
-              Call
+              {t.c3negotiationResult.call}
             </Text>
           </Pressable>
 
@@ -1875,7 +1895,7 @@ function ContactAccessCard({
                 styles.contactActionText
               }
             >
-              WhatsApp
+              {t.c3negotiationResult.whatsapp}
             </Text>
           </Pressable>
         </View>
@@ -1927,7 +1947,7 @@ function ContactAccessCard({
                 styles.contactRejectedTitle
               }
             >
-              Contact request declined
+              {t.c3negotiationResult.contactDeclined}
             </Text>
 
             <Text
@@ -1935,7 +1955,7 @@ function ContactAccessCard({
                 styles.contactDescription
               }
             >
-              Contact details remain private because the other participant did not approve the request.
+              {t.c3negotiationResult.contactDeclinedText}
             </Text>
           </View>
         </View>
@@ -2012,7 +2032,7 @@ function ContactAccessCard({
                   },
                 ]}
               >
-                NEW REQUEST
+                {t.c3negotiationResult.newRequest}
               </Text>
             </View>
 
@@ -2025,7 +2045,7 @@ function ContactAccessCard({
                 },
               ]}
             >
-              The other participant wants to connect
+              {t.c3negotiationResult.incomingTitle}
             </Text>
 
             <Text
@@ -2033,7 +2053,7 @@ function ContactAccessCard({
                 styles.contactDescription
               }
             >
-              Accept to unlock phone and WhatsApp contact for both sides.
+              {t.c3negotiationResult.incomingText}
             </Text>
           </View>
         </View>
@@ -2067,7 +2087,7 @@ function ContactAccessCard({
                 styles.contactRejectText
               }
             >
-              Reject
+              {t.c3negotiationResult.reject}
             </Text>
           </Pressable>
 
@@ -2106,7 +2126,7 @@ function ContactAccessCard({
                     styles.contactAcceptText
                   }
                 >
-                  Accept Access
+                  {t.c3negotiationResult.acceptAccess}
                 </Text>
               </>
             )}
@@ -2174,7 +2194,7 @@ function ContactAccessCard({
                 },
               ]}
             >
-              REQUEST PENDING
+              {t.c3negotiationResult.requestPending}
             </Text>
 
             <Text
@@ -2186,7 +2206,7 @@ function ContactAccessCard({
                 },
               ]}
             >
-              Waiting for approval
+              {t.c3negotiationResult.waitingApproval}
             </Text>
 
             <Text
@@ -2194,7 +2214,7 @@ function ContactAccessCard({
                 styles.contactDescription
               }
             >
-              Your contact request was sent successfully. Phone and WhatsApp remain protected until the other participant accepts.
+              {t.c3negotiationResult.waitingApprovalText}
             </Text>
           </View>
         </View>
@@ -2284,7 +2304,7 @@ function ContactAccessCard({
                 },
               ]}
             >
-              SECURE CONTACT ACCESS
+              {t.c3negotiationResult.secureContactAccess}
             </Text>
 
             <Text
@@ -2296,7 +2316,7 @@ function ContactAccessCard({
                 },
               ]}
             >
-              Continue the conversation
+              {t.c3negotiationResult.continueConversation}
             </Text>
 
             <Text
@@ -2304,7 +2324,7 @@ function ContactAccessCard({
                 styles.contactDescription
               }
             >
-              The AI agents reached an agreement. Request permission to securely exchange phone and WhatsApp contact details.
+              {t.c3negotiationResult.requestContactDescription}
             </Text>
           </View>
         </View>
@@ -2325,7 +2345,7 @@ function ContactAccessCard({
               styles.contactPrivacyText
             }
           >
-            Contact information stays private until the other participant approves.
+            {t.c3negotiationResult.contactStaysPrivate}
           </Text>
         </View>
 
@@ -2364,7 +2384,7 @@ function ContactAccessCard({
                   styles.requestContactText
                 }
               >
-                Request Contact Access
+                {t.c3negotiationResult.requestContactAccess}
               </Text>
 
               <Ionicons
@@ -2393,6 +2413,8 @@ function DoneButton({
   theme: ResultTheme;
   role: string | undefined;
 }) {
+  const { t } = useLanguage();
+
   const press =
     usePressScale(0.97);
 
@@ -2438,7 +2460,7 @@ function DoneButton({
           styles.doneButtonText
         }
       >
-        Return to Dashboard
+        {t.c3negotiationResult.returnDashboard}
       </Text>
 
       <Ionicons

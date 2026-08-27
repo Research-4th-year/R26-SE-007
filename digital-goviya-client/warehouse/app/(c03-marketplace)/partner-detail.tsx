@@ -27,6 +27,7 @@ import {
   Poppins_500Medium,
 } from "@expo-google-fonts/poppins";
 
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useMarketplaceAuth } from "@/hooks/c03-marketplace/useMarketplaceAuth";
 import { partnerService } from "@/services/c03-marketplace/partner.service";
 import { harvestService } from "@/services/c03-marketplace/harvest.service";
@@ -49,6 +50,7 @@ export default function PartnerDetailScreen() {
   }>();
 
   const { user } = useMarketplaceAuth();
+  const { t } = useLanguage();
 
   const [data, setData] = useState<PartnerDetailData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -108,7 +110,7 @@ export default function PartnerDetailScreen() {
 
   const loadPartner = useCallback(async () => {
     if (!partnerType || !partnerId) {
-      setErrorMessage("Partner information is missing.");
+      setErrorMessage(t.c3partnerDetail.partnerMissing);
       setLoading(false);
       return;
     }
@@ -128,7 +130,7 @@ export default function PartnerDetailScreen() {
     } finally {
       setLoading(false);
     }
-  }, [partnerType, partnerId]);
+  }, [partnerType, partnerId, t]);
 
   useFocusEffect(
     useCallback(() => {
@@ -215,7 +217,7 @@ export default function PartnerDetailScreen() {
       setMyHarvests(availableHarvests);
     } catch (error) {
       setOpportunityModalVisible(false);
-      Alert.alert("Unable to load Harvests", getApiErrorMessage(error));
+      Alert.alert(t.c3partnerDetail.unableToLoadHarvests, getApiErrorMessage(error));
     } finally {
       setResourcesLoading(false);
     }
@@ -244,7 +246,7 @@ export default function PartnerDetailScreen() {
       setMyDemands(openDemands);
     } catch (error) {
       setOpportunityModalVisible(false);
-      Alert.alert("Unable to load Demands", getApiErrorMessage(error));
+      Alert.alert(t.c3partnerDetail.unableToLoadDemands, getApiErrorMessage(error));
     } finally {
       setResourcesLoading(false);
     }
@@ -295,7 +297,7 @@ export default function PartnerDetailScreen() {
       <SafeAreaView style={[styles.screen, { backgroundColor: theme.page }]}>
         <View style={styles.centerState}>
           <ActivityIndicator size="large" color={theme.primary} />
-          <Text style={styles.stateTitle}>Loading partner</Text>
+          <Text style={styles.stateTitle}>{t.c3partnerDetail.loadingTitle}</Text>
         </View>
       </SafeAreaView>
     );
@@ -307,7 +309,7 @@ export default function PartnerDetailScreen() {
         <View style={styles.centerState}>
           <Ionicons name="warning-outline" size={36} color="#B91C1C" />
 
-          <Text style={styles.stateTitle}>Unable to load partner</Text>
+          <Text style={styles.stateTitle}>{t.c3partnerDetail.unableToLoad}</Text>
 
           <Text style={styles.errorDescription}>{errorMessage}</Text>
 
@@ -315,7 +317,7 @@ export default function PartnerDetailScreen() {
             style={[styles.backButtonLarge, { backgroundColor: theme.primary }]}
             onPress={() => router.back()}
           >
-            <Text style={styles.backButtonText}>Go back</Text>
+            <Text style={styles.backButtonText}>{t.c3partnerDetail.goBack}</Text>
           </Pressable>
         </View>
       </SafeAreaView>
@@ -352,10 +354,10 @@ export default function PartnerDetailScreen() {
         </Pressable>
 
         <View style={{ flex: 1 }}>
-          <Text style={styles.headerTitle}>Partner Details</Text>
+          <Text style={styles.headerTitle}>{t.c3partnerDetail.title}</Text>
 
           <Text style={styles.headerSubtitle}>
-            Profile, opportunities and trading history
+            {t.c3partnerDetail.subtitle}
           </Text>
         </View>
 
@@ -411,17 +413,24 @@ export default function PartnerDetailScreen() {
               />
 
               <Text style={styles.heroLocation}>
-                {partner.district} • {partner.location}
+                {translateDistrict(
+                  partner.district,
+                  t.c3districts,
+                  t.c3partnerDetail.notProvided
+                )}{" "}
+                • {partner.location}
               </Text>
             </View>
 
             <View style={styles.heroBadges}>
-              {connected ? <HeroBadge icon="people" label="Connected" /> : null}
+              {connected ? (
+                <HeroBadge icon="people" label={t.c3partnerDetail.connected} />
+              ) : null}
               {hasTrades ? (
-                <HeroBadge icon="receipt" label="Trade partner" />
+                <HeroBadge icon="receipt" label={t.c3partnerDetail.tradePartner} />
               ) : null}
               {data.isFavorite ? (
-                <HeroBadge icon="star" label="Favourite" />
+                <HeroBadge icon="star" label={t.c3partnerDetail.favourite} />
               ) : null}
             </View>
           </LinearGradient>
@@ -438,14 +447,14 @@ export default function PartnerDetailScreen() {
             <View style={{ flex: 1 }}>
               <Text style={styles.relationshipTitle}>
                 {connected
-                  ? "Trusted marketplace connection"
-                  : "Trading relationship"}
+                  ? t.c3partnerDetail.trustedConnection
+                  : t.c3partnerDetail.tradingRelationship}
               </Text>
 
               <Text style={styles.relationshipText}>
                 {connected
-                  ? "You are connected. Contact details and current marketplace opportunities are available."
-                  : "You have previously completed a successful AI negotiation with this partner."}
+                  ? t.c3partnerDetail.connectedDescription
+                  : t.c3partnerDetail.tradedDescription}
               </Text>
             </View>
           </View>
@@ -455,14 +464,18 @@ export default function PartnerDetailScreen() {
           <View style={[styles.infoCard, { borderColor: theme.cardBorder }]}>
             <InfoRow
               icon="location-outline"
-              label="District"
-              value={partner.district}
+              label={t.c3partnerDetail.district}
+              value={translateDistrict(
+                partner.district,
+                t.c3districts,
+                t.c3partnerDetail.notProvided
+              )}
               theme={theme}
             />
 
             <InfoRow
               icon="navigate-outline"
-              label="Location"
+              label={t.c3partnerDetail.location}
               value={partner.location}
               theme={theme}
             />
@@ -471,22 +484,25 @@ export default function PartnerDetailScreen() {
               <>
                 <InfoRow
                   icon="business-outline"
-                  label="Rice mill"
+                  label={t.c3partnerDetail.riceMill}
                   value={partner.millName ?? partner.name}
                   theme={theme}
                 />
 
                 <InfoRow
                   icon="person-outline"
-                  label="Representative"
-                  value={partner.personName || "Not provided"}
+                  label={t.c3partnerDetail.representative}
+                  value={partner.personName || t.c3partnerDetail.notProvided}
                   theme={theme}
                 />
 
                 <InfoRow
                   icon="document-text-outline"
-                  label="Registration"
-                  value={partner.businessRegistrationNumber || "Not provided"}
+                  label={t.c3partnerDetail.registration}
+                  value={
+                    partner.businessRegistrationNumber ||
+                    t.c3partnerDetail.notProvided
+                  }
                   theme={theme}
                   isLast
                 />
@@ -495,22 +511,26 @@ export default function PartnerDetailScreen() {
               <>
                 <InfoRow
                   icon="business-outline"
-                  label="Farm"
-                  value={partner.farmName || "Not provided"}
+                  label={t.c3partnerDetail.farm}
+                  value={partner.farmName || t.c3partnerDetail.notProvided}
                   theme={theme}
                 />
 
                 <InfoRow
                   icon="resize-outline"
-                  label="Farm size"
-                  value={`${formatNumber(partner.farmSizeAcres ?? 0)} acres`}
+                  label={t.c3partnerDetail.farmSize}
+                  value={`${formatNumber(partner.farmSizeAcres ?? 0)} ${t.c3partnerDetail.acres}`}
                   theme={theme}
                 />
 
                 <InfoRow
                   icon="leaf-outline"
-                  label="Main variety"
-                  value={partner.mainPaddyVariety || "Not provided"}
+                  label={t.c3partnerDetail.mainVariety}
+                  value={
+                    partner.mainPaddyVariety
+                      ? translatePaddyType(partner.mainPaddyVariety, t)
+                      : t.c3partnerDetail.notProvided
+                  }
                   theme={theme}
                   isLast
                 />
@@ -518,7 +538,7 @@ export default function PartnerDetailScreen() {
             )}
           </View>
 
-          <Text style={styles.sectionTitle}>Contact</Text>
+          <Text style={styles.sectionTitle}>{t.c3partnerDetail.contact}</Text>
 
           {data.contactUnlocked && data.contact ? (
             <View style={[styles.contactCard, { borderColor: theme.border }]}>
@@ -528,7 +548,7 @@ export default function PartnerDetailScreen() {
                 </View>
 
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.contactLabel}>CONTACT UNLOCKED</Text>
+                  <Text style={styles.contactLabel}>{t.c3partnerDetail.contactUnlocked}</Text>
 
                   <Text style={styles.contactName}>{data.contact.fullName}</Text>
 
@@ -548,7 +568,7 @@ export default function PartnerDetailScreen() {
                   ]}
                 >
                   <Ionicons name="call" size={16} color="#FFFFFF" />
-                  <Text style={styles.contactActionText}>Call</Text>
+                  <Text style={styles.contactActionText}>{t.c3partnerDetail.call}</Text>
                 </Pressable>
 
                 <Pressable
@@ -560,7 +580,7 @@ export default function PartnerDetailScreen() {
                   ]}
                 >
                   <Ionicons name="logo-whatsapp" size={17} color="#FFFFFF" />
-                  <Text style={styles.contactActionText}>WhatsApp</Text>
+                  <Text style={styles.contactActionText}>{t.c3partnerDetail.whatsapp}</Text>
                 </Pressable>
               </View>
             </View>
@@ -569,11 +589,10 @@ export default function PartnerDetailScreen() {
               <Ionicons name="lock-closed-outline" size={21} color="#64748B" />
 
               <View style={{ flex: 1 }}>
-                <Text style={styles.lockedTitle}>Contact protected</Text>
+                <Text style={styles.lockedTitle}>{t.c3partnerDetail.contactProtected}</Text>
 
                 <Text style={styles.lockedText}>
-                  Contact details require an accepted connection or approved
-                  contact request.
+                  {t.c3partnerDetail.contactProtectedText}
                 </Text>
               </View>
             </View>
@@ -585,8 +604,8 @@ export default function PartnerDetailScreen() {
                 <View>
                   <Text style={styles.sectionTitle}>
                     {partner.type === "miller"
-                      ? "Active Demands"
-                      : "Available Harvests"}
+                      ? t.c3partnerDetail.activeDemands
+                      : t.c3partnerDetail.availableHarvests}
                   </Text>
 
                   <Text style={styles.sectionSubtitle}>
@@ -619,33 +638,33 @@ export default function PartnerDetailScreen() {
 
           {hasTrades ? (
             <>
-              <Text style={styles.sectionTitle}>Trading summary</Text>
+              <Text style={styles.sectionTitle}>{t.c3partnerDetail.tradingSummary}</Text>
 
               <View style={styles.summaryGrid}>
                 <SummaryCard
                   icon="receipt-outline"
-                  label="Agreements"
+                  label={t.c3partnerDetail.agreements}
                   value={String(summary.totalAgreements)}
                   theme={theme}
                 />
 
                 <SummaryCard
                   icon="cube-outline"
-                  label="Quantity"
-                  value={`${formatNumber(summary.totalQuantityKg)} kg`}
+                  label={t.c3partnerDetail.quantity}
+                  value={`${formatNumber(summary.totalQuantityKg)} ${t.c3partnerDetail.kg}`}
                   theme={theme}
                 />
 
                 <SummaryCard
                   icon="cash-outline"
-                  label="Average price"
+                  label={t.c3partnerDetail.averagePrice}
                   value={formatCurrency(summary.averageAgreedPrice)}
                   theme={theme}
                 />
 
                 <SummaryCard
                   icon="trending-up-outline"
-                  label="Latest price"
+                  label={t.c3partnerDetail.latestPrice}
                   value={formatCurrency(summary.latestAgreedPrice)}
                   theme={theme}
                 />
@@ -658,7 +677,7 @@ export default function PartnerDetailScreen() {
                   </View>
 
                   <View>
-                    <Text style={styles.tradeValueLabel}>TOTAL TRADE VALUE</Text>
+                    <Text style={styles.tradeValueLabel}>{t.c3partnerDetail.totalTradeValue}</Text>
 
                     <Text style={styles.tradeValue}>
                       {formatCurrency(summary.totalTradeValue)}
@@ -669,11 +688,13 @@ export default function PartnerDetailScreen() {
 
               <View style={styles.historyHeader}>
                 <View>
-                  <Text style={styles.sectionTitle}>Transaction History</Text>
+                  <Text style={styles.sectionTitle}>{t.c3partnerDetail.transactionHistory}</Text>
 
                   <Text style={styles.sectionSubtitle}>
-                    {data.transactions.length} successful agreement
-                    {data.transactions.length === 1 ? "" : "s"}
+                    {data.transactions.length}{" "}
+                    {data.transactions.length === 1
+                      ? t.c3partnerDetail.successfulAgreement
+                      : t.c3partnerDetail.successfulAgreements}
                   </Text>
                 </View>
               </View>
@@ -695,11 +716,15 @@ export default function PartnerDetailScreen() {
 
                       <View style={{ flex: 1 }}>
                         <Text style={styles.historyTitle}>
-                          {formatPaddyType(transaction.paddyType)}
+                          {translatePaddyType(transaction.paddyType, t)}
                         </Text>
 
                         <Text style={styles.historyDate}>
-                          {formatDate(transaction.createdAt)}
+                          {formatDate(
+                            transaction.createdAt,
+                            t.c3partnerDetail.noDate,
+                            t.c3partnerDetail.dateUnavailable
+                          )}
                         </Text>
                       </View>
 
@@ -710,17 +735,17 @@ export default function PartnerDetailScreen() {
 
                     <View style={styles.historyMetrics}>
                       <SmallMetric
-                        label="Quantity"
-                        value={`${formatNumber(transaction.quantityKg)} kg`}
+                        label={t.c3partnerDetail.quantity}
+                        value={`${formatNumber(transaction.quantityKg)} ${t.c3partnerDetail.kg}`}
                       />
 
                       <SmallMetric
-                        label="Rounds"
+                        label={t.c3partnerDetail.rounds}
                         value={String(transaction.roundsCompleted)}
                       />
 
                       <SmallMetric
-                        label="Value"
+                        label={t.c3partnerDetail.value}
                         value={formatCurrency(transaction.totalValue)}
                       />
                     </View>
@@ -733,11 +758,10 @@ export default function PartnerDetailScreen() {
               <Ionicons name="sparkles-outline" size={23} color={theme.primary} />
 
               <View style={{ flex: 1 }}>
-                <Text style={styles.noTradeTitle}>No completed trades yet</Text>
+                <Text style={styles.noTradeTitle}>{t.c3partnerDetail.noCompletedTrades}</Text>
 
                 <Text style={styles.noTradeText}>
-                  You are connected, but you have not completed an AI
-                  negotiation with this partner yet.
+                  {t.c3partnerDetail.noCompletedTradesText}
                 </Text>
               </View>
             </View>
@@ -762,12 +786,12 @@ export default function PartnerDetailScreen() {
               </View>
 
               <View style={{ flex: 1 }}>
-                <Text style={styles.modalTitle}>Match Opportunity</Text>
+                <Text style={styles.modalTitle}>{t.c3partnerDetail.matchOpportunity}</Text>
 
                 <Text style={styles.modalSubtitle}>
                   {user?.role === "farmer"
-                    ? "Choose one of your available Harvests"
-                    : "Choose one of your open Demands"}
+                    ? t.c3partnerDetail.chooseHarvest
+                    : t.c3partnerDetail.chooseDemand}
                 </Text>
               </View>
 
@@ -778,36 +802,42 @@ export default function PartnerDetailScreen() {
 
             {selectedPartnerDemand ? (
               <View style={styles.targetOpportunity}>
-                <Text style={styles.targetLabel}>MILLER DEMAND</Text>
+                <Text style={styles.targetLabel}>{t.c3partnerDetail.millerDemand}</Text>
 
                 <Text style={styles.targetTitle}>
-                  {formatPaddyType(selectedPartnerDemand.paddyType)}
+                  {translatePaddyType(selectedPartnerDemand.paddyType, t)}
                 </Text>
 
                 <Text style={styles.targetText}>
-                  {formatNumber(selectedPartnerDemand.quantityNeeded)} kg •{" "}
-                  {formatCurrency(selectedPartnerDemand.offeredPrice)}/kg
+                  {formatNumber(selectedPartnerDemand.quantityNeeded)}{" "}
+                  {t.c3partnerDetail.kg} •{" "}
+                  {formatCurrency(selectedPartnerDemand.offeredPrice)}/
+                  {t.c3partnerDetail.kg}
                 </Text>
               </View>
             ) : null}
 
             {selectedPartnerHarvest ? (
               <View style={styles.targetOpportunity}>
-                <Text style={styles.targetLabel}>FARMER HARVEST</Text>
+                <Text style={styles.targetLabel}>{t.c3partnerDetail.farmerHarvest}</Text>
 
                 <Text style={styles.targetTitle}>
-                  {formatPaddyType(selectedPartnerHarvest.paddyType)}
+                  {translatePaddyType(selectedPartnerHarvest.paddyType, t)}
                 </Text>
 
                 <Text style={styles.targetText}>
-                  {formatNumber(selectedPartnerHarvest.quantity)} kg • Expected{" "}
-                  {formatCurrency(selectedPartnerHarvest.expectedPrice)}/kg
+                  {formatNumber(selectedPartnerHarvest.quantity)}{" "}
+                  {t.c3partnerDetail.kg} • {t.c3partnerDetail.expectedPrice}{" "}
+                  {formatCurrency(selectedPartnerHarvest.expectedPrice)}/
+                  {t.c3partnerDetail.kg}
                 </Text>
               </View>
             ) : null}
 
             <Text style={styles.chooseTitle}>
-              {user?.role === "farmer" ? "Choose your Harvest" : "Choose your Demand"}
+              {user?.role === "farmer"
+                ? t.c3partnerDetail.chooseYourHarvest
+                : t.c3partnerDetail.chooseYourDemand}
             </Text>
 
             {resourcesLoading ? (
@@ -815,7 +845,7 @@ export default function PartnerDetailScreen() {
                 <ActivityIndicator color={theme.primary} />
 
                 <Text style={styles.modalLoadingText}>
-                  Loading compatible marketplace records...
+                  {t.c3partnerDetail.loadingRecords}
                 </Text>
               </View>
             ) : user?.role === "farmer" ? (
@@ -846,16 +876,18 @@ export default function PartnerDetailScreen() {
 
                         <View style={{ flex: 1 }}>
                           <Text style={styles.resourceTitle}>
-                            {formatPaddyType(harvest.paddyType)}
+                            {translatePaddyType(harvest.paddyType, t)}
                           </Text>
 
                           <Text style={styles.resourceText}>
-                            {formatNumber(harvest.quantity)} kg •{" "}
-                            {formatPaddyType(harvest.season)}
+                            {formatNumber(harvest.quantity)} {t.c3partnerDetail.kg}{" "}
+                            • {translateSeason(harvest.season, t)}
                           </Text>
 
                           <Text style={styles.resourcePrice}>
-                            Expected {formatCurrency(harvest.expectedPrice)}/kg
+                            {t.c3partnerDetail.expectedPrice}{" "}
+                            {formatCurrency(harvest.expectedPrice)}/
+                            {t.c3partnerDetail.kg}
                           </Text>
                         </View>
                       </Pressable>
@@ -896,15 +928,18 @@ export default function PartnerDetailScreen() {
 
                       <View style={{ flex: 1 }}>
                         <Text style={styles.resourceTitle}>
-                          {formatPaddyType(demand.paddyType)}
+                          {translatePaddyType(demand.paddyType, t)}
                         </Text>
 
                         <Text style={styles.resourceText}>
-                          {formatNumber(demand.quantityNeeded)} kg needed
+                          {formatNumber(demand.quantityNeeded)}{" "}
+                          {t.c3partnerDetail.kg} {t.c3partnerDetail.kgNeeded}
                         </Text>
 
                         <Text style={styles.resourcePrice}>
-                          Offer {formatCurrency(demand.offeredPrice)}/kg
+                          {t.c3partnerDetail.offer}{" "}
+                          {formatCurrency(demand.offeredPrice)}/
+                          {t.c3partnerDetail.kg}
                         </Text>
                       </View>
                     </Pressable>
@@ -923,8 +958,7 @@ export default function PartnerDetailScreen() {
               <Ionicons name="shield-checkmark-outline" size={16} color="#64748B" />
 
               <Text style={styles.modalInfoText}>
-                The AI matching engine will still calculate compatibility before a
-                match request can be sent.
+                {t.c3partnerDetail.matchInfo}
               </Text>
             </View>
 
@@ -938,7 +972,7 @@ export default function PartnerDetailScreen() {
               ]}
             >
               <Ionicons name="sparkles" size={17} color="#FFFFFF" />
-              <Text style={styles.continueButtonText}>Check AI Match</Text>
+              <Text style={styles.continueButtonText}>{t.c3partnerDetail.checkAiMatch}</Text>
             </Pressable>
           </Pressable>
         </Pressable>
@@ -956,10 +990,12 @@ function DemandOpportunities({
   theme: Theme;
   onMatch: (demand: PartnerDemandOpportunity) => void;
 }) {
+  const { t } = useLanguage();
+
   if (demands.length === 0) {
     return (
       <OpportunityEmpty
-        text="This Miller currently has no open demands."
+        text={t.c3partnerDetail.noOpenDemands}
         theme={theme}
       />
     );
@@ -979,24 +1015,26 @@ function DemandOpportunities({
 
             <View style={{ flex: 1 }}>
               <Text style={styles.opportunityTitle}>
-                {formatPaddyType(demand.paddyType)}
+                {translatePaddyType(demand.paddyType, t)}
               </Text>
 
-              <Text style={styles.opportunitySubtitle}>Open Miller Demand</Text>
+              <Text style={styles.opportunitySubtitle}>
+                {t.c3partnerDetail.openMillerDemand}
+              </Text>
             </View>
 
-            <BadgeText text="OPEN" theme={theme} />
+            <BadgeText text={t.c3partnerDetail.open} theme={theme} />
           </View>
 
           <View style={styles.opportunityMetrics}>
             <SmallMetric
-              label="Quantity"
-              value={`${formatNumber(demand.quantityNeeded)} kg`}
+              label={t.c3partnerDetail.quantity}
+              value={`${formatNumber(demand.quantityNeeded)} ${t.c3partnerDetail.kg}`}
             />
 
             <SmallMetric
-              label="Offer"
-              value={`${formatCurrency(demand.offeredPrice)}/kg`}
+              label={t.c3partnerDetail.offer}
+              value={`${formatCurrency(demand.offeredPrice)}/${t.c3partnerDetail.kg}`}
             />
           </View>
 
@@ -1009,7 +1047,9 @@ function DemandOpportunities({
             ]}
           >
             <Ionicons name="git-compare-outline" size={16} color="#FFFFFF" />
-            <Text style={styles.matchOpportunityText}>Match with this Demand</Text>
+            <Text style={styles.matchOpportunityText}>
+              {t.c3partnerDetail.matchWithDemand}
+            </Text>
           </Pressable>
         </View>
       ))}
@@ -1026,10 +1066,12 @@ function HarvestOpportunities({
   theme: Theme;
   onMatch: (harvest: PartnerHarvestOpportunity) => void;
 }) {
+  const { t } = useLanguage();
+
   if (harvests.length === 0) {
     return (
       <OpportunityEmpty
-        text="This Farmer currently has no available harvests."
+        text={t.c3partnerDetail.noAvailableHarvests}
         theme={theme}
       />
     );
@@ -1049,31 +1091,31 @@ function HarvestOpportunities({
 
             <View style={{ flex: 1 }}>
               <Text style={styles.opportunityTitle}>
-                {formatPaddyType(harvest.paddyType)}
+                {translatePaddyType(harvest.paddyType, t)}
               </Text>
 
               <Text style={styles.opportunitySubtitle}>
-                {formatPaddyType(harvest.season)} Harvest
+                {translateSeason(harvest.season, t)} {t.c3partnerDetail.harvest}
               </Text>
             </View>
 
-            <BadgeText text="AVAILABLE" theme={theme} />
+            <BadgeText text={t.c3partnerDetail.available} theme={theme} />
           </View>
 
           <View style={styles.opportunityMetrics}>
             <SmallMetric
-              label="Quantity"
-              value={`${formatNumber(harvest.quantity)} kg`}
+              label={t.c3partnerDetail.quantity}
+              value={`${formatNumber(harvest.quantity)} ${t.c3partnerDetail.kg}`}
             />
 
             <SmallMetric
-              label="Expected"
-              value={`${formatCurrency(harvest.expectedPrice)}/kg`}
+              label={t.c3partnerDetail.expected}
+              value={`${formatCurrency(harvest.expectedPrice)}/${t.c3partnerDetail.kg}`}
             />
 
             <SmallMetric
-              label="AI price"
-              value={`${formatCurrency(harvest.aiPredictedPrice)}/kg`}
+              label={t.c3partnerDetail.aiPrice}
+              value={`${formatCurrency(harvest.aiPredictedPrice)}/${t.c3partnerDetail.kg}`}
             />
           </View>
 
@@ -1086,7 +1128,9 @@ function HarvestOpportunities({
             ]}
           >
             <Ionicons name="git-compare-outline" size={16} color="#FFFFFF" />
-            <Text style={styles.matchOpportunityText}>Match with this Harvest</Text>
+            <Text style={styles.matchOpportunityText}>
+              {t.c3partnerDetail.matchWithHarvest}
+            </Text>
           </Pressable>
         </View>
       ))}
@@ -1112,6 +1156,8 @@ function NoCompatibleResource({
   theme: Theme;
   onCreate: () => void;
 }) {
+  const { t } = useLanguage();
+
   return (
     <View style={styles.noResourceCard}>
       <View style={[styles.noResourceIcon, { backgroundColor: theme.soft }]}>
@@ -1123,13 +1169,15 @@ function NoCompatibleResource({
       </View>
 
       <Text style={styles.noResourceTitle}>
-        No compatible {role === "farmer" ? "Harvest" : "Demand"}
+        {role === "farmer"
+          ? t.c3partnerDetail.noCompatibleHarvest
+          : t.c3partnerDetail.noCompatibleDemand}
       </Text>
 
       <Text style={styles.noResourceText}>
         {role === "farmer"
-          ? "You need an available Harvest of the same paddy variety before checking this match."
-          : "You need an open Demand of the same paddy variety before checking this match."}
+          ? t.c3partnerDetail.needHarvest
+          : t.c3partnerDetail.needDemand}
       </Text>
 
       <Pressable
@@ -1142,7 +1190,9 @@ function NoCompatibleResource({
       >
         <Ionicons name="add" size={16} color="#FFFFFF" />
         <Text style={styles.createResourceText}>
-          {role === "farmer" ? "Add Harvest" : "Create Demand"}
+          {role === "farmer"
+            ? t.c3partnerDetail.addHarvest
+            : t.c3partnerDetail.createDemand}
         </Text>
       </Pressable>
     </View>
@@ -1250,7 +1300,63 @@ function normalizeSriLankanPhone(phone: string) {
   return value;
 }
 
-function formatPaddyType(value: string) {
+function translatePaddyType(value: string, t: any): string {
+  const normalized = value.trim().toLowerCase();
+
+  if (normalized === "nadu") {
+    return t.c3paddyTypes.Nadu;
+  }
+
+  if (normalized === "samba") {
+    return t.c3paddyTypes.Samba;
+  }
+
+  if (normalized === "keeri samba" || normalized === "keerisamba") {
+    return t.c3paddyTypes.KeeriSamba;
+  }
+
+  return value;
+}
+
+function translateDistrict(
+  district: string | undefined,
+  translations: {
+    Ampara: string;
+    Badulla: string;
+    Kandy: string;
+    Monaragala: string;
+  },
+  fallback: string,
+): string {
+  if (!district) {
+    return fallback;
+  }
+
+  const districtMap: Record<string, string> = {
+    Ampara: translations.Ampara,
+    Badulla: translations.Badulla,
+    Kandy: translations.Kandy,
+    Monaragala: translations.Monaragala,
+  };
+
+  return districtMap[district.trim()] ?? district.trim();
+}
+
+function translateSeason(value: string | undefined, t: any): string {
+  if (!value) {
+    return "";
+  }
+
+  const normalized = value.trim().toLowerCase();
+
+  if (normalized === "maha") {
+    return t.c3seasons.Maha;
+  }
+
+  if (normalized === "yala") {
+    return t.c3seasons.Yala;
+  }
+
   return value.replace(/_/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
@@ -1265,13 +1371,17 @@ function formatCurrency(value: number) {
   }).format(value)}`;
 }
 
-function formatDate(value: string | null | undefined) {
-  if (!value) return "No date";
+function formatDate(
+  value: string | null | undefined,
+  noDate: string,
+  dateUnavailable: string,
+) {
+  if (!value) return noDate;
 
   const date = new Date(value);
 
   if (Number.isNaN(date.getTime())) {
-    return "Date unavailable";
+    return dateUnavailable;
   }
 
   return new Intl.DateTimeFormat("en-LK", {

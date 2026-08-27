@@ -27,7 +27,11 @@ import { dashboardService } from "@/services/c03-marketplace/dashboard.service";
 
 import type { FarmerDashboardData } from "@/types/c03-marketplace/dashboard.types";
 
+import { useLanguage } from "@/contexts/LanguageContext";
+
 export default function FarmerHomeScreen() {
+  const { t, language } = useLanguage();
+
   const { user } = useMarketplaceAuth();
 
   const [dashboard, setDashboard] = useState<FarmerDashboardData | null>(null);
@@ -88,6 +92,7 @@ export default function FarmerHomeScreen() {
   const summary = dashboard?.summary;
 
   const analytics = dashboard?.marketAnalytics;
+  
 
   return (
     <SafeAreaView style={styles.screen}>
@@ -106,7 +111,7 @@ export default function FarmerHomeScreen() {
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerText}>
-            <Text style={styles.greeting}>Good evening,</Text>
+            <Text style={styles.greeting}>{t.c3farmerHome.greeting}</Text>
 
             <Text style={styles.userName} numberOfLines={1}>
               {user?.fullName ?? "Farmer"}
@@ -116,7 +121,11 @@ export default function FarmerHomeScreen() {
               <Ionicons name="location-outline" size={13} color="#6B7280" />
 
               <Text style={styles.locationText}>
-                {dashboard?.farmer.district ?? user?.district ?? "Sri Lanka"}
+                {translateDistrict(
+                  dashboard?.farmer.district ?? user?.district,
+                  t.c3districts,
+                  t.c3farmerHome.sriLanka,
+                )}
               </Text>
             </View>
           </View>
@@ -124,14 +133,12 @@ export default function FarmerHomeScreen() {
           <View style={styles.headerActions}>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Open notifications"
+              accessibilityLabel={t.c3farmerHome.openNotifications}
               style={({ pressed }) => [
                 styles.notificationButton,
                 pressed && styles.profileButtonPressed,
               ]}
-              onPress={() =>
-                router.push("/(c03-marketplace)/notifications")
-              }
+              onPress={() => router.push("/(c03-marketplace)/notifications")}
             >
               <Ionicons
                 name="notifications-outline"
@@ -152,18 +159,14 @@ export default function FarmerHomeScreen() {
 
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Open profile"
+              accessibilityLabel={t.c3farmerHome.openProfile}
               style={({ pressed }) => [
                 styles.profileButton,
                 pressed && styles.profileButtonPressed,
               ]}
               onPress={() => router.push("./profile")}
             >
-              <Ionicons
-                name="person-outline"
-                size={21}
-                color="#15803D"
-              />
+              <Ionicons name="person-outline" size={21} color="#15803D" />
             </Pressable>
           </View>
         </View>
@@ -185,23 +188,24 @@ export default function FarmerHomeScreen() {
             <View style={styles.heroStatusBadge}>
               <View style={styles.heroStatusDot} />
 
-              <Text style={styles.heroStatusText}>AI MARKETPLACE</Text>
+              <Text style={styles.heroStatusText}>
+                {t.c3farmerHome.aiMarketplace}
+              </Text>
             </View>
           </View>
 
           <View style={styles.heroEyebrowPill}>
             <Ionicons name="sparkles" size={11} color="#F5C542" />
 
-            <Text style={styles.heroEyebrow}>FARMER MARKETPLACE</Text>
+            <Text style={styles.heroEyebrow}>
+              {t.c3farmerHome.farmerMarketplace}
+            </Text>
           </View>
 
-          <Text style={styles.heroTitle}>
-            Sell paddy at a fair market price
-          </Text>
+          <Text style={styles.heroTitle}>{t.c3farmerHome.heroTitle}</Text>
 
           <Text style={styles.heroDescription}>
-            Receive AI price guidance, publish harvests and connect with
-            suitable millers.
+            {t.c3farmerHome.heroDescription}
           </Text>
 
           <Pressable
@@ -220,7 +224,9 @@ export default function FarmerHomeScreen() {
             >
               <Ionicons name="add-circle-outline" size={19} color="#0B3B22" />
 
-              <Text style={styles.primaryButtonText}>Add New Harvest</Text>
+              <Text style={styles.primaryButtonText}>
+                {t.c3farmerHome.addNewHarvest}
+              </Text>
             </LinearGradient>
           </Pressable>
         </LinearGradient>
@@ -228,10 +234,12 @@ export default function FarmerHomeScreen() {
         {/* Analytics header */}
         <View style={styles.sectionHeader}>
           <View>
-            <Text style={styles.sectionTitle}>Marketplace analytics</Text>
+            <Text style={styles.sectionTitle}>
+              {t.c3farmerHome.marketplaceAnalytics}
+            </Text>
 
             <Text style={styles.sectionSubtitle}>
-              Live overview of your harvests
+              {t.c3farmerHome.liveOverview}
             </Text>
           </View>
 
@@ -241,7 +249,7 @@ export default function FarmerHomeScreen() {
             <View style={styles.liveBadge}>
               <View style={styles.liveDot} />
 
-              <Text style={styles.liveText}>LIVE</Text>
+              <Text style={styles.liveText}>{t.c3farmerHome.live}</Text>
             </View>
           )}
         </View>
@@ -255,10 +263,12 @@ export default function FarmerHomeScreen() {
             <Ionicons name="warning-outline" size={21} color="#B91C1C" />
 
             <View style={styles.errorTextArea}>
-              <Text style={styles.errorTitle}>Analytics unavailable</Text>
+              <Text style={styles.errorTitle}>
+                {t.c3farmerHome.analyticsUnavailable}
+              </Text>
 
               <Text style={styles.errorMessage}>
-                {errorMessage} Tap to retry.
+                {errorMessage} {t.c3farmerHome.tapToRetry}
               </Text>
             </View>
           </Pressable>
@@ -269,13 +279,13 @@ export default function FarmerHomeScreen() {
           <View style={styles.analyticsGrid}>
             <AnalyticsMetric
               icon="leaf-outline"
-              label="Total harvests"
+              label={t.c3farmerHome.totalHarvests}
               value={loading ? "—" : String(summary?.totalHarvests ?? 0)}
             />
 
             <AnalyticsMetric
               icon="cube-outline"
-              label="Total quantity"
+              label={t.c3farmerHome.totalQuantity}
               value={
                 loading ? "—" : formatQuantity(analytics?.totalQuantity ?? 0)
               }
@@ -283,7 +293,7 @@ export default function FarmerHomeScreen() {
 
             <AnalyticsMetric
               icon="sparkles-outline"
-              label="Average AI price"
+              label={t.c3farmerHome.averageAiPrice}
               value={
                 loading
                   ? "—"
@@ -297,19 +307,19 @@ export default function FarmerHomeScreen() {
           <View style={styles.secondaryAnalytics}>
             <CompactMetric
               icon="checkmark-circle-outline"
-              label="Available"
+              label={t.c3farmerHome.available}
               value={String(summary?.availableHarvests ?? 0)}
             />
 
             <CompactMetric
               icon="git-compare-outline"
-              label="Matched"
+              label={t.c3farmerHome.matched}
               value={String(summary?.matchedHarvests ?? 0)}
             />
 
             <CompactMetric
               icon="stats-chart-outline"
-              label="Average score"
+              label={t.c3farmerHome.averageScore}
               value={`${Math.round(analytics?.averageHarvestScore ?? 0)}/100`}
             />
           </View>
@@ -324,16 +334,24 @@ export default function FarmerHomeScreen() {
 
             <View style={styles.recommendationTextArea}>
               <Text style={styles.recommendationEyebrow}>
-                LATEST AI INSIGHT
+                {t.c3farmerHome.latestAiInsight}
               </Text>
 
               <Text style={styles.recommendationTitle}>
-                {formatLabel(dashboard.latestAiRecommendation.paddyType)}
+                {translatePaddyType(
+                  dashboard.latestAiRecommendation.paddyType,
+                  language,
+                )}
               </Text>
 
               <Text style={styles.recommendationMessage} numberOfLines={3}>
-                {dashboard.latestAiRecommendation.recommendation?.english ||
-                  "Review the latest AI price and market analysis."}
+                {language === "si"
+                  ? dashboard.latestAiRecommendation.recommendation?.sinhala ||
+                    dashboard.latestAiRecommendation.recommendation?.english ||
+                    t.c3farmerHome.reviewLatestAi
+                  : dashboard.latestAiRecommendation.recommendation?.english ||
+                    dashboard.latestAiRecommendation.recommendation?.sinhala ||
+                    t.c3farmerHome.reviewLatestAi}
               </Text>
             </View>
 
@@ -342,34 +360,34 @@ export default function FarmerHomeScreen() {
         ) : null}
 
         {/* Quick actions */}
-        <Text style={styles.quickTitle}>Quick actions</Text>
+        <Text style={styles.quickTitle}>{t.c3farmerHome.quickActions}</Text>
 
         <View style={styles.actionGrid}>
           <ActionCard
             icon="add-circle-outline"
-            title="Add Harvest"
-            subtitle="Get AI price guidance"
+            title={t.c3farmerHome.addHarvest}
+            subtitle={t.c3farmerHome.addHarvestSubtitle}
             onPress={() => router.push("./add-harvest")}
           />
 
           <ActionCard
             icon="pricetag-outline"
-            title="My Harvests"
-            subtitle="View submitted harvests"
+            title={t.c3farmerHome.myHarvests}
+            subtitle={t.c3farmerHome.myHarvestsSubtitle}
             onPress={() => router.push("./my-harvests")}
           />
 
           <ActionCard
             icon="people-outline"
-            title="Match Requests"
-            subtitle="Track Miller responses"
+            title={t.c3farmerHome.matchRequests}
+            subtitle={t.c3farmerHome.matchRequestsSubtitle}
             onPress={() => router.push("./my-match-requests")}
           />
 
           <ActionCard
             icon="chatbubble-ellipses-outline"
-            title="AI Assistant"
-            subtitle="Ask market questions"
+            title={t.c3farmerHome.aiAssistant}
+            subtitle={t.c3farmerHome.aiAssistantSubtitle}
             onPress={() => router.push("/(c03-marketplace)/assistant")}
           />
         </View>
@@ -385,10 +403,12 @@ export default function FarmerHomeScreen() {
           </View>
 
           <View style={styles.sessionText}>
-            <Text style={styles.sessionTitle}>Farmer session active</Text>
+            <Text style={styles.sessionTitle}>
+              {t.c3farmerHome.farmerSessionActive}
+            </Text>
 
             <Text style={styles.sessionDescription} numberOfLines={1}>
-              Signed in as {user?.email}
+              {t.c3farmerHome.signedInAs} {user?.fullName ?? "Farmer"}
             </Text>
           </View>
 
@@ -426,6 +446,7 @@ function AnalyticsMetric({ icon, label, value }: AnalyticsMetricProps) {
     </View>
   );
 }
+
 
 function CompactMetric({ icon, label, value }: AnalyticsMetricProps) {
   return (
@@ -478,6 +499,59 @@ function ActionCard({ icon, title, subtitle, onPress }: ActionCardProps) {
     </Pressable>
   );
 }
+
+function translateDistrict(
+  district: string | undefined,
+  translations: {
+    Ampara: string;
+    Badulla: string;
+    Kandy: string;
+    Monaragala: string;
+  },
+  fallback: string,
+): string {
+  if (!district) {
+    return fallback;
+  }
+
+  const normalizedDistrict = district.trim();
+
+  const districtMap: Record<string, string> = {
+    Ampara: translations.Ampara,
+    Badulla: translations.Badulla,
+    Kandy: translations.Kandy,
+    Monaragala: translations.Monaragala,
+  };
+
+  return districtMap[normalizedDistrict] ?? normalizedDistrict;
+}
+
+function translatePaddyType(
+  paddyType: string | undefined,
+  language: string,
+): string {
+  if (!paddyType) {
+    return "";
+  }
+
+  const normalizedPaddyType = paddyType.trim().toLowerCase();
+
+  if (language !== "si") {
+    return formatLabel(paddyType);
+  }
+
+  const paddyTypeMap: Record<string, string> = {
+    samba: "සම්බා",
+    "samba ": "සම්බා",
+    nadu: "නාඩු",
+    "nadu ": "නාඩු",
+    keerisamba: "කීරි සම්බා",
+    "keeri samba": "කීරි සම්බා",
+  };
+
+  return paddyTypeMap[normalizedPaddyType] ?? paddyType;
+}
+
 
 function formatQuantity(value: number): string {
   if (value >= 1_000_000) {

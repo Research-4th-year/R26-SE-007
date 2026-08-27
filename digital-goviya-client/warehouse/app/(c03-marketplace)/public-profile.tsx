@@ -40,6 +40,10 @@ import {
 } from "@expo-google-fonts/poppins";
 
 import {
+  useLanguage,
+} from "@/contexts/LanguageContext";
+
+import {
   useMarketplaceAuth,
 } from "@/hooks/c03-marketplace/useMarketplaceAuth";
 
@@ -56,6 +60,10 @@ export default function PublicProfileScreen() {
   const {
     user,
   } = useMarketplaceAuth();
+
+  const {
+    t,
+  } = useLanguage();
 
   const params =
     useLocalSearchParams<{
@@ -147,10 +155,10 @@ export default function PublicProfileScreen() {
       );
     } catch (error) {
       Alert.alert(
-        "Unable to open profile",
+        t.c3publicProfile.unableToOpen,
         error instanceof Error
           ? error.message
-          : "Please try again."
+          : t.c3publicProfile.pleaseTryAgain
       );
     } finally {
       setLoading(false);
@@ -185,10 +193,10 @@ export default function PublicProfileScreen() {
       await loadProfile();
     } catch (error) {
       Alert.alert(
-        "Unable to connect",
+        t.c3publicProfile.unableToConnect,
         error instanceof Error
           ? error.message
-          : "Please try again."
+          : t.c3publicProfile.pleaseTryAgain
       );
     } finally {
       setActionLoading(
@@ -223,10 +231,10 @@ export default function PublicProfileScreen() {
       await loadProfile();
     } catch (error) {
       Alert.alert(
-        "Unable to respond",
+        t.c3publicProfile.unableToRespond,
         error instanceof Error
           ? error.message
-          : "Please try again."
+          : t.c3publicProfile.pleaseTryAgain
       );
     } finally {
       setActionLoading(
@@ -277,7 +285,7 @@ export default function PublicProfileScreen() {
               styles.loadingText
             }
           >
-            Loading profile
+            {t.c3publicProfile.loadingTitle}
           </Text>
 
           <Text
@@ -285,7 +293,7 @@ export default function PublicProfileScreen() {
               styles.loadingSubtext
             }
           >
-            Please wait a moment...
+            {t.c3publicProfile.loadingSubtext}
           </Text>
         </View>
       </SafeAreaView>
@@ -342,7 +350,7 @@ export default function PublicProfileScreen() {
               styles.headerTitle
             }
           >
-            Profile
+            {t.c3publicProfile.title}
           </Text>
 
           <Text
@@ -350,7 +358,7 @@ export default function PublicProfileScreen() {
               styles.headerSubtitle
             }
           >
-            Marketplace partner
+            {t.c3publicProfile.subtitle}
           </Text>
         </View>
 
@@ -474,8 +482,8 @@ export default function PublicProfileScreen() {
               }
             >
               {isMiller
-                ? "RICE MILLER"
-                : "FARMER"}
+                ? t.c3publicProfile.riceMiller
+                : t.c3publicProfile.farmer}
             </Text>
           </View>
 
@@ -503,10 +511,10 @@ export default function PublicProfileScreen() {
                 "miller" &&
               profile.verificationSource ===
                 "PMB"
-                ? "PMB REGISTERED MILLER"
+                ? t.c3publicProfile.pmbRegisteredMiller
                 : profile.verificationSource ===
                   "RESEARCH_SYNTHETIC"
-                ? "RESEARCH FARMER PROFILE"
+                ? t.c3publicProfile.researchFarmerProfile
                 : profile.type.toUpperCase()}
             </Text>
           </View>
@@ -527,9 +535,11 @@ export default function PublicProfileScreen() {
                 styles.heroLocationText
               }
             >
-              {
-                profile.district
-              }
+              {translateDistrict(
+                profile.district,
+                t.c3districts,
+                t.c3publicProfile.notProvided
+              )}
               {"  •  "}
               {
                 profile.location
@@ -595,7 +605,8 @@ export default function PublicProfileScreen() {
                   data.connection
                     .status,
                   data.connection
-                    .direction
+                    .direction,
+                  t
                 )}
               </Text>
 
@@ -627,7 +638,8 @@ export default function PublicProfileScreen() {
                 data.connection
                   .status,
                 data.connection
-                  .direction
+                  .direction,
+                t
               )}
             </Text>
           </View>
@@ -635,11 +647,13 @@ export default function PublicProfileScreen() {
 
         {/* PROFILE INFORMATION */}
         <SectionHeader
-          title="Profile information"
+          title={
+            t.c3publicProfile.profileInformation
+          }
           subtitle={
             isMiller
-              ? "Rice mill details"
-              : "Farm details"
+              ? t.c3publicProfile.riceMillDetails
+              : t.c3publicProfile.farmDetails
           }
         />
 
@@ -650,9 +664,15 @@ export default function PublicProfileScreen() {
         >
           <InfoRow
             icon="location-outline"
-            label="District"
+            label={
+              t.c3publicProfile.district
+            }
             value={
-              profile.district
+              translateDistrict(
+                profile.district,
+                t.c3districts,
+                t.c3publicProfile.notProvided
+              )
             }
             theme={
               theme
@@ -661,7 +681,9 @@ export default function PublicProfileScreen() {
 
           <InfoRow
             icon="navigate-outline"
-            label="Location"
+            label={
+              t.c3publicProfile.location
+            }
             value={
               profile.location
             }
@@ -674,7 +696,9 @@ export default function PublicProfileScreen() {
             <>
               <InfoRow
                 icon="business-outline"
-                label="Rice mill"
+                label={
+                  t.c3publicProfile.riceMill
+                }
                 value={
                   profile.millName
                 }
@@ -685,10 +709,12 @@ export default function PublicProfileScreen() {
 
               <InfoRow
                 icon="person-outline"
-                label="Owner / representative"
+                label={
+                  t.c3publicProfile.ownerRepresentative
+                }
                 value={
                   profile.personName ||
-                  "Not provided"
+                  t.c3publicProfile.notProvided
                 }
                 theme={
                   theme
@@ -697,10 +723,12 @@ export default function PublicProfileScreen() {
 
               <InfoRow
                 icon="document-text-outline"
-                label="PMB registration"
+                label={
+                  t.c3publicProfile.pmbRegistration
+                }
                 value={
                   profile.businessRegistrationNumber ||
-                  "Not provided"
+                  t.c3publicProfile.notProvided
                 }
                 theme={
                   theme
@@ -712,10 +740,12 @@ export default function PublicProfileScreen() {
             <>
               <InfoRow
                 icon="business-outline"
-                label="Farm"
+                label={
+                  t.c3publicProfile.farm
+                }
                 value={
                   profile.farmName ||
-                  "Not provided"
+                  t.c3publicProfile.notProvided
                 }
                 theme={
                   theme
@@ -724,8 +754,10 @@ export default function PublicProfileScreen() {
 
               <InfoRow
                 icon="resize-outline"
-                label="Farm size"
-                value={`${profile.farmSizeAcres ?? 0} acres`}
+                label={
+                  t.c3publicProfile.farmSize
+                }
+                value={`${profile.farmSizeAcres ?? 0} ${t.c3publicProfile.acres}`}
                 theme={
                   theme
                 }
@@ -733,10 +765,16 @@ export default function PublicProfileScreen() {
 
               <InfoRow
                 icon="leaf-outline"
-                label="Main variety"
+                label={
+                  t.c3publicProfile.mainVariety
+                }
                 value={
-                  profile.mainPaddyVariety ||
-                  "Not provided"
+                  profile.mainPaddyVariety
+                    ? translatePaddyType(
+                        profile.mainPaddyVariety,
+                        t
+                      )
+                    : t.c3publicProfile.notProvided
                 }
                 theme={
                   theme
@@ -749,12 +787,14 @@ export default function PublicProfileScreen() {
 
         {/* CONTACT */}
         <SectionHeader
-          title="Contact"
+          title={
+            t.c3publicProfile.contact
+          }
           subtitle={
             data.contactUnlocked &&
             data.contact
-              ? "Direct contact available"
-              : "Protected until connection"
+              ? t.c3publicProfile.directContactAvailable
+              : t.c3publicProfile.protectedUntilConnection
           }
         />
 
@@ -813,7 +853,7 @@ export default function PublicProfileScreen() {
                       styles.contactTitle
                     }
                   >
-                    Contact unlocked
+                    {t.c3publicProfile.contactUnlocked}
                   </Text>
                 </View>
 
@@ -868,7 +908,7 @@ export default function PublicProfileScreen() {
                     styles.contactButtonText
                   }
                 >
-                  Call
+                  {t.c3publicProfile.call}
                 </Text>
               </Pressable>
 
@@ -902,7 +942,7 @@ export default function PublicProfileScreen() {
                     styles.contactButtonText
                   }
                 >
-                  WhatsApp
+                  {t.c3publicProfile.whatsapp}
                 </Text>
               </Pressable>
             </View>
@@ -935,7 +975,7 @@ export default function PublicProfileScreen() {
                   styles.privateTitle
                 }
               >
-                Contact details are private
+                {t.c3publicProfile.contactPrivate}
               </Text>
 
               <Text
@@ -943,7 +983,7 @@ export default function PublicProfileScreen() {
                   styles.privateText
                 }
               >
-                Contact information becomes available only after both marketplace users connect.
+                {t.c3publicProfile.contactPrivateText}
               </Text>
             </View>
           </View>
@@ -1030,6 +1070,10 @@ function ConnectionActions({
   onAccept: () => void;
   onReject: () => void;
 }) {
+  const {
+    t,
+  } = useLanguage();
+
   if (
     data.connection.status ===
     "accepted"
@@ -1062,7 +1106,7 @@ function ConnectionActions({
               styles.connectedText
             }
           >
-            Connected Trading Partner
+            {t.c3publicProfile.connectedTradingPartner}
           </Text>
 
           <Text
@@ -1070,7 +1114,7 @@ function ConnectionActions({
               styles.connectedSubtext
             }
           >
-            You can now trade and communicate
+            {t.c3publicProfile.connectedSubtext}
           </Text>
         </View>
 
@@ -1100,7 +1144,7 @@ function ConnectionActions({
             styles.actionLabel
           }
         >
-          Respond to connection request
+          {t.c3publicProfile.respondToRequest}
         </Text>
 
         <View
@@ -1130,7 +1174,7 @@ function ConnectionActions({
                 styles.rejectText
               }
             >
-              Reject
+              {t.c3publicProfile.reject}
             </Text>
           </Pressable>
 
@@ -1166,7 +1210,7 @@ function ConnectionActions({
                     styles.acceptText
                   }
                 >
-                  Accept Request
+                  {t.c3publicProfile.acceptRequest}
                 </Text>
               </>
             )}
@@ -1210,7 +1254,7 @@ function ConnectionActions({
               styles.pendingText
             }
           >
-            Connection request sent
+            {t.c3publicProfile.requestSent}
           </Text>
 
           <Text
@@ -1218,7 +1262,7 @@ function ConnectionActions({
               styles.pendingSubtext
             }
           >
-            Waiting for their response
+            {t.c3publicProfile.waitingResponse}
           </Text>
         </View>
 
@@ -1264,7 +1308,7 @@ function ConnectionActions({
               styles.sendInfoTitle
             }
           >
-            Ready to connect?
+            {t.c3publicProfile.readyToConnect}
           </Text>
 
           <Text
@@ -1272,7 +1316,7 @@ function ConnectionActions({
               styles.sendInfoText
             }
           >
-            Your contact details stay private until the connection is accepted.
+            {t.c3publicProfile.contactStaysPrivate}
           </Text>
         </View>
       </View>
@@ -1309,7 +1353,7 @@ function ConnectionActions({
                 styles.sendButtonText
               }
             >
-              Send Connection Request
+              {t.c3publicProfile.sendConnectionRequest}
             </Text>
 
             <Ionicons
@@ -1404,13 +1448,14 @@ function InfoRow({
 
 function getConnectionTitle(
   status: string,
-  direction: string | null
+  direction: string | null,
+  t: any
 ) {
   if (
     status ===
     "accepted"
   ) {
-    return "Connected";
+    return t.c3publicProfile.statusConnected;
   }
 
   if (
@@ -1419,7 +1464,7 @@ function getConnectionTitle(
     direction ===
       "incoming"
   ) {
-    return "Connection request received";
+    return t.c3publicProfile.statusIncoming;
   }
 
   if (
@@ -1428,21 +1473,22 @@ function getConnectionTitle(
     direction ===
       "outgoing"
   ) {
-    return "Request pending";
+    return t.c3publicProfile.statusOutgoing;
   }
 
-  return "Build a trading connection";
+  return t.c3publicProfile.statusDefault;
 }
 
 function getConnectionDescription(
   status: string,
-  direction: string | null
+  direction: string | null,
+  t: any
 ) {
   if (
     status ===
     "accepted"
   ) {
-    return "You can now access approved contact information and build your trading relationship.";
+    return t.c3publicProfile.descConnected;
   }
 
   if (
@@ -1451,7 +1497,7 @@ function getConnectionDescription(
     direction ===
       "incoming"
   ) {
-    return "This marketplace user would like to connect with you.";
+    return t.c3publicProfile.descIncoming;
   }
 
   if (
@@ -1460,10 +1506,29 @@ function getConnectionDescription(
     direction ===
       "outgoing"
   ) {
-    return "Waiting for the other marketplace user to respond.";
+    return t.c3publicProfile.descOutgoing;
   }
 
-  return "Send a request to connect while keeping private contact details protected.";
+  return t.c3publicProfile.descDefault;
+}
+
+function translatePaddyType(value: string, t: any): string {
+  const normalized = value.trim().toLowerCase();
+  if (normalized === "nadu") return t.c3paddyTypes.Nadu;
+  if (normalized === "samba") return t.c3paddyTypes.Samba;
+  if (normalized === "keeri samba" || normalized === "keerisamba") return t.c3paddyTypes.KeeriSamba;
+  return value;
+}
+
+function translateDistrict(district: string | undefined, translations: { Ampara: string; Badulla: string; Kandy: string; Monaragala: string }, fallback: string): string {
+  if (!district) return fallback;
+  const districtMap: Record<string, string> = {
+    Ampara: translations.Ampara,
+    Badulla: translations.Badulla,
+    Kandy: translations.Kandy,
+    Monaragala: translations.Monaragala,
+  };
+  return districtMap[district.trim()] ?? district.trim();
 }
 
 function normalizePhone(
