@@ -1,10 +1,10 @@
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useState, useRef, useEffect, useMemo } from "react";
 import {
   View,
   Text,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   Animated,
   Modal,
   FlatList,
@@ -22,6 +22,7 @@ import {
   Poppins_600SemiBold,
   Poppins_500Medium,
 } from "@expo-google-fonts/poppins";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const RESULT_ROUTE = "/(c04-analytics)/price-prediction/prediction-result";
 
@@ -40,6 +41,8 @@ function toApiDate(d: Date) {
 }
 
 export default function PredictionInputScreen() {
+  const { t } = useLanguage();
+
   const [fontsLoaded] = useFonts({
     Poppins_800ExtraBold,
     Poppins_700Bold,
@@ -130,11 +133,11 @@ export default function PredictionInputScreen() {
 
           <View style={styles.eyebrowPill}>
             <Ionicons name="pricetag" size={11} color="#F5C542" />
-            <Text style={styles.eyebrow}>PRICE PREDICTION</Text>
+            <Text style={styles.eyebrow}>{t.predictionInput.eyebrow}</Text>
           </View>
 
-          <Text style={styles.heroTitle}>Get Today's{"\n"}Price Estimate</Text>
-          <Text style={styles.heroSub}>Choose a district and date to continue</Text>
+          <Text style={styles.heroTitle}>{t.predictionInput.title}</Text>
+          <Text style={styles.heroSub}>{t.predictionInput.subtitle}</Text>
         </View>
 
         {/* Sheet */}
@@ -149,7 +152,7 @@ export default function PredictionInputScreen() {
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
           >
-            <Text style={styles.fieldLabel}>District</Text>
+            <Text style={styles.fieldLabel}>{t.predictionInput.district}</Text>
             <TouchableOpacity
               style={styles.selectField}
               activeOpacity={0.8}
@@ -158,13 +161,13 @@ export default function PredictionInputScreen() {
               <View style={styles.selectFieldLeft}>
                 <Ionicons name="location-outline" size={18} color="#15803D" />
                 <Text style={[styles.selectFieldText, !district && styles.placeholderText]}>
-                  {district ?? "Select district"}
+                  {district ?? t.predictionInput.selectDistrict}
                 </Text>
               </View>
               <Ionicons name="chevron-down" size={18} color="#9CA3AF" />
             </TouchableOpacity>
 
-            <Text style={[styles.fieldLabel, { marginTop: 18 }]}>Date</Text>
+            <Text style={[styles.fieldLabel, { marginTop: 18 }]}>{t.predictionInput.date}</Text>
             <TouchableOpacity
               style={styles.selectField}
               activeOpacity={0.8}
@@ -173,18 +176,20 @@ export default function PredictionInputScreen() {
               <View style={styles.selectFieldLeft}>
                 <Ionicons name="calendar-outline" size={18} color="#15803D" />
                 <Text style={[styles.selectFieldText, !date && styles.placeholderText]}>
-                  {date ? formatDate(date) : "Select date"}
+                  {date ? formatDate(date) : t.predictionInput.selectDate}
                 </Text>
               </View>
               <Ionicons name="chevron-down" size={18} color="#9CA3AF" />
             </TouchableOpacity>
             <Text style={styles.helperText}>
-              Today up to {MAX_FORECAST_DAYS} days ahead ({formatDate(maxDate)})
+              {t.predictionInput.dateHelper
+                .replace("{days}", String(MAX_FORECAST_DAYS))
+                .replace("{maxDate}", formatDate(maxDate))}
             </Text>
 
             {showDatePicker && isWeb ? (
               <View style={styles.webPickerWrap}>
-                <Text style={styles.webPickerLabel}>Choose a date</Text>
+                <Text style={styles.webPickerLabel}>{t.predictionInput.chooseDate}</Text>
                 <input
                   type="date"
                   value={date ? toApiDate(date) : ""}
@@ -218,7 +223,7 @@ export default function PredictionInputScreen() {
             <View style={styles.noteBanner}>
               <Ionicons name="information-circle" size={18} color="#B45309" />
               <Text style={styles.noteText}>
-                Predictions are available only for Long Grain White Paddy.
+                {t.predictionInput.predictionNote}
               </Text>
             </View>
           </ScrollView>
@@ -236,7 +241,7 @@ export default function PredictionInputScreen() {
               style={styles.primaryBtn}
             >
               <Text style={[styles.primaryBtnText, !isValid && styles.disabledBtnText]}>
-                Predict Price
+                {t.predictionInput.predictPrice}
               </Text>
               <Ionicons
                 name="arrow-forward"
@@ -262,7 +267,7 @@ export default function PredictionInputScreen() {
         >
           <TouchableOpacity activeOpacity={1} style={styles.modalCard}>
             <View style={styles.sheetHandle} />
-            <Text style={styles.modalTitle}>Select District</Text>
+            <Text style={styles.modalTitle}>{t.predictionInput.selectDistrictTitle}</Text>
             <FlatList
               data={DISTRICTS}
               keyExtractor={(item) => item}

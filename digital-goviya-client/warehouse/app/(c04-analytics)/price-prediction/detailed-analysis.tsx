@@ -1,10 +1,9 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   Animated,
   ScrollView,
 } from "react-native";
@@ -18,13 +17,21 @@ import {
   Poppins_600SemiBold,
   Poppins_500Medium,
 } from "@expo-google-fonts/poppins";
+import { useLanguage } from "@/contexts/LanguageContext";
 import type { PredictionApiResponse } from "./prediction-result";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 type TabKey = "market" | "technical";
 
-const TABS: { key: TabKey; label: string; icon: string }[] = [
-  { key: "market", label: "Market Overview", icon: "bar-chart-outline" },
-  { key: "technical", label: "Technical Details", icon: "layers-outline" },
+const TABS: { key: TabKey; icon: string }[] = [
+  {
+    key: "market",
+    icon: "bar-chart-outline",
+  },
+  {
+    key: "technical",
+    icon: "layers-outline",
+  },
 ];
 
 function chipTone(kind: "trend" | "confidence" | "risk", value: string) {
@@ -44,20 +51,29 @@ function chipTone(kind: "trend" | "confidence" | "risk", value: string) {
   return { bg: "#FEE2E2", fg: "#DC2626", icon: "warning" };
 }
 
-function humanizeFeature(key: string) {
-  const overrides: Record<string, string> = {
-    max_price: "Maximum Market Price",
-    min_price: "Minimum Market Price",
-    avg_price: "Average Market Price",
-  };
-  if (overrides[key]) return overrides[key];
+function humanizeFeature(
+  key: string,
+  t: ReturnType<typeof useLanguage>["t"]
+) {
+  if (t.detailedAnalysis.features[key as keyof typeof t.detailedAnalysis.features]) {
+    return t.detailedAnalysis.features[
+      key as keyof typeof t.detailedAnalysis.features
+    ];
+  }
+
   return key
     .split("_")
-    .map((w) => (/^\d+w$/.test(w) ? `${w.replace("w", "-Week")}` : w[0].toUpperCase() + w.slice(1)))
+    .map((w) =>
+      /^\d+w$/.test(w)
+        ? `${w.replace("w", "-Week")}`
+        : w[0].toUpperCase() + w.slice(1)
+    )
     .join(" ");
 }
 
 export default function DetailedAnalysisScreen() {
+  const { t } = useLanguage();
+
   const { data } = useLocalSearchParams<{ data: string }>();
   const result: PredictionApiResponse | null = data ? JSON.parse(data) : null;
 
@@ -107,9 +123,9 @@ export default function DetailedAnalysisScreen() {
           </TouchableOpacity>
           <View style={styles.eyebrowPill}>
             <Ionicons name="analytics" size={11} color="#F5C542" />
-            <Text style={styles.eyebrow}>ADVANCED DETAILS</Text>
+            <Text style={styles.eyebrow}>{t.detailedAnalysis.eyebrow}</Text>
           </View>
-          <Text style={styles.heroTitle}>Behind the Prediction</Text>
+          <Text style={styles.heroTitle}>{t.detailedAnalysis.title}</Text>
           <Text style={styles.heroSub}>
             {prediction.district} · {prediction.date}
           </Text>
@@ -136,7 +152,9 @@ export default function DetailedAnalysisScreen() {
                     color={active ? "#0B3B22" : "#9CA3AF"}
                   />
                   <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>
-                    {tab.label}
+                    {tab.key === "market"
+                      ? t.detailedAnalysis.tabs.market
+                      : t.detailedAnalysis.tabs.technical}
                   </Text>
                 </TouchableOpacity>
               );
@@ -154,21 +172,21 @@ export default function DetailedAnalysisScreen() {
                   <View style={styles.chipRow}>
                     <View style={[styles.statusChip, { backgroundColor: trendTone.bg }]}>
                       <Ionicons name={trendTone.icon as any} size={16} color={trendTone.fg} />
-                      <Text style={[styles.statusChipLabel, { color: trendTone.fg }]}>Trend</Text>
+                      <Text style={[styles.statusChipLabel, { color: trendTone.fg }]}>{t.detailedAnalysis.status.trend}</Text>
                       <Text style={[styles.statusChipValue, { color: trendTone.fg }]}>
                         {market.trend}
                       </Text>
                     </View>
                     <View style={[styles.statusChip, { backgroundColor: confTone.bg }]}>
                       <Ionicons name={confTone.icon as any} size={16} color={confTone.fg} />
-                      <Text style={[styles.statusChipLabel, { color: confTone.fg }]}>Confidence</Text>
+                      <Text style={[styles.statusChipLabel, { color: confTone.fg }]}>{t.detailedAnalysis.status.confidence}</Text>
                       <Text style={[styles.statusChipValue, { color: confTone.fg }]}>
                         {market.confidence}
                       </Text>
                     </View>
                     <View style={[styles.statusChip, { backgroundColor: riskTone.bg }]}>
                       <Ionicons name={riskTone.icon as any} size={16} color={riskTone.fg} />
-                      <Text style={[styles.statusChipLabel, { color: riskTone.fg }]}>Risk</Text>
+                      <Text style={[styles.statusChipLabel, { color: riskTone.fg }]}>{t.detailedAnalysis.status.risk}</Text>
                       <Text style={[styles.statusChipValue, { color: riskTone.fg }]}>
                         {market.risk_level}
                       </Text>
@@ -180,7 +198,7 @@ export default function DetailedAnalysisScreen() {
                       <View style={[styles.infoIconBox, { backgroundColor: "#E0F2FE" }]}>
                         <Ionicons name="bar-chart" size={16} color="#0369A1" />
                       </View>
-                      <Text style={styles.infoCardTitle}>Market Outlook</Text>
+                      <Text style={styles.infoCardTitle}>{t.detailedAnalysis.market.outlook}</Text>
                     </View>
                     <Text style={styles.infoCardText}>{market.outlook}</Text>
                   </View>
@@ -190,7 +208,7 @@ export default function DetailedAnalysisScreen() {
                       <View style={[styles.infoIconBox, { backgroundColor: "#DCFCE7" }]}>
                         <Ionicons name="compass" size={16} color="#15803D" />
                       </View>
-                      <Text style={styles.infoCardTitle}>Recommendation</Text>
+                      <Text style={styles.infoCardTitle}>{t.detailedAnalysis.market.recommendation}</Text>
                     </View>
                     <Text style={styles.infoCardText}>{market.recommendation}</Text>
                   </View>
@@ -200,14 +218,14 @@ export default function DetailedAnalysisScreen() {
               {activeTab === "technical" && (
                 <View>
                   <Text style={styles.sectionIntro}>
-                    These are the factors that influenced this prediction most.
+                    {t.detailedAnalysis.technical.intro}
                   </Text>
                   {technical.top_features.map((f, i) => {
                     const positive = f.contribution >= 0;
                     return (
                       <View key={i} style={styles.factorCard}>
                         <View style={styles.factorHeader}>
-                          <Text style={styles.factorTitle}>{humanizeFeature(f.feature)}</Text>
+                          <Text style={styles.factorTitle}>{humanizeFeature(f.feature, t)}</Text>
                           <View
                             style={[
                               styles.contributionPill,
@@ -231,14 +249,17 @@ export default function DetailedAnalysisScreen() {
                           </View>
                         </View>
                         <Text style={styles.factorValue}>
-                          Current Value: <Text style={styles.factorValueBold}>{f.value} LKR/kg</Text>
+                          {t.detailedAnalysis.technical.currentValue}:{" "}
+                          <Text style={styles.factorValueBold}>
+                            {f.value} LKR/kg
+                          </Text>
                         </Text>
                       </View>
                     );
                   })}
 
                   <Text style={[styles.sectionIntro, { marginTop: 6 }]}>
-                    Step-by-step model reasoning (SHAP).
+                    {t.detailedAnalysis.technical.stepByStep}
                   </Text>
                   {technical.shap_reasons.map((reason, i) => (
                     <View key={i} style={styles.timelineRow}>

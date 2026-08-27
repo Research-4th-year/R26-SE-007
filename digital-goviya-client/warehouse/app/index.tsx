@@ -4,7 +4,11 @@ import { router } from "expo-router";
 
 export default function IndexScreen() {
   useEffect(() => {
-    router.replace("/splash-screen");
+    // Defer navigation until Root Layout <Stack> is mounted
+    const timer = setTimeout(() => {
+      router.replace("/splash-screen");
+    }, 0);
+    return () => clearTimeout(timer);
   }, []);
 
   return (

@@ -1,10 +1,10 @@
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   Animated,
   Easing,
   ScrollView,
@@ -30,10 +30,11 @@ import {
   Poppins_600SemiBold,
   Poppins_500Medium,
 } from "@expo-google-fonts/poppins";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const APP_LOGO = require("@/assets/logo2.png");
 
-const API_BASE = "http://127.0.0.1:8000";
+const API_BASE = process.env.EXPO_PUBLIC_API_URL;
 const WEEKLY_BREAKDOWN_ROUTE =
   "/(c04-analytics)/price-forecasting/weekly-breakdown";
 
@@ -289,8 +290,10 @@ const AnimatedG =
 
 
 function LogoLoadingState({
+  title,
   label,
 }: {
+  title: string;
   label: string;
 }) {
   const spin = useRef(new Animated.Value(0)).current;
@@ -358,7 +361,7 @@ function LogoLoadingState({
       </View>
 
       <Text style={styles.centerStateTitle}>
-        Crunching the numbers…
+        {title}
       </Text>
 
       <Text style={styles.centerStateText}>
@@ -370,6 +373,8 @@ function LogoLoadingState({
 
 
 export default function ForecastResultScreen() {
+  const { t } = useLanguage();
+
   const {
     district,
     date,
@@ -437,8 +442,8 @@ export default function ForecastResultScreen() {
     } catch (e: any) {
       setError(
         e?.message === "Network request failed"
-          ? "Couldn't reach the forecast server. Check your connection and try again."
-          : "Something went wrong while generating your forecast."
+          ? t.forecastResult.networkError
+          : t.forecastResult.generalError
       );
     } finally {
       setLoading(false);
@@ -496,18 +501,17 @@ export default function ForecastResultScreen() {
       ((last - first) / first) * 100;
 
     if (Math.abs(pctChange) < 2) {
-      insight =
-        "Prices are expected to remain relatively stable over the selected period.";
+      insight = t.forecastResult.insight.stable;
     } else if (pctChange > 0) {
-      insight = `Prices are projected to rise gradually, up roughly ${pctChange.toFixed(
-        1
-      )}% by the end of this period.`;
+      insight = t.forecastResult.insight.rising.replace(
+        "{percentage}",
+        pctChange.toFixed(1)
+      );
     } else {
-      insight = `Prices are projected to ease gradually, down roughly ${Math.abs(
-        pctChange
-      ).toFixed(
-        1
-      )}% by the end of this period.`;
+      insight = t.forecastResult.insight.falling.replace(
+        "{percentage}",
+        Math.abs(pctChange).toFixed(1)
+      );
     }
   }
 
@@ -552,16 +556,19 @@ export default function ForecastResultScreen() {
             />
 
             <Text style={styles.eyebrow}>
-              FORECAST RESULT
+              {t.forecastResult.eyebrow}
             </Text>
           </View>
 
           <Text style={styles.heroTitle}>
-            {weeks}-Week Price Forecast
+            {t.forecastResult.title.replace(
+              "{weeks}",
+              String(weeks)
+            )}
           </Text>
 
           <Text style={styles.heroSub}>
-            {district} · Starting {date}
+            {district} · {t.forecastResult.starting} {date}
           </Text>
         </View>
 
@@ -571,7 +578,8 @@ export default function ForecastResultScreen() {
 
           {loading && (
             <LogoLoadingState
-              label="Generating your forecast…"
+              title={t.forecastResult.loadingTitle}
+              label={t.forecastResult.loadingText}
             />
           )}
 
@@ -586,7 +594,7 @@ export default function ForecastResultScreen() {
               </View>
 
               <Text style={styles.errorTitle}>
-                Forecast failed
+                {t.forecastResult.errorTitle}
               </Text>
 
               <Text style={styles.centerStateText}>
@@ -605,7 +613,7 @@ export default function ForecastResultScreen() {
                 />
 
                 <Text style={styles.retryText}>
-                  Try Again
+                  {t.forecastResult.tryAgain}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -638,7 +646,7 @@ export default function ForecastResultScreen() {
                       <Text
                         style={styles.chartTitle}
                       >
-                        Predicted Price Trend
+                        {t.forecastResult.chart.predictedPriceTrend}
                       </Text>
 
                       <View
@@ -657,7 +665,7 @@ export default function ForecastResultScreen() {
                             styles.paddyTypePillText
                           }
                         >
-                          Long Grain White
+                          {t.forecastResult.chart.paddyType}
                         </Text>
                       </View>
                     </View>
@@ -699,22 +707,25 @@ export default function ForecastResultScreen() {
                   {/* Summary stats */}
                   <View style={styles.statsRow}>
                     <StatCard
-                      label="Highest"
+                      label={t.forecastResult.stats.highest}
                       value={highest}
+                      unit={t.forecastResult.stats.unit}
                       tone="#15803D"
                       bg="#DCFCE7"
                     />
 
                     <StatCard
-                      label="Lowest"
+                      label={t.forecastResult.stats.lowest}
                       value={lowest}
+                      unit={t.forecastResult.stats.unit}
                       tone="#DC2626"
                       bg="#FEE2E2"
                     />
 
                     <StatCard
-                      label="Average"
+                      label={t.forecastResult.stats.average}
                       value={average}
+                      unit={t.forecastResult.stats.unit}
                       tone="#B45309"
                       bg="#FEF3C7"
                     />
@@ -748,7 +759,7 @@ export default function ForecastResultScreen() {
                           styles.infoCardTitle
                         }
                       >
-                        Forecast Insight
+                        {t.forecastResult.insight.title}
                       </Text>
                     </View>
 
@@ -781,7 +792,7 @@ export default function ForecastResultScreen() {
                         styles.detailBtnText
                       }
                     >
-                      View Weekly Breakdown
+                      {t.forecastResult.weeklyBreakdown}
                     </Text>
 
                     <Ionicons
@@ -806,11 +817,13 @@ export default function ForecastResultScreen() {
 function StatCard({
   label,
   value,
+  unit,
   tone,
   bg,
 }: {
   label: string;
   value: number;
+  unit: string;
   tone: string;
   bg: string;
 }) {
@@ -845,7 +858,7 @@ function StatCard({
           { color: tone },
         ]}
       >
-        LKR/kg
+        {unit}
       </Text>
     </View>
   );

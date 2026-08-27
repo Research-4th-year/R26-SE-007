@@ -1,0 +1,339 @@
+[
+  {
+    "id": "DG-MARKETPLACE-001",
+    "category": "marketplace_overview",
+    "title": "Digital Goviya Paddy Marketplace",
+    "organization": "Digital Goviya",
+    "section": "Marketplace Overview",
+    "language": "English",
+    "roles": [
+      "farmer",
+      "miller"
+    ],
+    "content": "The Digital Goviya Paddy Marketplace connects Farmers and Millers. Farmers can publish paddy Harvests and Millers can publish purchasing Demands. The system supports AI-assisted matching, connection requests, AI negotiation and controlled contact sharing.",
+    "keywords": [
+      "marketplace",
+      "Digital Goviya",
+      "farmer",
+      "miller",
+      "harvest",
+      "demand"
+    ]
+  },
+  {
+    "id": "DG-HARVEST-001",
+    "category": "harvest",
+    "title": "Farmer Harvest",
+    "organization": "Digital Goviya",
+    "section": "Harvest Management",
+    "language": "English",
+    "roles": [
+      "farmer"
+    ],
+    "content": "A Farmer creates a Harvest by providing the paddy type, season, quantity, expected selling price and a private minimum acceptable price. The system also stores an AI predicted price and marketplace intelligence for the Harvest.",
+    "keywords": [
+      "harvest",
+      "add harvest",
+      "expected price",
+      "quantity",
+      "farmer"
+    ]
+  },
+  {
+    "id": "DG-HARVEST-PRIVATE-001",
+    "category": "privacy",
+    "title": "Farmer Minimum Acceptable Price",
+    "organization": "Digital Goviya",
+    "section": "Private Negotiation Information",
+    "language": "English",
+    "roles": [
+      "farmer",
+      "miller"
+    ],
+    "content": "The Farmer's minimum acceptable price is private negotiation information. It is not displayed to the Miller and is not included in the general marketplace profile or public Harvest information. It is used only where required by the AI negotiation process.",
+    "keywords": [
+      "minimum acceptable price",
+      "private price",
+      "privacy",
+      "farmer",
+      "negotiation"
+    ]
+  },
+  {
+    "id": "DG-DEMAND-001",
+    "category": "demand",
+    "title": "Miller Demand",
+    "organization": "Digital Goviya",
+    "section": "Demand Management",
+    "language": "English",
+    "roles": [
+      "miller"
+    ],
+    "content": "A Miller creates a purchasing Demand by providing the paddy type, quantity needed, offered price and a private maximum buying price.",
+    "keywords": [
+      "demand",
+      "create demand",
+      "miller",
+      "quantity needed",
+      "offered price"
+    ]
+  },
+  {
+    "id": "DG-DEMAND-PRIVATE-001",
+    "category": "privacy",
+    "title": "Miller Maximum Buying Price",
+    "organization": "Digital Goviya",
+    "section": "Private Negotiation Information",
+    "language": "English",
+    "roles": [
+      "farmer",
+      "miller"
+    ],
+    "content": "The Miller's maximum buying price is private negotiation information. It is not displayed to the Farmer and is used only where required by the AI negotiation process.",
+    "keywords": [
+      "maximum buying price",
+      "private price",
+      "miller",
+      "privacy",
+      "negotiation"
+    ]
+  },
+  {
+    "id": "DG-MATCHING-001",
+    "category": "matching",
+    "title": "AI Marketplace Matching",
+    "organization": "Digital Goviya",
+    "section": "Matching",
+    "language": "English",
+    "roles": [
+      "farmer",
+      "miller"
+    ],
+    "content": "The marketplace matching process compares Farmer Harvests with Miller Demands. The matching score considers location, paddy type, price compatibility and quantity compatibility.",
+    "keywords": [
+      "matching",
+      "matching score",
+      "location",
+      "paddy type",
+      "price compatibility",
+      "quantity compatibility"
+    ]
+  },
+  {
+    "id": "DG-MATCHING-REQUEST-001",
+    "category": "matching",
+    "title": "Sending a Match Request",
+    "organization": "Digital Goviya",
+    "section": "Matching Requests",
+    "language": "English",
+    "roles": [
+      "farmer",
+      "miller"
+    ],
+    "content": "Either a Farmer or Miller may initiate a marketplace match request. A Farmer can select a Miller Demand and a Miller can select a Farmer Harvest. The other party must accept the match request before the match becomes ready for AI negotiation.",
+    "keywords": [
+      "match request",
+      "accept match",
+      "Farmer request",
+      "Miller request",
+      "negotiation ready"
+    ]
+  },
+  {
+    "id": "DG-NEGOTIATION-001",
+    "category": "negotiation",
+    "title": "AI Negotiation",
+    "organization": "Digital Goviya",
+    "section": "AI Negotiation",
+    "language": "English",
+    "roles": [
+      "farmer",
+      "miller"
+    ],
+    "content": "AI negotiation is available after an accepted marketplace match becomes negotiation ready. A Farmer negotiation agent and Miller negotiation agent exchange offers while following business rules and using the FL reference price as market guidance.",
+    "keywords": [
+      "AI negotiation",
+      "negotiation",
+      "Farmer agent",
+      "Miller agent",
+      "FL reference price"
+    ]
+  },
+  {
+    "id": "DG-NEGOTIATION-PRIVACY-001",
+    "category": "privacy",
+    "title": "Negotiation Privacy",
+    "organization": "Digital Goviya",
+    "section": "AI Negotiation Privacy",
+    "language": "English",
+    "roles": [
+      "farmer",
+      "miller"
+    ],
+    "content": "During AI negotiation, the Farmer agent knows the Farmer's private minimum acceptable price and the Miller agent knows the Miller's private maximum buying price. These private reservation limits must not be revealed to the opposite party.",
+    "keywords": [
+      "negotiation privacy",
+      "reservation price",
+      "private limit",
+      "minimum price",
+      "maximum price"
+    ]
+  },
+  {
+    "id": "DG-FL-001",
+    "category": "fl_price",
+    "title": "Federated Learning Price Reference",
+    "organization": "Digital Goviya",
+    "section": "AI Price Guidance",
+    "language": "English",
+    "roles": [
+      "farmer",
+      "miller"
+    ],
+    "content": "The marketplace uses an AI predicted paddy price generated by the Federated Learning component as market guidance. The FL price is a reference value used by Harvest intelligence and AI negotiation; it is not the Farmer's private minimum price or the Miller's private maximum price.",
+    "keywords": [
+      "FL",
+      "Federated Learning",
+      "AI predicted price",
+      "reference price",
+      "market guidance"
+    ]
+  },
+  {
+    "id": "DG-CONNECTION-001",
+    "category": "connection",
+    "title": "Marketplace Connections",
+    "organization": "Digital Goviya",
+    "section": "Partner Connections",
+    "language": "English",
+    "roles": [
+      "farmer",
+      "miller"
+    ],
+    "content": "Farmers can search for Millers and Millers can search for Farmers. A marketplace user may send a connection request to the opposite role. The receiving user can accept or reject the request.",
+    "keywords": [
+      "connection",
+      "connect",
+      "request",
+      "search Farmer",
+      "search Miller"
+    ]
+  },
+  {
+    "id": "DG-CONNECTION-PENDING-001",
+    "category": "connection",
+    "title": "Pending Connection Request",
+    "organization": "Digital Goviya",
+    "section": "Partner Connections",
+    "language": "English",
+    "roles": [
+      "farmer",
+      "miller"
+    ],
+    "content": "A connection request remains pending until the receiving party accepts or rejects it. The user who originally sent a pending request can cancel the request before it is accepted.",
+    "keywords": [
+      "pending connection",
+      "cancel request",
+      "connection request",
+      "accept",
+      "reject"
+    ]
+  },
+  {
+    "id": "DG-CONTACT-001",
+    "category": "contact",
+    "title": "Contact Information Access",
+    "organization": "Digital Goviya",
+    "section": "Contact Sharing",
+    "language": "English",
+    "roles": [
+      "farmer",
+      "miller"
+    ],
+    "content": "Contact details are protected by default. An accepted marketplace connection unlocks approved contact information between the connected Farmer and Miller. Contact information may also be unlocked through the successful negotiation contact-request flow.",
+    "keywords": [
+      "contact",
+      "phone",
+      "WhatsApp",
+      "contact unlocked",
+      "privacy"
+    ]
+  },
+  {
+    "id": "DG-PARTNER-001",
+    "category": "partners",
+    "title": "Connected Partners",
+    "organization": "Digital Goviya",
+    "section": "Partners",
+    "language": "English",
+    "roles": [
+      "farmer",
+      "miller"
+    ],
+    "content": "Accepted marketplace connections appear in the Partners area. Connected users can view approved partner information, contact details and available marketplace opportunities from the other party.",
+    "keywords": [
+      "partners",
+      "connected partners",
+      "partner profile",
+      "connections"
+    ]
+  },
+  {
+    "id": "DG-PARTNER-OPPORTUNITY-001",
+    "category": "partners",
+    "title": "Partner Marketplace Opportunities",
+    "organization": "Digital Goviya",
+    "section": "Partners",
+    "language": "English",
+    "roles": [
+      "farmer",
+      "miller"
+    ],
+    "content": "A connected Farmer can view a Miller partner's open Demands. A connected Miller can view a Farmer partner's available Harvests. The user can then continue through the normal AI matching process instead of bypassing the matching rules.",
+    "keywords": [
+      "partner demand",
+      "partner harvest",
+      "open demands",
+      "available harvests",
+      "matching"
+    ]
+  },
+  {
+    "id": "DG-TRADE-PARTNER-001",
+    "category": "partners",
+    "title": "Trade Partners",
+    "organization": "Digital Goviya",
+    "section": "Trade Partners",
+    "language": "English",
+    "roles": [
+      "farmer",
+      "miller"
+    ],
+    "content": "A successful AI negotiation creates a trading relationship that can appear under Trade Partners. The Partner view can show previous successful negotiation information such as agreed price, quantity, negotiation rounds and trading summary.",
+    "keywords": [
+      "trade partner",
+      "transaction history",
+      "successful negotiation",
+      "agreed price",
+      "trade history"
+    ]
+  },
+  {
+    "id": "DG-OUT-OF-SCOPE-001",
+    "category": "scope",
+    "title": "Marketplace Assistant Scope",
+    "organization": "Digital Goviya",
+    "section": "Assistant Scope",
+    "language": "English",
+    "roles": [
+      "farmer",
+      "miller"
+    ],
+    "content": "The Digital Goviya marketplace assistant focuses on Sri Lankan paddy marketplace information, PMB purchasing information, marketplace operations, matching, price guidance, negotiation, connections, partners and related marketplace workflows. General crop cultivation instructions and unrelated agricultural advice are outside this assistant's marketplace scope.",
+    "keywords": [
+      "scope",
+      "marketplace assistant",
+      "unsupported question"
+    ]
+  }
+]

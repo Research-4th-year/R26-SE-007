@@ -1,10 +1,10 @@
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useRef, useEffect } from "react";
 import {
   View,
   Text,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   Animated,
   ScrollView,
 } from "react-native";
@@ -18,6 +18,7 @@ import {
   Poppins_600SemiBold,
   Poppins_500Medium,
 } from "@expo-google-fonts/poppins";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const ROUTES = {
   prediction: "/(c04-analytics)/price-prediction/prediction-input",
@@ -27,6 +28,8 @@ const ROUTES = {
 const DISTRICTS = ["Ampara", "Anuradhapura", "Polonnaruwa", "Kurunegala"];
 
 export default function AnalyticsHomeScreen() {
+  const { t } = useLanguage();
+
   const [fontsLoaded] = useFonts({
     Poppins_800ExtraBold,
     Poppins_700Bold,
@@ -77,12 +80,12 @@ export default function AnalyticsHomeScreen() {
 
           <View style={styles.eyebrowPill}>
             <Ionicons name="sparkles" size={11} color="#F5C542" />
-            <Text style={styles.eyebrow}>AI-POWERED PRICE INSIGHTS</Text>
+            <Text style={styles.eyebrow}>{t.analyticsHome.eyebrow}</Text>
           </View>
 
-          <Text style={styles.heroTitle}>Price Prediction{"\n"}& Forecasting</Text>
+          <Text style={styles.heroTitle}>{t.analyticsHome.title}</Text>
           <Text style={styles.heroSub}>
-            Know today's paddy price and see where it's headed
+            {t.analyticsHome.subtitle}
           </Text>
         </View>
 
@@ -98,8 +101,7 @@ export default function AnalyticsHomeScreen() {
             showsVerticalScrollIndicator={false}
           >
             <Text style={styles.welcomeText}>
-              Get an instant price estimate, or see how prices may move over
-              the next few weeks.
+              {t.analyticsHome.welcome}
             </Text>
 
             {/* Predict card */}
@@ -107,9 +109,9 @@ export default function AnalyticsHomeScreen() {
               <View style={[styles.featureIconBox, { backgroundColor: "#DCFCE7" }]}>
                 <Ionicons name="pricetag" size={26} color="#15803D" />
               </View>
-              <Text style={styles.featureTitle}>Predict Paddy Price</Text>
+              <Text style={styles.featureTitle}>{t.analyticsHome.prediction.title}</Text>
               <Text style={styles.featureDesc}>
-                Get today's estimated market price for your district in seconds.
+                {t.analyticsHome.prediction.description}
               </Text>
               <TouchableOpacity
                 style={styles.primaryBtnShadow}
@@ -122,7 +124,7 @@ export default function AnalyticsHomeScreen() {
                   end={{ x: 1, y: 0 }}
                   style={styles.primaryBtn}
                 >
-                  <Text style={styles.primaryBtnText}>Start Prediction</Text>
+                  <Text style={styles.primaryBtnText}>{t.analyticsHome.prediction.button}</Text>
                   <Ionicons name="arrow-forward" size={16} color="#0B3B22" />
                 </LinearGradient>
               </TouchableOpacity>
@@ -133,16 +135,16 @@ export default function AnalyticsHomeScreen() {
               <View style={[styles.featureIconBox, { backgroundColor: "#E0F2FE" }]}>
                 <Ionicons name="trending-up" size={26} color="#0369A1" />
               </View>
-              <Text style={styles.featureTitle}>Forecast Future Prices</Text>
+              <Text style={styles.featureTitle}>{t.analyticsHome.forecasting.title}</Text>
               <Text style={styles.featureDesc}>
-                See predicted price trends for the coming weeks, visualized on a chart.
+                {t.analyticsHome.forecasting.description}
               </Text>
               <TouchableOpacity
                 style={styles.secondaryBtn}
                 activeOpacity={0.85}
                 onPress={() => router.push(ROUTES.forecast as any)}
               >
-                <Text style={styles.secondaryBtnText}>Start Forecast</Text>
+                <Text style={styles.secondaryBtnText}>{t.analyticsHome.forecasting.button}</Text>
                 <Ionicons name="arrow-forward" size={16} color="#0369A1" />
               </TouchableOpacity>
             </View>
@@ -151,17 +153,17 @@ export default function AnalyticsHomeScreen() {
             <View style={styles.infoCard}>
               <View style={styles.infoRow}>
                 <Ionicons name="leaf-outline" size={16} color="#6B7280" />
-                <Text style={styles.infoLabel}>Paddy Type</Text>
+                <Text style={styles.infoLabel}>{t.analyticsHome.information.paddyType}</Text>
               </View>
               <View style={styles.paddyTypeBadge}>
-                <Text style={styles.paddyTypeText}>Long Grain White</Text>
+                <Text style={styles.paddyTypeText}>{t.analyticsHome.information.paddyTypeValue}</Text>
               </View>
 
               <View style={styles.infoDivider} />
 
               <View style={styles.infoRow}>
                 <Ionicons name="location-outline" size={16} color="#6B7280" />
-                <Text style={styles.infoLabel}>Supported Districts</Text>
+                <Text style={styles.infoLabel}>{t.analyticsHome.information.supportedDistricts}</Text>
               </View>
               <View style={styles.districtWrap}>
                 {DISTRICTS.map((d) => (

@@ -1,0 +1,2157 @@
+import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import {
+  router,
+  useFocusEffect,
+  useLocalSearchParams,
+} from "expo-router";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  ActivityIndicator,
+  Alert,
+  Animated,
+  Linking,
+  Modal,
+  Pressable,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+import {
+  useFonts,
+  Poppins_800ExtraBold,
+  Poppins_700Bold,
+  Poppins_600SemiBold,
+  Poppins_500Medium,
+} from "@expo-google-fonts/poppins";
+
+import { useMarketplaceAuth } from "@/hooks/c03-marketplace/useMarketplaceAuth";
+import { partnerService } from "@/services/c03-marketplace/partner.service";
+import { harvestService } from "@/services/c03-marketplace/harvest.service";
+import { demandService } from "@/services/c03-marketplace/demand.service";
+import { getApiErrorMessage } from "@/utils/c03-marketplace/getApiErrorMessage";
+
+import type {
+  PartnerDetailData,
+  PartnerDemandOpportunity,
+  PartnerHarvestOpportunity,
+  PartnerType,
+} from "@/types/c03-marketplace/partner.types";
+import type { Harvest } from "@/types/c03-marketplace/harvest.types";
+import type { MillerDemand } from "@/types/c03-marketplace/demand.types";
+
+export default function PartnerDetailScreen() {
+  const params = useLocalSearchParams<{
+    partnerType?: string;
+    partnerId?: string;
+  }>();
+
+  const { user } = useMarketplaceAuth();
+
+  const [data, setData] = useState<PartnerDetailData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [favoriteLoading, setFavoriteLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const [opportunityModalVisible, setOpportunityModalVisible] = useState(false);
+  const [selectedPartnerDemand, setSelectedPartnerDemand] =
+    useState<PartnerDemandOpportunity | null>(null);
+  const [selectedPartnerHarvest, setSelectedPartnerHarvest] =
+    useState<PartnerHarvestOpportunity | null>(null);
+
+  const [myHarvests, setMyHarvests] = useState<Harvest[]>([]);
+  const [myDemands, setMyDemands] = useState<MillerDemand[]>([]);
+  const [resourcesLoading, setResourcesLoading] = useState(false);
+  const [selectedResourceId, setSelectedResourceId] = useState<string | null>(
+    null
+  );
+
+  const [fontsLoaded] = useFonts({
+    Poppins_800ExtraBold,
+    Poppins_700Bold,
+    Poppins_600SemiBold,
+    Poppins_500Medium,
+  });
+
+  // Entrance animation — presentation only, mirrors the other marketplace screens.
+  const contentFade = useRef(new Animated.Value(0)).current;
+  const contentRise = useRef(new Animated.Value(14)).current;
+
+  const isFarmer = user?.role === "farmer";
+
+  const theme = useMemo<Theme>(
+    () =>
+      isFarmer
+        ? {
+            primary: "#15803D",
+            dark: "#14532D",
+            soft: "#DCFCE7",
+            border: "#BBF7D0",
+            page: "#F8FAF8",
+            cardBorder: "#E5E7EB",
+          }
+        : {
+            primary: "#92400E",
+            dark: "#78350F",
+            soft: "#FEF3C7",
+            border: "#FDE68A",
+            page: "#FBF8F1",
+            cardBorder: "#ECE6D6",
+          },
+    [isFarmer]
+  );
+
+  const partnerType = params.partnerType as PartnerType | undefined;
+  const partnerId = params.partnerId;
+
+  const loadPartner = useCallback(async () => {
+    if (!partnerType || !partnerId) {
+      setErrorMessage("Partner information is missing.");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setErrorMessage(null);
+      setLoading(true);
+
+      const response = await partnerService.getPartnerDetails(
+        partnerType,
+        partnerId
+      );
+
+      setData(response.data);
+    } catch (error) {
+      setErrorMessage(getApiErrorMessage(error));
+    } finally {
+      setLoading(false);
+    }
+  }, [partnerType, partnerId]);
+
+  useFocusEffect(
+    useCallback(() => {
+      void loadPartner();
+    }, [loadPartner])
+  );
+
+  useEffect(() => {
+    if (!fontsLoaded || loading) return;
+    contentFade.setValue(0);
+    contentRise.setValue(14);
+    Animated.parallel([
+      Animated.timing(contentFade, {
+        toValue: 1,
+        duration: 380,
+        useNativeDriver: true,
+      }),
+      Animated.timing(contentRise, {
+        toValue: 0,
+        duration: 380,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [fontsLoaded, loading]);
+
+  async function toggleFavorite() {
+    if (!data || !partnerType || !partnerId || favoriteLoading) {
+      return;
+    }
+
+    try {
+      setFavoriteLoading(true);
+
+      if (data.isFavorite) {
+        await partnerService.removeFavorite(partnerType, partnerId);
+      } else {
+        await partnerService.addFavorite(partnerType, partnerId);
+      }
+
+      setData((current) =>
+        current ? { ...current, isFavorite: !current.isFavorite } : current
+      );
+    } catch (error) {
+      console.error("Favourite update failed:", error);
+    } finally {
+      setFavoriteLoading(false);
+    }
+  }
+
+  async function callPartner() {
+    const phone = data?.contact?.phone;
+    if (!phone) return;
+    await Linking.openURL(`tel:${phone}`);
+  }
+
+  async function openWhatsApp() {
+    const phone = data?.contact?.phone;
+    if (!phone) return;
+    await Linking.openURL(
+      `https://wa.me/${normalizeSriLankanPhone(phone)}`
+    );
+  }
+
+  async function openDemandMatching(demand: PartnerDemandOpportunity) {
+    try {
+      setSelectedPartnerDemand(demand);
+      setSelectedPartnerHarvest(null);
+      setSelectedResourceId(null);
+      setMyHarvests([]);
+      setOpportunityModalVisible(true);
+      setResourcesLoading(true);
+
+      const response = await harvestService.getMyHarvests();
+
+      const availableHarvests = Array.isArray(response.data)
+        ? response.data.filter(
+            (harvest) =>
+              harvest.status === "available" &&
+              harvest.paddyType.trim().toLowerCase() ===
+                demand.paddyType.trim().toLowerCase()
+          )
+        : [];
+
+      setMyHarvests(availableHarvests);
+    } catch (error) {
+      setOpportunityModalVisible(false);
+      Alert.alert("Unable to load Harvests", getApiErrorMessage(error));
+    } finally {
+      setResourcesLoading(false);
+    }
+  }
+
+  async function openHarvestMatching(harvest: PartnerHarvestOpportunity) {
+    try {
+      setSelectedPartnerHarvest(harvest);
+      setSelectedPartnerDemand(null);
+      setSelectedResourceId(null);
+      setMyDemands([]);
+      setOpportunityModalVisible(true);
+      setResourcesLoading(true);
+
+      const response = await demandService.getMyDemands();
+
+      const openDemands = Array.isArray(response.data)
+        ? response.data.filter(
+            (demand) =>
+              demand.status === "open" &&
+              demand.paddyType.trim().toLowerCase() ===
+                harvest.paddyType.trim().toLowerCase()
+          )
+        : [];
+
+      setMyDemands(openDemands);
+    } catch (error) {
+      setOpportunityModalVisible(false);
+      Alert.alert("Unable to load Demands", getApiErrorMessage(error));
+    } finally {
+      setResourcesLoading(false);
+    }
+  }
+
+  function closeOpportunityModal() {
+    setOpportunityModalVisible(false);
+    setSelectedPartnerDemand(null);
+    setSelectedPartnerHarvest(null);
+    setSelectedResourceId(null);
+  }
+
+  function continueToMatching() {
+    if (!selectedResourceId) return;
+
+    const resourceId = selectedResourceId;
+    closeOpportunityModal();
+
+    if (user?.role === "farmer") {
+      router.push({
+        pathname: "/(c03-marketplace)/(farmer)/matched-millers" as any,
+        params: { harvestId: resourceId },
+      });
+      return;
+    }
+
+    router.push({
+      pathname: "/(c03-marketplace)/(miller)/matched-farmers" as any,
+      params: { demandId: resourceId },
+    });
+  }
+
+  function createMissingResource() {
+    closeOpportunityModal();
+
+    if (user?.role === "farmer") {
+      router.push("/(c03-marketplace)/(farmer)/add-harvest" as any);
+      return;
+    }
+
+    router.push("/(c03-marketplace)/(miller)/create-demand" as any);
+  }
+
+  if (!fontsLoaded) return null;
+
+  if (loading) {
+    return (
+      <SafeAreaView style={[styles.screen, { backgroundColor: theme.page }]}>
+        <View style={styles.centerState}>
+          <ActivityIndicator size="large" color={theme.primary} />
+          <Text style={styles.stateTitle}>Loading partner</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (errorMessage || !data) {
+    return (
+      <SafeAreaView style={[styles.screen, { backgroundColor: theme.page }]}>
+        <View style={styles.centerState}>
+          <Ionicons name="warning-outline" size={36} color="#B91C1C" />
+
+          <Text style={styles.stateTitle}>Unable to load partner</Text>
+
+          <Text style={styles.errorDescription}>{errorMessage}</Text>
+
+          <Pressable
+            style={[styles.backButtonLarge, { backgroundColor: theme.primary }]}
+            onPress={() => router.back()}
+          >
+            <Text style={styles.backButtonText}>Go back</Text>
+          </Pressable>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  const { partner, relationship, summary, opportunities } = data;
+
+  const connected = relationship.connected;
+  const hasTrades = relationship.hasTraded;
+
+  const opportunityCount =
+    partner.type === "miller"
+      ? opportunities.demands.length
+      : opportunities.harvests.length;
+
+  return (
+    <SafeAreaView style={[styles.screen, { backgroundColor: theme.page }]}>
+      <View
+        style={[
+          styles.header,
+          { backgroundColor: "#FFFFFF", borderBottomColor: theme.cardBorder },
+        ]}
+      >
+        <Pressable
+          onPress={() => router.back()}
+          style={({ pressed }) => [
+            styles.headerButton,
+            { borderColor: theme.cardBorder },
+            pressed && styles.pressed,
+          ]}
+        >
+          <Ionicons name="arrow-back" size={20} color="#1F2937" />
+        </Pressable>
+
+        <View style={{ flex: 1 }}>
+          <Text style={styles.headerTitle}>Partner Details</Text>
+
+          <Text style={styles.headerSubtitle}>
+            Profile, opportunities and trading history
+          </Text>
+        </View>
+
+        <Pressable
+          disabled={favoriteLoading}
+          onPress={() => void toggleFavorite()}
+          style={({ pressed }) => [
+            styles.favoriteButton,
+            {
+              backgroundColor: data.isFavorite ? theme.soft : "#FFFFFF",
+              borderColor: data.isFavorite ? theme.border : theme.cardBorder,
+            },
+            pressed && styles.pressed,
+          ]}
+        >
+          {favoriteLoading ? (
+            <ActivityIndicator size="small" color={theme.primary} />
+          ) : (
+            <Ionicons
+              name={data.isFavorite ? "star" : "star-outline"}
+              size={19}
+              color={data.isFavorite ? "#D97706" : "#64748B"}
+            />
+          )}
+        </Pressable>
+      </View>
+
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <Animated.View
+          style={{ opacity: contentFade, transform: [{ translateY: contentRise }] }}
+        >
+          <LinearGradient
+            colors={[theme.dark, theme.primary]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.profileHero}
+          >
+            <View style={styles.heroAvatar}>
+              <Ionicons
+                name={partner.type === "miller" ? "business" : "leaf"}
+                size={30}
+                color="#FFFFFF"
+              />
+            </View>
+
+            <Text style={styles.partnerName}>{partner.name}</Text>
+
+            <View style={styles.locationRow}>
+              <Ionicons
+                name="location-outline"
+                size={13}
+                color="rgba(255,255,255,0.75)"
+              />
+
+              <Text style={styles.heroLocation}>
+                {partner.district} • {partner.location}
+              </Text>
+            </View>
+
+            <View style={styles.heroBadges}>
+              {connected ? <HeroBadge icon="people" label="Connected" /> : null}
+              {hasTrades ? (
+                <HeroBadge icon="receipt" label="Trade partner" />
+              ) : null}
+              {data.isFavorite ? (
+                <HeroBadge icon="star" label="Favourite" />
+              ) : null}
+            </View>
+          </LinearGradient>
+
+          <View style={[styles.relationshipCard, { borderColor: theme.cardBorder }]}>
+            <View style={[styles.relationshipIcon, { backgroundColor: theme.soft }]}>
+              <Ionicons
+                name={connected ? "shield-checkmark-outline" : "receipt-outline"}
+                size={21}
+                color={theme.primary}
+              />
+            </View>
+
+            <View style={{ flex: 1 }}>
+              <Text style={styles.relationshipTitle}>
+                {connected
+                  ? "Trusted marketplace connection"
+                  : "Trading relationship"}
+              </Text>
+
+              <Text style={styles.relationshipText}>
+                {connected
+                  ? "You are connected. Contact details and current marketplace opportunities are available."
+                  : "You have previously completed a successful AI negotiation with this partner."}
+              </Text>
+            </View>
+          </View>
+
+          <Text style={styles.sectionTitle}>Partner information</Text>
+
+          <View style={[styles.infoCard, { borderColor: theme.cardBorder }]}>
+            <InfoRow
+              icon="location-outline"
+              label="District"
+              value={partner.district}
+              theme={theme}
+            />
+
+            <InfoRow
+              icon="navigate-outline"
+              label="Location"
+              value={partner.location}
+              theme={theme}
+            />
+
+            {partner.type === "miller" ? (
+              <>
+                <InfoRow
+                  icon="business-outline"
+                  label="Rice mill"
+                  value={partner.millName ?? partner.name}
+                  theme={theme}
+                />
+
+                <InfoRow
+                  icon="person-outline"
+                  label="Representative"
+                  value={partner.personName || "Not provided"}
+                  theme={theme}
+                />
+
+                <InfoRow
+                  icon="document-text-outline"
+                  label="Registration"
+                  value={partner.businessRegistrationNumber || "Not provided"}
+                  theme={theme}
+                  isLast
+                />
+              </>
+            ) : (
+              <>
+                <InfoRow
+                  icon="business-outline"
+                  label="Farm"
+                  value={partner.farmName || "Not provided"}
+                  theme={theme}
+                />
+
+                <InfoRow
+                  icon="resize-outline"
+                  label="Farm size"
+                  value={`${formatNumber(partner.farmSizeAcres ?? 0)} acres`}
+                  theme={theme}
+                />
+
+                <InfoRow
+                  icon="leaf-outline"
+                  label="Main variety"
+                  value={partner.mainPaddyVariety || "Not provided"}
+                  theme={theme}
+                  isLast
+                />
+              </>
+            )}
+          </View>
+
+          <Text style={styles.sectionTitle}>Contact</Text>
+
+          {data.contactUnlocked && data.contact ? (
+            <View style={[styles.contactCard, { borderColor: theme.border }]}>
+              <View style={styles.contactTop}>
+                <View style={[styles.contactIcon, { backgroundColor: theme.soft }]}>
+                  <Ionicons name="call-outline" size={19} color={theme.primary} />
+                </View>
+
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.contactLabel}>CONTACT UNLOCKED</Text>
+
+                  <Text style={styles.contactName}>{data.contact.fullName}</Text>
+
+                  <Text style={[styles.contactNumber, { color: theme.dark }]}>
+                    {data.contact.phone}
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.contactActions}>
+                <Pressable
+                  onPress={() => void callPartner()}
+                  style={({ pressed }) => [
+                    styles.contactAction,
+                    { backgroundColor: theme.primary },
+                    pressed && styles.pressed,
+                  ]}
+                >
+                  <Ionicons name="call" size={16} color="#FFFFFF" />
+                  <Text style={styles.contactActionText}>Call</Text>
+                </Pressable>
+
+                <Pressable
+                  onPress={() => void openWhatsApp()}
+                  style={({ pressed }) => [
+                    styles.contactAction,
+                    styles.whatsappAction,
+                    pressed && styles.pressed,
+                  ]}
+                >
+                  <Ionicons name="logo-whatsapp" size={17} color="#FFFFFF" />
+                  <Text style={styles.contactActionText}>WhatsApp</Text>
+                </Pressable>
+              </View>
+            </View>
+          ) : (
+            <View style={[styles.lockedCard, { borderColor: theme.cardBorder }]}>
+              <Ionicons name="lock-closed-outline" size={21} color="#64748B" />
+
+              <View style={{ flex: 1 }}>
+                <Text style={styles.lockedTitle}>Contact protected</Text>
+
+                <Text style={styles.lockedText}>
+                  Contact details require an accepted connection or approved
+                  contact request.
+                </Text>
+              </View>
+            </View>
+          )}
+
+          {connected ? (
+            <>
+              <View style={styles.opportunityHeader}>
+                <View>
+                  <Text style={styles.sectionTitle}>
+                    {partner.type === "miller"
+                      ? "Active Demands"
+                      : "Available Harvests"}
+                  </Text>
+
+                  <Text style={styles.sectionSubtitle}>
+                    Current opportunities from this partner
+                  </Text>
+                </View>
+
+                <View style={[styles.countBadge, { backgroundColor: theme.soft }]}>
+                  <Text style={[styles.countBadgeText, { color: theme.primary }]}>
+                    {opportunityCount}
+                  </Text>
+                </View>
+              </View>
+
+              {partner.type === "miller" ? (
+                <DemandOpportunities
+                  demands={opportunities.demands}
+                  theme={theme}
+                  onMatch={openDemandMatching}
+                />
+              ) : (
+                <HarvestOpportunities
+                  harvests={opportunities.harvests}
+                  theme={theme}
+                  onMatch={openHarvestMatching}
+                />
+              )}
+            </>
+          ) : null}
+
+          {hasTrades ? (
+            <>
+              <Text style={styles.sectionTitle}>Trading summary</Text>
+
+              <View style={styles.summaryGrid}>
+                <SummaryCard
+                  icon="receipt-outline"
+                  label="Agreements"
+                  value={String(summary.totalAgreements)}
+                  theme={theme}
+                />
+
+                <SummaryCard
+                  icon="cube-outline"
+                  label="Quantity"
+                  value={`${formatNumber(summary.totalQuantityKg)} kg`}
+                  theme={theme}
+                />
+
+                <SummaryCard
+                  icon="cash-outline"
+                  label="Average price"
+                  value={formatCurrency(summary.averageAgreedPrice)}
+                  theme={theme}
+                />
+
+                <SummaryCard
+                  icon="trending-up-outline"
+                  label="Latest price"
+                  value={formatCurrency(summary.latestAgreedPrice)}
+                  theme={theme}
+                />
+              </View>
+
+              {typeof summary.totalTradeValue === "number" ? (
+                <View style={[styles.tradeValueCard, { borderColor: theme.cardBorder }]}>
+                  <View style={[styles.tradeValueIcon, { backgroundColor: theme.soft }]}>
+                    <Ionicons name="wallet-outline" size={19} color={theme.primary} />
+                  </View>
+
+                  <View>
+                    <Text style={styles.tradeValueLabel}>TOTAL TRADE VALUE</Text>
+
+                    <Text style={styles.tradeValue}>
+                      {formatCurrency(summary.totalTradeValue)}
+                    </Text>
+                  </View>
+                </View>
+              ) : null}
+
+              <View style={styles.historyHeader}>
+                <View>
+                  <Text style={styles.sectionTitle}>Transaction History</Text>
+
+                  <Text style={styles.sectionSubtitle}>
+                    {data.transactions.length} successful agreement
+                    {data.transactions.length === 1 ? "" : "s"}
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.historyList}>
+                {data.transactions.map((transaction) => (
+                  <View
+                    key={transaction.negotiationMongoId}
+                    style={[styles.historyCard, { borderColor: theme.cardBorder }]}
+                  >
+                    <View style={styles.historyTop}>
+                      <View style={[styles.historyIcon, { backgroundColor: theme.soft }]}>
+                        <Ionicons
+                          name="receipt-outline"
+                          size={18}
+                          color={theme.primary}
+                        />
+                      </View>
+
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.historyTitle}>
+                          {formatPaddyType(transaction.paddyType)}
+                        </Text>
+
+                        <Text style={styles.historyDate}>
+                          {formatDate(transaction.createdAt)}
+                        </Text>
+                      </View>
+
+                      <Text style={[styles.historyPrice, { color: theme.primary }]}>
+                        {formatCurrency(transaction.agreedPrice)}
+                      </Text>
+                    </View>
+
+                    <View style={styles.historyMetrics}>
+                      <SmallMetric
+                        label="Quantity"
+                        value={`${formatNumber(transaction.quantityKg)} kg`}
+                      />
+
+                      <SmallMetric
+                        label="Rounds"
+                        value={String(transaction.roundsCompleted)}
+                      />
+
+                      <SmallMetric
+                        label="Value"
+                        value={formatCurrency(transaction.totalValue)}
+                      />
+                    </View>
+                  </View>
+                ))}
+              </View>
+            </>
+          ) : (
+            <View style={[styles.noTradeCard, { borderColor: theme.cardBorder }]}>
+              <Ionicons name="sparkles-outline" size={23} color={theme.primary} />
+
+              <View style={{ flex: 1 }}>
+                <Text style={styles.noTradeTitle}>No completed trades yet</Text>
+
+                <Text style={styles.noTradeText}>
+                  You are connected, but you have not completed an AI
+                  negotiation with this partner yet.
+                </Text>
+              </View>
+            </View>
+          )}
+        </Animated.View>
+      </ScrollView>
+
+      <Modal
+        visible={opportunityModalVisible}
+        transparent
+        animationType="fade"
+        statusBarTranslucent
+        onRequestClose={closeOpportunityModal}
+      >
+        <Pressable style={styles.modalOverlay} onPress={closeOpportunityModal}>
+          <Pressable style={styles.matchModal} onPress={() => {}}>
+            <View style={styles.modalHandle} />
+
+            <View style={styles.modalHeader}>
+              <View style={[styles.modalIcon, { backgroundColor: theme.soft }]}>
+                <Ionicons name="git-compare-outline" size={22} color={theme.primary} />
+              </View>
+
+              <View style={{ flex: 1 }}>
+                <Text style={styles.modalTitle}>Match Opportunity</Text>
+
+                <Text style={styles.modalSubtitle}>
+                  {user?.role === "farmer"
+                    ? "Choose one of your available Harvests"
+                    : "Choose one of your open Demands"}
+                </Text>
+              </View>
+
+              <Pressable onPress={closeOpportunityModal} style={styles.modalClose}>
+                <Ionicons name="close" size={19} color="#64748B" />
+              </Pressable>
+            </View>
+
+            {selectedPartnerDemand ? (
+              <View style={styles.targetOpportunity}>
+                <Text style={styles.targetLabel}>MILLER DEMAND</Text>
+
+                <Text style={styles.targetTitle}>
+                  {formatPaddyType(selectedPartnerDemand.paddyType)}
+                </Text>
+
+                <Text style={styles.targetText}>
+                  {formatNumber(selectedPartnerDemand.quantityNeeded)} kg •{" "}
+                  {formatCurrency(selectedPartnerDemand.offeredPrice)}/kg
+                </Text>
+              </View>
+            ) : null}
+
+            {selectedPartnerHarvest ? (
+              <View style={styles.targetOpportunity}>
+                <Text style={styles.targetLabel}>FARMER HARVEST</Text>
+
+                <Text style={styles.targetTitle}>
+                  {formatPaddyType(selectedPartnerHarvest.paddyType)}
+                </Text>
+
+                <Text style={styles.targetText}>
+                  {formatNumber(selectedPartnerHarvest.quantity)} kg • Expected{" "}
+                  {formatCurrency(selectedPartnerHarvest.expectedPrice)}/kg
+                </Text>
+              </View>
+            ) : null}
+
+            <Text style={styles.chooseTitle}>
+              {user?.role === "farmer" ? "Choose your Harvest" : "Choose your Demand"}
+            </Text>
+
+            {resourcesLoading ? (
+              <View style={styles.modalLoading}>
+                <ActivityIndicator color={theme.primary} />
+
+                <Text style={styles.modalLoadingText}>
+                  Loading compatible marketplace records...
+                </Text>
+              </View>
+            ) : user?.role === "farmer" ? (
+              myHarvests.length > 0 ? (
+                <ScrollView style={styles.resourceList} showsVerticalScrollIndicator={false}>
+                  {myHarvests.map((harvest) => {
+                    const selected = selectedResourceId === harvest._id;
+
+                    return (
+                      <Pressable
+                        key={harvest._id}
+                        onPress={() => setSelectedResourceId(harvest._id)}
+                        style={[
+                          styles.resourceCard,
+                          selected && {
+                            borderColor: theme.primary,
+                            backgroundColor: theme.soft,
+                          },
+                        ]}
+                      >
+                        <View style={styles.radioOuter}>
+                          {selected ? (
+                            <View
+                              style={[styles.radioInner, { backgroundColor: theme.primary }]}
+                            />
+                          ) : null}
+                        </View>
+
+                        <View style={{ flex: 1 }}>
+                          <Text style={styles.resourceTitle}>
+                            {formatPaddyType(harvest.paddyType)}
+                          </Text>
+
+                          <Text style={styles.resourceText}>
+                            {formatNumber(harvest.quantity)} kg •{" "}
+                            {formatPaddyType(harvest.season)}
+                          </Text>
+
+                          <Text style={styles.resourcePrice}>
+                            Expected {formatCurrency(harvest.expectedPrice)}/kg
+                          </Text>
+                        </View>
+                      </Pressable>
+                    );
+                  })}
+                </ScrollView>
+              ) : (
+                <NoCompatibleResource
+                  role="farmer"
+                  theme={theme}
+                  onCreate={createMissingResource}
+                />
+              )
+            ) : myDemands.length > 0 ? (
+              <ScrollView style={styles.resourceList} showsVerticalScrollIndicator={false}>
+                {myDemands.map((demand) => {
+                  const selected = selectedResourceId === demand._id;
+
+                  return (
+                    <Pressable
+                      key={demand._id}
+                      onPress={() => setSelectedResourceId(demand._id)}
+                      style={[
+                        styles.resourceCard,
+                        selected && {
+                          borderColor: theme.primary,
+                          backgroundColor: theme.soft,
+                        },
+                      ]}
+                    >
+                      <View style={styles.radioOuter}>
+                        {selected ? (
+                          <View
+                            style={[styles.radioInner, { backgroundColor: theme.primary }]}
+                          />
+                        ) : null}
+                      </View>
+
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.resourceTitle}>
+                          {formatPaddyType(demand.paddyType)}
+                        </Text>
+
+                        <Text style={styles.resourceText}>
+                          {formatNumber(demand.quantityNeeded)} kg needed
+                        </Text>
+
+                        <Text style={styles.resourcePrice}>
+                          Offer {formatCurrency(demand.offeredPrice)}/kg
+                        </Text>
+                      </View>
+                    </Pressable>
+                  );
+                })}
+              </ScrollView>
+            ) : (
+              <NoCompatibleResource
+                role="miller"
+                theme={theme}
+                onCreate={createMissingResource}
+              />
+            )}
+
+            <View style={styles.modalInfo}>
+              <Ionicons name="shield-checkmark-outline" size={16} color="#64748B" />
+
+              <Text style={styles.modalInfoText}>
+                The AI matching engine will still calculate compatibility before a
+                match request can be sent.
+              </Text>
+            </View>
+
+            <Pressable
+              disabled={!selectedResourceId || resourcesLoading}
+              onPress={continueToMatching}
+              style={[
+                styles.continueButton,
+                { backgroundColor: theme.primary },
+                (!selectedResourceId || resourcesLoading) && styles.disabledButton,
+              ]}
+            >
+              <Ionicons name="sparkles" size={17} color="#FFFFFF" />
+              <Text style={styles.continueButtonText}>Check AI Match</Text>
+            </Pressable>
+          </Pressable>
+        </Pressable>
+      </Modal>
+    </SafeAreaView>
+  );
+}
+
+function DemandOpportunities({
+  demands,
+  theme,
+  onMatch,
+}: {
+  demands: PartnerDemandOpportunity[];
+  theme: Theme;
+  onMatch: (demand: PartnerDemandOpportunity) => void;
+}) {
+  if (demands.length === 0) {
+    return (
+      <OpportunityEmpty
+        text="This Miller currently has no open demands."
+        theme={theme}
+      />
+    );
+  }
+
+  return (
+    <View style={styles.opportunityList}>
+      {demands.map((demand) => (
+        <View
+          key={demand._id}
+          style={[styles.opportunityCard, { borderColor: theme.cardBorder }]}
+        >
+          <View style={styles.opportunityTop}>
+            <View style={[styles.opportunityIcon, { backgroundColor: theme.soft }]}>
+              <Ionicons name="storefront-outline" size={19} color={theme.primary} />
+            </View>
+
+            <View style={{ flex: 1 }}>
+              <Text style={styles.opportunityTitle}>
+                {formatPaddyType(demand.paddyType)}
+              </Text>
+
+              <Text style={styles.opportunitySubtitle}>Open Miller Demand</Text>
+            </View>
+
+            <BadgeText text="OPEN" theme={theme} />
+          </View>
+
+          <View style={styles.opportunityMetrics}>
+            <SmallMetric
+              label="Quantity"
+              value={`${formatNumber(demand.quantityNeeded)} kg`}
+            />
+
+            <SmallMetric
+              label="Offer"
+              value={`${formatCurrency(demand.offeredPrice)}/kg`}
+            />
+          </View>
+
+          <Pressable
+            onPress={() => onMatch(demand)}
+            style={({ pressed }) => [
+              styles.matchOpportunityButton,
+              { backgroundColor: theme.primary },
+              pressed && styles.pressed,
+            ]}
+          >
+            <Ionicons name="git-compare-outline" size={16} color="#FFFFFF" />
+            <Text style={styles.matchOpportunityText}>Match with this Demand</Text>
+          </Pressable>
+        </View>
+      ))}
+    </View>
+  );
+}
+
+function HarvestOpportunities({
+  harvests,
+  theme,
+  onMatch,
+}: {
+  harvests: PartnerHarvestOpportunity[];
+  theme: Theme;
+  onMatch: (harvest: PartnerHarvestOpportunity) => void;
+}) {
+  if (harvests.length === 0) {
+    return (
+      <OpportunityEmpty
+        text="This Farmer currently has no available harvests."
+        theme={theme}
+      />
+    );
+  }
+
+  return (
+    <View style={styles.opportunityList}>
+      {harvests.map((harvest) => (
+        <View
+          key={harvest._id}
+          style={[styles.opportunityCard, { borderColor: theme.cardBorder }]}
+        >
+          <View style={styles.opportunityTop}>
+            <View style={[styles.opportunityIcon, { backgroundColor: theme.soft }]}>
+              <Ionicons name="leaf-outline" size={19} color={theme.primary} />
+            </View>
+
+            <View style={{ flex: 1 }}>
+              <Text style={styles.opportunityTitle}>
+                {formatPaddyType(harvest.paddyType)}
+              </Text>
+
+              <Text style={styles.opportunitySubtitle}>
+                {formatPaddyType(harvest.season)} Harvest
+              </Text>
+            </View>
+
+            <BadgeText text="AVAILABLE" theme={theme} />
+          </View>
+
+          <View style={styles.opportunityMetrics}>
+            <SmallMetric
+              label="Quantity"
+              value={`${formatNumber(harvest.quantity)} kg`}
+            />
+
+            <SmallMetric
+              label="Expected"
+              value={`${formatCurrency(harvest.expectedPrice)}/kg`}
+            />
+
+            <SmallMetric
+              label="AI price"
+              value={`${formatCurrency(harvest.aiPredictedPrice)}/kg`}
+            />
+          </View>
+
+          <Pressable
+            onPress={() => onMatch(harvest)}
+            style={({ pressed }) => [
+              styles.matchOpportunityButton,
+              { backgroundColor: theme.primary },
+              pressed && styles.pressed,
+            ]}
+          >
+            <Ionicons name="git-compare-outline" size={16} color="#FFFFFF" />
+            <Text style={styles.matchOpportunityText}>Match with this Harvest</Text>
+          </Pressable>
+        </View>
+      ))}
+    </View>
+  );
+}
+
+function OpportunityEmpty({ text, theme }: { text: string; theme: Theme }) {
+  return (
+    <View style={[styles.opportunityEmpty, { borderColor: theme.cardBorder }]}>
+      <Ionicons name="information-circle-outline" size={19} color={theme.primary} />
+      <Text style={styles.opportunityEmptyText}>{text}</Text>
+    </View>
+  );
+}
+
+function NoCompatibleResource({
+  role,
+  theme,
+  onCreate,
+}: {
+  role: "farmer" | "miller";
+  theme: Theme;
+  onCreate: () => void;
+}) {
+  return (
+    <View style={styles.noResourceCard}>
+      <View style={[styles.noResourceIcon, { backgroundColor: theme.soft }]}>
+        <Ionicons
+          name={role === "farmer" ? "leaf-outline" : "storefront-outline"}
+          size={24}
+          color={theme.primary}
+        />
+      </View>
+
+      <Text style={styles.noResourceTitle}>
+        No compatible {role === "farmer" ? "Harvest" : "Demand"}
+      </Text>
+
+      <Text style={styles.noResourceText}>
+        {role === "farmer"
+          ? "You need an available Harvest of the same paddy variety before checking this match."
+          : "You need an open Demand of the same paddy variety before checking this match."}
+      </Text>
+
+      <Pressable
+        style={({ pressed }) => [
+          styles.createResourceButton,
+          { backgroundColor: theme.primary },
+          pressed && styles.pressed,
+        ]}
+        onPress={onCreate}
+      >
+        <Ionicons name="add" size={16} color="#FFFFFF" />
+        <Text style={styles.createResourceText}>
+          {role === "farmer" ? "Add Harvest" : "Create Demand"}
+        </Text>
+      </Pressable>
+    </View>
+  );
+}
+
+function InfoRow({
+  icon,
+  label,
+  value,
+  theme,
+  isLast = false,
+}: {
+  icon: keyof typeof Ionicons.glyphMap;
+  label: string;
+  value: string;
+  theme: Theme;
+  isLast?: boolean;
+}) {
+  return (
+    <View style={[styles.infoRow, isLast && styles.infoRowLast]}>
+      <View style={[styles.infoIcon, { backgroundColor: theme.soft }]}>
+        <Ionicons name={icon} size={17} color={theme.primary} />
+      </View>
+
+      <View style={{ flex: 1 }}>
+        <Text style={styles.infoLabel}>{label}</Text>
+        <Text style={styles.infoValue}>{value}</Text>
+      </View>
+    </View>
+  );
+}
+
+function SummaryCard({
+  icon,
+  label,
+  value,
+  theme,
+}: {
+  icon: keyof typeof Ionicons.glyphMap;
+  label: string;
+  value: string;
+  theme: Theme;
+}) {
+  return (
+    <View style={[styles.summaryCard, { borderColor: theme.cardBorder }]}>
+      <View style={[styles.summaryIcon, { backgroundColor: theme.soft }]}>
+        <Ionicons name={icon} size={17} color={theme.primary} />
+      </View>
+
+      <Text style={styles.summaryLabel}>{label}</Text>
+
+      <Text style={styles.summaryValue} numberOfLines={1}>
+        {value}
+      </Text>
+    </View>
+  );
+}
+
+function HeroBadge({
+  icon,
+  label,
+}: {
+  icon: keyof typeof Ionicons.glyphMap;
+  label: string;
+}) {
+  return (
+    <View style={styles.heroBadge}>
+      <Ionicons name={icon} size={11} color="#FFFFFF" />
+      <Text style={styles.heroBadgeText}>{label}</Text>
+    </View>
+  );
+}
+
+function SmallMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <View style={{ flex: 1 }}>
+      <Text style={styles.smallMetricLabel}>{label}</Text>
+      <Text style={styles.smallMetricValue} numberOfLines={1}>
+        {value}
+      </Text>
+    </View>
+  );
+}
+
+function BadgeText({ text, theme }: { text: string; theme: Theme }) {
+  return (
+    <View style={[styles.statusBadge, { backgroundColor: theme.soft }]}>
+      <Text style={[styles.statusBadgeText, { color: theme.dark }]}>{text}</Text>
+    </View>
+  );
+}
+
+function normalizeSriLankanPhone(phone: string) {
+  const value = phone.replace(/\D/g, "");
+
+  if (value.length === 10 && value.startsWith("0")) {
+    return `94${value.slice(1)}`;
+  }
+
+  if (value.length === 9 && value.startsWith("7")) {
+    return `94${value}`;
+  }
+
+  return value;
+}
+
+function formatPaddyType(value: string) {
+  return value.replace(/_/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function formatNumber(value: number) {
+  return new Intl.NumberFormat("en-LK", { maximumFractionDigits: 2 }).format(value);
+}
+
+function formatCurrency(value: number) {
+  return `Rs. ${new Intl.NumberFormat("en-LK", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value)}`;
+}
+
+function formatDate(value: string | null | undefined) {
+  if (!value) return "No date";
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "Date unavailable";
+  }
+
+  return new Intl.DateTimeFormat("en-LK", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  }).format(date);
+}
+
+type Theme = {
+  primary: string;
+  dark: string;
+  soft: string;
+  border: string;
+  page: string;
+  cardBorder: string;
+};
+
+const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+  },
+
+  header: {
+    minHeight: 68,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 11,
+    paddingHorizontal: 17,
+    borderBottomWidth: 1,
+  },
+
+  headerButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 13,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+  },
+
+  headerTitle: {
+    color: "#1F2937",
+    fontSize: 15.5,
+    fontFamily: "Poppins_800ExtraBold",
+  },
+
+  headerSubtitle: {
+    color: "#64748B",
+    fontSize: 9,
+    fontFamily: "Poppins_500Medium",
+    marginTop: 2,
+  },
+
+  favoriteButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 13,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+  },
+
+  content: {
+    padding: 17,
+    paddingBottom: 120,
+  },
+
+  centerState: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 30,
+  },
+
+  stateTitle: {
+    color: "#1F2937",
+    fontSize: 15,
+    fontFamily: "Poppins_800ExtraBold",
+    marginTop: 10,
+  },
+
+  errorDescription: {
+    color: "#64748B",
+    fontSize: 10.5,
+    fontFamily: "Poppins_500Medium",
+    textAlign: "center",
+    marginTop: 5,
+  },
+
+  backButtonLarge: {
+    paddingHorizontal: 22,
+    paddingVertical: 12,
+    borderRadius: 13,
+    marginTop: 16,
+  },
+
+  backButtonText: {
+    color: "#FFFFFF",
+    fontSize: 11,
+    fontFamily: "Poppins_800ExtraBold",
+  },
+
+  profileHero: {
+    alignItems: "center",
+    borderRadius: 24,
+    padding: 22,
+    marginBottom: 14,
+    overflow: "hidden",
+  },
+
+  heroAvatar: {
+    width: 72,
+    height: 72,
+    borderRadius: 22,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255,255,255,0.14)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.2)",
+  },
+
+  partnerName: {
+    color: "#FFFFFF",
+    fontSize: 18,
+    fontFamily: "Poppins_800ExtraBold",
+    textAlign: "center",
+    marginTop: 12,
+  },
+
+  locationRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    marginTop: 5,
+  },
+
+  heroLocation: {
+    color: "rgba(255,255,255,0.74)",
+    fontSize: 10.5,
+    fontFamily: "Poppins_500Medium",
+  },
+
+  heroBadges: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    gap: 6,
+    marginTop: 11,
+  },
+
+  heroBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+    borderRadius: 999,
+    backgroundColor: "rgba(255,255,255,0.14)",
+  },
+
+  heroBadgeText: {
+    color: "#FFFFFF",
+    fontSize: 8.5,
+    fontFamily: "Poppins_700Bold",
+  },
+
+  relationshipCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    padding: 13,
+    borderRadius: 17,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    marginBottom: 18,
+  },
+
+  relationshipIcon: {
+    width: 43,
+    height: 43,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  relationshipTitle: {
+    color: "#1F2937",
+    fontSize: 11.5,
+    fontFamily: "Poppins_700Bold",
+  },
+
+  relationshipText: {
+    color: "#64748B",
+    fontSize: 9,
+    fontFamily: "Poppins_500Medium",
+    lineHeight: 14,
+    marginTop: 3,
+  },
+
+  sectionTitle: {
+    color: "#1F2937",
+    fontSize: 14,
+    fontFamily: "Poppins_800ExtraBold",
+    marginBottom: 9,
+  },
+
+  sectionSubtitle: {
+    color: "#94A3B8",
+    fontSize: 9,
+    fontFamily: "Poppins_500Medium",
+    marginTop: -5,
+  },
+
+  infoCard: {
+    paddingHorizontal: 14,
+    borderRadius: 18,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    marginBottom: 18,
+  },
+
+  infoRow: {
+    minHeight: 61,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F1F5F9",
+  },
+
+  infoRowLast: {
+    borderBottomWidth: 0,
+  },
+
+  infoIcon: {
+    width: 37,
+    height: 37,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  infoLabel: {
+    color: "#94A3B8",
+    fontSize: 9,
+    fontFamily: "Poppins_600SemiBold",
+  },
+
+  infoValue: {
+    color: "#1F2937",
+    fontSize: 11.5,
+    fontFamily: "Poppins_700Bold",
+    marginTop: 2,
+  },
+
+  contactCard: {
+    padding: 14,
+    borderRadius: 18,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    marginBottom: 18,
+  },
+
+  contactTop: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+
+  contactIcon: {
+    width: 43,
+    height: 43,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  contactLabel: {
+    color: "#94A3B8",
+    fontSize: 8,
+    fontFamily: "Poppins_700Bold",
+    letterSpacing: 0.7,
+  },
+
+  contactName: {
+    color: "#1F2937",
+    fontSize: 12,
+    fontFamily: "Poppins_800ExtraBold",
+    marginTop: 2,
+  },
+
+  contactNumber: {
+    fontSize: 13.5,
+    fontFamily: "Poppins_800ExtraBold",
+    marginTop: 2,
+  },
+
+  contactActions: {
+    flexDirection: "row",
+    gap: 8,
+    marginTop: 12,
+  },
+
+  contactAction: {
+    flex: 1,
+    minHeight: 44,
+    borderRadius: 13,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+  },
+
+  contactActionText: {
+    color: "#FFFFFF",
+    fontSize: 10,
+    fontFamily: "Poppins_800ExtraBold",
+  },
+
+  whatsappAction: {
+    backgroundColor: "#16A34A",
+  },
+
+  lockedCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    padding: 13,
+    borderRadius: 17,
+    backgroundColor: "#F8FAFC",
+    borderWidth: 1,
+    marginBottom: 18,
+  },
+
+  lockedTitle: {
+    color: "#475569",
+    fontSize: 11,
+    fontFamily: "Poppins_800ExtraBold",
+  },
+
+  lockedText: {
+    color: "#64748B",
+    fontSize: 9,
+    fontFamily: "Poppins_500Medium",
+    lineHeight: 14,
+    marginTop: 2,
+  },
+
+  opportunityHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 9,
+  },
+
+  countBadge: {
+    minWidth: 29,
+    height: 29,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  countBadgeText: {
+    fontSize: 11,
+    fontFamily: "Poppins_800ExtraBold",
+  },
+
+  opportunityList: {
+    gap: 10,
+    marginBottom: 19,
+  },
+
+  opportunityCard: {
+    padding: 13,
+    borderRadius: 18,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+  },
+
+  opportunityTop: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 9,
+  },
+
+  opportunityIcon: {
+    width: 41,
+    height: 41,
+    borderRadius: 13,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  opportunityTitle: {
+    color: "#1F2937",
+    fontSize: 12,
+    fontFamily: "Poppins_800ExtraBold",
+  },
+
+  opportunitySubtitle: {
+    color: "#94A3B8",
+    fontSize: 9,
+    fontFamily: "Poppins_500Medium",
+    marginTop: 2,
+  },
+
+  statusBadge: {
+    paddingHorizontal: 7,
+    paddingVertical: 4,
+    borderRadius: 999,
+  },
+
+  statusBadgeText: {
+    fontSize: 7.5,
+    fontFamily: "Poppins_800ExtraBold",
+  },
+
+  opportunityMetrics: {
+    flexDirection: "row",
+    gap: 7,
+    padding: 9,
+    borderRadius: 12,
+    backgroundColor: "#F8FAFC",
+    marginTop: 10,
+  },
+
+  opportunityEmpty: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 9,
+    padding: 14,
+    borderRadius: 17,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    marginBottom: 18,
+  },
+
+  opportunityEmptyText: {
+    flex: 1,
+    color: "#64748B",
+    fontSize: 9.5,
+    fontFamily: "Poppins_500Medium",
+    lineHeight: 14,
+  },
+
+  summaryGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginBottom: 10,
+  },
+
+  summaryCard: {
+    width: "48.5%",
+    padding: 12,
+    borderRadius: 16,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+  },
+
+  summaryIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 11,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 8,
+  },
+
+  summaryLabel: {
+    color: "#94A3B8",
+    fontSize: 8,
+    fontFamily: "Poppins_600SemiBold",
+  },
+
+  summaryValue: {
+    color: "#1F2937",
+    fontSize: 11.5,
+    fontFamily: "Poppins_800ExtraBold",
+    marginTop: 3,
+  },
+
+  tradeValueCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    padding: 13,
+    borderRadius: 17,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    marginBottom: 19,
+  },
+
+  tradeValueIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 13,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  tradeValueLabel: {
+    color: "#94A3B8",
+    fontSize: 8,
+    fontFamily: "Poppins_800ExtraBold",
+  },
+
+  tradeValue: {
+    color: "#1F2937",
+    fontSize: 13.5,
+    fontFamily: "Poppins_800ExtraBold",
+    marginTop: 2,
+  },
+
+  historyHeader: {
+    marginTop: 2,
+    marginBottom: 9,
+  },
+
+  historyList: {
+    gap: 10,
+  },
+
+  historyCard: {
+    padding: 13,
+    borderRadius: 17,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+  },
+
+  historyTop: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 9,
+  },
+
+  historyIcon: {
+    width: 39,
+    height: 39,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  historyTitle: {
+    color: "#1F2937",
+    fontSize: 11.5,
+    fontFamily: "Poppins_800ExtraBold",
+  },
+
+  historyDate: {
+    color: "#94A3B8",
+    fontSize: 9,
+    fontFamily: "Poppins_500Medium",
+    marginTop: 2,
+  },
+
+  historyPrice: {
+    fontSize: 11.5,
+    fontFamily: "Poppins_800ExtraBold",
+  },
+
+  historyMetrics: {
+    flexDirection: "row",
+    gap: 7,
+    padding: 9,
+    borderRadius: 12,
+    backgroundColor: "#F8FAFC",
+    marginTop: 10,
+  },
+
+  smallMetricLabel: {
+    color: "#94A3B8",
+    fontSize: 7.5,
+    fontFamily: "Poppins_600SemiBold",
+  },
+
+  smallMetricValue: {
+    color: "#334155",
+    fontSize: 9,
+    fontFamily: "Poppins_800ExtraBold",
+    marginTop: 2,
+  },
+
+  noTradeCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    padding: 14,
+    borderRadius: 17,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    marginTop: 2,
+  },
+
+  noTradeTitle: {
+    color: "#1F2937",
+    fontSize: 11,
+    fontFamily: "Poppins_800ExtraBold",
+  },
+
+  noTradeText: {
+    color: "#64748B",
+    fontSize: 9,
+    fontFamily: "Poppins_500Medium",
+    lineHeight: 14,
+    marginTop: 2,
+  },
+
+  matchOpportunityButton: {
+    minHeight: 44,
+    borderRadius: 13,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    marginTop: 11,
+  },
+
+  matchOpportunityText: {
+    color: "#FFFFFF",
+    fontSize: 10,
+    fontFamily: "Poppins_800ExtraBold",
+  },
+
+  modalOverlay: {
+    flex: 1,
+    justifyContent: "flex-end",
+    backgroundColor: "rgba(15,23,42,0.46)",
+  },
+
+  matchModal: {
+    maxHeight: "88%",
+    paddingHorizontal: 18,
+    paddingTop: 10,
+    paddingBottom: 28,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    backgroundColor: "#FFFFFF",
+  },
+
+  modalHandle: {
+    alignSelf: "center",
+    width: 40,
+    height: 4,
+    borderRadius: 999,
+    backgroundColor: "#CBD5E1",
+    marginBottom: 16,
+  },
+
+  modalHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+
+  modalIcon: {
+    width: 47,
+    height: 47,
+    borderRadius: 15,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  modalTitle: {
+    color: "#1F2937",
+    fontSize: 15.5,
+    fontFamily: "Poppins_800ExtraBold",
+  },
+
+  modalSubtitle: {
+    color: "#64748B",
+    fontSize: 9,
+    fontFamily: "Poppins_500Medium",
+    marginTop: 2,
+  },
+
+  modalClose: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#F1F5F9",
+  },
+
+  targetOpportunity: {
+    padding: 13,
+    borderRadius: 16,
+    backgroundColor: "#F8FAFC",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    marginTop: 15,
+  },
+
+  targetLabel: {
+    color: "#94A3B8",
+    fontSize: 8,
+    fontFamily: "Poppins_800ExtraBold",
+    letterSpacing: 0.8,
+  },
+
+  targetTitle: {
+    color: "#1F2937",
+    fontSize: 12,
+    fontFamily: "Poppins_800ExtraBold",
+    marginTop: 4,
+  },
+
+  targetText: {
+    color: "#64748B",
+    fontSize: 9.5,
+    fontFamily: "Poppins_500Medium",
+    marginTop: 3,
+  },
+
+  chooseTitle: {
+    color: "#1F2937",
+    fontSize: 12,
+    fontFamily: "Poppins_800ExtraBold",
+    marginTop: 16,
+    marginBottom: 9,
+  },
+
+  modalLoading: {
+    minHeight: 130,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+  },
+
+  modalLoadingText: {
+    color: "#64748B",
+    fontSize: 9,
+    fontFamily: "Poppins_500Medium",
+  },
+
+  resourceList: {
+    maxHeight: 260,
+  },
+
+  resourceCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    padding: 12,
+    borderRadius: 15,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    marginBottom: 8,
+  },
+
+  radioOuter: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: "#CBD5E1",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  radioInner: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+
+  resourceTitle: {
+    color: "#1F2937",
+    fontSize: 11,
+    fontFamily: "Poppins_800ExtraBold",
+  },
+
+  resourceText: {
+    color: "#64748B",
+    fontSize: 9,
+    fontFamily: "Poppins_500Medium",
+    marginTop: 2,
+  },
+
+  resourcePrice: {
+    color: "#334155",
+    fontSize: 9.5,
+    fontFamily: "Poppins_700Bold",
+    marginTop: 3,
+  },
+
+  modalInfo: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 7,
+    padding: 10,
+    borderRadius: 13,
+    backgroundColor: "#F8FAFC",
+    marginTop: 11,
+  },
+
+  modalInfoText: {
+    flex: 1,
+    color: "#64748B",
+    fontSize: 9,
+    fontFamily: "Poppins_500Medium",
+    lineHeight: 14,
+  },
+
+  continueButton: {
+    minHeight: 50,
+    borderRadius: 15,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 7,
+    marginTop: 12,
+  },
+
+  continueButtonText: {
+    color: "#FFFFFF",
+    fontSize: 11,
+    fontFamily: "Poppins_800ExtraBold",
+  },
+
+  disabledButton: {
+    opacity: 0.45,
+  },
+
+  noResourceCard: {
+    alignItems: "center",
+    padding: 18,
+    borderRadius: 16,
+    backgroundColor: "#F8FAFC",
+  },
+
+  noResourceIcon: {
+    width: 52,
+    height: 52,
+    borderRadius: 17,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  noResourceTitle: {
+    color: "#1F2937",
+    fontSize: 11,
+    fontFamily: "Poppins_800ExtraBold",
+    marginTop: 9,
+  },
+
+  noResourceText: {
+    color: "#64748B",
+    fontSize: 9,
+    fontFamily: "Poppins_500Medium",
+    lineHeight: 14,
+    textAlign: "center",
+    marginTop: 3,
+  },
+
+  createResourceButton: {
+    minHeight: 40,
+    paddingHorizontal: 17,
+    borderRadius: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 5,
+    marginTop: 11,
+  },
+
+  createResourceText: {
+    color: "#FFFFFF",
+    fontSize: 9.5,
+    fontFamily: "Poppins_800ExtraBold",
+  },
+
+  pressed: {
+    opacity: 0.85,
+    transform: [{ scale: 0.98 }],
+  },
+});

@@ -1,0 +1,109 @@
+{
+  "Anuradhapura": [
+    { "name": "Anuradhapura City", "lat": 8.3114, "lon": 80.4037 },
+    { "name": "Kekirawa", "lat": 8.0411, "lon": 80.5925 },
+    { "name": "Tambuttegama", "lat": 8.1492, "lon": 80.2981 }
+  ],
+  "Polonnaruwa": [
+    { "name": "Polonnaruwa City", "lat": 7.9403, "lon": 81.0188 },
+    { "name": "Hingurakgoda", "lat": 8.0551, "lon": 80.9806 },
+    { "name": "Medirigiriya", "lat": 8.1444, "lon": 80.9866 }
+  ],
+  "Ampara": [
+    { "name": "Ampara City", "lat": 7.2840, "lon": 81.6747 },
+    { "name": "Akkaraipattu", "lat": 7.2198, "lon": 81.8485 },
+    { "name": "Dehiattakandiya", "lat": 7.6409, "lon": 81.0253 }
+  ],
+  "Kurunegala": [
+    { "name": "Kurunegala City", "lat": 7.4818, "lon": 80.3609 },
+    { "name": "Kuliyapitiya", "lat": 7.4674, "lon": 80.0401 }
+  ],
+  "Hambantota": [
+    { "name": "Hambantota City", "lat": 6.1248, "lon": 81.1185 },
+    { "name": "Tangalle", "lat": 6.0246, "lon": 80.7963 },
+    { "name": "Tissamaharama", "lat": 6.2785, "lon": 81.2863 }
+  ],
+  "Trincomalee": [
+    { "name": "Trincomalee City", "lat": 8.5711, "lon": 81.2330 },
+    { "name": "Kinniya", "lat": 8.5146, "lon": 81.1830 },
+    { "name": "Mutur", "lat": 8.4552, "lon": 81.2662 }
+  ],
+  "Batticaloa": [
+    { "name": "Batticaloa City", "lat": 7.7102, "lon": 81.6924 },
+    { "name": "Kattankudy", "lat": 7.6746, "lon": 81.7225 }
+  ],
+  "Puttalam": [
+    { "name": "Puttalam City", "lat": 8.0362, "lon": 79.8283 },
+    { "name": "Chilaw", "lat": 7.5755, "lon": 79.7993 }
+  ],
+  "Mannar": [
+    { "name": "Mannar City", "lat": 8.9810, "lon": 79.9044 },
+    { "name": "Murunkan", "lat": 8.8184, "lon": 80.0261 }
+  ],
+  "Vavuniya": [
+    { "name": "Vavuniya City", "lat": 8.7542, "lon": 80.4982 },
+    { "name": "Cheddikulam", "lat": 8.6811, "lon": 80.2588 }
+  ],
+  "Kilinochchi": [
+    { "name": "Kilinochchi City", "lat": 9.3803, "lon": 80.3770 },
+    { "name": "Pallai", "lat": 9.5393, "lon": 80.3444 }
+  ],
+  "Mullaitivu": [
+    { "name": "Mullaitivu City", "lat": 9.2671, "lon": 80.8142 },
+    { "name": "Puthukkudiyiruppu", "lat": 9.3179, "lon": 80.6698 }
+  ],
+  "Jaffna": [
+    { "name": "Jaffna City", "lat": 9.6615, "lon": 80.0255 },
+    { "name": "Chavakachcheri", "lat": 9.6586, "lon": 80.1601 }
+  ],
+  "Moneragala": [
+    { "name": "Moneragala City", "lat": 6.8728, "lon": 81.3507 },
+    { "name": "Bibile", "lat": 7.1659, "lon": 81.2319 },
+    { "name": "Wellawaya", "lat": 6.7371, "lon": 81.1039 }
+  ],
+  "Badulla": [
+    { "name": "Badulla City", "lat": 6.9819, "lon": 81.0559 },
+    { "name": "Bandarawela", "lat": 6.8301, "lon": 80.9982 }
+  ],
+  "Matale": [
+    { "name": "Matale City", "lat": 7.4675, "lon": 80.6234 },
+    { "name": "Dambulla", "lat": 7.8596, "lon": 80.6517 }
+  ],
+  "Kandy": [
+    { "name": "Kandy City", "lat": 7.2906, "lon": 80.6337 },
+    { "name": "Gampola", "lat": 7.1633, "lon": 80.5739 }
+  ],
+  "Nuwara Eliya": [
+    { "name": "Nuwara Eliya City", "lat": 6.9497, "lon": 80.7828 },
+    { "name": "Hatton", "lat": 6.8893, "lon": 80.5968 }
+  ],
+  "Kegalle": [
+    { "name": "Kegalle City", "lat": 7.2513, "lon": 80.3464 },
+    { "name": "Mawanella", "lat": 7.2515, "lon": 80.4449 }
+  ],
+  "Ratnapura": [
+    { "name": "Ratnapura City", "lat": 6.7055, "lon": 80.3847 },
+    { "name": "Balangoda", "lat": 6.6508, "lon": 80.6974 },
+    { "name": "Embilipitiya", "lat": 6.3458, "lon": 80.8407 }
+  ],
+  "Colombo": [
+    { "name": "Colombo City", "lat": 6.9271, "lon": 79.8612 },
+    { "name": "Avissawella", "lat": 6.9530, "lon": 80.2078 }
+  ],
+  "Gampaha": [
+    { "name": "Gampaha City", "lat": 7.0840, "lon": 80.0098 },
+    { "name": "Negombo", "lat": 7.2091, "lon": 79.8358 }
+  ],
+  "Kalutara": [
+    { "name": "Kalutara City", "lat": 6.5854, "lon": 79.9607 },
+    { "name": "Mathugama", "lat": 6.5167, "lon": 80.1167 }
+  ],
+  "Galle": [
+    { "name": "Galle City", "lat": 6.0535, "lon": 80.2210 },
+    { "name": "Elpitiya", "lat": 6.2709, "lon": 80.1419 }
+  ],
+  "Matara": [
+    { "name": "Matara City", "lat": 5.9549, "lon": 80.5469 },
+    { "name": "Akuressa", "lat": 6.0963, "lon": 80.4853 }
+  ]
+}

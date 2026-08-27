@@ -1,0 +1,122 @@
+{
+    "title": "Recommended Rice Varieties (from 1958 to 2021)",
+    "country": "Sri Lanka",
+    "categories": [
+        {
+            "age_group": "2 1/2 Months",
+            "varieties": [
+                "Bg 750",
+                "Bg 250",
+                "Bg 251(GSR)",
+                "Bg 252",
+                "Ld 253",
+                "At 313"
+            ]
+        },
+        {
+            "age_group": "3 Months",
+            "varieties": [
+                "H 10",
+                "62-355",
+                "Bg-34-8",
+                "Bg 276-5",
+                "Bw 272-6b",
+                "Bg 300",
+                "Bg 301",
+                "Bw 302",
+                "At 303",
+                "Bg 304",
+                "Bg 305",
+                "At 306",
+                "At 307",
+                "At 308",
+                "At 309",
+                "Bg 310",
+                "At 311",
+                "Bg 314"
+            ]
+        },
+        {
+            "age_group": "3 1/2 Months",
+            "varieties": [
+                "H 7",
+                "At 16",
+                "Bw 266-7",
+                "Bw 267-3",
+                "Bg 34-6",
+                "Bg 94-1",
+                "Bg 94-2",
+                "Bg 350",
+                "Bw 351",
+                "Bg 352",
+                "At 353",
+                "At 354",
+                "Ld 355",
+                "Ld 356",
+                "Bg 357",
+                "Bg 358",
+                "Bg 359",
+                "Bg 360",
+                "Bw 361",
+                "At 362",
+                "Bw 363",
+                "Bw 364",
+                "Ld 365",
+                "Bg 366",
+                "Bw 367",
+                "Ld 368",
+                "Bg 369",
+                "Bg 370",
+                "Ld 371",
+                "Bw 372",
+                "At 373",
+                "Bg 374",
+                "Bg 375",
+                "Bg 377",
+                "Ld 376",
+                "Bg 381 IP"
+            ]
+        },
+        {
+            "age_group": "4 - 4 1/2 Months",
+            "varieties": [
+                "H 4",
+                "H 8",
+                "Bg 11-11",
+                "Bg 90-2",
+                "Bg 379-2",
+                "Bg 400-1",
+                "Bg 380",
+                "Ld 66",
+                "Bw 78",
+                "Bw 100",
+                "MI 273",
+                "Bw 400",
+                "At 401",
+                "At 402",
+                "Bg 403",
+                "At 405",
+                "Bg 406",
+                "Bg 407H",
+                "Ld 408",
+                "Bg 450",
+                "Bw 451",
+                "Bw 452",
+                "Bw 453",
+                "Bg 454",
+                "Bg 455",
+                "Bg 409"
+            ]
+        },
+        {
+            "age_group": "5 - 6 Months",
+            "varieties": [
+                "H 9",
+                "Bg 3-5",
+                "Bg 38",
+                "Bg 407",
+                "Bg 745"
+            ]
+        }
+    ]
+}
