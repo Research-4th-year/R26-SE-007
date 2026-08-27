@@ -881,7 +881,7 @@ export default function PartnerDetailScreen() {
 
                           <Text style={styles.resourceText}>
                             {formatNumber(harvest.quantity)} {t.c3partnerDetail.kg}{" "}
-                            • {formatPaddyType(harvest.season)}
+                            • {translateSeason(harvest.season, t)}
                           </Text>
 
                           <Text style={styles.resourcePrice}>
@@ -1095,7 +1095,7 @@ function HarvestOpportunities({
               </Text>
 
               <Text style={styles.opportunitySubtitle}>
-                {formatPaddyType(harvest.season)} {t.c3partnerDetail.harvest}
+                {translateSeason(harvest.season, t)} {t.c3partnerDetail.harvest}
               </Text>
             </View>
 
@@ -1342,7 +1342,21 @@ function translateDistrict(
   return districtMap[district.trim()] ?? district.trim();
 }
 
-function formatPaddyType(value: string) {
+function translateSeason(value: string | undefined, t: any): string {
+  if (!value) {
+    return "";
+  }
+
+  const normalized = value.trim().toLowerCase();
+
+  if (normalized === "maha") {
+    return t.c3seasons.Maha;
+  }
+
+  if (normalized === "yala") {
+    return t.c3seasons.Yala;
+  }
+
   return value.replace(/_/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 

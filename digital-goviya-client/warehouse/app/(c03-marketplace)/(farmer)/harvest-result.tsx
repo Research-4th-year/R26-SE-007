@@ -313,8 +313,9 @@ export default function HarvestResultScreen() {
           <SummaryRow
             icon="leaf-outline"
             label={t.harvestResult.paddyType}
-            value={formatLabel(
+            value={translatePaddyType(
               params.paddyType,
+              t,
               t.harvestResult.notAvailable,
             )}
           />
@@ -324,8 +325,9 @@ export default function HarvestResultScreen() {
           <SummaryRow
             icon="calendar-outline"
             label={t.harvestResult.season}
-            value={formatLabel(
+            value={translateSeason(
               params.season,
+              t,
               t.harvestResult.notAvailable,
             )}
           />
@@ -736,6 +738,54 @@ function toNumber(value?: string): number | null {
   return Number.isFinite(numberValue)
     ? numberValue
     : null;
+}
+
+function translatePaddyType(
+  value: string | undefined,
+  t: any,
+  fallback: string,
+): string {
+  if (!value) {
+    return fallback;
+  }
+
+  const normalized = value.trim().toLowerCase();
+
+  if (normalized === "nadu") {
+    return t.c3paddyTypes.Nadu;
+  }
+
+  if (normalized === "samba") {
+    return t.c3paddyTypes.Samba;
+  }
+
+  if (normalized === "keeri samba" || normalized === "keerisamba") {
+    return t.c3paddyTypes.KeeriSamba;
+  }
+
+  return formatLabel(value, fallback);
+}
+
+function translateSeason(
+  value: string | undefined,
+  t: any,
+  fallback: string,
+): string {
+  if (!value) {
+    return fallback;
+  }
+
+  const normalized = value.trim().toLowerCase();
+
+  if (normalized === "maha") {
+    return t.c3seasons.Maha;
+  }
+
+  if (normalized === "yala") {
+    return t.c3seasons.Yala;
+  }
+
+  return formatLabel(value, fallback);
 }
 
 function formatLabel(

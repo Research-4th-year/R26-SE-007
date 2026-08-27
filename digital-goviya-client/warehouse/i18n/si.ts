@@ -370,6 +370,11 @@ c3paddyTypes: {
   KeeriSamba: "කීරි සම්බා",
 },
 
+c3seasons: {
+  Maha: "මහ",
+  Yala: "යල",
+},
+
 c3addHarvest: {
   eyebrow: "ගොවි වෙළඳපොළ",
 

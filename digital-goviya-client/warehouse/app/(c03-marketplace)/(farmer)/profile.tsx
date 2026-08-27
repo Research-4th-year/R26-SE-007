@@ -179,10 +179,11 @@ export default function FarmerProfileScreen() {
           <ProfileRow
             icon="location-outline"
             label={t.c3profile.district}
-            value={
-              farmerProfile?.district ??
+            value={translateDistrict(
+              farmerProfile?.district,
+              t.c3districts,
               t.c3profile.notProvided
-            }
+            )}
           />
 
           <ProfileRow
@@ -213,8 +214,12 @@ export default function FarmerProfileScreen() {
             icon="leaf-outline"
             label={t.c3profile.mainVariety}
             value={
-              farmerProfile?.mainPaddyVariety ??
-              t.c3profile.notProvided
+              farmerProfile?.mainPaddyVariety
+                ? translatePaddyType(
+                    farmerProfile.mainPaddyVariety,
+                    t
+                  )
+                : t.c3profile.notProvided
             }
             isLast
           />
@@ -292,6 +297,51 @@ export default function FarmerProfileScreen() {
       </Animated.ScrollView>
     </SafeAreaView>
   );
+}
+
+function translatePaddyType(
+  value: string,
+  t: any
+): string {
+  const normalized = value.trim().toLowerCase();
+
+  if (normalized === "nadu") {
+    return t.c3paddyTypes.Nadu;
+  }
+
+  if (normalized === "samba") {
+    return t.c3paddyTypes.Samba;
+  }
+
+  if (normalized === "keeri samba" || normalized === "keerisamba") {
+    return t.c3paddyTypes.KeeriSamba;
+  }
+
+  return value;
+}
+
+function translateDistrict(
+  district: string | undefined,
+  translations: {
+    Ampara: string;
+    Badulla: string;
+    Kandy: string;
+    Monaragala: string;
+  },
+  fallback: string
+): string {
+  if (!district) {
+    return fallback;
+  }
+
+  const districtMap: Record<string, string> = {
+    Ampara: translations.Ampara,
+    Badulla: translations.Badulla,
+    Kandy: translations.Kandy,
+    Monaragala: translations.Monaragala,
+  };
+
+  return districtMap[district.trim()] ?? district.trim();
 }
 
 interface ProfileRowProps {

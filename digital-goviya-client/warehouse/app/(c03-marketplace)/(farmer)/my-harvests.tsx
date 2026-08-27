@@ -204,7 +204,13 @@ export default function MyHarvestsScreen() {
 
         const searchableText = [
           harvest.paddyType,
+          translatePaddyType(harvest.paddyType, t),
           harvest.season,
+          translateSeason(
+            harvest.season,
+            t,
+            harvest.season
+          ),
           harvest.status,
           harvest.marketStatus,
           harvest.priceLevel,
@@ -269,6 +275,7 @@ export default function MyHarvestsScreen() {
     statusFilter,
     paddyFilter,
     sortOption,
+    t,
   ]);
 
   const activeFilterCount =
@@ -847,8 +854,9 @@ function HarvestCard({
 
         <View style={styles.cardTitleArea}>
           <Text style={styles.paddyName}>
-            {formatPaddyType(
-              harvest.paddyType
+            {translatePaddyType(
+              harvest.paddyType,
+              t
             )}
           </Text>
 
@@ -887,8 +895,9 @@ function HarvestCard({
 
         <MetricItem
           label={t.c3myHarvests.season}
-          value={formatSeason(
+          value={translateSeason(
             harvest.season,
+            t,
             t.c3myHarvests.notSpecified
           )}
           icon="calendar-outline"
@@ -1090,8 +1099,9 @@ function CompactHarvestCard({
       <View style={styles.compactBody}>
         <View style={styles.compactTop}>
           <Text style={styles.compactTitle}>
-            {formatPaddyType(
-              harvest.paddyType
+            {translatePaddyType(
+              harvest.paddyType,
+              t
             )}
           </Text>
 
@@ -1102,8 +1112,9 @@ function CompactHarvestCard({
         </View>
 
         <Text style={styles.compactSubtitle}>
-          {formatSeason(
+          {translateSeason(
             harvest.season,
+            t,
             t.c3myHarvests.notSpecified
           )}{" "}
           •{" "}
@@ -1498,9 +1509,24 @@ function getHarvestStatusStyle(
   }
 }
 
-function formatPaddyType(
-  value: string
+function translatePaddyType(
+  value: string,
+  t: any
 ): string {
+  const normalized = value.trim().toLowerCase();
+
+  if (normalized === "nadu") {
+    return t.c3paddyTypes.Nadu;
+  }
+
+  if (normalized === "samba") {
+    return t.c3paddyTypes.Samba;
+  }
+
+  if (normalized === "keeri samba" || normalized === "keerisamba") {
+    return t.c3paddyTypes.KeeriSamba;
+  }
+
   return value
     .trim()
     .split(/[\s_-]+/)
@@ -1512,14 +1538,29 @@ function formatPaddyType(
     .join(" ");
 }
 
-function formatSeason(
+function translateSeason(
   value: string,
+  t: any,
   fallback: string
 ): string {
-  return value
-    ? value.charAt(0).toUpperCase() +
-        value.slice(1).toLowerCase()
-    : fallback;
+  if (!value) {
+    return fallback;
+  }
+
+  const normalized = value.trim().toLowerCase();
+
+  if (normalized === "maha") {
+    return t.c3seasons.Maha;
+  }
+
+  if (normalized === "yala") {
+    return t.c3seasons.Yala;
+  }
+
+  return (
+    value.charAt(0).toUpperCase() +
+    value.slice(1).toLowerCase()
+  );
 }
 
 function formatStatus(

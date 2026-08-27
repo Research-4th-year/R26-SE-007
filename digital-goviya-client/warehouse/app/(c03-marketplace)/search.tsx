@@ -167,17 +167,28 @@ export default function SearchScreen() {
       [
         item.profile.name,
         item.profile.district,
+        translateDistrict(
+          item.profile.district,
+          t.c3districts,
+          item.profile.district
+        ),
         item.profile.location,
         item.profile.type === "miller"
           ? item.profile.millName
           : item.profile.farmerName,
+        item.profile.type === "farmer"
+          ? item.profile.mainPaddyVariety
+          : "",
+        item.profile.type === "farmer" && item.profile.mainPaddyVariety
+          ? translatePaddyType(item.profile.mainPaddyVariety, t)
+          : "",
       ]
         .filter(Boolean)
         .join(" ")
         .toLowerCase()
         .includes(normalized)
     );
-  }, [results, searchQuery]);
+  }, [results, searchQuery, t]);
 
   return (
     <SafeAreaView style={[styles.screen, { backgroundColor: theme.page }]}>

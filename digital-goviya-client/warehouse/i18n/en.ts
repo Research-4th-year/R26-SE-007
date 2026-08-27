@@ -348,6 +348,11 @@ c3paddyTypes: {
   KeeriSamba: "Keeri Samba",
 },
 
+c3seasons: {
+  Maha: "Maha",
+  Yala: "Yala",
+},
+
 c3addHarvest: {
   eyebrow: "FARMER MARKETPLACE",
   title: "New Harvest Entry",

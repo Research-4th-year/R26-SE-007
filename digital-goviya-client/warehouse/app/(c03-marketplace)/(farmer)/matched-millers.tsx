@@ -316,9 +316,10 @@ export default function MatchedMillersScreen() {
                 <Text
                   style={styles.harvestTitle}
                 >
-                  {formatLabel(
+                  {translatePaddyType(
                     matchingData?.harvest
-                      .paddyType ?? ""
+                      .paddyType ?? "",
+                    t
                   )}
                 </Text>
 
@@ -613,7 +614,11 @@ function MatchCard({
 
         <Text style={styles.locationText}>
           {match.miller.location},{" "}
-          {match.miller.district}
+          {translateDistrict(
+            match.miller.district,
+            t.c3districts,
+            match.miller.district
+          )}
         </Text>
       </View>
 
@@ -898,6 +903,51 @@ function formatLabel(value: string) {
         part.slice(1).toLowerCase()
     )
     .join(" ");
+}
+
+function translatePaddyType(
+  value: string,
+  t: any
+): string {
+  const normalized = value.trim().toLowerCase();
+
+  if (normalized === "nadu") {
+    return t.c3paddyTypes.Nadu;
+  }
+
+  if (normalized === "samba") {
+    return t.c3paddyTypes.Samba;
+  }
+
+  if (normalized === "keeri samba" || normalized === "keerisamba") {
+    return t.c3paddyTypes.KeeriSamba;
+  }
+
+  return formatLabel(value);
+}
+
+function translateDistrict(
+  district: string | undefined,
+  translations: {
+    Ampara: string;
+    Badulla: string;
+    Kandy: string;
+    Monaragala: string;
+  },
+  fallback: string
+): string {
+  if (!district) {
+    return fallback;
+  }
+
+  const districtMap: Record<string, string> = {
+    Ampara: translations.Ampara,
+    Badulla: translations.Badulla,
+    Kandy: translations.Kandy,
+    Monaragala: translations.Monaragala,
+  };
+
+  return districtMap[district.trim()] ?? district.trim();
 }
 
 function formatNumber(value: number) {

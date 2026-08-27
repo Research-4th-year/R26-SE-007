@@ -524,8 +524,10 @@ function FarmerRequestCard({
           <DetailItem
             icon="leaf-outline"
             label={t.c3myMatchRequests.paddy}
-            value={formatLabel(
-              harvest?.paddyType ?? "-"
+            value={translatePaddyType(
+              harvest?.paddyType,
+              t,
+              "-"
             )}
           />
 
@@ -557,9 +559,11 @@ function FarmerRequestCard({
           <DetailItem
             icon="location-outline"
             label={t.c3myMatchRequests.district}
-            value={
-              miller?.district ?? "-"
-            }
+            value={translateDistrict(
+              miller?.district,
+              t.c3districts,
+              "-"
+            )}
           />
         </View>
       </View>
@@ -1043,6 +1047,56 @@ function formatLabel(
         part.slice(1).toLowerCase()
     )
     .join(" ");
+}
+
+function translatePaddyType(
+  value: string | undefined,
+  t: any,
+  fallback: string
+): string {
+  if (!value) {
+    return fallback;
+  }
+
+  const normalized = value.trim().toLowerCase();
+
+  if (normalized === "nadu") {
+    return t.c3paddyTypes.Nadu;
+  }
+
+  if (normalized === "samba") {
+    return t.c3paddyTypes.Samba;
+  }
+
+  if (normalized === "keeri samba" || normalized === "keerisamba") {
+    return t.c3paddyTypes.KeeriSamba;
+  }
+
+  return formatLabel(value);
+}
+
+function translateDistrict(
+  district: string | undefined,
+  translations: {
+    Ampara: string;
+    Badulla: string;
+    Kandy: string;
+    Monaragala: string;
+  },
+  fallback: string
+): string {
+  if (!district) {
+    return fallback;
+  }
+
+  const districtMap: Record<string, string> = {
+    Ampara: translations.Ampara,
+    Badulla: translations.Badulla,
+    Kandy: translations.Kandy,
+    Monaragala: translations.Monaragala,
+  };
+
+  return districtMap[district.trim()] ?? district.trim();
 }
 
 function formatNumber(
