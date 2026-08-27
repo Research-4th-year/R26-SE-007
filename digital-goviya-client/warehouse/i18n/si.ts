@@ -609,6 +609,11 @@ c3MatchedMillers: {
   millersSelected: "මෝල්කරුවන් තෝරා ඇත",
   sendMatchRequests: "ගැළපුම් ඉල්ලීම් යවන්න",
 
+  requestSent: "ඉල්ලීම යවන ලදී",
+  negotiationReady: "සාකච්ඡාවට සූදානම්",
+  requestRejected: "ප්‍රතික්ෂේප කළා",
+  requestCancelled: "අවලංගු කළා",
+
   highlyRecommended: "ඉතා නිර්දේශිතයි",
   recommended: "නිර්දේශිතයි",
   moderateMatch: "මධ්‍යම ගැළපීම",
@@ -1201,6 +1206,11 @@ c3MillerHome: {
 
     farmerSelected: "ගොවියා තෝරා ඇත",
     selectThisFarmer: "මෙම ගොවියා තෝරන්න",
+
+    requestSent: "ඉල්ලීම යවන ලදී",
+    negotiationReady: "සාකච්ඡාවට සූදානම්",
+    requestRejected: "ප්‍රතික්ෂේප කළා",
+    requestCancelled: "අවලංගු කළා",
 
     loadingTitle: "සුදුසු ගොවීන් සොයමින්",
     loadingDescription:

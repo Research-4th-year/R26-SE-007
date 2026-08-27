@@ -36,7 +36,10 @@ import {
 import type {
   HarvestMatch,
   MatchingResponse,
+  MatchSelectionStatus,
 } from "@/types/c03-marketplace/matching.types";
+
+import { MarketplaceApiError } from "@/services/c03-marketplace/api-client";
 
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -119,6 +122,14 @@ export default function MatchedMillersScreen() {
           });
 
       setMatchingData(response.data);
+      setSelectedDemandIds((current) =>
+        current.filter((demandId) => {
+          const match = response.data.matches.find(
+            (item) => item.demand._id === demandId
+          );
+          return Boolean(match) && !match?.existingRequest;
+        })
+      );
 
       Animated.parallel([
         Animated.timing(fade, {
@@ -150,6 +161,14 @@ export default function MatchedMillersScreen() {
   const toggleSelection = (
     demandId: string
   ): void => {
+    const match = matchingData?.matches.find(
+      (item) => item.demand._id === demandId
+    );
+
+    if (match?.existingRequest) {
+      return;
+    }
+
     setSelectedDemandIds((current) =>
       current.includes(demandId)
         ? current.filter(
@@ -180,13 +199,28 @@ export default function MatchedMillersScreen() {
       return;
     }
 
+    const demandIds = selectedDemandIds.filter((demandId) => {
+      const match = matchingData?.matches.find(
+        (item) => item.demand._id === demandId
+      );
+      return !match?.existingRequest;
+    });
+
+    if (demandIds.length === 0) {
+      Alert.alert(
+        t.c3MatchedMillers.selectMiller,
+        t.c3MatchedMillers.selectMillerDescription
+      );
+      return;
+    }
+
     try {
       setSubmitting(true);
 
       const response =
         await matchingService.createSelections({
           harvestId,
-          demandIds: selectedDemandIds,
+          demandIds,
         });
 
       console.log(
@@ -206,6 +240,13 @@ export default function MatchedMillersScreen() {
         "Create match selections failed:",
         error
       );
+
+      if (
+        error instanceof MarketplaceApiError &&
+        error.statusCode === 409
+      ) {
+        await loadMatches(true);
+      }
 
       Alert.alert(
         t.c3MatchedMillers.unableToSendRequests,
@@ -394,6 +435,9 @@ export default function MatchedMillersScreen() {
                     selected={selectedDemandIds.includes(
                       match.demand._id
                     )}
+                    requestStatus={
+                      match.existingRequest?.status ?? null
+                    }
                     onSelect={() =>
                       toggleSelection(
                         match.demand._id
@@ -456,6 +500,7 @@ interface MatchCardProps {
   match: HarvestMatch;
   rank: number;
   selected: boolean;
+  requestStatus: MatchSelectionStatus | null;
   onSelect: () => void;
   t: any;
 }
@@ -464,6 +509,7 @@ function MatchCard({
   match,
   rank,
   selected,
+  requestStatus,
   onSelect,
   t,
 }: MatchCardProps) {
@@ -724,24 +770,35 @@ function MatchCard({
       ) : null}
 
       <Pressable
+        disabled={Boolean(requestStatus)}
         onPress={onSelect}
         style={[
           styles.selectButton,
           selected &&
             styles.selectButtonSelected,
+          requestStatus &&
+            styles.selectButtonDisabled,
         ]}
       >
         <Ionicons
           name={
-            selected
-              ? "checkmark-circle"
-              : "ellipse-outline"
+            requestStatus
+              ? requestStatus === "pending"
+                ? "checkmark-done-outline"
+                : requestStatus === "negotiation_ready"
+                  ? "sparkles-outline"
+                  : "close-circle-outline"
+              : selected
+                ? "checkmark-circle"
+                : "ellipse-outline"
           }
           size={20}
           color={
-            selected
-              ? "#FFFFFF"
-              : "#15803D"
+            requestStatus
+              ? "#64748B"
+              : selected
+                ? "#FFFFFF"
+                : "#15803D"
           }
         />
 
@@ -750,11 +807,15 @@ function MatchCard({
             styles.selectButtonText,
             selected &&
               styles.selectButtonTextSelected,
+            requestStatus &&
+              styles.selectButtonTextDisabled,
           ]}
         >
-          {selected
-            ? t.c3MatchedMillers.selected
-            : t.c3MatchedMillers.selectThisMiller}
+          {requestStatus
+            ? getRequestStatusLabel(requestStatus, t.c3MatchedMillers)
+            : selected
+              ? t.c3MatchedMillers.selected
+              : t.c3MatchedMillers.selectThisMiller}
         </Text>
       </Pressable>
     </View>
@@ -876,6 +937,27 @@ function EmptyState({
       </Text>
     </View>
   );
+}
+
+function getRequestStatusLabel(
+  status: MatchSelectionStatus,
+  labels: {
+    requestSent: string;
+    negotiationReady: string;
+    requestRejected: string;
+    requestCancelled: string;
+  },
+) {
+  switch (status) {
+    case "negotiation_ready":
+      return labels.negotiationReady;
+    case "rejected":
+      return labels.requestRejected;
+    case "cancelled":
+      return labels.requestCancelled;
+    default:
+      return labels.requestSent;
+  }
 }
 
 function getPriorityDisplay(
@@ -1360,6 +1442,11 @@ const styles = StyleSheet.create({
     backgroundColor: "#15803D",
   },
 
+  selectButtonDisabled: {
+    borderColor: "#CBD5E1",
+    backgroundColor: "#F1F5F9",
+  },
+
   selectButtonText: {
     color: "#15803D",
     fontSize: 11,
@@ -1368,6 +1455,10 @@ const styles = StyleSheet.create({
 
   selectButtonTextSelected: {
     color: "#FFFFFF",
+  },
+
+  selectButtonTextDisabled: {
+    color: "#64748B",
   },
 
   bottomBar: {

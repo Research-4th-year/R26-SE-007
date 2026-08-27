@@ -284,7 +284,7 @@ const createSelections = async (
         continue;
       }
 
-      const evaluation =
+        const evaluation =
         evaluateDemand({
           demand,
           harvest,
@@ -292,6 +292,23 @@ const createSelections = async (
           perspective:
             "farmer",
         });
+
+      const existingRequest =
+        await MatchSelection.findOne({
+          harvestId: harvest._id,
+          demandId: demand._id,
+        });
+
+      if (existingRequest) {
+        skippedSelections.push({
+          demandId,
+
+          reason:
+            "A matching request already exists for this Harvest and Demand.",
+        });
+
+        continue;
+      }
 
       try {
         const selection =
@@ -696,7 +713,7 @@ const createSelectionsByMiller =
               miller,
           };
 
-        const evaluation =
+          const evaluation =
           evaluateDemand({
             demand:
               evaluationDemand,
@@ -707,6 +724,23 @@ const createSelectionsByMiller =
             perspective:
               "miller",
           });
+
+        const existingRequest =
+          await MatchSelection.findOne({
+            harvestId: harvest._id,
+            demandId: demand._id,
+          });
+
+        if (existingRequest) {
+          skippedSelections.push({
+            harvestId,
+
+            reason:
+              "A matching request already exists for this Harvest and Demand.",
+          });
+
+          continue;
+        }
 
         try {
           const selection =

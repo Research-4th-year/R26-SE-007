@@ -552,6 +552,11 @@ c3MatchedMillers: {
   millersSelected: "millers selected",
   sendMatchRequests: "Send Match Requests",
 
+  requestSent: "Request Sent",
+  negotiationReady: "Negotiation Ready",
+  requestRejected: "Rejected",
+  requestCancelled: "Cancelled",
+
   highlyRecommended: "Highly Recommended",
   recommended: "Recommended",
   moderateMatch: "Moderate Match",
@@ -1124,6 +1129,11 @@ c3MillerHome: {
 
     farmerSelected: "Farmer Selected",
     selectThisFarmer: "Select this Farmer",
+
+    requestSent: "Request Sent",
+    negotiationReady: "Negotiation Ready",
+    requestRejected: "Rejected",
+    requestCancelled: "Cancelled",
 
     loadingTitle: "Finding suitable Farmers",
     loadingDescription:
