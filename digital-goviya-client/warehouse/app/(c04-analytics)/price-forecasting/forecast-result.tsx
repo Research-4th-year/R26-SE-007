@@ -33,7 +33,7 @@ import {
 
 const APP_LOGO = require("@/assets/logo2.png");
 
-const API_BASE = "http://127.0.0.1:8000";
+const API_BASE = process.env.EXPO_PUBLIC_API_URL;
 const WEEKLY_BREAKDOWN_ROUTE =
   "/(c04-analytics)/price-forecasting/weekly-breakdown";
 

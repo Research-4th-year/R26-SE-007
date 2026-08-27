@@ -23,7 +23,7 @@ const char* password = "22222222";
 #define MODEM_TX       17
 #define MODEM_BAUDRATE 115200
 
-const char* APN       = "mobitel3g";
+const char* APN       = "mobitel";
 const char* GPRS_USER = "";
 const char* GPRS_PASS = "";
 
