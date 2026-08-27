@@ -30,8 +30,11 @@ import {
 } from "@/utils/c03-marketplace/getApiErrorMessage";
 import type {
   FarmerHarvestMatch,
+  MatchSelectionStatus,
   MillerMatchingResponse,
 } from "@/types/c03-marketplace/matching.types";
+
+import { MarketplaceApiError } from "@/services/c03-marketplace/api-client";
 
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -90,6 +93,14 @@ export default function MatchedFarmersScreen() {
           });
 
         setData(response.data);
+        setSelectedHarvestIds((current) =>
+          current.filter((harvestId) => {
+            const match = response.data.matches.find(
+              (item) => item.harvest._id === harvestId,
+            );
+            return Boolean(match) && !match?.existingRequest;
+          }),
+        );
 
         fade.setValue(0);
         rise.setValue(14);
@@ -121,6 +132,14 @@ export default function MatchedFarmersScreen() {
   }, [loadMatches]);
 
   const toggleSelection = (harvestId: string) => {
+    const match = data?.matches.find(
+      (item) => item.harvest._id === harvestId,
+    );
+
+    if (match?.existingRequest) {
+      return;
+    }
+
     setSelectedHarvestIds((current) =>
       current.includes(harvestId)
         ? current.filter((id) => id !== harvestId)
@@ -137,13 +156,24 @@ export default function MatchedFarmersScreen() {
       return;
     }
 
+    const harvestIds = selectedHarvestIds.filter((harvestId) => {
+      const match = data?.matches.find(
+        (item) => item.harvest._id === harvestId,
+      );
+      return !match?.existingRequest;
+    });
+
+    if (harvestIds.length === 0) {
+      return;
+    }
+
     try {
       setSubmitting(true);
 
       const response =
         await matchingService.createMillerSelections({
           demandId,
-          harvestIds: selectedHarvestIds,
+          harvestIds,
         });
 
       console.log(
@@ -155,6 +185,13 @@ export default function MatchedFarmersScreen() {
         "/(c03-marketplace)/(miller)/received-match-requests" as any,
       );
     } catch (error) {
+      if (
+        error instanceof MarketplaceApiError &&
+        error.statusCode === 409
+      ) {
+        await loadMatches(true);
+      }
+
       Alert.alert(
         t.c3matchedFarmers.unableToSendRequests,
         getApiErrorMessage(error),
@@ -262,6 +299,9 @@ export default function MatchedFarmersScreen() {
                   selected={selectedHarvestIds.includes(
                     match.harvest._id,
                   )}
+                  requestStatus={
+                    match.existingRequest?.status ?? null
+                  }
                   onPress={() =>
                     toggleSelection(match.harvest._id)
                   }
@@ -381,11 +421,13 @@ function FarmerMatchCard({
   match,
   rank,
   selected,
+  requestStatus,
   onPress,
 }: {
   match: FarmerHarvestMatch;
   rank: number;
   selected: boolean;
+  requestStatus: MatchSelectionStatus | null;
   onPress: () => void;
 }) {
   const { t, language } = useLanguage();
@@ -570,35 +612,48 @@ function FarmerMatchCard({
       ) : null}
 
       <Pressable
+        disabled={Boolean(requestStatus)}
         onPress={onPress}
         style={({ pressed }) => [
           styles.selectButton,
           selected && styles.selectButtonSelected,
-          pressed && styles.pressed,
+          requestStatus && styles.selectButtonDisabled,
+          pressed && !requestStatus && styles.pressed,
         ]}
       >
         <Ionicons
           name={
-            selected
-              ? "checkmark-circle"
-              : "person-add-outline"
+            requestStatus
+              ? requestStatus === "pending"
+                ? "checkmark-done-outline"
+                : requestStatus === "negotiation_ready"
+                  ? "sparkles-outline"
+                  : "close-circle-outline"
+              : selected
+                ? "checkmark-circle"
+                : "person-add-outline"
           }
           size={18}
           color={
-            selected
-              ? "#FFFFFF"
-              : THEME.primary
+            requestStatus
+              ? THEME.muted
+              : selected
+                ? "#FFFFFF"
+                : THEME.primary
           }
         />
         <Text
           style={[
             styles.selectButtonText,
             selected && styles.selectButtonTextSelected,
+            requestStatus && styles.selectButtonTextDisabled,
           ]}
         >
-          {selected
-            ? t.c3matchedFarmers.farmerSelected
-            : t.c3matchedFarmers.selectThisFarmer}
+          {requestStatus
+            ? getRequestStatusLabel(requestStatus, t.c3matchedFarmers)
+            : selected
+              ? t.c3matchedFarmers.farmerSelected
+              : t.c3matchedFarmers.selectThisFarmer}
         </Text>
       </Pressable>
     </View>
@@ -751,6 +806,27 @@ function readString(
   return Array.isArray(value)
     ? value[0] ?? ""
     : value ?? "";
+}
+
+function getRequestStatusLabel(
+  status: MatchSelectionStatus,
+  labels: {
+    requestSent: string;
+    negotiationReady: string;
+    requestRejected: string;
+    requestCancelled: string;
+  },
+) {
+  switch (status) {
+    case "negotiation_ready":
+      return labels.negotiationReady;
+    case "rejected":
+      return labels.requestRejected;
+    case "cancelled":
+      return labels.requestCancelled;
+    default:
+      return labels.requestSent;
+  }
 }
 
 function translatePaddyType(value: string, t: any): string {
@@ -1243,6 +1319,11 @@ const styles = StyleSheet.create({
     backgroundColor: THEME.primary,
   },
 
+  selectButtonDisabled: {
+    borderColor: "#D6D3D1",
+    backgroundColor: "#F5F5F4",
+  },
+
   selectButtonText: {
     color: THEME.primary,
     fontSize: 10.5,
@@ -1251,6 +1332,10 @@ const styles = StyleSheet.create({
 
   selectButtonTextSelected: {
     color: "#FFFFFF",
+  },
+
+  selectButtonTextDisabled: {
+    color: THEME.muted,
   },
 
  bottomBar: {

@@ -10,6 +10,7 @@ import {
 } from "@expo-google-fonts/poppins";
 import {
   ActivityIndicator,
+  Alert,
   Animated,
   Pressable,
   RefreshControl,
@@ -758,6 +759,9 @@ export default function MyHarvestsScreen() {
                         <HarvestCard
                           key={harvest._id}
                           harvest={harvest}
+                          onCompleted={() =>
+                            void loadHarvests()
+                          }
                         />
                       )
                   )}
@@ -818,10 +822,17 @@ function SummaryStat({
 
 function HarvestCard({
   harvest,
+  onCompleted,
 }: {
   harvest: Harvest;
+  onCompleted: () => void;
 }) {
   const { t } = useLanguage();
+  const [markingSold, setMarkingSold] = useState(false);
+
+  const canMarkSold =
+    harvest.status === "available" ||
+    harvest.status === "matched";
 
   const predictedPrice =
     harvest.aiPredictedPrice;
@@ -834,6 +845,51 @@ function HarvestCard({
 
   const openDetails = () =>
     navigateToHarvestResult(harvest);
+
+  const markSold = async () => {
+    try {
+      setMarkingSold(true);
+
+      const response =
+        await harvestService.markHarvestSold(
+          harvest._id
+        );
+
+      Alert.alert(
+        t.c3myHarvests.markAsSoldSuccessTitle,
+        response.message ??
+          t.c3myHarvests.markAsSoldSuccessTitle
+      );
+
+      onCompleted();
+    } catch (error) {
+      Alert.alert(
+        t.c3myHarvests.updateErrorTitle,
+        getApiErrorMessage(error)
+      );
+    } finally {
+      setMarkingSold(false);
+    }
+  };
+
+  const confirmMarkSold = () => {
+    Alert.alert(
+      t.c3myHarvests.markAsSoldConfirmTitle,
+      t.c3myHarvests.markAsSoldConfirmMessage,
+      [
+        {
+          text: t.c3myHarvests.cancel,
+          style: "cancel",
+        },
+        {
+          text: t.c3myHarvests.confirm,
+          onPress: () => {
+            void markSold();
+          },
+        },
+      ]
+    );
+  };
 
   return (
     <Pressable
@@ -1067,6 +1123,58 @@ function HarvestCard({
           </Pressable>
         )}
       </View>
+
+      {canMarkSold || harvest.status === "sold" ? (
+        <Pressable
+          disabled={!canMarkSold || markingSold}
+          onPress={(event) => {
+            event.stopPropagation?.();
+            confirmMarkSold();
+          }}
+          style={({ pressed }) => [
+            styles.completeAction,
+            harvest.status === "sold" &&
+              styles.completeActionDone,
+            pressed &&
+              canMarkSold &&
+              !markingSold &&
+              styles.cardPressed,
+          ]}
+        >
+          {markingSold ? (
+            <ActivityIndicator
+              size="small"
+              color="#15803D"
+            />
+          ) : (
+            <Ionicons
+              name={
+                harvest.status === "sold"
+                  ? "checkmark-circle"
+                  : "pricetag-outline"
+              }
+              size={16}
+              color={
+                harvest.status === "sold"
+                  ? "#047857"
+                  : "#15803D"
+              }
+            />
+          )}
+
+          <Text
+            style={[
+              styles.completeActionText,
+              harvest.status === "sold" &&
+                styles.completeActionTextDone,
+            ]}
+          >
+            {harvest.status === "sold"
+              ? t.c3myHarvests.sold
+              : t.c3myHarvests.markAsSold}
+          </Text>
+        </Pressable>
+      ) : null}
     </Pressable>
   );
 }
@@ -1159,8 +1267,18 @@ function HarvestStatusBadge({
   status: Harvest["status"];
   compact?: boolean;
 }) {
+  const { t } = useLanguage();
   const visual =
     getHarvestStatusStyle(status);
+
+  const label =
+    status === "available"
+      ? t.c3myHarvests.available
+      : status === "matched"
+        ? t.c3myHarvests.matched
+        : status === "sold"
+          ? t.c3myHarvests.sold
+          : formatStatus(status);
 
   return (
     <View
@@ -1192,7 +1310,7 @@ function HarvestStatusBadge({
           },
         ]}
       >
-        {formatStatus(status)}
+        {label}
       </Text>
     </View>
   );
@@ -1467,6 +1585,7 @@ function navigateToHarvestResult(
         harvest.marketStatus,
       recommendedAction:
         harvest.recommendedAction,
+      status: harvest.status,
       recommendationEnglish:
         harvest.recommendation?.english ??
         "",
@@ -2213,6 +2332,34 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 6,
     backgroundColor: "#15803D",
+  },
+
+  completeAction: {
+    marginTop: 9,
+    minHeight: 43,
+    borderRadius: 13,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    backgroundColor: "#F0FDF4",
+    borderWidth: 1,
+    borderColor: "#BBF7D0",
+  },
+
+  completeActionDone: {
+    backgroundColor: "#ECFDF5",
+    borderColor: "#A7F3D0",
+  },
+
+  completeActionText: {
+    color: "#15803D",
+    fontSize: 10,
+    fontFamily: "Poppins_700Bold",
+  },
+
+  completeActionTextDone: {
+    color: "#047857",
   },
 
   primaryActionText: {

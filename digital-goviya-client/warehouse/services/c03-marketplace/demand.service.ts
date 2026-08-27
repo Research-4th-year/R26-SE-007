@@ -6,6 +6,7 @@ import type {
   CreateDemandRequest,
   CreateDemandResponse,
   GetDemandsResponse,
+  MarkDemandFulfilledResponse,
 } from "@/types/c03-marketplace/demand.types";
 
 export const demandService = {
@@ -30,6 +31,17 @@ export const demandService = {
     const response =
       await marketplaceApiClient.get<GetDemandsResponse>(
         "/miller-demand/my-demands"
+      );
+
+    return response.data;
+  },
+
+  async markDemandFulfilled(
+    demandId: string
+  ): Promise<MarkDemandFulfilledResponse> {
+    const response =
+      await marketplaceApiClient.patch<MarkDemandFulfilledResponse>(
+        `/miller-demand/${demandId}/fulfilled`
       );
 
     return response.data;

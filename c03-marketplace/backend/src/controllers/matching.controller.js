@@ -16,6 +16,10 @@ const Miller = require(
   "../models/miller.model"
 );
 
+const MatchSelection = require(
+  "../models/matchSelection.model"
+);
+
 const MAX_MATCH_SCORE = 100;
 
 const escapeRegex = (value = "") => {
@@ -510,6 +514,56 @@ const includeFocusedMatch = ({
   return [...topMatches, focused];
 };
 
+const attachExistingRequests = async ({
+  matches,
+  harvestId,
+  demandId,
+}) => {
+  if (!Array.isArray(matches) || matches.length === 0) {
+    return matches;
+  }
+
+  const query = harvestId
+    ? {
+        harvestId,
+        demandId: {
+          $in: matches.map((item) => item.demand._id),
+        },
+      }
+    : {
+        demandId,
+        harvestId: {
+          $in: matches.map((item) => item.harvest._id),
+        },
+      };
+
+  const existing = await MatchSelection.find(query).select(
+    "harvestId demandId status initiatedBy"
+  );
+
+  const byPair = new Map(
+    existing.map((item) => [
+      `${asId(item.harvestId)}:${asId(item.demandId)}`,
+      {
+        status: item.status,
+        initiatedBy: item.initiatedBy,
+        selectionId: asId(item._id),
+      },
+    ])
+  );
+
+  return matches.map((item) => {
+    const pairKey = harvestId
+      ? `${asId(harvestId)}:${asId(item.demand._id)}`
+      : `${asId(item.harvest._id)}:${asId(demandId)}`;
+
+    return {
+      ...item,
+      existingRequest: byPair.get(pairKey) || null,
+    };
+  });
+};
+
 const millerMatchPopulate = {
   path: "millerId",
   select:
@@ -780,12 +834,17 @@ const matchHarvest = async (
       focusMillerId,
     });
 
-    const matches = includeFocusedMatch({
+    const rankedMatches = includeFocusedMatch({
       matched,
       getPartnerId: (item) => item.miller._id,
       getResourceId: (item) => item.demand._id,
       focusPartnerId: focusMillerId,
       focusResourceId: focusDemandId,
+    });
+
+    const matches = await attachExistingRequests({
+      matches: rankedMatches,
+      harvestId: harvest._id,
     });
 
     return res
@@ -1003,12 +1062,17 @@ const matchDemand = async (
       focusFarmerId,
     });
 
-    const matches = includeFocusedMatch({
+    const rankedMatches = includeFocusedMatch({
       matched,
       getPartnerId: (item) => item.farmer._id,
       getResourceId: (item) => item.harvest._id,
       focusPartnerId: focusFarmerId,
       focusResourceId: focusHarvestId,
+    });
+
+    const matches = await attachExistingRequests({
+      matches: rankedMatches,
+      demandId: demand._id,
     });
 
     return res

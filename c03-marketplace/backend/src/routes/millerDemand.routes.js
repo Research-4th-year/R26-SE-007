@@ -12,6 +12,7 @@ const {
 const {
   createDemand,
   getMyDemands,
+  markDemandFulfilled,
 } = require("../controllers/millerDemand.controller");
 
 const demandValidation = require(
@@ -30,5 +31,11 @@ router.post(
 );
 
 router.get("/my-demands", getMyDemands);
+
+router.patch(
+  "/:demandId/fulfilled",
+  validate(demandValidation.markDemandFulfilled),
+  markDemandFulfilled
+);
 
 module.exports = router;

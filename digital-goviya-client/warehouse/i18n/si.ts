@@ -325,6 +325,15 @@ const si = {
     findMillers: "මෝල් හිමියන් සොයන්න",
     viewDetails: "විස්තර බලන්න",
 
+    markAsSold: "අලෙවි කළ ලෙස සලකුණු කරන්න",
+    markAsSoldConfirmTitle: "අස්වැන්න අලෙවි කළ ලෙස සලකුණු කරන්නද?",
+    markAsSoldConfirmMessage:
+      "ඔබට මෙම අස්වැන්න අලෙවි කළ ලෙස සලකුණු කිරීමට අවශ්‍ය බව විශ්වාසද? එය තවදුරටත් ගැළපීම් හෝ සාකච්ඡා සඳහා ලබා ගත නොහැක.",
+    markAsSoldSuccessTitle: "අස්වැන්න අලෙවි කරන ලදී",
+    cancel: "අවලංගු කරන්න",
+    confirm: "තහවුරු කරන්න",
+    updateErrorTitle: "යාවත්කාලීන කිරීම අසාර්ථකයි",
+
     score: "ලකුණු",
     ai: "AI",
     marketReview: "වෙළඳපොළ සමාලෝචනය",
@@ -608,6 +617,11 @@ c3MatchedMillers: {
   millerSelected: "මෝල්කරුවෙකු තෝරා ඇත",
   millersSelected: "මෝල්කරුවන් තෝරා ඇත",
   sendMatchRequests: "ගැළපුම් ඉල්ලීම් යවන්න",
+
+  requestSent: "ඉල්ලීම යවන ලදී",
+  negotiationReady: "සාකච්ඡාවට සූදානම්",
+  requestRejected: "ප්‍රතික්ෂේප කළා",
+  requestCancelled: "අවලංගු කළා",
 
   highlyRecommended: "ඉතා නිර්දේශිතයි",
   recommended: "නිර්දේශිතයි",
@@ -973,6 +987,7 @@ c3MillerHome: {
     statusNegotiationReady: "සාකච්ඡාවට සූදානම්",
     statusNegotiating: "සාකච්ඡා වෙමින්",
     statusAgreementReached: "එකඟතාවකට එළඹුණි",
+    statusFulfilled: "සම්පූර්ණ කළ",
     statusNegotiationFailed: "සාකච්ඡාව අසාර්ථකයි",
     statusRejected: "ප්‍රතික්ෂේප කළා",
     statusCancelled: "අවලංගු කළා",
@@ -1052,6 +1067,7 @@ c3MillerHome: {
     statusNegotiationReady: "සාකච්ඡාවට සූදානම්",
     statusNegotiating: "සාකච්ඡා වෙමින්",
     statusAgreementReached: "එකඟතාවකට එළඹුණි",
+    statusFulfilled: "සම්පූර්ණ කළ",
     statusNegotiationFailed: "සාකච්ඡාව අසාර්ථකයි",
     statusRejected: "ප්‍රතික්ෂේප කළා",
     statusCancelled: "අවලංගු කළා",
@@ -1060,11 +1076,21 @@ c3MillerHome: {
     activityNegotiationReady: "සාකච්ඡාව ආරම්භ කිරීමට සූදානම්",
     activityNegotiating: "AI සාකච්ඡාව සක්‍රීයයි",
     activityAgreementReached: "එකඟතාවකට එළඹුණි",
+    activityFulfilled: "මෙම ඉල්ලීම සම්පූර්ණ කර ඇත",
     activityNegotiationFailed:
       "එකඟතාවකින් තොරව සාකච්ඡාව අවසන් විය",
     activityRejected: "ඉල්ලීම ප්‍රතික්ෂේප කරන ලදී",
     activityCancelled: "ඉල්ලීම අවලංගු කරන ලදී",
     activityDefault: "ඉල්ලීම් තත්ත්වය යාවත්කාලීන කරන ලදී",
+
+    markAsFulfilled: "සම්පූර්ණ කළ ලෙස සලකුණු කරන්න",
+    markAsFulfilledConfirmTitle: "ඉල්ලීම සම්පූර්ණ කළ ලෙස සලකුණු කරන්නද?",
+    markAsFulfilledConfirmMessage:
+      "ඔබට මෙම ඉල්ලීම සම්පූර්ණ කළ ලෙස සලකුණු කිරීමට අවශ්‍ය බව විශ්වාසද? එය තවදුරටත් ගැළපීම් හෝ සාකච්ඡා සඳහා ලබා ගත නොහැක.",
+    markAsFulfilledSuccessTitle: "ඉල්ලීම සම්පූර්ණ කරන ලදී",
+    cancel: "අවලංගු කරන්න",
+    confirm: "තහවුරු කරන්න",
+    updateErrorTitle: "යාවත්කාලීන කිරීම අසාර්ථකයි",
   },
 
   // C3 Marketplace - Miller Profile
@@ -1201,6 +1227,11 @@ c3MillerHome: {
 
     farmerSelected: "ගොවියා තෝරා ඇත",
     selectThisFarmer: "මෙම ගොවියා තෝරන්න",
+
+    requestSent: "ඉල්ලීම යවන ලදී",
+    negotiationReady: "සාකච්ඡාවට සූදානම්",
+    requestRejected: "ප්‍රතික්ෂේප කළා",
+    requestCancelled: "අවලංගු කළා",
 
     loadingTitle: "සුදුසු ගොවීන් සොයමින්",
     loadingDescription:

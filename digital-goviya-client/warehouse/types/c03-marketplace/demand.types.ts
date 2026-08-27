@@ -7,6 +7,7 @@ export type DemandStatus =
   | "negotiation_ready"
   | "negotiating"
   | "agreement_reached"
+  | "fulfilled"
   | "negotiation_failed"
   | "rejected"
   | "cancelled";
@@ -41,4 +42,10 @@ export interface GetDemandsResponse {
   success: boolean;
   count: number;
   data: MillerDemand[];
+}
+
+export interface MarkDemandFulfilledResponse {
+  success: boolean;
+  message?: string;
+  data: MillerDemand;
 }

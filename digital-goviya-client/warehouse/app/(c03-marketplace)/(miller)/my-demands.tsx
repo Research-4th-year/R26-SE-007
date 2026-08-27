@@ -10,6 +10,7 @@ import {
 } from "@expo-google-fonts/poppins";
 import {
   ActivityIndicator,
+  Alert,
   Animated,
   Pressable,
   RefreshControl,
@@ -214,7 +215,8 @@ export default function MyDemandsScreen() {
           result.negotiating += 1;
         } else if (
           demand.status ===
-          "agreement_reached"
+            "agreement_reached" ||
+          demand.status === "fulfilled"
         ) {
           result.agreed += 1;
         }
@@ -241,7 +243,10 @@ export default function MyDemandsScreen() {
           (statusFilter === "active"
             ? demand.status === "negotiation_ready" ||
               demand.status === "negotiating"
-            : demand.status === statusFilter);
+            : statusFilter === "agreement_reached"
+              ? demand.status === "agreement_reached" ||
+                demand.status === "fulfilled"
+              : demand.status === statusFilter);
 
         const matchesPaddy =
           paddyFilter === "all" ||
@@ -872,6 +877,9 @@ export default function MyDemandsScreen() {
                         <DemandCard
                           key={demand._id}
                           demand={demand}
+                          onCompleted={() =>
+                            void loadDemands()
+                          }
                         />
                       )
                   )}
@@ -943,11 +951,67 @@ function StatChip({
 
 function DemandCard({
   demand,
+  onCompleted,
 }: {
   demand: MillerDemand;
+  onCompleted: () => void;
 }) {
   const { t } = useLanguage();
   const visual = getStatusStyle(demand.status);
+  const [markingFulfilled, setMarkingFulfilled] =
+    useState(false);
+
+  const canMarkFulfilled =
+    demand.status === "open" ||
+    demand.status === "negotiation_ready" ||
+    demand.status === "negotiating";
+
+  const isFulfilled = demand.status === "fulfilled";
+
+  const markFulfilled = async () => {
+    try {
+      setMarkingFulfilled(true);
+
+      const response =
+        await demandService.markDemandFulfilled(
+          demand._id
+        );
+
+      Alert.alert(
+        t.c3myDemands.markAsFulfilledSuccessTitle,
+        response.message ??
+          t.c3myDemands.markAsFulfilledSuccessTitle
+      );
+
+      onCompleted();
+    } catch (error) {
+      Alert.alert(
+        t.c3myDemands.updateErrorTitle,
+        getApiErrorMessage(error)
+      );
+    } finally {
+      setMarkingFulfilled(false);
+    }
+  };
+
+  const confirmMarkFulfilled = () => {
+    Alert.alert(
+      t.c3myDemands.markAsFulfilledConfirmTitle,
+      t.c3myDemands.markAsFulfilledConfirmMessage,
+      [
+        {
+          text: t.c3myDemands.cancel,
+          style: "cancel",
+        },
+        {
+          text: t.c3myDemands.confirm,
+          onPress: () => {
+            void markFulfilled();
+          },
+        },
+      ]
+    );
+  };
 
   return (
     <View style={styles.demandCard}>
@@ -1138,6 +1202,50 @@ function DemandCard({
               />
             </View>
           </LinearGradient>
+        </Pressable>
+      ) : null}
+
+      {canMarkFulfilled || isFulfilled ? (
+        <Pressable
+          disabled={!canMarkFulfilled || markingFulfilled}
+          accessibilityRole="button"
+          onPress={confirmMarkFulfilled}
+          style={({ pressed }) => [
+            styles.completeAction,
+            isFulfilled && styles.completeActionDone,
+            pressed &&
+              canMarkFulfilled &&
+              !markingFulfilled &&
+              styles.pressed,
+          ]}
+        >
+          {markingFulfilled ? (
+            <ActivityIndicator
+              size="small"
+              color={ACCENT}
+            />
+          ) : (
+            <Ionicons
+              name={
+                isFulfilled
+                  ? "checkmark-circle"
+                  : "checkmark-done-outline"
+              }
+              size={16}
+              color={isFulfilled ? "#065F46" : ACCENT}
+            />
+          )}
+
+          <Text
+            style={[
+              styles.completeActionText,
+              isFulfilled && styles.completeActionTextDone,
+            ]}
+          >
+            {isFulfilled
+              ? t.c3myDemands.statusFulfilled
+              : t.c3myDemands.markAsFulfilled}
+          </Text>
         </Pressable>
       ) : null}
 
@@ -1519,6 +1627,7 @@ function getStatusStyle(
         border: "#F5C542",
       };
     case "agreement_reached":
+    case "fulfilled":
       return {
         background: "#D1FAE5",
         text: "#065F46",
@@ -1554,6 +1663,8 @@ function getDemandActivityText(
       return t.c3myDemands.activityNegotiating;
     case "agreement_reached":
       return t.c3myDemands.activityAgreementReached;
+    case "fulfilled":
+      return t.c3myDemands.activityFulfilled;
     case "negotiation_failed":
       return t.c3myDemands.activityNegotiationFailed;
     case "rejected":
@@ -1578,6 +1689,8 @@ function getStatusLabel(
       return t.c3myDemands.statusNegotiating;
     case "agreement_reached":
       return t.c3myDemands.statusAgreementReached;
+    case "fulfilled":
+      return t.c3myDemands.statusFulfilled;
     case "negotiation_failed":
       return t.c3myDemands.statusNegotiationFailed;
     case "rejected":
@@ -2240,6 +2353,30 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "rgba(255,255,255,0.14)",
+  },
+  completeAction: {
+    marginTop: 10,
+    minHeight: 43,
+    borderRadius: 13,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    backgroundColor: "#FEF3C7",
+    borderWidth: 1,
+    borderColor: "#FDE68A",
+  },
+  completeActionDone: {
+    backgroundColor: "#ECFDF5",
+    borderColor: "#A7F3D0",
+  },
+  completeActionText: {
+    color: ACCENT,
+    fontSize: 10,
+    fontFamily: "Poppins_700Bold",
+  },
+  completeActionTextDone: {
+    color: "#065F46",
   },
   cardFooter: {
     flexDirection: "row",

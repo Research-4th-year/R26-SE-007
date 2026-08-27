@@ -21,6 +21,12 @@ export type MatchSelectionStatus =
   | "rejected"
   | "cancelled";
 
+export interface ExistingMatchRequest {
+  status: MatchSelectionStatus;
+  initiatedBy: MatchInitiator;
+  selectionId: string;
+}
+
 export interface BilingualText {
   english: string;
   sinhala: string;
@@ -87,6 +93,7 @@ export interface HarvestMatch {
 
   reasons: BilingualText[];
   recommendation: BilingualText;
+  existingRequest?: ExistingMatchRequest | null;
 }
 
 export interface FarmerHarvestMatch {
@@ -105,6 +112,7 @@ export interface FarmerHarvestMatch {
 
   reasons: BilingualText[];
   recommendation: BilingualText;
+  existingRequest?: ExistingMatchRequest | null;
 }
 
 export interface MatchingResponse {

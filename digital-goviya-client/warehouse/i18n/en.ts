@@ -305,6 +305,15 @@ const en = {
     findMillers: "Find Millers",
     viewDetails: "View Details",
 
+    markAsSold: "Mark as Sold",
+    markAsSoldConfirmTitle: "Mark harvest as sold?",
+    markAsSoldConfirmMessage:
+      "Are you sure you want to mark this harvest as sold? It will no longer be available for matching or negotiation.",
+    markAsSoldSuccessTitle: "Harvest sold",
+    cancel: "Cancel",
+    confirm: "Confirm",
+    updateErrorTitle: "Update failed",
+
     marketReview: "Market review",
     score: "Score",
     ai: "AI",
@@ -551,6 +560,11 @@ c3MatchedMillers: {
   millerSelected: "miller selected",
   millersSelected: "millers selected",
   sendMatchRequests: "Send Match Requests",
+
+  requestSent: "Request Sent",
+  negotiationReady: "Negotiation Ready",
+  requestRejected: "Rejected",
+  requestCancelled: "Cancelled",
 
   highlyRecommended: "Highly Recommended",
   recommended: "Recommended",
@@ -896,6 +910,7 @@ c3MillerHome: {
     statusNegotiationReady: "Negotiation Ready",
     statusNegotiating: "Negotiating",
     statusAgreementReached: "Agreement Reached",
+    statusFulfilled: "Fulfilled",
     statusNegotiationFailed: "Negotiation Failed",
     statusRejected: "Rejected",
     statusCancelled: "Cancelled",
@@ -975,6 +990,7 @@ c3MillerHome: {
     statusNegotiationReady: "Negotiation Ready",
     statusNegotiating: "Negotiating",
     statusAgreementReached: "Agreement Reached",
+    statusFulfilled: "Fulfilled",
     statusNegotiationFailed: "Negotiation Failed",
     statusRejected: "Rejected",
     statusCancelled: "Cancelled",
@@ -983,11 +999,21 @@ c3MillerHome: {
     activityNegotiationReady: "Ready to start negotiation",
     activityNegotiating: "AI negotiation is active",
     activityAgreementReached: "An agreement was reached",
+    activityFulfilled: "This demand has been fulfilled",
     activityNegotiationFailed:
       "Negotiation ended without agreement",
     activityRejected: "The demand was rejected",
     activityCancelled: "The demand was cancelled",
     activityDefault: "Demand status updated",
+
+    markAsFulfilled: "Mark as Fulfilled",
+    markAsFulfilledConfirmTitle: "Mark demand as fulfilled?",
+    markAsFulfilledConfirmMessage:
+      "Are you sure you want to mark this demand as fulfilled? It will no longer be available for matching or negotiation.",
+    markAsFulfilledSuccessTitle: "Demand fulfilled",
+    cancel: "Cancel",
+    confirm: "Confirm",
+    updateErrorTitle: "Update failed",
   },
 
   // C3 Marketplace - Miller Profile
@@ -1124,6 +1150,11 @@ c3MillerHome: {
 
     farmerSelected: "Farmer Selected",
     selectThisFarmer: "Select this Farmer",
+
+    requestSent: "Request Sent",
+    negotiationReady: "Negotiation Ready",
+    requestRejected: "Rejected",
+    requestCancelled: "Cancelled",
 
     loadingTitle: "Finding suitable Farmers",
     loadingDescription:

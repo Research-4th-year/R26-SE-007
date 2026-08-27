@@ -265,6 +265,8 @@ function getStatusLabel(status: string, t: any): string {
       return t.c3demandResult.statusNegotiating;
     case "agreement_reached":
       return t.c3demandResult.statusAgreementReached;
+    case "fulfilled":
+      return t.c3demandResult.statusFulfilled;
     case "negotiation_failed":
       return t.c3demandResult.statusNegotiationFailed;
     case "rejected":
@@ -298,6 +300,7 @@ function getStatusStyle(status: string): { background: string; text: string } {
     case "negotiating":
       return { background: "#FDE68A", text: "#78350F" };
     case "agreement_reached":
+    case "fulfilled":
       return { background: "#D1FAE5", text: "#065F46" };
     case "negotiation_failed":
     case "rejected":

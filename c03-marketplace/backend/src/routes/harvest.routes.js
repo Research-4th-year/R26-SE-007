@@ -12,6 +12,7 @@ const {
 const {
   addHarvest,
   getMyHarvests,
+  markHarvestSold,
 } = require("../controllers/harvest.controller");
 
 const harvestValidation = require(
@@ -32,6 +33,12 @@ router.post(
 router.get(
   "/my-harvests",
   getMyHarvests
+);
+
+router.patch(
+  "/:harvestId/sold",
+  validate(harvestValidation.markHarvestSold),
+  markHarvestSold
 );
 
 module.exports = router;
