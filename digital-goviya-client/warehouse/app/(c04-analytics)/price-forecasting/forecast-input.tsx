@@ -20,6 +20,7 @@ import {
   Poppins_500Medium,
 } from "@expo-google-fonts/poppins";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const RESULT_ROUTE =
   "/(c04-analytics)/price-forecasting/forecast-result";
@@ -50,6 +51,8 @@ function toApiDate(d: Date) {
 }
 
 export default function ForecastInputScreen() {
+  const { t } = useLanguage();
+  
   const [fontsLoaded] = useFonts({
     Poppins_800ExtraBold,
     Poppins_700Bold,
@@ -147,15 +150,15 @@ export default function ForecastInputScreen() {
               size={11}
               color="#F5C542"
             />
-            <Text style={styles.eyebrow}>PRICE FORECAST</Text>
+            <Text style={styles.eyebrow}> {t.forecastInput.eyebrow} </Text>
           </View>
 
           <Text style={styles.heroTitle}>
-            See Where Prices{"\n"}Are Headed
+            {t.forecastInput.title}
           </Text>
 
           <Text style={styles.heroSub}>
-            Choose a district and forecast length
+            {t.forecastInput.subtitle}
           </Text>
         </View>
 
@@ -178,7 +181,7 @@ export default function ForecastInputScreen() {
             keyboardShouldPersistTaps="handled"
           >
             {/* District */}
-            <Text style={styles.fieldLabel}>District</Text>
+            <Text style={styles.fieldLabel}>{t.forecastInput.district}</Text>
 
             <TouchableOpacity
               style={styles.selectField}
@@ -198,7 +201,7 @@ export default function ForecastInputScreen() {
                     !district && styles.placeholderText,
                   ]}
                 >
-                  {district ?? "Select district"}
+                  {district ?? t.forecastInput.selectDistrict}
                 </Text>
               </View>
 
@@ -216,7 +219,7 @@ export default function ForecastInputScreen() {
                 { marginTop: 18 },
               ]}
             >
-              Start Date
+              {t.forecastInput.startDate}
             </Text>
 
             {/* Read-only date field */}
@@ -242,7 +245,7 @@ export default function ForecastInputScreen() {
             </View>
 
             <Text style={styles.helperText}>
-              Forecast starts automatically from today
+              {t.forecastInput.startDateHelper}
             </Text>
 
             {/* Forecast Length */}
@@ -252,7 +255,7 @@ export default function ForecastInputScreen() {
                 { marginTop: 18 },
               ]}
             >
-              Forecast Length
+              {t.forecastInput.forecastLength}
             </Text>
 
             <View style={styles.weeksGrid}>
@@ -286,7 +289,7 @@ export default function ForecastInputScreen() {
                           styles.weekChipLabelActive,
                       ]}
                     >
-                      {w === 1 ? "Week" : "Weeks"}
+                      {w === 1 ? t.forecastInput.week : t.forecastInput.weeks}
                     </Text>
                   </TouchableOpacity>
                 );
@@ -302,7 +305,7 @@ export default function ForecastInputScreen() {
               />
 
               <Text style={styles.noteText}>
-                Long Grain White Paddy
+                {t.forecastInput.paddyType}
               </Text>
             </View>
           </ScrollView>
@@ -333,7 +336,7 @@ export default function ForecastInputScreen() {
                   !isValid && styles.disabledBtnText,
                 ]}
               >
-                Generate Forecast
+                {t.forecastInput.generateForecast}
               </Text>
 
               <Ionicons
@@ -369,7 +372,7 @@ export default function ForecastInputScreen() {
             <View style={styles.sheetHandle} />
 
             <Text style={styles.modalTitle}>
-              Select District
+              {t.forecastInput.selectDistrictTitle}
             </Text>
 
             <FlatList

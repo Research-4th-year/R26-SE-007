@@ -19,6 +19,7 @@ import {
   Poppins_600SemiBold,
   Poppins_500Medium,
 } from "@expo-google-fonts/poppins";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 
 const APP_LOGO = require("@/assets/logo2.png");
@@ -71,7 +72,7 @@ export type PredictionApiResponse = {
   technical: TechnicalSection;
 };
 
-function LogoLoadingState({ label }: { label: string }) {
+function LogoLoadingState({ title, label }: { title: string; label: string }) {
   const spin = useRef(new Animated.Value(0)).current;
   const pulse = useRef(new Animated.Value(1)).current;
 
@@ -120,13 +121,15 @@ function LogoLoadingState({ label }: { label: string }) {
           style={[styles.logoImage, { transform: [{ scale: pulse }] }]}
         />
       </View>
-      <Text style={styles.centerStateTitle}>Crunching the numbers…</Text>
+      <Text style={styles.centerStateTitle}>{title}</Text>
       <Text style={styles.centerStateText}>{label}</Text>
     </View>
   );
 }
 
 export default function PredictionResultScreen() {
+  const { t } = useLanguage();
+  
   const { district, date } = useLocalSearchParams<{ district: string; date: string }>();
 
   const [fontsLoaded] = useFonts({
@@ -158,8 +161,8 @@ export default function PredictionResultScreen() {
     } catch (e: any) {
       setError(
         e?.message === "Network request failed"
-          ? "Couldn't reach the prediction server. Check your connection and try again."
-          : "Something went wrong while getting your prediction."
+          ? t.predictionResult.error.network
+          : t.predictionResult.error.general
       );
     } finally {
       setLoading(false);
@@ -222,10 +225,10 @@ export default function PredictionResultScreen() {
 
           <View style={styles.eyebrowPill}>
             <Ionicons name="pricetag" size={11} color="#F5C542" />
-            <Text style={styles.eyebrow}>PREDICTION RESULT</Text>
+            <Text style={styles.eyebrow}>{t.predictionResult.eyebrow}</Text>
           </View>
 
-          <Text style={styles.heroTitle}>Today's Price Estimate</Text>
+          <Text style={styles.heroTitle}>{t.predictionResult.title}</Text>
           <Text style={styles.heroSub}>
             {district} · {date}
           </Text>
@@ -235,18 +238,23 @@ export default function PredictionResultScreen() {
         <Animated.View style={styles.sheet}>
           <View style={styles.sheetHandle} />
 
-          {loading && <LogoLoadingState label="Getting your price estimate…" />}
+          {loading && 
+            <LogoLoadingState 
+              title={t.predictionResult.loading.title}
+              label={t.predictionResult.loading.message}
+            />
+          }
 
           {!loading && error && (
             <View style={styles.centerState}>
               <View style={styles.errorIconBox}>
                 <Ionicons name="cloud-offline-outline" size={30} color="#DC2626" />
               </View>
-              <Text style={styles.errorTitle}>Prediction failed</Text>
+              <Text style={styles.errorTitle}>{t.predictionResult.error.title}</Text>
               <Text style={styles.centerStateText}>{error}</Text>
               <TouchableOpacity style={styles.retryBtn} onPress={fetchPrediction} activeOpacity={0.85}>
                 <Ionicons name="refresh" size={16} color="#15803D" />
-                <Text style={styles.retryText}>Try Again</Text>
+                <Text style={styles.retryText}>{t.predictionResult.error.retry}</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -265,7 +273,7 @@ export default function PredictionResultScreen() {
                   end={{ x: 1, y: 1 }}
                   style={styles.priceCard}
                 >
-                  <Text style={styles.priceLabel}>Predicted Price</Text>
+                  <Text style={styles.priceLabel}>{t.predictionResult.price.predictedPrice}</Text>
                   <View style={styles.priceRow}>
                     <Text style={styles.priceValue}>{p.predicted_price.toFixed(2)}</Text>
                     <Text style={styles.priceUnit}>{p.currency}</Text>
@@ -279,13 +287,13 @@ export default function PredictionResultScreen() {
                     />
                     <Text style={styles.deltaPillText}>
                       {deltaUp ? "+" : ""}
-                      {delta.toFixed(2)} vs previous ({p.previous_price.toFixed(2)} {p.currency})
+                      {delta.toFixed(2)} {t.predictionResult.price.vsPrevious} ({p.previous_price.toFixed(2)} {p.currency})
                     </Text>
                   </View>
 
                   <View style={styles.paddyTypePill}>
                     <Ionicons name="leaf" size={11} color="#0B3B22" />
-                    <Text style={styles.paddyTypePillText}>Long Grain White</Text>
+                    <Text style={styles.paddyTypePillText}>{t.predictionResult.price.paddyType}</Text>
                   </View>
 
                   {/* Explanation button, anchored right next to the predicted price */}
@@ -295,7 +303,7 @@ export default function PredictionResultScreen() {
                     onPress={goToExplanation}
                   >
                     <Ionicons name="bulb" size={16} color="#F5C542" />
-                    <Text style={styles.explanationBtnText}>Why this price?</Text>
+                    <Text style={styles.explanationBtnText}>{t.predictionResult.price.whyThisPrice}</Text>
                     <Ionicons name="arrow-forward" size={14} color="#F5C542" />
                   </TouchableOpacity>
                 </LinearGradient>
@@ -303,13 +311,13 @@ export default function PredictionResultScreen() {
                 <View style={styles.contextCard}>
                   <View style={styles.contextRow}>
                     <Ionicons name="location-outline" size={16} color="#15803D" />
-                    <Text style={styles.contextLabel}>District</Text>
+                    <Text style={styles.contextLabel}>{t.predictionResult.context.district}</Text>
                     <Text style={styles.contextValue}>{p.district}</Text>
                   </View>
                   <View style={styles.contextDivider} />
                   <View style={styles.contextRow}>
                     <Ionicons name="calendar-outline" size={16} color="#15803D" />
-                    <Text style={styles.contextLabel}>Date</Text>
+                    <Text style={styles.contextLabel}>{t.predictionResult.context.date}</Text>
                     <Text style={styles.contextValue}>{p.date}</Text>
                   </View>
                 </View>
@@ -324,8 +332,8 @@ export default function PredictionResultScreen() {
                       <Ionicons name="stats-chart" size={17} color="#15803D" />
                     </View>
                     <View>
-                      <Text style={styles.advancedBtnTitle}>Advanced Details</Text>
-                      <Text style={styles.advancedBtnSub}>Market outlook & model breakdown</Text>
+                      <Text style={styles.advancedBtnTitle}>{t.predictionResult.advanced.title}</Text>
+                      <Text style={styles.advancedBtnSub}>{t.predictionResult.advanced.subtitle}</Text>
                     </View>
                   </View>
                   <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
