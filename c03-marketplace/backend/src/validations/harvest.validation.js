@@ -33,6 +33,18 @@ const addHarvest = {
   }),
 };
 
+const objectId = Joi.string()
+  .hex()
+  .length(24)
+  .required();
+
+const markHarvestSold = {
+  params: Joi.object().keys({
+    harvestId: objectId,
+  }),
+};
+
 module.exports = {
   addHarvest,
+  markHarvestSold,
 };

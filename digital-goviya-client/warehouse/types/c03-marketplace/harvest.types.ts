@@ -105,3 +105,9 @@ export interface GetHarvestsResponse {
   count: number;
   data: Harvest[];
 }
+
+export interface MarkHarvestSoldResponse {
+  success: boolean;
+  message?: string;
+  data: Harvest;
+}

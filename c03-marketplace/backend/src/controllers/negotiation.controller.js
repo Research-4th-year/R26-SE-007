@@ -177,6 +177,33 @@ const startNegotiation = async (
     }
 
     if (
+      harvest.status === "sold" ||
+      harvest.status === "cancelled"
+    ) {
+      return res.status(409).json({
+        success: false,
+        message:
+          "This harvest is no longer available for negotiation.",
+      });
+    }
+
+    if (
+      [
+        "fulfilled",
+        "agreement_reached",
+        "cancelled",
+        "rejected",
+        "negotiation_failed",
+      ].includes(demand.status)
+    ) {
+      return res.status(409).json({
+        success: false,
+        message:
+          "This demand is no longer available for negotiation.",
+      });
+    }
+
+    if (
       harvest.minimumAcceptablePrice ==
         null ||
       demand.maximumBuyingPrice == null

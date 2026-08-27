@@ -1113,8 +1113,14 @@ const respondToSelection =
         await selection.save();
 
         await Harvest
-          .findByIdAndUpdate(
-            harvest._id,
+          .findOneAndUpdate(
+            {
+              _id:
+                harvest._id,
+
+              status:
+                "available",
+            },
             {
               status:
                 "matched",
@@ -1126,8 +1132,14 @@ const respondToSelection =
           );
 
         await MillerDemand
-          .findByIdAndUpdate(
-            demand._id,
+          .findOneAndUpdate(
+            {
+              _id:
+                demand._id,
+
+              status:
+                "open",
+            },
             {
               status:
                 "negotiation_ready",

@@ -51,6 +51,7 @@ interface HarvestResultParams {
   districtDemand?: string;
 
   createdAt?: string;
+  status?: string;
 }
 
 export default function HarvestResultScreen() {
@@ -76,8 +77,12 @@ export default function HarvestResultScreen() {
   const normalizedMarketStatus =
     params.marketStatus?.trim().toUpperCase();
 
+  const listingStatus =
+    params.status?.trim().toLowerCase() || "available";
+
   const canFindMatchingMillers =
     Boolean(params.harvestId) &&
+    listingStatus === "available" &&
     normalizedMarketStatus !== "LOW_DEMAND";
 
   const priceDifference =

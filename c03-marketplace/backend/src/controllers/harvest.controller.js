@@ -1,6 +1,9 @@
+const mongoose = require("mongoose");
+
 const Harvest = require("../models/harvest.model");
 const Farmer = require("../models/farmer.model");
 const MillerDemand = require("../models/millerDemand.model");
+const MatchSelection = require("../models/matchSelection.model");
 
 const flService = require("../services/fl.service");
 
@@ -252,7 +255,100 @@ const getMyHarvests = async (req, res) => {
   }
 };
 
+const MARKABLE_HARVEST_STATUSES = [
+  "available",
+  "matched",
+];
+
+const cancelPendingHarvestSelections = async (harvestId) => {
+  try {
+    await MatchSelection.updateMany(
+      {
+        harvestId,
+        status: "pending",
+      },
+      {
+        status: "cancelled",
+        respondedAt: new Date(),
+      }
+    );
+  } catch (error) {
+    console.error(
+      "CANCEL PENDING HARVEST SELECTIONS ERROR:",
+      error
+    );
+  }
+};
+
+const markHarvestSold = async (req, res) => {
+  try {
+    const { harvestId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(harvestId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid harvest id.",
+      });
+    }
+
+    const farmer = await Farmer.findOne({
+      user: req.user._id,
+    });
+
+    if (!farmer) {
+      return res.status(404).json({
+        success: false,
+        message: "Farmer profile not found",
+      });
+    }
+
+    const harvest = await Harvest.findOne({
+      _id: harvestId,
+      farmerId: farmer._id,
+    });
+
+    if (!harvest) {
+      return res.status(404).json({
+        success: false,
+        message: "Harvest not found.",
+      });
+    }
+
+    if (harvest.status === "sold") {
+      return res.status(409).json({
+        success: false,
+        message: "This harvest is already marked as sold.",
+      });
+    }
+
+    if (!MARKABLE_HARVEST_STATUSES.includes(harvest.status)) {
+      return res.status(409).json({
+        success: false,
+        message:
+          "Only available or matched harvests can be marked as sold.",
+      });
+    }
+
+    harvest.status = "sold";
+    await harvest.save();
+
+    await cancelPendingHarvestSelections(harvest._id);
+
+    return res.status(200).json({
+      success: true,
+      message: "Harvest marked as sold.",
+      data: harvest,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 module.exports = {
   addHarvest,
   getMyHarvests,
+  markHarvestSold,
 };

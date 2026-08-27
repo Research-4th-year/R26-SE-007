@@ -27,6 +27,18 @@ const createDemand = {
   }),
 };
 
+const objectId = Joi.string()
+  .hex()
+  .length(24)
+  .required();
+
+const markDemandFulfilled = {
+  params: Joi.object().keys({
+    demandId: objectId,
+  }),
+};
+
 module.exports = {
   createDemand,
+  markDemandFulfilled,
 };

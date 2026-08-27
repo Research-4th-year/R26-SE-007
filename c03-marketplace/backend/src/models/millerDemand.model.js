@@ -42,6 +42,7 @@ const millerDemandSchema = new mongoose.Schema(
         "negotiation_ready",
         "negotiating",
         "agreement_reached",
+        "fulfilled",
         "negotiation_failed",
         "rejected",
         "cancelled",
