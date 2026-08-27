@@ -31,6 +31,7 @@ import {
 import { harvestService } from "@/services/c03-marketplace/harvest.service";
 import { getApiErrorMessage } from "@/utils/c03-marketplace/getApiErrorMessage";
 import type { Harvest } from "@/types/c03-marketplace/harvest.types";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type HarvestStatusFilter =
   | "all"
@@ -55,27 +56,27 @@ type SortOption =
 type ViewMode = "cards" | "compact";
 
 const PADDY_FILTERS: Array<{
-  label: string;
   value: PaddyFilter;
 }> = [
-  { label: "All varieties", value: "all" },
-  { label: "Nadu", value: "nadu" },
-  { label: "Samba", value: "samba" },
-  { label: "Keeri Samba", value: "keeri samba" },
+  { value: "all" },
+  { value: "nadu" },
+  { value: "samba" },
+  { value: "keeri samba" },
 ];
 
 const SORT_OPTIONS: Array<{
-  label: string;
   value: SortOption;
 }> = [
-  { label: "Newest", value: "newest" },
-  { label: "Oldest", value: "oldest" },
-  { label: "Highest quantity", value: "quantity_high" },
-  { label: "Lowest quantity", value: "quantity_low" },
-  { label: "Highest AI score", value: "score_high" },
+  { value: "newest" },
+  { value: "oldest" },
+  { value: "quantity_high" },
+  { value: "quantity_low" },
+  { value: "score_high" },
 ];
 
 export default function MyHarvestsScreen() {
+  const { t, language } = useLanguage();
+
   const [harvests, setHarvests] = useState<Harvest[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -203,7 +204,13 @@ export default function MyHarvestsScreen() {
 
         const searchableText = [
           harvest.paddyType,
+          translatePaddyType(harvest.paddyType, t),
           harvest.season,
+          translateSeason(
+            harvest.season,
+            t,
+            harvest.season
+          ),
           harvest.status,
           harvest.marketStatus,
           harvest.priceLevel,
@@ -268,6 +275,7 @@ export default function MyHarvestsScreen() {
     statusFilter,
     paddyFilter,
     sortOption,
+    t,
   ]);
 
   const activeFilterCount =
@@ -294,7 +302,7 @@ export default function MyHarvestsScreen() {
       <View style={styles.navigationHeader}>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Go back"
+          accessibilityLabel={t.c3myHarvests.back}
           onPress={() => router.back()}
           style={({ pressed }) => [
             styles.backButton,
@@ -310,16 +318,17 @@ export default function MyHarvestsScreen() {
 
         <View style={styles.navigationTitleArea}>
           <Text style={styles.navigationTitle}>
-            My Harvests
+            {t.c3myHarvests.title}
           </Text>
+
           <Text style={styles.navigationSubtitle}>
-            {stats.total} submitted
+            {stats.total} {t.c3myHarvests.submitted}
           </Text>
         </View>
 
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Add harvest"
+          accessibilityLabel={t.c3myHarvests.addHarvest}
           onPress={() =>
             router.push("./add-harvest")
           }
@@ -399,25 +408,27 @@ export default function MyHarvestsScreen() {
 
                   <View style={{ flex: 1 }}>
                     <Text style={styles.summaryEyebrow}>
-                      HARVEST PORTFOLIO
+                      {t.c3myHarvests.portfolioEyebrow}
                     </Text>
+
                     <Text style={styles.summaryHeroTitle}>
-                      Track every listing in one place
+                      {t.c3myHarvests.portfolioTitle}
                     </Text>
                   </View>
                 </View>
 
                 <View style={styles.statRow}>
                   <SummaryStat
-                    label="Total"
+                    label={t.c3myHarvests.total}
                     value={stats.total}
                     selected={statusFilter === "all"}
                     onPress={() =>
                       setStatusFilter("all")
                     }
                   />
+
                   <SummaryStat
-                    label="Available"
+                    label={t.c3myHarvests.available}
                     value={stats.available}
                     selected={
                       statusFilter === "available"
@@ -426,8 +437,9 @@ export default function MyHarvestsScreen() {
                       setStatusFilter("available")
                     }
                   />
+
                   <SummaryStat
-                    label="Matched"
+                    label={t.c3myHarvests.matched}
                     value={stats.matched}
                     selected={
                       statusFilter === "matched"
@@ -436,8 +448,9 @@ export default function MyHarvestsScreen() {
                       setStatusFilter("matched")
                     }
                   />
+
                   <SummaryStat
-                    label="Sold"
+                    label={t.c3myHarvests.sold}
                     value={stats.sold}
                     selected={statusFilter === "sold"}
                     onPress={() =>
@@ -458,7 +471,9 @@ export default function MyHarvestsScreen() {
                   <TextInput
                     value={searchQuery}
                     onChangeText={setSearchQuery}
-                    placeholder="Search paddy, season, status..."
+                    placeholder={
+                      t.c3myHarvests.searchPlaceholder
+                    }
                     placeholderTextColor="#9CA3AF"
                     style={styles.searchInput}
                     autoCapitalize="none"
@@ -535,14 +550,15 @@ export default function MyHarvestsScreen() {
                           styles.filterPanelTitle
                         }
                       >
-                        Refine results
+                        {t.c3myHarvests.refineResults}
                       </Text>
+
                       <Text
                         style={
                           styles.filterPanelSubtitle
                         }
                       >
-                        Variety and sorting options
+                        {t.c3myHarvests.varietyAndSorting}
                       </Text>
                     </View>
 
@@ -554,19 +570,28 @@ export default function MyHarvestsScreen() {
                           styles.clearFiltersText
                         }
                       >
-                        Clear all
+                        {t.c3myHarvests.clearAll}
                       </Text>
                     </Pressable>
                   </View>
 
                   <Text style={styles.filterLabel}>
-                    Paddy variety
+                    {t.c3myHarvests.paddyVariety}
                   </Text>
 
                   <View style={styles.wrapRow}>
                     {PADDY_FILTERS.map((item) => {
                       const selected =
                         paddyFilter === item.value;
+
+                      const label =
+                        item.value === "all"
+                          ? t.c3myHarvests.allVarieties
+                          : item.value === "nadu"
+                          ? t.c3myHarvests.nadu
+                          : item.value === "samba"
+                          ? t.c3myHarvests.samba
+                          : t.c3myHarvests.keeriSamba;
 
                       return (
                         <Pressable
@@ -589,7 +614,7 @@ export default function MyHarvestsScreen() {
                                 styles.optionChipTextSelected,
                             ]}
                           >
-                            {item.label}
+                            {label}
                           </Text>
                         </Pressable>
                       );
@@ -602,13 +627,24 @@ export default function MyHarvestsScreen() {
                       { marginTop: 17 },
                     ]}
                   >
-                    Sort by
+                    {t.c3myHarvests.sortBy}
                   </Text>
 
                   <View style={styles.wrapRow}>
                     {SORT_OPTIONS.map((item) => {
                       const selected =
                         sortOption === item.value;
+
+                      const label =
+                        item.value === "newest"
+                          ? t.c3myHarvests.newest
+                          : item.value === "oldest"
+                          ? t.c3myHarvests.oldest
+                          : item.value === "quantity_high"
+                          ? t.c3myHarvests.highestQuantity
+                          : item.value === "quantity_low"
+                          ? t.c3myHarvests.lowestQuantity
+                          : t.c3myHarvests.highestAiScore;
 
                       return (
                         <Pressable
@@ -631,7 +667,7 @@ export default function MyHarvestsScreen() {
                                 styles.optionChipTextSelected,
                             ]}
                           >
-                            {item.label}
+                            {label}
                           </Text>
                         </Pressable>
                       );
@@ -643,17 +679,22 @@ export default function MyHarvestsScreen() {
               <View style={styles.resultsToolbar}>
                 <View>
                   <Text style={styles.sectionTitle}>
-                    Harvests
+                    {t.c3myHarvests.harvests}
                   </Text>
+
                   <Text style={styles.resultMeta}>
-                    {filteredHarvests.length} of{" "}
-                    {harvests.length} shown
+                    {filteredHarvests.length}{" "}
+                    {t.c3myHarvests.of}{" "}
+                    {harvests.length}{" "}
+                    {t.c3myHarvests.shown}
                   </Text>
                 </View>
 
                 <View style={styles.viewToggle}>
                   <Pressable
-                    accessibilityLabel="Card view"
+                    accessibilityLabel={
+                      t.c3myHarvests.cardView
+                    }
                     onPress={() =>
                       setViewMode("cards")
                     }
@@ -675,7 +716,9 @@ export default function MyHarvestsScreen() {
                   </Pressable>
 
                   <Pressable
-                    accessibilityLabel="Compact list view"
+                    accessibilityLabel={
+                      t.c3myHarvests.compactListView
+                    }
                     onPress={() =>
                       setViewMode("compact")
                     }
@@ -739,11 +782,13 @@ function SummaryStat({
   selected?: boolean;
   onPress?: () => void;
 }) {
+  const { t } = useLanguage();
+
   return (
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={`Filter harvests by ${label}`}
+      accessibilityLabel={`${t.c3myHarvests.filterHarvestsBy} ${label}`}
       style={({ pressed }) => [
         styles.summaryStat,
         selected && styles.summaryStatSelected,
@@ -758,6 +803,7 @@ function SummaryStat({
       >
         {value}
       </Text>
+
       <Text
         style={[
           styles.summaryStatLabel,
@@ -775,6 +821,8 @@ function HarvestCard({
 }: {
   harvest: Harvest;
 }) {
+  const { t } = useLanguage();
+
   const predictedPrice =
     harvest.aiPredictedPrice;
 
@@ -806,12 +854,17 @@ function HarvestCard({
 
         <View style={styles.cardTitleArea}>
           <Text style={styles.paddyName}>
-            {formatPaddyType(
-              harvest.paddyType
+            {translatePaddyType(
+              harvest.paddyType,
+              t
             )}
           </Text>
+
           <Text style={styles.harvestDate}>
-            {formatDate(harvest.createdAt)}
+            {formatDate(
+              harvest.createdAt,
+              t.c3myHarvests.dateUnavailable
+            )}
           </Text>
         </View>
 
@@ -825,41 +878,47 @@ function HarvestCard({
           status={
             formatStatus(
               harvest.marketStatus
-            ) ?? "Market review"
+            ) ??
+            t.c3myHarvests.marketReview
           }
         />
       </View>
 
       <View style={styles.detailsGrid}>
         <MetricItem
-          label="Quantity"
+          label={t.c3myHarvests.quantity}
           value={`${formatNumber(
             harvest.quantity
-          )} kg`}
+          )} ${t.c3myHarvests.kg}`}
           icon="cube-outline"
         />
+
         <MetricItem
-          label="Season"
-          value={formatSeason(
-            harvest.season
+          label={t.c3myHarvests.season}
+          value={translateSeason(
+            harvest.season,
+            t,
+            t.c3myHarvests.notSpecified
           )}
           icon="calendar-outline"
         />
+
         <MetricItem
-          label="Expected"
+          label={t.c3myHarvests.expected}
           value={formatCurrency(
             harvest.expectedPrice
           )}
           icon="cash-outline"
         />
+
         <MetricItem
-          label="AI price"
+          label={t.c3myHarvests.aiPrice}
           value={
             typeof predictedPrice === "number"
               ? formatCurrency(
                   predictedPrice
                 )
-              : "Pending"
+              : t.c3myHarvests.pending
           }
           icon="sparkles-outline"
           emphasized
@@ -896,7 +955,7 @@ function HarvestCard({
             {formatCurrency(
               priceDifference
             )}{" "}
-            compared with your expected price
+            {t.c3myHarvests.compactListView}
           </Text>
         </View>
       ) : null}
@@ -904,8 +963,9 @@ function HarvestCard({
       <View style={styles.scoreSection}>
         <View style={styles.scoreHeader}>
           <Text style={styles.scoreLabel}>
-            Harvest score
+            {t.c3myHarvests.harvestScore}
           </Text>
+
           <Text style={styles.scoreValue}>
             {Math.round(
               harvest.harvestScore ?? 0
@@ -945,12 +1005,13 @@ function HarvestCard({
             size={17}
             color="#15803D"
           />
+
           <Text
             style={
               styles.secondaryActionText
             }
           >
-            AI Details
+            {t.c3myHarvests.aiDetails}
           </Text>
         </Pressable>
 
@@ -976,12 +1037,13 @@ function HarvestCard({
               size={17}
               color="#FFFFFF"
             />
+
             <Text
               style={
                 styles.primaryActionText
               }
             >
-              Find Millers
+              {t.c3myHarvests.findMillers}
             </Text>
           </Pressable>
         ) : (
@@ -994,8 +1056,9 @@ function HarvestCard({
                 styles.primaryActionText
               }
             >
-              View Details
+              {t.c3myHarvests.viewDetails}
             </Text>
+
             <Ionicons
               name="arrow-forward"
               size={16}
@@ -1013,6 +1076,8 @@ function CompactHarvestCard({
 }: {
   harvest: Harvest;
 }) {
+  const { t } = useLanguage();
+
   return (
     <Pressable
       onPress={() =>
@@ -1034,8 +1099,9 @@ function CompactHarvestCard({
       <View style={styles.compactBody}>
         <View style={styles.compactTop}>
           <Text style={styles.compactTitle}>
-            {formatPaddyType(
-              harvest.paddyType
+            {translatePaddyType(
+              harvest.paddyType,
+              t
             )}
           </Text>
 
@@ -1046,19 +1112,21 @@ function CompactHarvestCard({
         </View>
 
         <Text style={styles.compactSubtitle}>
-          {formatSeason(
-            harvest.season
+          {translateSeason(
+            harvest.season,
+            t,
+            t.c3myHarvests.notSpecified
           )}{" "}
           •{" "}
           {formatNumber(
             harvest.quantity
           )}{" "}
-          kg
+          {t.c3myHarvests.kg}
         </Text>
 
         <View style={styles.compactPriceRow}>
           <Text style={styles.compactPriceLabel}>
-            AI{" "}
+            {t.c3myHarvests.ai}{" "}
             <Text style={styles.compactPrice}>
               {formatCurrency(
                 harvest.aiPredictedPrice
@@ -1067,7 +1135,7 @@ function CompactHarvestCard({
           </Text>
 
           <Text style={styles.compactScore}>
-            Score{" "}
+            {t.c3myHarvests.score}{" "}
             {Math.round(
               harvest.harvestScore ?? 0
             )}
@@ -1115,6 +1183,7 @@ function HarvestStatusBadge({
           },
         ]}
       />
+
       <Text
         style={[
           styles.harvestStatusText,
@@ -1152,6 +1221,7 @@ function MetricItem({
               : "#64748B"
           }
         />
+
         <Text style={styles.metricLabel}>
           {label}
         </Text>
@@ -1204,6 +1274,7 @@ function StatusBadge({
           },
         ]}
       />
+
       <Text
         style={[
           styles.statusText,
@@ -1219,6 +1290,8 @@ function StatusBadge({
 }
 
 function LoadingState() {
+  const { t } = useLanguage();
+
   return (
     <SafeAreaView style={styles.screen}>
       <View style={styles.centerState}>
@@ -1228,14 +1301,15 @@ function LoadingState() {
             color="#15803D"
           />
         </View>
+
         <Text style={styles.stateTitle}>
-          Loading harvests
+          {t.c3myHarvests.loadingHarvests}
         </Text>
+
         <Text
           style={styles.stateDescription}
         >
-          Retrieving your latest marketplace
-          data.
+          {t.c3myHarvests.loadingDescription}
         </Text>
       </View>
     </SafeAreaView>
@@ -1249,6 +1323,8 @@ function ErrorState({
   message: string;
   onRetry: () => void;
 }) {
+  const { t } = useLanguage();
+
   return (
     <View style={styles.centerState}>
       <View style={styles.errorIcon}>
@@ -1260,7 +1336,7 @@ function ErrorState({
       </View>
 
       <Text style={styles.stateTitle}>
-        Unable to load harvests
+        {t.c3myHarvests.unableToLoad}
       </Text>
 
       <Text style={styles.stateDescription}>
@@ -1276,8 +1352,9 @@ function ErrorState({
           size={18}
           color="#FFFFFF"
         />
+
         <Text style={styles.retryButtonText}>
-          Try again
+          {t.c3myHarvests.tryAgain}
         </Text>
       </Pressable>
     </View>
@@ -1285,6 +1362,8 @@ function ErrorState({
 }
 
 function EmptyState() {
+  const { t } = useLanguage();
+
   return (
     <View style={styles.centerState}>
       <View style={styles.emptyIllustration}>
@@ -1296,13 +1375,11 @@ function EmptyState() {
       </View>
 
       <Text style={styles.stateTitle}>
-        No harvests yet
+        {t.c3myHarvests.noHarvests}
       </Text>
 
       <Text style={styles.stateDescription}>
-        Add your first paddy harvest to
-        receive an AI-generated price
-        recommendation.
+        {t.c3myHarvests.noHarvestsDescription}
       </Text>
 
       <Pressable
@@ -1316,8 +1393,9 @@ function EmptyState() {
           size={20}
           color="#FFFFFF"
         />
+
         <Text style={styles.emptyButtonText}>
-          Add First Harvest
+          {t.c3myHarvests.addFirstHarvest}
         </Text>
       </Pressable>
     </View>
@@ -1329,6 +1407,8 @@ function FilteredEmptyState({
 }: {
   onClear: () => void;
 }) {
+  const { t } = useLanguage();
+
   return (
     <View style={styles.filteredEmpty}>
       <View style={styles.filteredEmptyIcon}>
@@ -1340,12 +1420,11 @@ function FilteredEmptyState({
       </View>
 
       <Text style={styles.filteredEmptyTitle}>
-        No matching harvests
+        {t.c3myHarvests.noMatchingHarvests}
       </Text>
 
       <Text style={styles.filteredEmptyText}>
-        Try changing your search or filter
-        options.
+        {t.c3myHarvests.noMatchingHarvestsDescription}
       </Text>
 
       <Pressable
@@ -1353,7 +1432,7 @@ function FilteredEmptyState({
         style={styles.clearButton}
       >
         <Text style={styles.clearButtonText}>
-          Clear filters
+          {t.c3myHarvests.clearFilters}
         </Text>
       </Pressable>
     </View>
@@ -1408,16 +1487,19 @@ function getHarvestStatusStyle(
         background: "#DCFCE7",
         text: "#166534",
       };
+
     case "matched":
       return {
         background: "#DBEAFE",
         text: "#1D4ED8",
       };
+
     case "sold":
       return {
         background: "#D1FAE5",
         text: "#047857",
       };
+
     case "cancelled":
     default:
       return {
@@ -1427,9 +1509,24 @@ function getHarvestStatusStyle(
   }
 }
 
-function formatPaddyType(
-  value: string
+function translatePaddyType(
+  value: string,
+  t: any
 ): string {
+  const normalized = value.trim().toLowerCase();
+
+  if (normalized === "nadu") {
+    return t.c3paddyTypes.Nadu;
+  }
+
+  if (normalized === "samba") {
+    return t.c3paddyTypes.Samba;
+  }
+
+  if (normalized === "keeri samba" || normalized === "keerisamba") {
+    return t.c3paddyTypes.KeeriSamba;
+  }
+
   return value
     .trim()
     .split(/[\s_-]+/)
@@ -1441,13 +1538,29 @@ function formatPaddyType(
     .join(" ");
 }
 
-function formatSeason(
-  value: string
+function translateSeason(
+  value: string,
+  t: any,
+  fallback: string
 ): string {
-  return value
-    ? value.charAt(0).toUpperCase() +
-        value.slice(1).toLowerCase()
-    : "Not specified";
+  if (!value) {
+    return fallback;
+  }
+
+  const normalized = value.trim().toLowerCase();
+
+  if (normalized === "maha") {
+    return t.c3seasons.Maha;
+  }
+
+  if (normalized === "yala") {
+    return t.c3seasons.Yala;
+  }
+
+  return (
+    value.charAt(0).toUpperCase() +
+    value.slice(1).toLowerCase()
+  );
 }
 
 function formatStatus(
@@ -1489,12 +1602,13 @@ function formatCurrency(
 }
 
 function formatDate(
-  value: string
+  value: string,
+  fallback: string
 ): string {
   const date = new Date(value);
 
   if (Number.isNaN(date.getTime())) {
-    return "Date unavailable";
+    return fallback;
   }
 
   return new Intl.DateTimeFormat(
@@ -1512,9 +1626,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#F8FAF8",
   },
+
   animatedFlex: {
     flex: 1,
   },
+
   navigationHeader: {
     minHeight: 72,
     flexDirection: "row",
@@ -1524,6 +1640,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#EEF0ED",
   },
+
   backButton: {
     width: 42,
     height: 42,
@@ -1532,21 +1649,25 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: "#F3F4F6",
   },
+
   navigationTitleArea: {
     flex: 1,
     marginHorizontal: 14,
   },
+
   navigationTitle: {
     color: "#1F2937",
     fontSize: 19,
     fontFamily: "Poppins_800ExtraBold",
   },
+
   navigationSubtitle: {
     color: "#6B7280",
     fontSize: 11,
     fontFamily: "Poppins_500Medium",
     marginTop: 2,
   },
+
   addHeaderButtonShadow: {
     borderRadius: 14,
     shadowColor: "#15803D",
@@ -1558,6 +1679,7 @@ const styles = StyleSheet.create({
     },
     elevation: 4,
   },
+
   addHeaderButton: {
     width: 42,
     height: 42,
@@ -1565,24 +1687,29 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+
   content: {
     padding: 18,
     paddingBottom: 120,
   },
+
   emptyContent: {
     flexGrow: 1,
     justifyContent: "center",
   },
+
   summaryHero: {
     borderRadius: 24,
     padding: 18,
     marginBottom: 18,
   },
+
   summaryHeroTop: {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
   },
+
   summaryHeroIcon: {
     width: 46,
     height: 46,
@@ -1592,23 +1719,27 @@ const styles = StyleSheet.create({
     backgroundColor:
       "rgba(255,255,255,0.13)",
   },
+
   summaryEyebrow: {
     color: "#BBF7D0",
     fontSize: 9,
     fontFamily: "Poppins_700Bold",
     letterSpacing: 1.1,
   },
+
   summaryHeroTitle: {
     color: "#FFFFFF",
     fontSize: 15,
     fontFamily: "Poppins_700Bold",
     marginTop: 4,
   },
+
   statRow: {
     flexDirection: "row",
     gap: 7,
     marginTop: 16,
   },
+
   summaryStat: {
     flex: 1,
     alignItems: "center",
@@ -1619,34 +1750,41 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.14)",
   },
+
   summaryStatSelected: {
     backgroundColor:
       "rgba(255,255,255,0.26)",
     borderColor:
       "rgba(255,255,255,0.55)",
   },
+
   summaryStatValue: {
     color: "#FFFFFF",
     fontSize: 16,
     fontFamily: "Poppins_800ExtraBold",
   },
+
   summaryStatValueSelected: {
     color: "#FFFFFF",
   },
+
   summaryStatLabel: {
     color: "rgba(255,255,255,0.7)",
     fontSize: 8,
     fontFamily: "Poppins_600SemiBold",
     marginTop: 2,
   },
+
   summaryStatLabelSelected: {
     color: "rgba(255,255,255,0.95)",
   },
+
   searchRow: {
     flexDirection: "row",
     gap: 9,
     marginBottom: 12,
   },
+
   searchBox: {
     flex: 1,
     minHeight: 50,
@@ -1659,6 +1797,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#E5E7EB",
   },
+
   searchInput: {
     flex: 1,
     color: "#1F2937",
@@ -1666,6 +1805,7 @@ const styles = StyleSheet.create({
     fontFamily: "Poppins_500Medium",
     paddingVertical: 0,
   },
+
   filterButton: {
     width: 50,
     height: 50,
@@ -1677,10 +1817,12 @@ const styles = StyleSheet.create({
     borderColor: "#BBF7D0",
     position: "relative",
   },
+
   filterButtonActive: {
     backgroundColor: "#15803D",
     borderColor: "#15803D",
   },
+
   filterCountBadge: {
     position: "absolute",
     right: -4,
@@ -1695,11 +1837,13 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: "#FFFFFF",
   },
+
   filterCountText: {
     color: "#78350F",
     fontSize: 7,
     fontFamily: "Poppins_800ExtraBold",
   },
+
   filterPanel: {
     borderRadius: 20,
     padding: 16,
@@ -1708,39 +1852,46 @@ const styles = StyleSheet.create({
     borderColor: "#DCFCE7",
     marginBottom: 18,
   },
+
   filterPanelHeader: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     marginBottom: 15,
   },
+
   filterPanelTitle: {
     color: "#1F2937",
     fontSize: 13,
     fontFamily: "Poppins_800ExtraBold",
   },
+
   filterPanelSubtitle: {
     color: "#94A3B8",
     fontSize: 8.5,
     fontFamily: "Poppins_500Medium",
     marginTop: 2,
   },
+
   clearFiltersText: {
     color: "#15803D",
     fontSize: 9,
     fontFamily: "Poppins_700Bold",
   },
+
   filterLabel: {
     color: "#475569",
     fontSize: 9,
     fontFamily: "Poppins_700Bold",
     marginBottom: 8,
   },
+
   wrapRow: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 7,
   },
+
   optionChip: {
     borderRadius: 999,
     paddingHorizontal: 11,
@@ -1749,19 +1900,23 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#E2E8F0",
   },
+
   optionChipSelected: {
     backgroundColor: "#DCFCE7",
     borderColor: "#86EFAC",
   },
+
   optionChipText: {
     color: "#64748B",
     fontSize: 8.5,
     fontFamily: "Poppins_600SemiBold",
   },
+
   optionChipTextSelected: {
     color: "#166534",
     fontFamily: "Poppins_700Bold",
   },
+
   resultsToolbar: {
     flexDirection: "row",
     alignItems: "center",
@@ -1769,17 +1924,20 @@ const styles = StyleSheet.create({
     marginTop: 4,
     marginBottom: 13,
   },
+
   sectionTitle: {
     color: "#1F2937",
     fontSize: 16,
     fontFamily: "Poppins_800ExtraBold",
   },
+
   resultMeta: {
     color: "#94A3B8",
     fontSize: 8.5,
     fontFamily: "Poppins_500Medium",
     marginTop: 2,
   },
+
   viewToggle: {
     flexDirection: "row",
     gap: 4,
@@ -1787,6 +1945,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: "#EEF2F7",
   },
+
   viewToggleButton: {
     width: 34,
     height: 32,
@@ -1794,12 +1953,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+
   viewToggleButtonActive: {
     backgroundColor: "#15803D",
   },
+
   harvestList: {
     gap: 13,
   },
+
   harvestCard: {
     borderRadius: 22,
     padding: 17,
@@ -1815,14 +1977,17 @@ const styles = StyleSheet.create({
     },
     elevation: 2,
   },
+
   cardPressed: {
     opacity: 0.88,
     transform: [{ scale: 0.995 }],
   },
+
   cardTopRow: {
     flexDirection: "row",
     alignItems: "center",
   },
+
   paddyIcon: {
     width: 46,
     height: 46,
@@ -1831,21 +1996,25 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: "#DCFCE7",
   },
+
   cardTitleArea: {
     flex: 1,
     marginLeft: 12,
   },
+
   paddyName: {
     color: "#1F2937",
     fontSize: 15,
     fontFamily: "Poppins_800ExtraBold",
   },
+
   harvestDate: {
     color: "#9CA3AF",
     fontSize: 9.5,
     fontFamily: "Poppins_500Medium",
     marginTop: 3,
   },
+
   harvestStatusBadge: {
     flexDirection: "row",
     alignItems: "center",
@@ -1854,23 +2023,28 @@ const styles = StyleSheet.create({
     paddingHorizontal: 9,
     paddingVertical: 6,
   },
+
   harvestStatusBadgeCompact: {
     paddingHorizontal: 7,
     paddingVertical: 4,
   },
+
   harvestStatusDot: {
     width: 5,
     height: 5,
     borderRadius: 3,
   },
+
   harvestStatusText: {
     fontSize: 8,
     fontFamily: "Poppins_700Bold",
   },
+
   marketBadgeRow: {
     flexDirection: "row",
     marginTop: 11,
   },
+
   statusBadge: {
     flexDirection: "row",
     alignItems: "center",
@@ -1879,27 +2053,34 @@ const styles = StyleSheet.create({
     paddingHorizontal: 9,
     paddingVertical: 5,
   },
+
   statusDot: {
     width: 5,
     height: 5,
     borderRadius: 3,
   },
+
   statusPositive: {
     backgroundColor: "#DCFCE7",
   },
+
   statusNeutral: {
     backgroundColor: "#FEF3C7",
   },
+
   statusText: {
     fontSize: 8,
     fontFamily: "Poppins_700Bold",
   },
+
   statusPositiveText: {
     color: "#166534",
   },
+
   statusNeutralText: {
     color: "#92400E",
   },
+
   detailsGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -1909,29 +2090,35 @@ const styles = StyleSheet.create({
     padding: 13,
     rowGap: 14,
   },
+
   metricItem: {
     width: "50%",
     paddingRight: 8,
   },
+
   metricLabelRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
   },
+
   metricLabel: {
     color: "#64748B",
     fontSize: 9,
     fontFamily: "Poppins_600SemiBold",
   },
+
   metricValue: {
     color: "#1F2937",
     fontSize: 12,
     fontFamily: "Poppins_800ExtraBold",
     marginTop: 4,
   },
+
   metricValueEmphasized: {
     color: "#15803D",
   },
+
   insightRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -1942,6 +2129,7 @@ const styles = StyleSheet.create({
     borderRadius: 13,
     backgroundColor: "#F0FDF4",
   },
+
   insightText: {
     flex: 1,
     color: "#166534",
@@ -1949,37 +2137,45 @@ const styles = StyleSheet.create({
     fontFamily: "Poppins_700Bold",
     lineHeight: 14,
   },
+
   insightWarning: {
     color: "#92400E",
   },
+
   scoreSection: {
     marginTop: 14,
   },
+
   scoreHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 7,
   },
+
   scoreLabel: {
     color: "#64748B",
     fontSize: 9,
     fontFamily: "Poppins_600SemiBold",
   },
+
   scoreValue: {
     color: "#15803D",
     fontSize: 10,
     fontFamily: "Poppins_800ExtraBold",
   },
+
   progressTrack: {
     height: 7,
     borderRadius: 999,
     overflow: "hidden",
     backgroundColor: "#E5E7EB",
   },
+
   progressFill: {
     height: "100%",
     borderRadius: 999,
   },
+
   actionRow: {
     flexDirection: "row",
     gap: 9,
@@ -1988,6 +2184,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: "#F1F5F9",
   },
+
   secondaryAction: {
     flex: 1,
     minHeight: 43,
@@ -2000,11 +2197,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#BBF7D0",
   },
+
   secondaryActionText: {
     color: "#15803D",
     fontSize: 9,
     fontFamily: "Poppins_700Bold",
   },
+
   primaryAction: {
     flex: 1.25,
     minHeight: 43,
@@ -2015,11 +2214,13 @@ const styles = StyleSheet.create({
     gap: 6,
     backgroundColor: "#15803D",
   },
+
   primaryActionText: {
     color: "#FFFFFF",
     fontSize: 9,
     fontFamily: "Poppins_700Bold",
   },
+
   compactCard: {
     minHeight: 91,
     flexDirection: "row",
@@ -2031,6 +2232,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#E5E7EB",
   },
+
   compactIcon: {
     width: 43,
     height: 43,
@@ -2039,52 +2241,62 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: "#DCFCE7",
   },
+
   compactBody: {
     flex: 1,
   },
+
   compactTop: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     gap: 8,
   },
+
   compactTitle: {
     flex: 1,
     color: "#1F2937",
     fontSize: 12,
     fontFamily: "Poppins_800ExtraBold",
   },
+
   compactSubtitle: {
     color: "#64748B",
     fontSize: 8.5,
     fontFamily: "Poppins_500Medium",
     marginTop: 4,
   },
+
   compactPriceRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     marginTop: 5,
   },
+
   compactPriceLabel: {
     color: "#94A3B8",
     fontSize: 8,
     fontFamily: "Poppins_500Medium",
   },
+
   compactPrice: {
     color: "#15803D",
     fontFamily: "Poppins_700Bold",
   },
+
   compactScore: {
     color: "#475569",
     fontSize: 8,
     fontFamily: "Poppins_700Bold",
   },
+
   centerState: {
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 27,
     paddingVertical: 55,
   },
+
   loadingIcon: {
     width: 72,
     height: 72,
@@ -2094,6 +2306,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#ECFDF5",
     marginBottom: 18,
   },
+
   errorIcon: {
     width: 72,
     height: 72,
@@ -2103,6 +2316,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FEF2F2",
     marginBottom: 18,
   },
+
   emptyIllustration: {
     width: 92,
     height: 92,
@@ -2112,12 +2326,14 @@ const styles = StyleSheet.create({
     backgroundColor: "#ECFDF5",
     marginBottom: 18,
   },
+
   stateTitle: {
     color: "#1F2937",
     fontSize: 18,
     fontFamily: "Poppins_800ExtraBold",
     textAlign: "center",
   },
+
   stateDescription: {
     color: "#6B7280",
     fontSize: 10,
@@ -2127,6 +2343,7 @@ const styles = StyleSheet.create({
     marginTop: 7,
     maxWidth: 290,
   },
+
   retryButton: {
     minHeight: 45,
     borderRadius: 13,
@@ -2138,11 +2355,13 @@ const styles = StyleSheet.create({
     backgroundColor: "#15803D",
     marginTop: 17,
   },
+
   retryButtonText: {
     color: "#FFFFFF",
     fontSize: 10,
     fontFamily: "Poppins_700Bold",
   },
+
   emptyButton: {
     minHeight: 47,
     borderRadius: 14,
@@ -2154,11 +2373,13 @@ const styles = StyleSheet.create({
     backgroundColor: "#15803D",
     marginTop: 18,
   },
+
   emptyButtonText: {
     color: "#FFFFFF",
     fontSize: 10,
     fontFamily: "Poppins_700Bold",
   },
+
   filteredEmpty: {
     alignItems: "center",
     justifyContent: "center",
@@ -2169,6 +2390,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#E5E7EB",
   },
+
   filteredEmptyIcon: {
     width: 58,
     height: 58,
@@ -2177,12 +2399,14 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: "#ECFDF5",
   },
+
   filteredEmptyTitle: {
     color: "#1F2937",
     fontSize: 14,
     fontFamily: "Poppins_800ExtraBold",
     marginTop: 13,
   },
+
   filteredEmptyText: {
     color: "#64748B",
     fontSize: 9,
@@ -2190,6 +2414,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
     textAlign: "center",
   },
+
   clearButton: {
     borderRadius: 12,
     paddingHorizontal: 15,
@@ -2197,11 +2422,13 @@ const styles = StyleSheet.create({
     backgroundColor: "#DCFCE7",
     marginTop: 13,
   },
+
   clearButtonText: {
     color: "#166534",
     fontSize: 9,
     fontFamily: "Poppins_700Bold",
   },
+
   pressed: {
     opacity: 0.84,
     transform: [{ scale: 0.98 }],

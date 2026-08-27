@@ -33,6 +33,8 @@ import type {
   MillerMatchingResponse,
 } from "@/types/c03-marketplace/matching.types";
 
+import { useLanguage } from "@/contexts/LanguageContext";
+
 const THEME = {
   page: "#FBF8F1",
   primary: "#92400E",
@@ -45,6 +47,7 @@ const THEME = {
 };
 
 export default function MatchedFarmersScreen() {
+  const { t } = useLanguage();
   const params = useLocalSearchParams();
   const demandId = readString(params.demandId);
 
@@ -64,7 +67,7 @@ export default function MatchedFarmersScreen() {
   const loadMatches = useCallback(
     async (refresh = false): Promise<void> => {
       if (!demandId) {
-        setErrorMessage("Demand ID is missing.");
+        setErrorMessage(t.c3matchedFarmers.demandIdMissing);
         setLoading(false);
         return;
       }
@@ -105,7 +108,7 @@ export default function MatchedFarmersScreen() {
         setRefreshing(false);
       }
     },
-    [demandId, fade, rise],
+    [demandId, fade, rise, t],
   );
 
   useEffect(() => {
@@ -148,7 +151,7 @@ export default function MatchedFarmersScreen() {
       );
     } catch (error) {
       Alert.alert(
-        "Unable to send match requests",
+        t.c3matchedFarmers.unableToSendRequests,
         getApiErrorMessage(error),
       );
     } finally {
@@ -181,10 +184,10 @@ export default function MatchedFarmersScreen() {
 
         <View style={styles.headerText}>
           <Text style={styles.headerTitle}>
-            Matching Farmers
+            {t.c3matchedFarmers.title}
           </Text>
           <Text style={styles.headerSubtitle}>
-            AI-ranked harvest opportunities
+            {t.c3matchedFarmers.subtitle}
           </Text>
         </View>
 
@@ -228,10 +231,10 @@ export default function MatchedFarmersScreen() {
             <View style={styles.sectionHeader}>
               <View>
                 <Text style={styles.eyebrow}>
-                  AI RECOMMENDATIONS
+                  {t.c3matchedFarmers.aiRecommendations}
                 </Text>
                 <Text style={styles.sectionTitle}>
-                  Best Farmer Matches
+                  {t.c3matchedFarmers.bestFarmerMatches}
                 </Text>
               </View>
 
@@ -240,7 +243,7 @@ export default function MatchedFarmersScreen() {
                   {matches.length}
                 </Text>
                 <Text style={styles.countLabel}>
-                  matches
+                  {t.c3matchedFarmers.matches}
                 </Text>
               </View>
             </View>
@@ -272,7 +275,7 @@ export default function MatchedFarmersScreen() {
               {selectedHarvestIds.length}
             </Text>
             <Text style={styles.selectedLabel}>
-              selected
+              {t.c3matchedFarmers.selected}
             </Text>
           </View>
 
@@ -304,12 +307,14 @@ export default function MatchedFarmersScreen() {
                 />
                 <Text style={styles.sendButtonText}>
                   {selectedHarvestIds.length > 0
-                    ? `Send ${selectedHarvestIds.length} Request${
-                        selectedHarvestIds.length === 1
-                          ? ""
-                          : "s"
-                      }`
-                    : "Select Farmer"}
+                    ? (selectedHarvestIds.length === 1
+                        ? t.c3matchedFarmers.sendRequest
+                        : t.c3matchedFarmers.sendRequests
+                      ).replace(
+                        "{{count}}",
+                        String(selectedHarvestIds.length),
+                      )
+                    : t.c3matchedFarmers.selectFarmer}
                 </Text>
                 <Ionicons
                   name="arrow-forward"
@@ -330,6 +335,8 @@ function DemandBanner({
 }: {
   data: MillerMatchingResponse["data"];
 }) {
+  const { t } = useLanguage();
+
   return (
     <View style={styles.demandBanner}>
       <View style={styles.demandIcon}>
@@ -342,14 +349,14 @@ function DemandBanner({
 
       <View style={styles.demandText}>
         <Text style={styles.demandEyebrow}>
-          YOUR OPEN DEMAND
+          {t.c3matchedFarmers.yourOpenDemand}
         </Text>
         <Text style={styles.demandTitle}>
-          {formatLabel(data.demand.paddyType)}
+          {translatePaddyType(data.demand.paddyType, t)}
         </Text>
         <Text style={styles.demandMeta}>
-          {formatNumber(data.demand.quantityNeeded)} kg ·
-          {" "}Rs.{data.demand.offeredPrice.toFixed(2)}/kg
+          {formatNumber(data.demand.quantityNeeded)} {t.c3matchedFarmers.kg} ·
+          {" "}Rs.{data.demand.offeredPrice.toFixed(2)}/{t.c3matchedFarmers.kg}
         </Text>
       </View>
 
@@ -376,6 +383,7 @@ function FarmerMatchCard({
   selected: boolean;
   onPress: () => void;
 }) {
+  const { t, language } = useLanguage();
   const [expanded, setExpanded] = useState(false);
 
   return (
@@ -401,7 +409,12 @@ function FarmerMatchCard({
               color={THEME.muted}
             />
             <Text style={styles.locationText}>
-              {match.farmer.location}, {match.farmer.district}
+              {match.farmer.location},{" "}
+              {translateDistrict(
+                match.farmer.district,
+                t.c3districts,
+                match.farmer.district,
+              )}
             </Text>
           </View>
         </View>
@@ -411,7 +424,7 @@ function FarmerMatchCard({
             {match.matchingPercentage.toFixed(0)}%
           </Text>
           <Text style={styles.scorePillLabel}>
-            match
+            {t.c3matchedFarmers.match}
           </Text>
         </View>
       </View>
@@ -441,35 +454,35 @@ function FarmerMatchCard({
           </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.harvestEyebrow}>
-              AVAILABLE HARVEST
+              {t.c3matchedFarmers.availableHarvest}
             </Text>
             <Text style={styles.harvestName}>
-              {formatLabel(match.harvest.paddyType)}
+              {translatePaddyType(match.harvest.paddyType, t)}
             </Text>
           </View>
           <View style={styles.availableBadge}>
             <View style={styles.availableDot} />
             <Text style={styles.availableText}>
-              Available
+              {t.c3matchedFarmers.available}
             </Text>
           </View>
         </View>
 
         <View style={styles.harvestMetrics}>
           <SmallMetric
-            label="Quantity"
+            label={t.c3matchedFarmers.quantity}
             value={`${formatNumber(
               match.harvest.quantity,
-            )} kg`}
+            )} ${t.c3matchedFarmers.kg}`}
           />
           <SmallMetric
-            label="Farmer asks"
+            label={t.c3matchedFarmers.farmerAsks}
             value={`Rs.${match.harvest.expectedPrice.toFixed(
               2,
             )}`}
           />
           <SmallMetric
-            label="AI price"
+            label={t.c3matchedFarmers.aiPrice}
             value={`Rs.${match.harvest.aiPredictedPrice.toFixed(
               2,
             )}`}
@@ -481,25 +494,25 @@ function FarmerMatchCard({
       <View style={styles.breakdown}>
         <ScoreMetric
           icon="location-outline"
-          label="Location"
+          label={t.c3matchedFarmers.location}
           value={match.scoreBreakdown.location}
           max={40}
         />
         <ScoreMetric
           icon="leaf-outline"
-          label="Paddy"
+          label={t.c3matchedFarmers.paddy}
           value={match.scoreBreakdown.paddyType}
           max={30}
         />
         <ScoreMetric
           icon="cash-outline"
-          label="Price"
+          label={t.c3matchedFarmers.price}
           value={match.scoreBreakdown.priceCompatibility}
           max={20}
         />
         <ScoreMetric
           icon="cube-outline"
-          label="Quantity"
+          label={t.c3matchedFarmers.quantity}
           value={match.scoreBreakdown.quantityCompatibility}
           max={10}
         />
@@ -518,8 +531,8 @@ function FarmerMatchCard({
         </View>
         <Text style={styles.explanationButtonText}>
           {expanded
-            ? "Hide AI explanation"
-            : "Why is this Farmer recommended?"}
+            ? t.c3matchedFarmers.hideAiExplanation
+            : t.c3matchedFarmers.whyRecommended}
         </Text>
         <Ionicons
           name={
@@ -535,14 +548,19 @@ function FarmerMatchCard({
       {expanded ? (
         <View style={styles.explanation}>
           <Text style={styles.explanationTitle}>
-            AI Recommendation
+            {t.c3matchedFarmers.aiRecommendation}
           </Text>
           <Text style={styles.explanationText}>
-            {match.recommendation.english}
+            {language === "si"
+              ? match.recommendation.sinhala ||
+                match.recommendation.english
+              : match.recommendation.english}
           </Text>
-          <Text style={styles.explanationSinhala}>
-            {match.recommendation.sinhala}
-          </Text>
+          {language !== "si" && match.recommendation.sinhala ? (
+            <Text style={styles.explanationSinhala}>
+              {match.recommendation.sinhala}
+            </Text>
+          ) : null}
         </View>
       ) : null}
 
@@ -574,8 +592,8 @@ function FarmerMatchCard({
           ]}
         >
           {selected
-            ? "Farmer Selected"
-            : "Select this Farmer"}
+            ? t.c3matchedFarmers.farmerSelected
+            : t.c3matchedFarmers.selectThisFarmer}
         </Text>
       </Pressable>
     </View>
@@ -637,6 +655,8 @@ function ScoreMetric({
 }
 
 function LoadingState() {
+  const { t } = useLanguage();
+
   return (
     <SafeAreaView style={styles.screen}>
       <View style={styles.centerState}>
@@ -647,11 +667,10 @@ function LoadingState() {
           />
         </View>
         <Text style={styles.stateTitle}>
-          Finding suitable Farmers
+          {t.c3matchedFarmers.loadingTitle}
         </Text>
         <Text style={styles.stateText}>
-          AI is comparing paddy variety, district,
-          quantity and market price.
+          {t.c3matchedFarmers.loadingDescription}
         </Text>
       </View>
     </SafeAreaView>
@@ -659,6 +678,8 @@ function LoadingState() {
 }
 
 function EmptyState() {
+  const { t } = useLanguage();
+
   return (
     <View style={styles.centerState}>
       <View style={styles.emptyIcon}>
@@ -669,12 +690,10 @@ function EmptyState() {
         />
       </View>
       <Text style={styles.stateTitle}>
-        No matching harvests yet
+        {t.c3matchedFarmers.noMatchingHarvests}
       </Text>
       <Text style={styles.stateText}>
-        There are currently no available Farmer
-        harvests matching this demand. Pull down to
-        check again later.
+        {t.c3matchedFarmers.noMatchingHarvestsDescription}
       </Text>
     </View>
   );
@@ -687,6 +706,8 @@ function ErrorState({
   message: string;
   onRetry: () => void;
 }) {
+  const { t } = useLanguage();
+
   return (
     <View style={styles.centerState}>
       <View style={styles.errorIcon}>
@@ -697,7 +718,7 @@ function ErrorState({
         />
       </View>
       <Text style={styles.stateTitle}>
-        Unable to load matches
+        {t.c3matchedFarmers.unableToLoad}
       </Text>
       <Text style={styles.stateText}>
         {message}
@@ -712,7 +733,7 @@ function ErrorState({
           color="#FFFFFF"
         />
         <Text style={styles.retryButtonText}>
-          Try Again
+          {t.c3matchedFarmers.tryAgain}
         </Text>
       </Pressable>
     </View>
@@ -725,6 +746,48 @@ function readString(
   return Array.isArray(value)
     ? value[0] ?? ""
     : value ?? "";
+}
+
+function translatePaddyType(value: string, t: any): string {
+  const normalized = value.trim().toLowerCase();
+
+  if (normalized === "nadu") {
+    return t.c3paddyTypes.Nadu;
+  }
+
+  if (normalized === "samba") {
+    return t.c3paddyTypes.Samba;
+  }
+
+  if (normalized === "keeri samba" || normalized === "keerisamba") {
+    return t.c3paddyTypes.KeeriSamba;
+  }
+
+  return formatLabel(value);
+}
+
+function translateDistrict(
+  district: string | undefined,
+  translations: {
+    Ampara: string;
+    Badulla: string;
+    Kandy: string;
+    Monaragala: string;
+  },
+  fallback: string,
+): string {
+  if (!district) {
+    return fallback;
+  }
+
+  const districtMap: Record<string, string> = {
+    Ampara: translations.Ampara,
+    Badulla: translations.Badulla,
+    Kandy: translations.Kandy,
+    Monaragala: translations.Monaragala,
+  };
+
+  return districtMap[district.trim()] ?? district.trim();
 }
 
 function formatLabel(value: string): string {

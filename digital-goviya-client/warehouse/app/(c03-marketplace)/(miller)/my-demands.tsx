@@ -34,6 +34,7 @@ import type {
   DemandStatus,
   MillerDemand,
 } from "@/types/c03-marketplace/demand.types";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type DemandStatusFilter =
   | "all"
@@ -76,40 +77,28 @@ const ACCENT_LIGHT = "#FDE68A";
 const GOLD = "#F5C542";
 
 const PADDY_FILTERS: Array<{
-  label: string;
   value: PaddyFilter;
 }> = [
-  { label: "All varieties", value: "all" },
-  { label: "Nadu", value: "nadu" },
-  { label: "Samba", value: "samba" },
-  { label: "Keeri Samba", value: "keeri samba" },
+  { value: "all" },
+  { value: "nadu" },
+  { value: "samba" },
+  { value: "keeri samba" },
 ];
 
 const SORT_OPTIONS: Array<{
-  label: string;
   value: SortOption;
 }> = [
-  { label: "Newest", value: "newest" },
-  { label: "Oldest", value: "oldest" },
-  {
-    label: "Highest quantity",
-    value: "quantity_high",
-  },
-  {
-    label: "Lowest quantity",
-    value: "quantity_low",
-  },
-  {
-    label: "Highest price",
-    value: "price_high",
-  },
-  {
-    label: "Lowest price",
-    value: "price_low",
-  },
+  { value: "newest" },
+  { value: "oldest" },
+  { value: "quantity_high" },
+  { value: "quantity_low" },
+  { value: "price_high" },
+  { value: "price_low" },
 ];
 
 export default function MyDemandsScreen() {
+  const { t } = useLanguage();
+
   const [demands, setDemands] =
     useState<MillerDemand[]>([]);
   const [loading, setLoading] =
@@ -379,12 +368,12 @@ export default function MyDemandsScreen() {
 
         <View style={styles.headerText}>
           <Text style={styles.headerTitle}>
-            My Demands
+            {t.c3myDemands.title}
           </Text>
           <View style={styles.headerSubtitleRow}>
             <View style={styles.headerSubtitleDot} />
             <Text style={styles.headerSubtitle}>
-              {stats.total} published
+              {stats.total} {t.c3myDemands.published}
             </Text>
           </View>
         </View>
@@ -486,21 +475,21 @@ export default function MyDemandsScreen() {
                         styles.summaryHeroEyebrow
                       }
                     >
-                      DEMAND PORTFOLIO
+                      {t.c3myDemands.portfolioEyebrow}
                     </Text>
                     <Text
                       style={
                         styles.summaryHeroTitle
                       }
                     >
-                      Manage purchasing requirements
+                      {t.c3myDemands.portfolioTitle}
                     </Text>
                   </View>
                 </View>
 
                 <View style={styles.statChipRow}>
                   <StatChip
-                    label="Total"
+                    label={t.c3myDemands.total}
                     value={stats.total}
                     icon="layers-outline"
                     selected={statusFilter === "all"}
@@ -509,7 +498,7 @@ export default function MyDemandsScreen() {
                     }
                   />
                   <StatChip
-                    label="Open"
+                    label={t.c3myDemands.open}
                     value={stats.open}
                     icon="radio-button-on-outline"
                     selected={statusFilter === "open"}
@@ -518,7 +507,7 @@ export default function MyDemandsScreen() {
                     }
                   />
                   <StatChip
-                    label="Active"
+                    label={t.c3myDemands.active}
                     value={stats.negotiating}
                     icon="pulse-outline"
                     selected={statusFilter === "active"}
@@ -527,7 +516,7 @@ export default function MyDemandsScreen() {
                     }
                   />
                   <StatChip
-                    label="Agreed"
+                    label={t.c3myDemands.agreed}
                     value={stats.agreed}
                     icon="checkmark-done-outline"
                     selected={
@@ -556,7 +545,7 @@ export default function MyDemandsScreen() {
                   <TextInput
                     value={searchQuery}
                     onChangeText={setSearchQuery}
-                    placeholder="Search paddy, status, quantity..."
+                    placeholder={t.c3myDemands.searchPlaceholder}
                     placeholderTextColor="#A8A091"
                     style={styles.searchInput}
                     autoCapitalize="none"
@@ -637,14 +626,14 @@ export default function MyDemandsScreen() {
                           styles.filterPanelTitle
                         }
                       >
-                        Refine results
+                        {t.c3myDemands.refineResults}
                       </Text>
                       <Text
                         style={
                           styles.filterPanelSubtitle
                         }
                       >
-                        Variety and sorting options
+                        {t.c3myDemands.varietyAndSorting}
                       </Text>
                     </View>
 
@@ -657,7 +646,7 @@ export default function MyDemandsScreen() {
                           styles.clearFiltersText
                         }
                       >
-                        Clear all
+                        {t.c3myDemands.clearAll}
                       </Text>
                     </Pressable>
                   </View>
@@ -667,7 +656,7 @@ export default function MyDemandsScreen() {
                       styles.filterLabel
                     }
                   >
-                    Paddy variety
+                    {t.c3myDemands.paddyVariety}
                   </Text>
 
                   <View
@@ -678,6 +667,15 @@ export default function MyDemandsScreen() {
                         const selected =
                           paddyFilter ===
                           item.value;
+
+                        const label =
+                          item.value === "all"
+                            ? t.c3myDemands.allVarieties
+                            : item.value === "nadu"
+                            ? t.c3myDemands.nadu
+                            : item.value === "samba"
+                            ? t.c3myDemands.samba
+                            : t.c3myDemands.keeriSamba;
 
                         return (
                           <Pressable
@@ -700,7 +698,7 @@ export default function MyDemandsScreen() {
                                   styles.optionChipTextSelected,
                               ]}
                             >
-                              {item.label}
+                              {label}
                             </Text>
                           </Pressable>
                         );
@@ -718,7 +716,7 @@ export default function MyDemandsScreen() {
                       },
                     ]}
                   >
-                    Sort by
+                    {t.c3myDemands.sortBy}
                   </Text>
 
                   <View
@@ -729,6 +727,19 @@ export default function MyDemandsScreen() {
                         const selected =
                           sortOption ===
                           item.value;
+
+                        const label =
+                          item.value === "newest"
+                            ? t.c3myDemands.newest
+                            : item.value === "oldest"
+                            ? t.c3myDemands.oldest
+                            : item.value === "quantity_high"
+                            ? t.c3myDemands.highestQuantity
+                            : item.value === "quantity_low"
+                            ? t.c3myDemands.lowestQuantity
+                            : item.value === "price_high"
+                            ? t.c3myDemands.highestPrice
+                            : t.c3myDemands.lowestPrice;
 
                         return (
                           <Pressable
@@ -751,7 +762,7 @@ export default function MyDemandsScreen() {
                                   styles.optionChipTextSelected,
                               ]}
                             >
-                              {item.label}
+                              {label}
                             </Text>
                           </Pressable>
                         );
@@ -774,15 +785,15 @@ export default function MyDemandsScreen() {
                         styles.sectionTitle
                       }
                     >
-                      Demands
+                      {t.c3myDemands.demands}
                     </Text>
                     <Text
                       style={
                         styles.resultMeta
                       }
                     >
-                      {filteredDemands.length} of{" "}
-                      {demands.length} shown
+                      {filteredDemands.length} {t.c3myDemands.of}{" "}
+                      {demands.length} {t.c3myDemands.shown}
                     </Text>
                   </View>
                 </View>
@@ -791,6 +802,9 @@ export default function MyDemandsScreen() {
                   style={styles.viewToggle}
                 >
                   <Pressable
+                    accessibilityLabel={
+                      t.c3myDemands.cardView
+                    }
                     onPress={() =>
                       setViewMode("cards")
                     }
@@ -813,6 +827,9 @@ export default function MyDemandsScreen() {
                   </Pressable>
 
                   <Pressable
+                    accessibilityLabel={
+                      t.c3myDemands.compactListView
+                    }
                     onPress={() =>
                       setViewMode("compact")
                     }
@@ -881,11 +898,13 @@ function StatChip({
   selected?: boolean;
   onPress?: () => void;
 }) {
+  const { t } = useLanguage();
+
   return (
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={`Filter demands by ${label}`}
+      accessibilityLabel={`${t.c3myDemands.filterDemandsBy} ${label}`}
       style={({ pressed }) => [
         styles.statChip,
         selected && styles.statChipSelected,
@@ -927,6 +946,7 @@ function DemandCard({
 }: {
   demand: MillerDemand;
 }) {
+  const { t } = useLanguage();
   const visual = getStatusStyle(demand.status);
 
   return (
@@ -956,9 +976,7 @@ function DemandCard({
           style={styles.cardTitleArea}
         >
           <Text style={styles.paddyTitle}>
-            {formatLabel(
-              demand.paddyType
-            )}
+            {translatePaddyType(demand.paddyType, t)}
           </Text>
           <View style={styles.createdDateRow}>
             <Ionicons
@@ -970,7 +988,8 @@ function DemandCard({
               style={styles.createdDate}
             >
               {formatDate(
-                demand.createdAt
+                demand.createdAt,
+                t.c3myDemands.dateUnavailable,
               )}
             </Text>
           </View>
@@ -997,7 +1016,7 @@ function DemandCard({
             <Text
               style={styles.metricLabel}
             >
-              Quantity needed
+              {t.c3myDemands.quantityNeeded}
             </Text>
             <Text
               style={styles.metricValue}
@@ -1005,7 +1024,7 @@ function DemandCard({
               {formatNumber(
                 demand.quantityNeeded
               )}{" "}
-              kg
+              {t.c3myDemands.kg}
             </Text>
           </View>
         </View>
@@ -1032,7 +1051,7 @@ function DemandCard({
             <Text
               style={styles.metricLabel}
             >
-              Offered price
+              {t.c3myDemands.offeredPrice}
             </Text>
             <Text
               style={
@@ -1042,7 +1061,7 @@ function DemandCard({
               {formatCurrency(
                 demand.offeredPrice
               )}
-              /kg
+              /{t.c3myDemands.kg}
             </Text>
           </View>
         </View>
@@ -1051,9 +1070,10 @@ function DemandCard({
       {demand.status === "open" ? (
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={`Find matching Farmers for ${formatLabel(
-            demand.paddyType
-          )} demand`}
+          accessibilityLabel={`${t.c3myDemands.findMatchingFarmersA11y} ${translatePaddyType(
+            demand.paddyType,
+            t,
+          )}`}
           onPress={() =>
             router.push({
               pathname:
@@ -1099,14 +1119,14 @@ function DemandCard({
                   styles.findFarmersButtonText
                 }
               >
-                Find Matching Farmers
+                {t.c3myDemands.findMatchingFarmers}
               </Text>
               <Text
                 style={
                   styles.findFarmersButtonSubtext
                 }
               >
-                AI-rank available harvests
+                {t.c3myDemands.findMatchingFarmersSubtext}
               </Text>
             </View>
 
@@ -1135,7 +1155,8 @@ function DemandCard({
           style={styles.activityText}
         >
           {getDemandActivityText(
-            demand.status
+            demand.status,
+            t,
           )}
         </Text>
 
@@ -1154,6 +1175,7 @@ function CompactDemandCard({
 }: {
   demand: MillerDemand;
 }) {
+  const { t } = useLanguage();
   const visual = getStatusStyle(demand.status);
 
   return (
@@ -1178,8 +1200,9 @@ function CompactDemandCard({
           <Text
             style={styles.compactTitle}
           >
-            {formatLabel(
-              demand.paddyType
+            {translatePaddyType(
+              demand.paddyType,
+              t,
             )}
           </Text>
 
@@ -1195,18 +1218,19 @@ function CompactDemandCard({
           {formatNumber(
             demand.quantityNeeded
           )}{" "}
-          kg •{" "}
+          {t.c3myDemands.kg} •{" "}
           {formatCurrency(
             demand.offeredPrice
           )}
-          /kg
+          /{t.c3myDemands.kg}
         </Text>
 
         <Text
           style={styles.compactActivity}
         >
           {getDemandActivityText(
-            demand.status
+            demand.status,
+            t,
           )}
         </Text>
       </View>
@@ -1250,6 +1274,7 @@ function DemandStatusBadge({
   status: DemandStatus;
   compact?: boolean;
 }) {
+  const { t } = useLanguage();
   const visual =
     getStatusStyle(status);
 
@@ -1283,13 +1308,15 @@ function DemandStatusBadge({
           },
         ]}
       >
-        {formatLabel(status)}
+        {getStatusLabel(status, t)}
       </Text>
     </View>
   );
 }
 
 function LoadingState() {
+  const { t } = useLanguage();
+
   return (
     <SafeAreaView style={styles.screen}>
       <View style={styles.centerState}>
@@ -1306,13 +1333,12 @@ function LoadingState() {
         </LinearGradient>
 
         <Text style={styles.stateTitle}>
-          Loading demands
+          {t.c3myDemands.loadingTitle}
         </Text>
         <Text
           style={styles.stateDescription}
         >
-          Retrieving your latest paddy
-          requirements.
+          {t.c3myDemands.loadingDescription}
         </Text>
       </View>
     </SafeAreaView>
@@ -1326,6 +1352,8 @@ function ErrorState({
   message: string;
   onRetry: () => void;
 }) {
+  const { t } = useLanguage();
+
   return (
     <View style={styles.centerState}>
       <View style={styles.errorIcon}>
@@ -1337,7 +1365,7 @@ function ErrorState({
       </View>
 
       <Text style={styles.stateTitle}>
-        Unable to load demands
+        {t.c3myDemands.unableToLoad}
       </Text>
       <Text
         style={styles.stateDescription}
@@ -1358,7 +1386,7 @@ function ErrorState({
           color={SURFACE}
         />
         <Text style={styles.retryText}>
-          Try Again
+          {t.c3myDemands.tryAgain}
         </Text>
       </Pressable>
     </View>
@@ -1366,6 +1394,8 @@ function ErrorState({
 }
 
 function EmptyState() {
+  const { t } = useLanguage();
+
   return (
     <View style={styles.centerState}>
       <LinearGradient
@@ -1382,15 +1412,13 @@ function EmptyState() {
       </LinearGradient>
 
       <Text style={styles.stateTitle}>
-        No demands yet
+        {t.c3myDemands.noDemands}
       </Text>
 
       <Text
         style={styles.stateDescription}
       >
-        Publish your first paddy requirement
-        to start finding suitable farmer
-        harvests.
+        {t.c3myDemands.noDemandsDescription}
       </Text>
 
       <Pressable
@@ -1410,7 +1438,7 @@ function EmptyState() {
         <Text
           style={styles.emptyButtonText}
         >
-          Create First Demand
+          {t.c3myDemands.createFirstDemand}
         </Text>
       </Pressable>
     </View>
@@ -1422,6 +1450,8 @@ function FilteredEmptyState({
 }: {
   onClear: () => void;
 }) {
+  const { t } = useLanguage();
+
   return (
     <View style={styles.filteredEmpty}>
       <View
@@ -1437,13 +1467,12 @@ function FilteredEmptyState({
       <Text
         style={styles.filteredEmptyTitle}
       >
-        No matching demands
+        {t.c3myDemands.noMatchingDemands}
       </Text>
       <Text
         style={styles.filteredEmptyText}
       >
-        Try changing your search or filter
-        options.
+        {t.c3myDemands.noMatchingDemandsDescription}
       </Text>
 
       <Pressable
@@ -1456,7 +1485,7 @@ function FilteredEmptyState({
         <Text
           style={styles.clearButtonText}
         >
-          Clear filters
+          {t.c3myDemands.clearFilters}
         </Text>
       </Pressable>
     </View>
@@ -1513,26 +1542,69 @@ function getStatusStyle(
 }
 
 function getDemandActivityText(
-  status: DemandStatus
+  status: DemandStatus,
+  t: any,
 ): string {
   switch (status) {
     case "open":
-      return "Available for harvest matching";
+      return t.c3myDemands.activityOpen;
     case "negotiation_ready":
-      return "Ready to start negotiation";
+      return t.c3myDemands.activityNegotiationReady;
     case "negotiating":
-      return "AI negotiation is active";
+      return t.c3myDemands.activityNegotiating;
     case "agreement_reached":
-      return "An agreement was reached";
+      return t.c3myDemands.activityAgreementReached;
     case "negotiation_failed":
-      return "Negotiation ended without agreement";
+      return t.c3myDemands.activityNegotiationFailed;
     case "rejected":
-      return "The demand was rejected";
+      return t.c3myDemands.activityRejected;
     case "cancelled":
-      return "The demand was cancelled";
+      return t.c3myDemands.activityCancelled;
     default:
-      return "Demand status updated";
+      return t.c3myDemands.activityDefault;
   }
+}
+
+function getStatusLabel(
+  status: DemandStatus,
+  t: any,
+): string {
+  switch (status) {
+    case "open":
+      return t.c3myDemands.statusOpen;
+    case "negotiation_ready":
+      return t.c3myDemands.statusNegotiationReady;
+    case "negotiating":
+      return t.c3myDemands.statusNegotiating;
+    case "agreement_reached":
+      return t.c3myDemands.statusAgreementReached;
+    case "negotiation_failed":
+      return t.c3myDemands.statusNegotiationFailed;
+    case "rejected":
+      return t.c3myDemands.statusRejected;
+    case "cancelled":
+      return t.c3myDemands.statusCancelled;
+    default:
+      return formatLabel(status);
+  }
+}
+
+function translatePaddyType(value: string, t: any): string {
+  const normalized = value.trim().toLowerCase();
+
+  if (normalized === "nadu") {
+    return t.c3paddyTypes.Nadu;
+  }
+
+  if (normalized === "samba") {
+    return t.c3paddyTypes.Samba;
+  }
+
+  if (normalized === "keeri samba" || normalized === "keerisamba") {
+    return t.c3paddyTypes.KeeriSamba;
+  }
+
+  return formatLabel(value);
 }
 
 function formatLabel(
@@ -1570,12 +1642,13 @@ function formatCurrency(
 }
 
 function formatDate(
-  value: string
+  value: string,
+  fallback: string,
 ): string {
   const date = new Date(value);
 
   if (Number.isNaN(date.getTime())) {
-    return "Date unavailable";
+    return fallback;
   }
 
   return new Intl.DateTimeFormat(

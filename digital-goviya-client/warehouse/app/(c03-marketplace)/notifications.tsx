@@ -16,6 +16,8 @@ import {
   View,
 } from "react-native";
 
+import { useLanguage } from "@/contexts/LanguageContext";
+
 import {
   useMarketplaceAuth,
 } from "@/hooks/c03-marketplace/useMarketplaceAuth";
@@ -36,6 +38,9 @@ import type {
 export default function NotificationsScreen() {
   const { user } =
     useMarketplaceAuth();
+
+  const { t, language } =
+    useLanguage();
 
   const [
     notifications,
@@ -269,7 +274,7 @@ export default function NotificationsScreen() {
               styles.headerTitle
             }
           >
-            Notifications
+            {t.c3notifications.title}
           </Text>
 
           <Text
@@ -278,13 +283,20 @@ export default function NotificationsScreen() {
             }
           >
             {unreadCount > 0
-              ? `${unreadCount} unread update${
-                  unreadCount ===
-                  1
-                    ? ""
-                    : "s"
-                }`
-              : "You're all caught up"}
+              ? (unreadCount ===
+                1
+                  ? t.c3notifications
+                      .unreadSingular
+                  : t.c3notifications
+                      .unreadPlural
+                ).replace(
+                  "{{count}}",
+                  String(
+                    unreadCount
+                  )
+                )
+              : t.c3notifications
+                  .allCaughtUp}
           </Text>
         </View>
 
@@ -333,7 +345,7 @@ export default function NotificationsScreen() {
               styles.stateTitle
             }
           >
-            Loading your inbox
+            {t.c3notifications.loadingTitle}
           </Text>
         </View>
       ) : (
@@ -388,7 +400,7 @@ export default function NotificationsScreen() {
                     styles.errorTitle
                   }
                 >
-                  Inbox unavailable
+                  {t.c3notifications.inboxUnavailable}
                 </Text>
 
                 <Text
@@ -399,7 +411,7 @@ export default function NotificationsScreen() {
                   {
                     errorMessage
                   }{" "}
-                  Tap to retry.
+                  {t.c3notifications.tapToRetry}
                 </Text>
               </View>
             </Pressable>
@@ -433,7 +445,7 @@ export default function NotificationsScreen() {
                   styles.stateTitle
                 }
               >
-                No notifications yet
+                {t.c3notifications.emptyTitle}
               </Text>
 
               <Text
@@ -441,11 +453,7 @@ export default function NotificationsScreen() {
                   styles.stateText
                 }
               >
-                Match requests,
-                AI negotiation
-                updates and contact
-                requests will appear
-                here.
+                {t.c3notifications.emptyText}
               </Text>
             </View>
           ) : (
@@ -460,7 +468,8 @@ export default function NotificationsScreen() {
                     getNotificationVisual(
                       item.type,
                       theme.primary,
-                      theme.soft
+                      theme.soft,
+                      t
                     );
 
                   return (
@@ -541,7 +550,8 @@ export default function NotificationsScreen() {
                             }
                           >
                             {formatTimeAgo(
-                              item.createdAt
+                              item.createdAt,
+                              t
                             )}
                           </Text>
                         </View>
@@ -551,10 +561,14 @@ export default function NotificationsScreen() {
                             styles.title
                           }
                         >
-                          {
-                            item.title
-                              .english
-                          }
+                          {language ===
+                          "si"
+                            ? item
+                                .title
+                                .sinhala
+                            : item
+                                .title
+                                .english}
                         </Text>
 
                         <Text
@@ -565,10 +579,14 @@ export default function NotificationsScreen() {
                             3
                           }
                         >
-                          {
-                            item.message
-                              .english
-                          }
+                          {language ===
+                          "si"
+                            ? item
+                                .message
+                                .sinhala
+                            : item
+                                .message
+                                .english}
                         </Text>
 
                         <View
@@ -679,7 +697,8 @@ function getNotificationVisual(
   type:
     MarketplaceNotificationType,
   primary: string,
-  soft: string
+  soft: string,
+  t: any
 ): {
   icon:
     keyof typeof Ionicons.glyphMap;
@@ -697,7 +716,8 @@ function getNotificationVisual(
         background:
           soft,
         label:
-          "Match request",
+          t.c3notifications
+            .matchRequest,
       };
 
     case "MATCH_ACCEPTED":
@@ -709,7 +729,8 @@ function getNotificationVisual(
         background:
           "#DCFCE7",
         label:
-          "Accepted",
+          t.c3notifications
+            .accepted,
       };
 
     case "MATCH_REJECTED":
@@ -721,7 +742,8 @@ function getNotificationVisual(
         background:
           "#FEE2E2",
         label:
-          "Declined",
+          t.c3notifications
+            .declined,
       };
 
     case "NEGOTIATION_READY":
@@ -733,7 +755,8 @@ function getNotificationVisual(
         background:
           "#EDE9FE",
         label:
-          "AI ready",
+          t.c3notifications
+            .aiReady,
       };
 
     case "NEGOTIATION_AGREED":
@@ -745,7 +768,8 @@ function getNotificationVisual(
         background:
           "#DCFCE7",
         label:
-          "Agreement",
+          t.c3notifications
+            .agreement,
       };
 
     case "NEGOTIATION_FAILED":
@@ -757,7 +781,8 @@ function getNotificationVisual(
         background:
           "#FEF3C7",
         label:
-          "Negotiation",
+          t.c3notifications
+            .negotiation,
       };
 
     case "CONTACT_REQUEST":
@@ -769,7 +794,8 @@ function getNotificationVisual(
         background:
           "#E0F2FE",
         label:
-          "Contact request",
+          t.c3notifications
+            .contactRequest,
       };
 
     case "CONTACT_ACCEPTED":
@@ -781,7 +807,8 @@ function getNotificationVisual(
         background:
           "#DCFCE7",
         label:
-          "Contact unlocked",
+          t.c3notifications
+            .contactUnlocked,
       };
 
     case "CONTACT_REJECTED":
@@ -793,7 +820,8 @@ function getNotificationVisual(
         background:
           "#FEE2E2",
         label:
-          "Contact declined",
+          t.c3notifications
+            .contactDeclined,
       };
 
     default:
@@ -805,13 +833,15 @@ function getNotificationVisual(
         background:
           soft,
         label:
-          "Update",
+          t.c3notifications
+            .update,
       };
   }
 }
 
 function formatTimeAgo(
-  dateString: string
+  dateString: string,
+  t: any
 ): string {
   const created =
     new Date(
@@ -832,7 +862,7 @@ function formatTimeAgo(
     );
 
   if (seconds < 60) {
-    return "Just now";
+    return t.c3notifications.justNow;
   }
 
   const minutes =

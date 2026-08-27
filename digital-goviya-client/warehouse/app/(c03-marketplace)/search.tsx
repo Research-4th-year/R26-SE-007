@@ -15,6 +15,7 @@ import {
   View,
 } from "react-native";
 
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useMarketplaceAuth } from "@/hooks/c03-marketplace/useMarketplaceAuth";
 import { connectionService } from "@/services/c03-marketplace/connection.service";
 import type { SearchMarketplaceItem } from "@/types/c03-marketplace/connection.types";
@@ -35,6 +36,7 @@ const DISTRICTS = ["All", "Ampara", "Kandy", "Badulla", "Monaragala"];
 
 export default function SearchScreen() {
   const { user } = useMarketplaceAuth();
+  const { t } = useLanguage();
 
   const [results, setResults] = useState<SearchMarketplaceItem[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -84,15 +86,15 @@ export default function SearchScreen() {
       } catch (error) {
         console.error("Search loading failed:", error);
         Alert.alert(
-          "Unable to load users",
-          error instanceof Error ? error.message : "Please try again."
+          t.c3search.unableToLoadUsers,
+          error instanceof Error ? error.message : t.c3search.pleaseTryAgain
         );
       } finally {
         setLoading(false);
         setRefreshing(false);
       }
     },
-    [selectedDistrict]
+    [selectedDistrict, t]
   );
 
   useFocusEffect(
@@ -113,8 +115,8 @@ export default function SearchScreen() {
       setResults(response.data);
     } catch (error) {
       Alert.alert(
-        "Search failed",
-        error instanceof Error ? error.message : "Unable to search."
+        t.c3search.searchFailed,
+        error instanceof Error ? error.message : t.c3search.unableToSearch
       );
     } finally {
       setSearching(false);
@@ -143,13 +145,13 @@ export default function SearchScreen() {
       );
 
       Alert.alert(
-        "Request sent",
-        `Your connection request was sent to ${item.profile.name}.`
+        t.c3search.requestSent,
+        t.c3search.requestSentMessage.replace("{{name}}", item.profile.name)
       );
     } catch (error) {
       Alert.alert(
-        "Unable to connect",
-        error instanceof Error ? error.message : "Please try again."
+        t.c3search.unableToConnect,
+        error instanceof Error ? error.message : t.c3search.pleaseTryAgain
       );
     }
   }
@@ -165,36 +167,45 @@ export default function SearchScreen() {
       [
         item.profile.name,
         item.profile.district,
+        translateDistrict(
+          item.profile.district,
+          t.c3districts,
+          item.profile.district
+        ),
         item.profile.location,
         item.profile.type === "miller"
           ? item.profile.millName
           : item.profile.farmerName,
+        item.profile.type === "farmer"
+          ? item.profile.mainPaddyVariety
+          : "",
+        item.profile.type === "farmer" && item.profile.mainPaddyVariety
+          ? translatePaddyType(item.profile.mainPaddyVariety, t)
+          : "",
       ]
         .filter(Boolean)
         .join(" ")
         .toLowerCase()
         .includes(normalized)
     );
-  }, [results, searchQuery]);
+  }, [results, searchQuery, t]);
 
   return (
     <SafeAreaView style={[styles.screen, { backgroundColor: theme.page }]}>
       <View style={styles.header}>
-        <Text style={styles.headerEyebrow}>MARKETPLACE DISCOVERY</Text>
+        <Text style={styles.headerEyebrow}>{t.c3search.eyebrow}</Text>
         <Text style={styles.headerTitle}>
-          {isFarmer ? "Find Millers" : "Find Farmers"}
+          {isFarmer ? t.c3search.findMillers : t.c3search.findFarmers}
         </Text>
         <Text style={styles.headerSubtitle}>
-          {isFarmer
-            ? "Discover registered rice millers and build trusted trading relationships."
-            : "Discover farmer profiles and build your paddy sourcing network."}
+          {isFarmer ? t.c3search.millerSubtitle : t.c3search.farmerSubtitle}
         </Text>
       </View>
 
       {loading ? (
         <View style={styles.loadingState}>
           <ActivityIndicator size="large" color={theme.primary} />
-          <Text style={styles.loadingTitle}>Finding marketplace profiles</Text>
+          <Text style={styles.loadingTitle}>{t.c3search.loadingTitle}</Text>
         </View>
       ) : (
         <ScrollView
@@ -228,10 +239,11 @@ export default function SearchScreen() {
             </View>
 
             <View style={{ flex: 1 }}>
-              <Text style={styles.heroTitle}>Search your trading network</Text>
+              <Text style={styles.heroTitle}>{t.c3search.heroTitle}</Text>
               <Text style={styles.heroText}>
-                Search by name,{isFarmer ? " mill name," : " farm name,"}{" "}
-                district or location.
+                {isFarmer
+                  ? t.c3search.heroTextMiller
+                  : t.c3search.heroTextFarmer}
               </Text>
             </View>
           </LinearGradient>
@@ -245,8 +257,8 @@ export default function SearchScreen() {
               onSubmitEditing={() => void handleSearch()}
               placeholder={
                 isFarmer
-                  ? "Search name or rice mill..."
-                  : "Search farmer or farm..."
+                  ? t.c3search.placeholderMiller
+                  : t.c3search.placeholderFarmer
               }
               placeholderTextColor="#94A3B8"
               style={styles.searchInput}
@@ -267,7 +279,7 @@ export default function SearchScreen() {
             ) : null}
           </View>
 
-          <Text style={styles.filterLabel}>Filter by district</Text>
+          <Text style={styles.filterLabel}>{t.c3search.filterByDistrict}</Text>
 
           <ScrollView
             horizontal
@@ -295,7 +307,7 @@ export default function SearchScreen() {
                       active && styles.districtTextActive,
                     ]}
                   >
-                    {district}
+                    {translateDistrict(district, t.c3districts, district)}
                   </Text>
                 </Pressable>
               );
@@ -304,13 +316,15 @@ export default function SearchScreen() {
 
           <View style={styles.resultHeader}>
             <Text style={styles.sectionTitle}>
-              {isFarmer ? "Available Millers" : "Available Farmers"}
+              {isFarmer
+                ? t.c3search.availableMillers
+                : t.c3search.availableFarmers}
             </Text>
             <View
               style={[styles.countPill, { backgroundColor: theme.soft }]}
             >
               <Text style={[styles.resultCount, { color: theme.dark }]}>
-                {filteredResults.length} profiles
+                {filteredResults.length} {t.c3search.profiles}
               </Text>
             </View>
           </View>
@@ -322,9 +336,9 @@ export default function SearchScreen() {
               >
                 <Ionicons name="search-outline" size={28} color={theme.primary} />
               </View>
-              <Text style={styles.emptyTitle}>No profiles found</Text>
+              <Text style={styles.emptyTitle}>{t.c3search.noProfiles}</Text>
               <Text style={styles.emptyText}>
-                Try a different name, location or district.
+                {t.c3search.noProfilesDescription}
               </Text>
             </View>
           ) : (
@@ -365,6 +379,7 @@ function SearchCard({
   onOpen: () => void;
   onConnect: () => void;
 }) {
+  const { t } = useLanguage();
   const profile = item.profile;
 
   return (
@@ -398,17 +413,22 @@ function SearchCard({
           <Text style={[styles.profileType, { color: theme.primary }]}>
             {profile.type === "miller"
               ? profile.verificationSource === "PMB"
-                ? "PMB REGISTERED MILLER"
-                : "RICE MILLER"
+                ? t.c3search.pmbRegisteredMiller
+                : t.c3search.riceMiller
               : profile.verificationSource === "RESEARCH_SYNTHETIC"
-              ? "RESEARCH FARMER PROFILE"
-              : "FARMER"}
+              ? t.c3search.researchFarmerProfile
+              : t.c3search.farmer}
           </Text>
 
           <View style={styles.locationRow}>
             <Ionicons name="location-outline" size={13} color="#94A3B8" />
             <Text style={styles.locationText}>
-              {profile.district} · {profile.location}
+              {translateDistrict(
+                profile.district,
+                t.c3districts,
+                profile.district
+              )}{" "}
+              · {profile.location}
             </Text>
           </View>
         </View>
@@ -417,32 +437,34 @@ function SearchCard({
       {profile.type === "miller" ? (
         <View style={styles.infoStrip}>
           <View style={{ flex: 1 }}>
-            <Text style={styles.infoLabel}>MILL</Text>
+            <Text style={styles.infoLabel}>{t.c3search.mill}</Text>
             <Text style={styles.infoValue} numberOfLines={1}>
               {profile.millName}
             </Text>
           </View>
           <View style={styles.infoDivider} />
           <View style={{ flex: 1 }}>
-            <Text style={styles.infoLabel}>REGISTRATION</Text>
+            <Text style={styles.infoLabel}>{t.c3search.registration}</Text>
             <Text style={styles.infoValue} numberOfLines={1}>
-              {profile.businessRegistrationNumber || "Not provided"}
+              {profile.businessRegistrationNumber || t.c3search.notProvided}
             </Text>
           </View>
         </View>
       ) : (
         <View style={styles.infoStrip}>
           <View style={{ flex: 1 }}>
-            <Text style={styles.infoLabel}>MAIN PADDY</Text>
+            <Text style={styles.infoLabel}>{t.c3search.mainPaddy}</Text>
             <Text style={styles.infoValue}>
-              {profile.mainPaddyVariety || "Not provided"}
+              {profile.mainPaddyVariety
+                ? translatePaddyType(profile.mainPaddyVariety, t)
+                : t.c3search.notProvided}
             </Text>
           </View>
           <View style={styles.infoDivider} />
           <View style={{ flex: 1 }}>
-            <Text style={styles.infoLabel}>FARM SIZE</Text>
+            <Text style={styles.infoLabel}>{t.c3search.farmSize}</Text>
             <Text style={styles.infoValue}>
-              {profile.farmSizeAcres ?? 0} acres
+              {profile.farmSizeAcres ?? 0} {t.c3search.acres}
             </Text>
           </View>
         </View>
@@ -452,7 +474,7 @@ function SearchCard({
         <Pressable onPress={onOpen} style={styles.viewButton}>
           <Ionicons name="person-outline" size={15} color={theme.primary} />
           <Text style={[styles.viewButtonText, { color: theme.primary }]}>
-            View Profile
+            {t.c3search.viewProfile}
           </Text>
         </Pressable>
 
@@ -473,6 +495,8 @@ function ConnectionButton({
   onConnect: () => void;
   onOpen: () => void;
 }) {
+  const { t } = useLanguage();
+
   if (item.connection.status === "accepted") {
     return (
       <Pressable
@@ -481,7 +505,7 @@ function ConnectionButton({
       >
         <Ionicons name="checkmark-circle" size={16} color="#166534" />
         <Text style={[styles.connectButtonText, { color: "#166534" }]}>
-          Connected
+          {t.c3search.connected}
         </Text>
       </Pressable>
     );
@@ -495,7 +519,7 @@ function ConnectionButton({
       <View style={[styles.connectButton, { backgroundColor: "#F1F5F9" }]}>
         <Ionicons name="time-outline" size={16} color="#64748B" />
         <Text style={[styles.connectButtonText, { color: "#64748B" }]}>
-          Requested
+          {t.c3search.requested}
         </Text>
       </View>
     );
@@ -512,7 +536,7 @@ function ConnectionButton({
       >
         <Ionicons name="mail-unread-outline" size={16} color="#92400E" />
         <Text style={[styles.connectButtonText, { color: "#92400E" }]}>
-          Respond
+          {t.c3search.respond}
         </Text>
       </Pressable>
     );
@@ -524,9 +548,53 @@ function ConnectionButton({
       style={[styles.connectButton, { backgroundColor: theme.primary }]}
     >
       <Ionicons name="person-add-outline" size={16} color="#FFFFFF" />
-      <Text style={styles.connectWhiteText}>Connect</Text>
+      <Text style={styles.connectWhiteText}>{t.c3search.connect}</Text>
     </Pressable>
   );
+}
+
+function translatePaddyType(value: string, t: any): string {
+  const normalized = value.trim().toLowerCase();
+
+  if (normalized === "nadu") {
+    return t.c3paddyTypes.Nadu;
+  }
+
+  if (normalized === "samba") {
+    return t.c3paddyTypes.Samba;
+  }
+
+  if (normalized === "keeri samba" || normalized === "keerisamba") {
+    return t.c3paddyTypes.KeeriSamba;
+  }
+
+  return value;
+}
+
+function translateDistrict(
+  district: string | undefined,
+  translations: {
+    All: string;
+    Ampara: string;
+    Badulla: string;
+    Kandy: string;
+    Monaragala: string;
+  },
+  fallback: string
+): string {
+  if (!district) {
+    return fallback;
+  }
+
+  const districtMap: Record<string, string> = {
+    All: translations.All,
+    Ampara: translations.Ampara,
+    Badulla: translations.Badulla,
+    Kandy: translations.Kandy,
+    Monaragala: translations.Monaragala,
+  };
+
+  return districtMap[district.trim()] ?? district.trim();
 }
 
 const styles = StyleSheet.create({

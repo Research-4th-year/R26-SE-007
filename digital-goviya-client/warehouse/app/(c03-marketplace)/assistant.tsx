@@ -31,39 +31,32 @@ import {
   Poppins_500Medium,
 } from "@expo-google-fonts/poppins";
 
-import {
-  useMarketplaceAuth,
-} from "@/hooks/c03-marketplace/useMarketplaceAuth";
+import { useMarketplaceAuth } from "@/hooks/c03-marketplace/useMarketplaceAuth";
+import { ragService } from "@/services/c03-marketplace/rag.service";
+import { getApiErrorMessage } from "@/utils/c03-marketplace/getApiErrorMessage";
+import type { RagChatMessage } from "@/types/c03-marketplace/rag.types";
+import { useLanguage } from "@/contexts/LanguageContext";
 
-import {
-  ragService,
-} from "@/services/c03-marketplace/rag.service";
+// ===========================================================================
+// SUGGESTED QUESTIONS
+// ===========================================================================
 
-import {
-  getApiErrorMessage,
-} from "@/utils/c03-marketplace/getApiErrorMessage";
-
-import type {
-  RagChatMessage,
-} from "@/types/c03-marketplace/rag.types";
-
-const SUGGESTED_QUESTIONS = [
-  "What is the current price of Nadu paddy?",
-  "What are the quality requirements for selling paddy?",
-  "Explain the difference between Maha and Yala seasons.",
-  "How should I evaluate a miller's offered price?",
+const SUGGESTED_QUESTIONS = (t: any) => [
+  t.c3assistant.suggestedQuestion1,
+  t.c3assistant.suggestedQuestion2,
+  t.c3assistant.suggestedQuestion3,
+  t.c3assistant.suggestedQuestion4,
 ];
 
-// ---------------------------------------------------------------------------
-// Role themes
-//
-// Farmer  -> paddy-field green: fresh, growing, open-field
-// Miller  -> milled-grain amber: warm, toasted, processed
-// ---------------------------------------------------------------------------
+// ===========================================================================
+// ROLE THEME
+// ===========================================================================
+
 type RoleTheme = {
   accent: string;
   accentDark: string;
   accentSoft: string;
+  accentPale: string;
   gradient: [string, string];
   headerGradient: [string, string];
   icon: keyof typeof Ionicons.glyphMap;
@@ -72,41 +65,40 @@ type RoleTheme = {
 
 const FARMER_THEME: RoleTheme = {
   accent: "#2F9E44",
-  accentDark: "#1B5E20",
-  accentSoft: "#E6F7EA",
-  gradient: ["#3FB663", "#1B7A3D"],
-  headerGradient: ["#EAFBEF", "#F8FAF8"],
+  accentDark: "#176B2C",
+  accentSoft: "#DDF7E4",
+  accentPale: "#F0FFF4",
+  gradient: ["#61a070", "#0f602e"],
+  headerGradient: ["#E8FBEF", "#F9FFFB"],
   icon: "leaf",
   eyebrow: "GROWER KNOWLEDGE ASSISTANT",
 };
 
 const MILLER_THEME: RoleTheme = {
   accent: "#C2760C",
-  accentDark: "#7A4708",
-  accentSoft: "#FBEBD2",
-  gradient: ["#DE9A2E", "#A85E0A"],
-  headerGradient: ["#FDF3E2", "#F8FAF8"],
+  accentDark: "#874D06",
+  accentSoft: "#FBE6C5",
+  accentPale: "#FFF8EA",
+  gradient: ["#F1B94A", "#A95B08"],
+  headerGradient: ["#FFF3DE", "#FFFCF7"],
   icon: "cube",
   eyebrow: "MILLER KNOWLEDGE ASSISTANT",
 };
 
+// ===========================================================================
+// MAIN SCREEN
+// ===========================================================================
+
 export default function MarketplaceAssistantScreen() {
   const { user } = useMarketplaceAuth();
+  const { t, language } = useLanguage();
 
-  const listRef =
-    useRef<FlatList<RagChatMessage>>(null);
+  const listRef = useRef<FlatList<RagChatMessage>>(null);
 
-  const [question, setQuestion] =
-    useState("");
-
-  const [messages, setMessages] =
-    useState<RagChatMessage[]>([]);
-
-  const [submitting, setSubmitting] =
-    useState(false);
-
-  const [inputError, setInputError] =
-    useState<string | null>(null);
+  const [question, setQuestion] = useState("");
+  const [messages, setMessages] = useState<RagChatMessage[]>([]);
+  const [submitting, setSubmitting] = useState(false);
+  const [inputError, setInputError] = useState<string | null>(null);
 
   const [fontsLoaded] = useFonts({
     Poppins_800ExtraBold,
@@ -115,14 +107,27 @@ export default function MarketplaceAssistantScreen() {
     Poppins_500Medium,
   });
 
+  // =========================================================================
+  // THEME
+  // =========================================================================
+
   const theme: RoleTheme =
     user?.role === "miller"
-      ? MILLER_THEME
-      : FARMER_THEME;
+      ? {
+          ...MILLER_THEME,
+          eyebrow: t.c3assistant.millerKnowledgeAssistant,
+        }
+      : {
+          ...FARMER_THEME,
+          eyebrow: t.c3assistant.growerKnowledgeAssistant,
+        };
 
-  // Kept for backwards-compatible naming used deeper in the tree.
   const accent = theme.accent;
   const accentSoft = theme.accentSoft;
+
+  // =========================================================================
+  // WELCOME MESSAGE
+  // =========================================================================
 
   const assistantWelcome = useMemo(
     (): RagChatMessage => ({
@@ -130,17 +135,19 @@ export default function MarketplaceAssistantScreen() {
       sender: "assistant",
       text:
         user?.role === "miller"
-          ? "Hello. I can help you understand paddy prices, quality requirements, market conditions and purchasing decisions."
-          : "Hello. I can help you understand paddy prices, selling requirements, market conditions and fair trading decisions.",
+          ? t.c3assistant.millerWelcome
+          : t.c3assistant.farmerWelcome,
       createdAt: Date.now(),
     }),
-    [user?.role]
+    [user?.role, language, t]
   );
 
   const displayedMessages =
-    messages.length > 0
-      ? messages
-      : [assistantWelcome];
+    messages.length > 0 ? messages : [assistantWelcome];
+
+  // =========================================================================
+  // SCROLL
+  // =========================================================================
 
   const scrollToBottom = useCallback(() => {
     requestAnimationFrame(() => {
@@ -149,6 +156,10 @@ export default function MarketplaceAssistantScreen() {
       });
     });
   }, []);
+
+  // =========================================================================
+  // SUBMIT QUESTION
+  // =========================================================================
 
   const submitQuestion = async (
     selectedQuestion?: string
@@ -163,7 +174,7 @@ export default function MarketplaceAssistantScreen() {
 
     if (cleanedQuestion.length < 2) {
       setInputError(
-        "Please enter a valid question."
+        t.c3assistant.pleaseEnterValidQuestion
       );
       return;
     }
@@ -184,17 +195,19 @@ export default function MarketplaceAssistantScreen() {
     ]);
 
     setSubmitting(true);
-    scrollToBottom();
+
+    setTimeout(() => {
+      scrollToBottom();
+    }, 50);
 
     try {
-      const response =
-        await ragService.askQuestion({
-          question: cleanedQuestion,
-        });
+      const response = await ragService.askQuestion({
+        question: cleanedQuestion,
+      });
 
       const answer =
         response.data.answer?.trim() ||
-        "I found relevant information, but an answer could not be generated.";
+        t.c3assistant.answerNotGenerated;
 
       const assistantMessage: RagChatMessage = {
         id: `assistant-${Date.now()}`,
@@ -210,10 +223,7 @@ export default function MarketplaceAssistantScreen() {
         assistantMessage,
       ]);
     } catch (error) {
-      console.error(
-        "RAG question failed:",
-        error
-      );
+      console.error("RAG question failed:", error);
 
       const failedMessage: RagChatMessage = {
         id: `assistant-error-${Date.now()}`,
@@ -229,9 +239,16 @@ export default function MarketplaceAssistantScreen() {
       ]);
     } finally {
       setSubmitting(false);
-      scrollToBottom();
+
+      setTimeout(() => {
+        scrollToBottom();
+      }, 80);
     }
   };
+
+  // =========================================================================
+  // LOADING
+  // =========================================================================
 
   if (!fontsLoaded) {
     return null;
@@ -247,16 +264,20 @@ export default function MarketplaceAssistantScreen() {
             : "height"
         }
         keyboardVerticalOffset={
-          Platform.OS === "ios" ? 8 : 20
+          Platform.OS === "ios" ? 0 : 0
         }
       >
+        {/* ================================================================
+            HEADER
+        ================================================================ */}
+
         <LinearGradient
           colors={theme.headerGradient}
           style={styles.header}
         >
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Go back"
+            accessibilityLabel={t.c3assistant.goBack}
             onPress={() => router.back()}
             style={({ pressed }) => [
               styles.headerButton,
@@ -265,7 +286,7 @@ export default function MarketplaceAssistantScreen() {
           >
             <Ionicons
               name="arrow-back"
-              size={21}
+              size={20}
               color="#1F2937"
             />
           </Pressable>
@@ -274,19 +295,32 @@ export default function MarketplaceAssistantScreen() {
             colors={theme.gradient}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
-            style={styles.headerIcon}
+            style={styles.headerAvatar}
           >
             <Ionicons
               name={theme.icon}
-              size={19}
+              size={21}
               color="#FFFFFF"
             />
           </LinearGradient>
 
           <View style={styles.headerText}>
-            <Text style={styles.headerTitle}>
-              Market Assistant
-            </Text>
+            <View style={styles.titleRow}>
+              <Text style={styles.headerTitle}>
+                {t.c3assistant.title}
+              </Text>
+
+              <LinearGradient
+                colors={theme.gradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.aiBadge}
+              >
+                <Text style={styles.aiBadgeText}>
+                  AI
+                </Text>
+              </LinearGradient>
+            </View>
 
             <View style={styles.onlineRow}>
               <View
@@ -299,14 +333,16 @@ export default function MarketplaceAssistantScreen() {
               />
 
               <Text style={styles.headerSubtitle}>
-                RAG-powered agricultural guidance
+                {t.c3assistant.subtitle}
               </Text>
             </View>
           </View>
 
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Clear conversation"
+            accessibilityLabel={
+              t.c3assistant.clearConversation
+            }
             onPress={() => {
               setMessages([]);
               setQuestion("");
@@ -314,16 +350,21 @@ export default function MarketplaceAssistantScreen() {
             }}
             style={({ pressed }) => [
               styles.headerButton,
+              styles.clearButton,
               pressed && styles.pressed,
             ]}
           >
             <Ionicons
-              name="trash-outline"
+              name="refresh-outline"
               size={19}
-              color="#64748B"
+              color={accent}
             />
           </Pressable>
         </LinearGradient>
+
+        {/* ================================================================
+            CHAT LIST
+        ================================================================ */}
 
         <FlatList
           ref={listRef}
@@ -333,11 +374,24 @@ export default function MarketplaceAssistantScreen() {
             <ChatMessage
               message={item}
               theme={theme}
+              translations={t.c3assistant}
             />
           )}
           ListHeaderComponent={
             <View style={styles.listHeader}>
-              <View
+
+              {/* ========================================================
+                  HERO
+              ======================================================== */}
+
+              <LinearGradient
+                colors={
+                  user?.role === "miller"
+                    ? ["#FFF9EE", "#FFF1D6"]
+                    : ["#F2FFF5", "#E5F9EA"]
+                }
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
                 style={[
                   styles.heroCard,
                   {
@@ -345,6 +399,16 @@ export default function MarketplaceAssistantScreen() {
                   },
                 ]}
               >
+                <View
+                  style={[
+                    styles.heroGlow,
+                    {
+                      backgroundColor:
+                        theme.accentSoft,
+                    },
+                  ]}
+                />
+
                 <LinearGradient
                   colors={theme.gradient}
                   start={{ x: 0, y: 0 }}
@@ -352,50 +416,109 @@ export default function MarketplaceAssistantScreen() {
                   style={styles.heroIcon}
                 >
                   <Ionicons
-                    name="chatbubble-ellipses-outline"
-                    size={24}
+                    name="chatbubble-ellipses"
+                    size={25}
                     color="#FFFFFF"
                   />
                 </LinearGradient>
 
                 <View style={styles.heroText}>
-                  <Text
-                    style={[
-                      styles.heroEyebrow,
-                      { color: theme.accentDark },
-                    ]}
-                  >
-                    {theme.eyebrow}
-                  </Text>
+                  <View style={styles.heroEyebrowRow}>
+                    <Text
+                      style={[
+                        styles.heroEyebrow,
+                        {
+                          color:
+                            theme.accentDark,
+                        },
+                      ]}
+                    >
+                      {theme.eyebrow}
+                    </Text>
+
+                    <View
+                      style={[
+                        styles.liveBadge,
+                        {
+                          backgroundColor:
+                            theme.accentSoft,
+                        },
+                      ]}
+                    >
+                      <View
+                        style={[
+                          styles.liveDot,
+                          {
+                            backgroundColor:
+                              accent,
+                          },
+                        ]}
+                      />
+
+                      <Text
+                        style={[
+                          styles.liveText,
+                          {
+                            color:
+                              theme.accentDark,
+                          },
+                        ]}
+                      >
+                        LIVE
+                      </Text>
+                    </View>
+                  </View>
 
                   <Text style={styles.heroTitle}>
-                    Ask about paddy markets
+                    {t.c3assistant.askAboutPaddyMarkets}
                   </Text>
 
                   <Text
-                    style={
-                      styles.heroDescription
-                    }
+                    style={styles.heroDescription}
                   >
-                    Answers are generated using
-                    retrieved agricultural data and
-                    marketplace knowledge.
+                    {t.c3assistant.heroDescription}
                   </Text>
                 </View>
-              </View>
+              </LinearGradient>
 
-              <Text style={styles.suggestionTitle}>
-                Suggested questions
-              </Text>
+              {/* ========================================================
+                  QUICK QUESTIONS
+              ======================================================== */}
+
+              <View style={styles.sectionHeader}>
+                <View>
+                  <Text style={styles.sectionTitle}>
+                    {t.c3assistant.suggestedQuestions}
+                  </Text>
+
+                  <Text style={styles.sectionSubtitle}>
+                    Quick questions to get started
+                  </Text>
+                </View>
+
+                <LinearGradient
+                  colors={theme.gradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.sparkleBadge}
+                >
+                  <Ionicons
+                    name="sparkles"
+                    size={15}
+                    color="#FFFFFF"
+                  />
+                </LinearGradient>
+              </View>
 
               <View
                 style={styles.suggestionContainer}
               >
-                {SUGGESTED_QUESTIONS.map(
-                  (item) => (
+                {SUGGESTED_QUESTIONS(t).map(
+                  (item, index) => (
                     <SuggestionChip
                       key={item}
                       text={item}
+                      index={index}
                       theme={theme}
                       disabled={submitting}
                       onPress={() =>
@@ -406,16 +529,53 @@ export default function MarketplaceAssistantScreen() {
                 )}
               </View>
 
-              <Text style={styles.conversationTitle}>
-                Conversation
-              </Text>
+              {/* ========================================================
+                  CONVERSATION
+              ======================================================== */}
+
+              <View style={styles.conversationHeader}>
+                <LinearGradient
+                  colors={theme.gradient}
+                  style={styles.conversationLine}
+                />
+
+                <Text
+                  style={styles.conversationTitle}
+                >
+                  {t.c3assistant.conversation}
+                </Text>
+
+                <View
+                  style={[
+                    styles.conversationBadge,
+                    {
+                      backgroundColor:
+                        theme.accentSoft,
+                    },
+                  ]}
+                >
+                  <Ionicons
+                    name="chatbubbles-outline"
+                    size={12}
+                    color={accent}
+                  />
+                </View>
+              </View>
             </View>
           }
           ListFooterComponent={
             submitting ? (
-              <TypingIndicator theme={theme} />
+              <TypingIndicator
+                theme={theme}
+                text={
+                  t.c3assistant
+                    .retrievingAgriculturalInformation
+                }
+              />
             ) : (
-              <View style={styles.listBottomSpace} />
+              <View
+                style={styles.listBottomSpace}
+              />
             )
           }
           contentContainerStyle={
@@ -426,21 +586,54 @@ export default function MarketplaceAssistantScreen() {
           onContentSizeChange={scrollToBottom}
         />
 
+        {/* ================================================================
+            COMPOSER
+        ================================================================ */}
+
         <View style={styles.composerArea}>
           {inputError ? (
-            <Text style={styles.inputError}>
-              {inputError}
-            </Text>
+            <View style={styles.errorRow}>
+              <Ionicons
+                name="alert-circle-outline"
+                size={13}
+                color="#DC2626"
+              />
+
+              <Text style={styles.inputError}>
+                {inputError}
+              </Text>
+            </View>
           ) : null}
 
           <View
             style={[
               styles.composer,
+              {
+                borderColor: submitting
+                  ? accentSoft
+                  : "#D8E0E7",
+              },
               inputError
                 ? styles.composerError
                 : null,
+              submitting
+                ? styles.composerSubmitting
+                : null,
             ]}
           >
+            <LinearGradient
+              colors={theme.gradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.inputIcon}
+            >
+              <Ionicons
+                name="chatbubble-outline"
+                size={15}
+                color="#FFFFFF"
+              />
+            </LinearGradient>
+
             <TextInput
               value={question}
               onChangeText={(value) => {
@@ -450,16 +643,16 @@ export default function MarketplaceAssistantScreen() {
                   setInputError(null);
                 }
               }}
-              placeholder="Ask about prices, quality or trading..."
+              placeholder={
+                t.c3assistant.inputPlaceholder
+              }
               placeholderTextColor="#94A3B8"
               multiline
               maxLength={500}
               editable={!submitting}
               style={styles.input}
               onSubmitEditing={() => {
-                if (
-                  Platform.OS === "web"
-                ) {
+                if (Platform.OS === "web") {
                   void submitQuestion();
                 }
               }}
@@ -472,27 +665,45 @@ export default function MarketplaceAssistantScreen() {
                 question.trim().length < 2
               }
               submitting={submitting}
+              accessibilityLabel={
+                t.c3assistant.sendQuestion
+              }
               onPress={() =>
                 void submitQuestion()
               }
             />
           </View>
 
-          <Text style={styles.disclaimer}>
-            AI answers should be reviewed before
-            making financial or trading decisions.
-          </Text>
+          <View style={styles.composerFooter}>
+            <View style={styles.secureRow}>
+              <Ionicons
+                name="shield-checkmark-outline"
+                size={11}
+                color={accent}
+              />
+
+              <Text style={styles.disclaimer}>
+                {t.c3assistant.disclaimer}
+              </Text>
+            </View>
+
+            <Text style={styles.characterCount}>
+              {question.length}/500
+            </Text>
+          </View>
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
-// ---------------------------------------------------------------------------
-// Suggestion chip — press-scale micro-interaction
-// ---------------------------------------------------------------------------
+// ===========================================================================
+// SUGGESTION CHIP
+// ===========================================================================
+
 interface SuggestionChipProps {
   text: string;
+  index: number;
   theme: RoleTheme;
   disabled: boolean;
   onPress: () => void;
@@ -500,70 +711,112 @@ interface SuggestionChipProps {
 
 function SuggestionChip({
   text,
+  index,
   theme,
   disabled,
   onPress,
 }: SuggestionChipProps) {
-  const scale = useRef(new Animated.Value(1)).current;
+  const scale = useRef(
+    new Animated.Value(1)
+  ).current;
 
   const animateTo = (value: number) => {
     Animated.spring(scale, {
       toValue: value,
       speed: 24,
-      bounciness: 6,
+      bounciness: 5,
       useNativeDriver: true,
     }).start();
   };
 
+  const icons: Array<
+    keyof typeof Ionicons.glyphMap
+  > = [
+    "trending-up-outline",
+    "cash-outline",
+    "location-outline",
+    "analytics-outline",
+  ];
+
   return (
     <Animated.View
-      style={{ transform: [{ scale }] }}
+      style={{
+        transform: [{ scale }],
+      }}
     >
       <Pressable
         disabled={disabled}
-        onPressIn={() => animateTo(0.97)}
+        onPressIn={() => animateTo(0.975)}
         onPressOut={() => animateTo(1)}
         onPress={onPress}
-        style={[
-          styles.suggestionChip,
-          { borderColor: theme.accentSoft },
+        style={({ pressed }) => [
+          styles.suggestionCard,
+          {
+            borderColor: theme.accentSoft,
+          },
+          pressed && styles.suggestionPressed,
           disabled && styles.disabled,
         ]}
       >
+        <LinearGradient
+          colors={theme.gradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.suggestionIcon}
+        >
+          <Ionicons
+            name={icons[index % icons.length]}
+            size={17}
+            color="#FFFFFF"
+          />
+        </LinearGradient>
+
+        <View style={styles.suggestionContent}>
+          <Text style={styles.suggestionLabel}>
+            {text}
+          </Text>
+
+          <Text
+            style={[
+              styles.suggestionHint,
+              {
+                color: theme.accent,
+              },
+            ]}
+          >
+            Ask assistant
+          </Text>
+        </View>
+
         <View
           style={[
-            styles.suggestionIconDot,
-            { backgroundColor: theme.accentSoft },
+            styles.suggestionArrow,
+            {
+              backgroundColor:
+                theme.accentSoft,
+            },
           ]}
         >
           <Ionicons
-            name="sparkles-outline"
-            size={12}
+            name="arrow-up"
+            size={14}
             color={theme.accent}
           />
         </View>
-
-        <Text style={styles.suggestionText}>
-          {text}
-        </Text>
-
-        <Ionicons
-          name="arrow-forward"
-          size={13}
-          color={theme.accent}
-        />
       </Pressable>
     </Animated.View>
   );
 }
 
-// ---------------------------------------------------------------------------
-// Send button — gradient fill, scale feedback
-// ---------------------------------------------------------------------------
+// ===========================================================================
+// SEND BUTTON
+// ===========================================================================
+
 interface SendButtonProps {
   theme: RoleTheme;
   disabled: boolean;
   submitting: boolean;
+  accessibilityLabel: string;
   onPress: () => void;
 }
 
@@ -571,9 +824,12 @@ function SendButton({
   theme,
   disabled,
   submitting,
+  accessibilityLabel,
   onPress,
 }: SendButtonProps) {
-  const scale = useRef(new Animated.Value(1)).current;
+  const scale = useRef(
+    new Animated.Value(1)
+  ).current;
 
   const animateTo = (value: number) => {
     Animated.spring(scale, {
@@ -586,24 +842,27 @@ function SendButton({
 
   return (
     <Animated.View
-      style={{ transform: [{ scale }] }}
+      style={{
+        transform: [{ scale }],
+      }}
     >
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Send question"
+        accessibilityLabel={accessibilityLabel}
         disabled={disabled}
-        onPressIn={() => animateTo(0.94)}
+        onPressIn={() => animateTo(0.93)}
         onPressOut={() => animateTo(1)}
         onPress={onPress}
       >
         <LinearGradient
-          colors={theme.gradient}
+          colors={
+            disabled
+              ? ["#CBD5E1", "#94A3B8"]
+              : theme.gradient
+          }
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={[
-            styles.sendButton,
-            disabled && styles.disabled,
-          ]}
+          style={styles.sendButton}
         >
           {submitting ? (
             <ActivityIndicator
@@ -612,8 +871,8 @@ function SendButton({
             />
           ) : (
             <Ionicons
-              name="send"
-              size={18}
+              name="arrow-up"
+              size={20}
               color="#FFFFFF"
             />
           )}
@@ -623,23 +882,31 @@ function SendButton({
   );
 }
 
-// ---------------------------------------------------------------------------
-// Chat message bubble — fades and rises in on arrival
-// ---------------------------------------------------------------------------
+// ===========================================================================
+// CHAT MESSAGE
+// ===========================================================================
+
 interface ChatMessageProps {
   message: RagChatMessage;
   theme: RoleTheme;
+  translations: any;
 }
 
 function ChatMessage({
   message,
   theme,
+  translations,
 }: ChatMessageProps) {
   const [showSources, setShowSources] =
     useState(false);
 
-  const opacity = useRef(new Animated.Value(0)).current;
-  const translateY = useRef(new Animated.Value(8)).current;
+  const opacity = useRef(
+    new Animated.Value(0)
+  ).current;
+
+  const translateY = useRef(
+    new Animated.Value(8)
+  ).current;
 
   useEffect(() => {
     Animated.parallel([
@@ -655,7 +922,7 @@ function ChatMessage({
         useNativeDriver: true,
       }),
     ]).start();
-    // Runs once when the bubble mounts.
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -680,15 +947,11 @@ function ChatMessage({
       ]}
     >
       {!isUser ? (
-        <View
-          style={[
-            styles.avatar,
-            {
-              backgroundColor: message.failed
-                ? "#FEE2E2"
-                : theme.accentSoft,
-            },
-          ]}
+        <LinearGradient
+          colors={theme.gradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.messageAvatar}
         >
           <Ionicons
             name={
@@ -696,14 +959,10 @@ function ChatMessage({
                 ? "warning-outline"
                 : theme.icon
             }
-            size={16}
-            color={
-              message.failed
-                ? "#B91C1C"
-                : theme.accent
-            }
+            size={15}
+            color="#FFFFFF"
           />
-        </View>
+        </LinearGradient>
       ) : null}
 
       <View
@@ -739,7 +998,9 @@ function ChatMessage({
                 styles.userMessageTime,
               ]}
             >
-              {formatTime(message.createdAt)}
+              {formatTime(
+                message.createdAt
+              )}
             </Text>
           </LinearGradient>
         ) : (
@@ -751,6 +1012,45 @@ function ChatMessage({
                 : styles.assistantBubble,
             ]}
           >
+            {!message.failed ? (
+              <View
+                style={styles.assistantLabelRow}
+              >
+                <LinearGradient
+                  colors={theme.gradient}
+                  style={styles.assistantLabelIcon}
+                >
+                  <Ionicons
+                    name="sparkles"
+                    size={8}
+                    color="#FFFFFF"
+                  />
+                </LinearGradient>
+
+                <Text
+                  style={[
+                    styles.assistantLabel,
+                    {
+                      color:
+                        theme.accentDark,
+                    },
+                  ]}
+                >
+                  MARKETPLACE ASSISTANT
+                </Text>
+
+                <View
+                  style={[
+                    styles.assistantLabelDot,
+                    {
+                      backgroundColor:
+                        theme.accent,
+                    },
+                  ]}
+                />
+              </View>
+            ) : null}
+
             <Text
               style={[
                 styles.messageText,
@@ -770,23 +1070,39 @@ function ChatMessage({
                       (current) => !current
                     )
                   }
-                  style={styles.sourceButton}
+                  style={[
+                    styles.sourceButton,
+                    {
+                      borderTopColor:
+                        theme.accentSoft,
+                    },
+                  ]}
                 >
-                  <Ionicons
-                    name="document-text-outline"
-                    size={15}
-                    color={theme.accent}
-                  />
+                  <LinearGradient
+                    colors={theme.gradient}
+                    style={styles.sourceIcon}
+                  >
+                    <Ionicons
+                      name="document-text-outline"
+                      size={14}
+                      color="#FFFFFF"
+                    />
+                  </LinearGradient>
 
                   <Text
                     style={[
                       styles.sourceButtonText,
-                      { color: theme.accent },
+                      {
+                        color:
+                          theme.accentDark,
+                      },
                     ]}
                   >
                     {showSources
-                      ? "Hide retrieved information"
-                      : "View retrieved information"}
+                      ? translations
+                          .hideRetrievedInformation
+                      : translations
+                          .viewRetrievedInformation}
                   </Text>
 
                   <Ionicons
@@ -804,7 +1120,12 @@ function ChatMessage({
                   <View
                     style={[
                       styles.sourceContainer,
-                      { backgroundColor: theme.accentSoft },
+                      {
+                        backgroundColor:
+                          theme.accentPale,
+                        borderColor:
+                          theme.accentSoft,
+                      },
                     ]}
                   >
                     {message.context?.trim() ? (
@@ -812,14 +1133,21 @@ function ChatMessage({
                         <Text
                           style={[
                             styles.sourceTitle,
-                            { color: theme.accentDark },
+                            {
+                              color:
+                                theme.accentDark,
+                            },
                           ]}
                         >
-                          Retrieved context
+                          {
+                            translations.retrievedContext
+                          }
                         </Text>
 
                         <Text
-                          style={styles.sourceText}
+                          style={
+                            styles.sourceText
+                          }
                         >
                           {message.context}
                         </Text>
@@ -832,38 +1160,44 @@ function ChatMessage({
                           style={[
                             styles.sourceTitle,
                             styles.resultsTitle,
-                            { color: theme.accentDark },
+                            {
+                              color:
+                                theme.accentDark,
+                            },
                           ]}
                         >
-                          Retrieved results
+                          {
+                            translations.retrievedResults
+                          }
                         </Text>
 
                         {message.results.map(
-                          (result, index) => (
+                          (
+                            result,
+                            index
+                          ) => (
                             <View
                               key={`${message.id}-${index}`}
                               style={
                                 styles.resultItem
                               }
                             >
-                              <View
-                                style={[
-                                  styles.resultNumber,
-                                  {
-                                    backgroundColor:
-                                      "#FFFFFF",
-                                  },
-                                ]}
+                              <LinearGradient
+                                colors={
+                                  theme.gradient
+                                }
+                                style={
+                                  styles.resultNumber
+                                }
                               >
                                 <Text
-                                  style={[
-                                    styles.resultNumberText,
-                                    { color: theme.accent },
-                                  ]}
+                                  style={
+                                    styles.resultNumberText
+                                  }
                                 >
                                   {index + 1}
                                 </Text>
-                              </View>
+                              </LinearGradient>
 
                               <Text
                                 style={
@@ -885,7 +1219,9 @@ function ChatMessage({
             ) : null}
 
             <Text style={styles.messageTime}>
-              {formatTime(message.createdAt)}
+              {formatTime(
+                message.createdAt
+              )}
             </Text>
           </View>
         )}
@@ -894,17 +1230,30 @@ function ChatMessage({
   );
 }
 
-// ---------------------------------------------------------------------------
-// Typing indicator — three grain-shaped dots bouncing in sequence
-// ---------------------------------------------------------------------------
+// ===========================================================================
+// TYPING INDICATOR
+// ===========================================================================
+
 interface TypingIndicatorProps {
   theme: RoleTheme;
+  text: string;
 }
 
-function TypingIndicator({ theme }: TypingIndicatorProps) {
-  const dot1 = useRef(new Animated.Value(0)).current;
-  const dot2 = useRef(new Animated.Value(0)).current;
-  const dot3 = useRef(new Animated.Value(0)).current;
+function TypingIndicator({
+  theme,
+  text,
+}: TypingIndicatorProps) {
+  const dot1 = useRef(
+    new Animated.Value(0)
+  ).current;
+
+  const dot2 = useRef(
+    new Animated.Value(0)
+  ).current;
+
+  const dot3 = useRef(
+    new Animated.Value(0)
+  ).current;
 
   useEffect(() => {
     const makeLoop = (
@@ -936,10 +1285,15 @@ function TypingIndicator({ theme }: TypingIndicatorProps) {
 
     loops.forEach((loop) => loop.start());
 
-    return () => loops.forEach((loop) => loop.stop());
+    return () =>
+      loops.forEach((loop) =>
+        loop.stop()
+      );
   }, [dot1, dot2, dot3]);
 
-  const dotStyle = (value: Animated.Value) => ({
+  const dotStyle = (
+    value: Animated.Value
+  ) => ({
     opacity: value.interpolate({
       inputRange: [0, 1],
       outputRange: [0.35, 1],
@@ -955,56 +1309,83 @@ function TypingIndicator({ theme }: TypingIndicatorProps) {
   });
 
   return (
-    <View style={[styles.messageRow, styles.assistantMessageRow]}>
-      <View
-        style={[
-          styles.avatar,
-          { backgroundColor: theme.accentSoft },
-        ]}
+    <View
+      style={[
+        styles.messageRow,
+        styles.assistantMessageRow,
+      ]}
+    >
+      <LinearGradient
+        colors={theme.gradient}
+        style={styles.messageAvatar}
       >
-        <Ionicons name={theme.icon} size={16} color={theme.accent} />
-      </View>
+        <Ionicons
+          name={theme.icon}
+          size={15}
+          color="#FFFFFF"
+        />
+      </LinearGradient>
 
       <View
         style={[
           styles.messageBubble,
           styles.assistantBubbleShadow,
-          styles.bubbleFill,
-          styles.assistantBubble,
-          styles.typingBubble,
         ]}
       >
-        <View style={styles.typingDots}>
-          <Animated.View
-            style={[
-              styles.typingDot,
-              { backgroundColor: theme.accent },
-              dotStyle(dot1),
-            ]}
-          />
-          <Animated.View
-            style={[
-              styles.typingDot,
-              { backgroundColor: theme.accent },
-              dotStyle(dot2),
-            ]}
-          />
-          <Animated.View
-            style={[
-              styles.typingDot,
-              { backgroundColor: theme.accent },
-              dotStyle(dot3),
-            ]}
-          />
-        </View>
+        <View
+          style={[
+            styles.bubbleFill,
+            styles.assistantBubble,
+            styles.typingBubble,
+          ]}
+        >
+          <View style={styles.typingDots}>
+            <Animated.View
+              style={[
+                styles.typingDot,
+                {
+                  backgroundColor:
+                    theme.accent,
+                },
+                dotStyle(dot1),
+              ]}
+            />
 
-        <Text style={styles.typingText}>
-          Retrieving agricultural information...
-        </Text>
+            <Animated.View
+              style={[
+                styles.typingDot,
+                {
+                  backgroundColor:
+                    theme.accent,
+                },
+                dotStyle(dot2),
+              ]}
+            />
+
+            <Animated.View
+              style={[
+                styles.typingDot,
+                {
+                  backgroundColor:
+                    theme.accent,
+                },
+                dotStyle(dot3),
+              ]}
+            />
+          </View>
+
+          <Text style={styles.typingText}>
+            {text}
+          </Text>
+        </View>
       </View>
     </View>
   );
 }
+
+// ===========================================================================
+// HELPERS
+// ===========================================================================
 
 function formatRagResult(
   value: unknown
@@ -1050,6 +1431,10 @@ function formatTime(
   ).format(new Date(timestamp));
 }
 
+// ===========================================================================
+// STYLES
+// ===========================================================================
+
 const styles = StyleSheet.create({
   flex: {
     flex: 1,
@@ -1057,49 +1442,81 @@ const styles = StyleSheet.create({
 
   screen: {
     flex: 1,
-    backgroundColor: "#F8FAF8",
+    backgroundColor: "#F5F8F6",
   },
 
+  // -------------------------------------------------------------------------
+  // HEADER
+  // -------------------------------------------------------------------------
+
   header: {
-    minHeight: 72,
+    minHeight: 70,
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 16,
-    gap: 10,
+    paddingHorizontal: 13,
+    gap: 9,
     borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
+    borderBottomColor: "#E4EAE6",
   },
 
   headerButton: {
-    width: 40,
-    height: 40,
+    width: 39,
+    height: 39,
     borderRadius: 13,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(255,255,255,0.6)",
+    backgroundColor: "rgba(255,255,255,0.85)",
+    borderWidth: 1,
+    borderColor: "rgba(226,232,240,0.9)",
   },
 
-  headerIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 13,
+  clearButton: {
+    marginLeft: 1,
+  },
+
+  headerAvatar: {
+    width: 42,
+    height: 42,
+    borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.14,
-    shadowRadius: 6,
-    elevation: 3,
+    shadowColor: "#0F172A",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.16,
+    shadowRadius: 8,
+    elevation: 4,
   },
 
   headerText: {
     flex: 1,
   },
 
+  titleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 7,
+  },
+
   headerTitle: {
-    color: "#1F2937",
+    color: "#172033",
     fontSize: 16,
     fontFamily: "Poppins_700Bold",
+  },
+
+  aiBadge: {
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+
+  aiBadgeText: {
+    color: "#FFFFFF",
+    fontSize: 7,
+    fontFamily: "Poppins_800ExtraBold",
+    letterSpacing: 0.6,
   },
 
   onlineRow: {
@@ -1116,45 +1533,70 @@ const styles = StyleSheet.create({
   },
 
   headerSubtitle: {
-    color: "#6B7280",
+    color: "#718096",
     fontSize: 8.5,
     fontFamily: "Poppins_500Medium",
   },
 
+  // -------------------------------------------------------------------------
+  // LIST
+  // -------------------------------------------------------------------------
+
   messageList: {
-    paddingHorizontal: 16,
-    paddingBottom: 24,
+    paddingHorizontal: 14,
+    paddingBottom: 8,
   },
 
   listHeader: {
-    paddingTop: 17,
+    paddingTop: 12,
   },
 
+  // -------------------------------------------------------------------------
+  // HERO
+  // -------------------------------------------------------------------------
+
   heroCard: {
+    minHeight: 125,
     flexDirection: "row",
-    gap: 13,
-    padding: 16,
-    borderRadius: 20,
-    backgroundColor: "#FFFFFF",
+    gap: 12,
+    padding: 14,
+    borderRadius: 22,
     borderWidth: 1,
-    marginBottom: 20,
+    overflow: "hidden",
+    marginBottom: 18,
     shadowColor: "#0F172A",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 1,
+    shadowOffset: {
+      width: 0,
+      height: 5,
+    },
+    shadowOpacity: 0.07,
+    shadowRadius: 12,
+    elevation: 2,
+  },
+
+  heroGlow: {
+    position: "absolute",
+    width: 130,
+    height: 130,
+    borderRadius: 65,
+    right: -55,
+    top: -55,
+    opacity: 0.6,
   },
 
   heroIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 15,
+    width: 51,
+    height: 51,
+    borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 3 },
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
     shadowOpacity: 0.16,
-    shadowRadius: 6,
+    shadowRadius: 7,
     elevation: 3,
   },
 
@@ -1162,82 +1604,201 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 
+  heroEyebrowRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 7,
+  },
+
   heroEyebrow: {
-    fontSize: 8,
+    flex: 1,
+    fontSize: 7.5,
     fontFamily: "Poppins_700Bold",
-    letterSpacing: 0.8,
+    letterSpacing: 0.7,
+  },
+
+  liveBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 7,
+    paddingVertical: 4,
+    borderRadius: 7,
+  },
+
+  liveDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+  },
+
+  liveText: {
+    fontSize: 6.5,
+    fontFamily: "Poppins_800ExtraBold",
+    letterSpacing: 0.5,
   },
 
   heroTitle: {
-    color: "#1F2937",
+    color: "#172033",
     fontSize: 14,
     fontFamily: "Poppins_800ExtraBold",
-    marginTop: 3,
+    marginTop: 5,
   },
 
   heroDescription: {
-    color: "#6B7280",
+    color: "#687587",
     fontSize: 9.5,
     lineHeight: 15,
     fontFamily: "Poppins_500Medium",
     marginTop: 4,
   },
 
-  suggestionTitle: {
-    color: "#1F2937",
+  // -------------------------------------------------------------------------
+  // SECTION HEADER
+  // -------------------------------------------------------------------------
+
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 9,
+  },
+
+  sectionTitle: {
+    color: "#172033",
     fontSize: 13,
     fontFamily: "Poppins_700Bold",
-    marginBottom: 10,
   },
+
+  sectionSubtitle: {
+    color: "#94A3B8",
+    fontSize: 8,
+    fontFamily: "Poppins_500Medium",
+    marginTop: 1,
+  },
+
+  sparkleBadge: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
+    shadowOpacity: 0.12,
+    shadowRadius: 5,
+    elevation: 2,
+  },
+
+  // -------------------------------------------------------------------------
+  // SUGGESTIONS
+  // -------------------------------------------------------------------------
 
   suggestionContainer: {
     gap: 8,
-    marginBottom: 22,
+    marginBottom: 17,
   },
 
-  suggestionChip: {
+  suggestionCard: {
+    minHeight: 57,
     flexDirection: "row",
     alignItems: "center",
-    gap: 9,
-    minHeight: 45,
-    borderRadius: 15,
-    paddingHorizontal: 11,
-    paddingVertical: 10,
+    gap: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: 17,
     backgroundColor: "#FFFFFF",
     borderWidth: 1,
     shadowColor: "#0F172A",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 7,
     elevation: 1,
   },
 
-  suggestionIconDot: {
-    width: 24,
-    height: 24,
-    borderRadius: 8,
+  suggestionPressed: {
+    opacity: 0.88,
+  },
+
+  suggestionIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
   },
 
-  suggestionText: {
+  suggestionContent: {
     flex: 1,
-    color: "#475569",
-    fontSize: 10,
+  },
+
+  suggestionLabel: {
+    color: "#334155",
+    fontSize: 9.5,
     lineHeight: 15,
+    fontFamily: "Poppins_600SemiBold",
+  },
+
+  suggestionHint: {
+    fontSize: 7.5,
     fontFamily: "Poppins_500Medium",
+    marginTop: 1,
+  },
+
+  suggestionArrow: {
+    width: 30,
+    height: 30,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  // -------------------------------------------------------------------------
+  // CONVERSATION
+  // -------------------------------------------------------------------------
+
+  conversationHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 10,
+  },
+
+  conversationLine: {
+    width: 4,
+    height: 17,
+    borderRadius: 2,
   },
 
   conversationTitle: {
-    color: "#1F2937",
+    color: "#172033",
     fontSize: 13,
     fontFamily: "Poppins_700Bold",
-    marginBottom: 12,
+    flex: 1,
   },
+
+  conversationBadge: {
+    width: 27,
+    height: 27,
+    borderRadius: 9,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  // -------------------------------------------------------------------------
+  // MESSAGES
+  // -------------------------------------------------------------------------
 
   messageRow: {
     width: "100%",
-    marginBottom: 14,
+    marginBottom: 12,
   },
 
   userMessageRow: {
@@ -1250,37 +1811,51 @@ const styles = StyleSheet.create({
     gap: 8,
   },
 
-  avatar: {
+  messageAvatar: {
     width: 34,
     height: 34,
     borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
+    shadowOpacity: 0.12,
+    shadowRadius: 5,
+    elevation: 2,
   },
 
   messageBubble: {
-    maxWidth: "84%",
+    maxWidth: "85%",
   },
 
   bubbleFill: {
-    borderRadius: 18,
+    borderRadius: 19,
     paddingHorizontal: 14,
     paddingVertical: 11,
   },
 
   userBubbleShadow: {
     shadowColor: "#0F172A",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.13,
+    shadowRadius: 9,
     elevation: 2,
   },
 
   assistantBubbleShadow: {
     shadowColor: "#0F172A",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.045,
+    shadowRadius: 7,
     elevation: 1,
   },
 
@@ -1291,7 +1866,7 @@ const styles = StyleSheet.create({
   assistantBubble: {
     backgroundColor: "#FFFFFF",
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: "#E1E9E4",
     borderTopLeftRadius: 6,
   },
 
@@ -1302,8 +1877,35 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 6,
   },
 
+  assistantLabelRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    marginBottom: 7,
+  },
+
+  assistantLabelIcon: {
+    width: 17,
+    height: 17,
+    borderRadius: 6,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  assistantLabel: {
+    fontSize: 6.5,
+    fontFamily: "Poppins_800ExtraBold",
+    letterSpacing: 0.65,
+  },
+
+  assistantLabelDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+  },
+
   messageText: {
-    fontSize: 11,
+    fontSize: 10.5,
     lineHeight: 18,
     fontFamily: "Poppins_500Medium",
   },
@@ -1322,53 +1924,65 @@ const styles = StyleSheet.create({
 
   messageTime: {
     color: "#94A3B8",
-    fontSize: 7.5,
+    fontSize: 7,
     fontFamily: "Poppins_500Medium",
-    marginTop: 7,
+    marginTop: 6,
     textAlign: "right",
   },
 
   userMessageTime: {
-    color: "rgba(255,255,255,0.68)",
+    color: "rgba(255,255,255,0.7)",
   },
+
+  // -------------------------------------------------------------------------
+  // SOURCES
+  // -------------------------------------------------------------------------
 
   sourceButton: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
-    marginTop: 12,
-    paddingTop: 10,
+    gap: 7,
+    marginTop: 11,
+    paddingTop: 9,
     borderTopWidth: 1,
-    borderTopColor: "#E5E7EB",
+  },
+
+  sourceIcon: {
+    width: 26,
+    height: 26,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
   },
 
   sourceButtonText: {
     flex: 1,
-    fontSize: 9,
+    fontSize: 8.5,
     fontFamily: "Poppins_600SemiBold",
   },
 
   sourceContainer: {
-    marginTop: 11,
-    borderRadius: 13,
-    padding: 11,
+    marginTop: 9,
+    borderRadius: 14,
+    padding: 10,
+    borderWidth: 1,
   },
 
   sourceTitle: {
-    fontSize: 9,
+    fontSize: 8.5,
     fontFamily: "Poppins_700Bold",
   },
 
   sourceText: {
     color: "#64748B",
-    fontSize: 8.5,
+    fontSize: 8.2,
     lineHeight: 15,
     fontFamily: "Poppins_500Medium",
     marginTop: 5,
   },
 
   resultsTitle: {
-    marginTop: 13,
+    marginTop: 12,
   },
 
   resultItem: {
@@ -1379,14 +1993,15 @@ const styles = StyleSheet.create({
   },
 
   resultNumber: {
-    width: 21,
-    height: 21,
+    width: 22,
+    height: 22,
     borderRadius: 7,
     alignItems: "center",
     justifyContent: "center",
   },
 
   resultNumberText: {
+    color: "#FFFFFF",
     fontSize: 8,
     fontFamily: "Poppins_700Bold",
   },
@@ -1394,10 +2009,14 @@ const styles = StyleSheet.create({
   resultText: {
     flex: 1,
     color: "#64748B",
-    fontSize: 8.5,
+    fontSize: 8.2,
     lineHeight: 14,
     fontFamily: "Poppins_500Medium",
   },
+
+  // -------------------------------------------------------------------------
+  // TYPING
+  // -------------------------------------------------------------------------
 
   typingBubble: {
     flexDirection: "row",
@@ -1418,53 +2037,83 @@ const styles = StyleSheet.create({
 
   typingText: {
     color: "#64748B",
-    fontSize: 9.5,
+    fontSize: 8.5,
     fontFamily: "Poppins_500Medium",
   },
 
   listBottomSpace: {
-    height: 4,
+    height: 3,
   },
 
+  // -------------------------------------------------------------------------
+  // COMPOSER
+  // -------------------------------------------------------------------------
+
   composerArea: {
-    paddingHorizontal: 14,
-    paddingTop: 10,
+    paddingHorizontal: 11,
+    paddingTop: 7,
+
+    // IMPORTANT:
+    // Reduced significantly from 96/91.
+    // This removes the large blank space above the keyboard.
     paddingBottom:
-    Platform.OS === "ios" ? 100 : 96,
+      Platform.OS === "ios" ? 7 : 5,
+
     backgroundColor: "#FFFFFF",
     borderTopWidth: 1,
-    borderTopColor: "#E5E7EB",
+    borderTopColor: "#E4EAE7",
   },
 
   composer: {
     minHeight: 54,
-    maxHeight: 120,
+    maxHeight: 115,
     flexDirection: "row",
     alignItems: "flex-end",
-    gap: 9,
-    paddingLeft: 14,
-    paddingRight: 6,
-    paddingVertical: 6,
+    gap: 7,
+    paddingLeft: 7,
+    paddingRight: 5,
+    paddingVertical: 5,
     borderRadius: 18,
     backgroundColor: "#F8FAFC",
     borderWidth: 1,
-    borderColor: "#CBD5E1",
+  },
+
+  composerSubmitting: {
+    opacity: 0.82,
   },
 
   composerError: {
     borderColor: "#DC2626",
+    backgroundColor: "#FFF9F9",
+  },
+
+  inputIcon: {
+    width: 34,
+    height: 34,
+    borderRadius: 11,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 3,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.12,
+    shadowRadius: 4,
+    elevation: 2,
   },
 
   input: {
     flex: 1,
-    minHeight: 40,
-    maxHeight: 104,
+    minHeight: 38,
+    maxHeight: 96,
     color: "#0F172A",
-    fontSize: 11,
+    fontSize: 10.5,
     lineHeight: 17,
     fontFamily: "Poppins_500Medium",
-    paddingTop: 10,
-    paddingBottom: 8,
+    paddingTop: 9,
+    paddingBottom: 7,
     textAlignVertical: "top",
   },
 
@@ -1475,31 +2124,68 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.18,
-    shadowRadius: 6,
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 7,
     elevation: 3,
   },
 
-  inputError: {
-    color: "#DC2626",
-    fontSize: 9,
-    fontFamily: "Poppins_500Medium",
-    marginBottom: 5,
-    marginLeft: 4,
+  composerFooter: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 3,
+    marginTop: 4,
+  },
+
+  secureRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    flex: 1,
   },
 
   disclaimer: {
     color: "#94A3B8",
-    fontSize: 7.5,
-    textAlign: "center",
+    fontSize: 7,
+    textAlign: "left",
     fontFamily: "Poppins_500Medium",
-    marginTop: 7,
   },
+
+  characterCount: {
+    color: "#B0BAC7",
+    fontSize: 7,
+    fontFamily: "Poppins_500Medium",
+  },
+
+  errorRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    marginBottom: 4,
+    marginLeft: 4,
+  },
+
+  inputError: {
+    color: "#DC2626",
+    fontSize: 8.5,
+    fontFamily: "Poppins_500Medium",
+  },
+
+  // -------------------------------------------------------------------------
+  // INTERACTION
+  // -------------------------------------------------------------------------
 
   pressed: {
     opacity: 0.82,
-    transform: [{ scale: 0.98 }],
+    transform: [
+      {
+        scale: 0.98,
+      },
+    ],
   },
 
   disabled: {

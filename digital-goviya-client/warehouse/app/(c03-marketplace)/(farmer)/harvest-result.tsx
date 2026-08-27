@@ -5,13 +5,13 @@ import {
   Easing,
   Pressable,
   SafeAreaView,
-  ScrollView,
   StyleSheet,
   Text,
   View,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useRef } from "react";
+
 import {
   useFonts,
   Poppins_900Black,
@@ -20,6 +20,8 @@ import {
   Poppins_600SemiBold,
   Poppins_500Medium,
 } from "@expo-google-fonts/poppins";
+
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface HarvestResultParams {
   harvestId?: string;
@@ -53,7 +55,9 @@ interface HarvestResultParams {
 
 export default function HarvestResultScreen() {
   const params =
-  useLocalSearchParams() as HarvestResultParams;
+    useLocalSearchParams() as HarvestResultParams;
+
+  const { t, language } = useLanguage();
 
   const quantity = toNumber(params.quantity);
   const expectedPrice = toNumber(params.expectedPrice);
@@ -61,22 +65,20 @@ export default function HarvestResultScreen() {
   const harvestScore = toNumber(params.harvestScore);
 
   const matchingPaddyDemands =
-  toNumber(params.matchingPaddyDemands) ?? 0;
+    toNumber(params.matchingPaddyDemands) ?? 0;
 
-const quantityCompatibleDemands =
-  toNumber(params.quantityCompatibleDemands) ?? 0;
+  const quantityCompatibleDemands =
+    toNumber(params.quantityCompatibleDemands) ?? 0;
 
-const sameDistrictDemands =
-  toNumber(params.sameDistrictDemands) ?? 0;
+  const sameDistrictDemands =
+    toNumber(params.sameDistrictDemands) ?? 0;
 
-const normalizedMarketStatus =
-  params.marketStatus
-    ?.trim()
-    .toUpperCase();
+  const normalizedMarketStatus =
+    params.marketStatus?.trim().toUpperCase();
 
-const canFindMatchingMillers =
-  Boolean(params.harvestId) &&
-  normalizedMarketStatus !== "LOW_DEMAND";
+  const canFindMatchingMillers =
+    Boolean(params.harvestId) &&
+    normalizedMarketStatus !== "LOW_DEMAND";
 
   const priceDifference =
     toNumber(params.priceDifference) ??
@@ -85,10 +87,24 @@ const canFindMatchingMillers =
       : null);
 
   const recommendation =
-    params.recommendationEnglish?.trim() ||
-    createRecommendation(expectedPrice, aiPredictedPrice);
+    language === "si"
+      ? params.recommendationSinhala?.trim() ||
+        createRecommendation(
+          expectedPrice,
+          aiPredictedPrice,
+          t,
+        )
+      : params.recommendationEnglish?.trim() ||
+        createRecommendation(
+          expectedPrice,
+          aiPredictedPrice,
+          t,
+        );
 
-  const sinhalaRecommendation = params.recommendationSinhala?.trim() || "";
+  const sinhalaRecommendation =
+    language === "si"
+      ? ""
+      : params.recommendationSinhala?.trim() || "";
 
   const [fontsLoaded] = useFonts({
     Poppins_900Black,
@@ -98,7 +114,6 @@ const canFindMatchingMillers =
     Poppins_500Medium,
   });
 
-  // Entrance animation — matches the fade/rise used across the app
   const fade = useRef(new Animated.Value(0)).current;
   const rise = useRef(new Animated.Value(14)).current;
   const matchPulse = useRef(new Animated.Value(1)).current;
@@ -172,31 +187,44 @@ const canFindMatchingMillers =
 
   return (
     <SafeAreaView style={styles.screen}>
+      {/* HEADER */}
       <View style={styles.navigationHeader}>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Go back"
+          accessibilityLabel={t.harvestResult.goBack}
           onPress={() => router.back()}
           style={({ pressed }) => [
             styles.backButton,
             pressed && styles.pressed,
           ]}
         >
-          <Ionicons name="arrow-back" size={22} color="#1F2937" />
+          <Ionicons
+            name="arrow-back"
+            size={22}
+            color="#1F2937"
+          />
         </Pressable>
 
         <View style={styles.headerTitleArea}>
-          <Text style={styles.headerTitle}>AI Harvest Result</Text>
+          <Text style={styles.headerTitle}>
+            {t.harvestResult.title}
+          </Text>
 
-          <Text style={styles.headerSubtitle}>Market price recommendation</Text>
+          <Text style={styles.headerSubtitle}>
+            {t.harvestResult.subtitle}
+          </Text>
         </View>
       </View>
 
       <Animated.ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
-        style={{ opacity: fade, transform: [{ translateY: rise }] }}
+        style={{
+          opacity: fade,
+          transform: [{ translateY: rise }],
+        }}
       >
+        {/* HERO */}
         <View style={styles.heroCardShadow}>
           <LinearGradient
             colors={["#0A331D", "#14532D", "#166534"]}
@@ -207,24 +235,34 @@ const canFindMatchingMillers =
             <View style={styles.heroTopRow}>
               <View style={styles.heroIconRing}>
                 <View style={styles.heroIcon}>
-                  <Ionicons name="sparkles" size={24} color="#FFFFFF" />
+                  <Ionicons
+                    name="sparkles"
+                    size={24}
+                    color="#FFFFFF"
+                  />
                 </View>
               </View>
 
               <View style={styles.aiBadge}>
-                <Text style={styles.aiBadgeText}>AI GENERATED</Text>
+                <Text style={styles.aiBadgeText}>
+                  {t.harvestResult.aiGenerated}
+                </Text>
               </View>
             </View>
 
-            <Text style={styles.heroLabel}>Recommended market price</Text>
+            <Text style={styles.heroLabel}>
+              {t.harvestResult.recommendedMarketPrice}
+            </Text>
 
             <Text style={styles.heroPrice}>
               {aiPredictedPrice !== null
                 ? formatCurrency(aiPredictedPrice)
-                : "Prediction pending"}
+                : t.harvestResult.predictionPending}
             </Text>
 
-            <Text style={styles.heroUnit}>per kilogram</Text>
+            <Text style={styles.heroUnit}>
+              {t.harvestResult.perKilogram}
+            </Text>
 
             {priceDifference !== null ? (
               <View style={styles.differenceBadge}>
@@ -240,49 +278,69 @@ const canFindMatchingMillers =
 
                 <Text style={styles.differenceText}>
                   {priceDifference >= 0
-                    ? `Your expected price is ${formatCurrency(
-                        priceDifference,
-                      )} above the AI estimate`
-                    : `Your expected price is ${formatCurrency(
-                        Math.abs(priceDifference),
-                      )} below the AI estimate`}
+                    ? t.harvestResult.expectedPriceAbove.replace(
+                        "{{amount}}",
+                        formatCurrency(priceDifference),
+                      )
+                    : t.harvestResult.expectedPriceBelow.replace(
+                        "{{amount}}",
+                        formatCurrency(
+                          Math.abs(priceDifference),
+                        ),
+                      )}
                 </Text>
               </View>
             ) : null}
           </LinearGradient>
         </View>
 
+        {/* HARVEST SUMMARY */}
         <View style={styles.sectionHeaderRow}>
           <View style={styles.sectionIconBoxGreen}>
-            <Ionicons name="document-text-outline" size={16} color="#15803D" />
+            <Ionicons
+              name="document-text-outline"
+              size={16}
+              color="#15803D"
+            />
           </View>
-          <Text style={styles.sectionTitle}>Harvest summary</Text>
+
+          <Text style={styles.sectionTitle}>
+            {t.harvestResult.harvestSummary}
+          </Text>
         </View>
 
         <View style={styles.summaryCard}>
           <SummaryRow
             icon="leaf-outline"
-            label="Paddy type"
-            value={formatLabel(params.paddyType)}
+            label={t.harvestResult.paddyType}
+            value={translatePaddyType(
+              params.paddyType,
+              t,
+              t.harvestResult.notAvailable,
+            )}
           />
 
           <Divider />
 
           <SummaryRow
             icon="calendar-outline"
-            label="Season"
-            value={formatLabel(params.season)}
+            label={t.harvestResult.season}
+            value={translateSeason(
+              params.season,
+              t,
+              t.harvestResult.notAvailable,
+            )}
           />
 
           <Divider />
 
           <SummaryRow
             icon="cube-outline"
-            label="Quantity"
+            label={t.harvestResult.quantity}
             value={
               quantity !== null
                 ? `${formatNumber(quantity)} kg`
-                : "Not available"
+                : t.harvestResult.notAvailable
             }
           />
 
@@ -290,11 +348,11 @@ const canFindMatchingMillers =
 
           <SummaryRow
             icon="cash-outline"
-            label="Expected price"
+            label={t.harvestResult.expectedPrice}
             value={
               expectedPrice !== null
                 ? `${formatCurrency(expectedPrice)} / kg`
-                : "Not available"
+                : t.harvestResult.notAvailable
             }
           />
 
@@ -302,11 +360,15 @@ const canFindMatchingMillers =
 
           <SummaryRow
             icon="time-outline"
-            label="Submitted date"
-            value={formatDate(params.createdAt)}
+            label={t.harvestResult.submittedDate}
+            value={formatDate(
+              params.createdAt,
+              t.harvestResult.notAvailable,
+            )}
           />
         </View>
 
+        {/* HARVEST SCORE */}
         {harvestScore !== null ? (
           <>
             <View style={styles.sectionHeaderRow}>
@@ -317,16 +379,21 @@ const canFindMatchingMillers =
                   color="#15803D"
                 />
               </View>
-              <Text style={styles.sectionTitle}>Harvest score</Text>
+
+              <Text style={styles.sectionTitle}>
+                {t.harvestResult.harvestScore}
+              </Text>
             </View>
 
             <View style={styles.scoreCard}>
               <View style={styles.scoreHeader}>
                 <View style={styles.scoreTextArea}>
-                  <Text style={styles.scoreTitle}>Market readiness</Text>
+                  <Text style={styles.scoreTitle}>
+                    {t.harvestResult.marketReadiness}
+                  </Text>
 
                   <Text style={styles.scoreDescription}>
-                    Based on price and current demand conditions.
+                    {t.harvestResult.scoreDescription}
                   </Text>
                 </View>
 
@@ -335,7 +402,9 @@ const canFindMatchingMillers =
                     {Math.round(harvestScore)}
                   </Text>
 
-                  <Text style={styles.scoreTotal}>/100</Text>
+                  <Text style={styles.scoreTotal}>
+                    /100
+                  </Text>
                 </View>
               </View>
 
@@ -347,39 +416,64 @@ const canFindMatchingMillers =
                   style={[
                     styles.progressFill,
                     {
-                      width: `${Math.min(Math.max(harvestScore, 0), 100)}%`,
+                      width: `${Math.min(
+                        Math.max(harvestScore, 0),
+                        100,
+                      )}%`,
                     },
                   ]}
                 />
               </View>
 
               <Text style={styles.scoreStatus}>
-                {getScoreDescription(harvestScore)}
+                {getScoreDescription(
+                  harvestScore,
+                  t.harvestResult,
+                )}
               </Text>
             </View>
           </>
         ) : null}
 
+        {/* AI RECOMMENDATION */}
         <View style={styles.sectionHeaderRow}>
           <View style={styles.sectionIconBoxAmber}>
-            <Ionicons name="bulb-outline" size={16} color="#B45309" />
+            <Ionicons
+              name="bulb-outline"
+              size={16}
+              color="#B45309"
+            />
           </View>
-          <Text style={styles.sectionTitle}>AI recommendation</Text>
+
+          <Text style={styles.sectionTitle}>
+            {t.harvestResult.aiRecommendation}
+          </Text>
         </View>
 
         <View style={styles.recommendationCard}>
           <View style={styles.recommendationHeader}>
             <View style={styles.recommendationIcon}>
-              <Ionicons name="bulb-outline" size={25} color="#B45309" />
+              <Ionicons
+                name="bulb-outline"
+                size={25}
+                color="#B45309"
+              />
             </View>
 
             <View style={styles.recommendationHeadingText}>
-              <Text style={styles.recommendationTitle}>Suggested action</Text>
-              <Text style={styles.recommendationEyebrow}>AI MARKET GUIDANCE</Text>
+              <Text style={styles.recommendationTitle}>
+                {t.harvestResult.suggestedAction}
+              </Text>
+
+              <Text style={styles.recommendationEyebrow}>
+                {t.harvestResult.aiMarketGuidance}
+              </Text>
             </View>
           </View>
 
-          <Text style={styles.recommendationText}>{recommendation}</Text>
+          <Text style={styles.recommendationText}>
+            {recommendation}
+          </Text>
 
           {sinhalaRecommendation ? (
             <>
@@ -391,109 +485,163 @@ const canFindMatchingMillers =
             </>
           ) : null}
 
+          {/* MATCHING MILLERS */}
           {canFindMatchingMillers ? (
             <Animated.View
-              style={[
-                styles.matchOpportunityPanel,
-                {
-                  transform: [{ scale: matchPulse }],
-                  borderColor: matchGlow.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: ["#FDE68A", "#F59E0B"],
-                  }),
-                },
-              ]}
+              style={{
+                transform: [{ scale: matchPulse }],
+              }}
             >
-              <View style={styles.matchOpportunityHeader}>
-                <View style={styles.matchOpportunityIcon}>
-                  <Ionicons name="sparkles" size={19} color="#B45309" />
-                </View>
-
-                <View style={styles.matchOpportunityText}>
-                  <View style={styles.matchOpportunityTitleRow}>
-                    <Text style={styles.matchOpportunityTitle}>
-                      Matching opportunities found
-                    </Text>
-
-                    {matchingPaddyDemands > 0 ? (
-                      <View style={styles.matchOpportunityCount}>
-                        <Text style={styles.matchOpportunityCountText}>
-                          {matchingPaddyDemands}
-                        </Text>
-                      </View>
-                    ) : null}
-                  </View>
-
-                  <Text style={styles.matchOpportunityDescription}>
-                    {matchingPaddyDemands > 0
-                      ? `${matchingPaddyDemands} open Miller demand${
-                          matchingPaddyDemands === 1 ? "" : "s"
-                        } currently match this harvest`
-                      : "Search current Miller demands that match this harvest"}
-                    {sameDistrictDemands > 0
-                      ? ` · ${sameDistrictDemands} in your district`
-                      : ""}
-                  </Text>
-                </View>
-              </View>
-
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Find matching millers"
-                onPress={() =>
-                  router.push({
-                    pathname: "/(c03-marketplace)/(farmer)/matched-millers",
-                    params: {
-                      harvestId: params.harvestId,
-                    },
-                  })
-                }
-                style={({ pressed }) => [
-                  styles.matchMillersButtonShadow,
-                  pressed && styles.matchButtonPressed,
+              <Animated.View
+                style={[
+                  styles.matchOpportunityPanel,
+                  {
+                    borderColor: matchGlow.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [
+                        "#FDE68A",
+                        "#F59E0B",
+                      ],
+                    }),
+                  },
                 ]}
               >
-                <LinearGradient
-                  colors={["#F59E0B", "#B45309"]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.matchMillersButton}
-                >
-                  <View style={styles.matchButtonIcon}>
+                <View style={styles.matchOpportunityHeader}>
+                  <View style={styles.matchOpportunityIcon}>
                     <Ionicons
-                      name="git-compare-outline"
-                      size={18}
-                      color="#92400E"
+                      name="sparkles"
+                      size={19}
+                      color="#B45309"
                     />
                   </View>
 
-                  <Text style={styles.matchMillersButtonText}>
-                    Find Matching Millers
-                  </Text>
+                  <View style={styles.matchOpportunityText}>
+                    <View
+                      style={styles.matchOpportunityTitleRow}
+                    >
+                      <Text
+                        style={styles.matchOpportunityTitle}
+                      >
+                        {
+                          t.harvestResult
+                            .matchingOpportunitiesFound
+                        }
+                      </Text>
 
-                  <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
-                </LinearGradient>
-              </Pressable>
+                      {matchingPaddyDemands > 0 ? (
+                        <View
+                          style={styles.matchOpportunityCount}
+                        >
+                          <Text
+                            style={
+                              styles.matchOpportunityCountText
+                            }
+                          >
+                            {matchingPaddyDemands}
+                          </Text>
+                        </View>
+                      ) : null}
+                    </View>
+
+                    <Text
+                      style={
+                        styles.matchOpportunityDescription
+                      }
+                    >
+                      {matchingPaddyDemands > 0
+                        ? t.harvestResult.openMillerDemandsMatch.replace(
+                            "{{count}}",
+                            String(matchingPaddyDemands),
+                          )
+                        : t.harvestResult
+                            .searchCurrentMillerDemands}
+
+                      {sameDistrictDemands > 0
+                        ? ` · ${sameDistrictDemands} ${t.harvestResult.inYourDistrict}`
+                        : ""}
+                    </Text>
+                  </View>
+                </View>
+
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={
+                    t.harvestResult.findMatchingMillers
+                  }
+                  onPress={() =>
+                    router.push({
+                      pathname:
+                        "/(c03-marketplace)/(farmer)/matched-millers",
+                      params: {
+                        harvestId: params.harvestId,
+                      },
+                    })
+                  }
+                  style={({ pressed }) => [
+                    styles.matchMillersButtonShadow,
+                    pressed &&
+                      styles.matchButtonPressed,
+                  ]}
+                >
+                  <LinearGradient
+                    colors={["#F59E0B", "#B45309"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.matchMillersButton}
+                  >
+                    <View style={styles.matchButtonIcon}>
+                      <Ionicons
+                        name="git-compare-outline"
+                        size={18}
+                        color="#92400E"
+                      />
+                    </View>
+
+                    <Text
+                      style={styles.matchMillersButtonText}
+                    >
+                      {t.harvestResult.findMatchingMillers}
+                    </Text>
+
+                    <Ionicons
+                      name="arrow-forward"
+                      size={18}
+                      color="#FFFFFF"
+                    />
+                  </LinearGradient>
+                </Pressable>
+              </Animated.View>
             </Animated.View>
           ) : null}
         </View>
 
+        {/* MARKET STATUS */}
         {params.marketStatus ? (
           <View style={styles.statusCard}>
             <View>
-              <Text style={styles.statusLabel}>Market status</Text>
+              <Text style={styles.statusLabel}>
+                {t.harvestResult.marketStatus}
+              </Text>
 
               <Text style={styles.statusValue}>
-                {formatLabel(params.marketStatus)}
+                {formatLabel(
+                  params.marketStatus,
+                  t.harvestResult.notAvailable,
+                )}
               </Text>
             </View>
 
             <View style={styles.statusIconRing}>
-              <Ionicons name="analytics-outline" size={22} color="#15803D" />
+              <Ionicons
+                name="analytics-outline"
+                size={22}
+                color="#15803D"
+              />
             </View>
           </View>
         ) : null}
 
+        {/* VIEW ALL */}
         <Pressable
           onPress={() => router.push("./my-harvests")}
           style={({ pressed }) => [
@@ -507,11 +655,19 @@ const canFindMatchingMillers =
             end={{ x: 1, y: 0 }}
             style={styles.primaryButton}
           >
-            <Ionicons name="list-outline" size={20} color="#FFFFFF" />
-            <Text style={styles.primaryButtonText}>View All Harvests</Text>
+            <Ionicons
+              name="list-outline"
+              size={20}
+              color="#FFFFFF"
+            />
+
+            <Text style={styles.primaryButtonText}>
+              {t.harvestResult.viewAllHarvests}
+            </Text>
           </LinearGradient>
         </Pressable>
 
+        {/* ADD ANOTHER */}
         <Pressable
           onPress={() => router.push("./add-harvest")}
           style={({ pressed }) => [
@@ -519,9 +675,15 @@ const canFindMatchingMillers =
             pressed && styles.pressed,
           ]}
         >
-          <Ionicons name="add-circle-outline" size={20} color="#15803D" />
+          <Ionicons
+            name="add-circle-outline"
+            size={20}
+            color="#15803D"
+          />
 
-          <Text style={styles.secondaryButtonText}>Add Another Harvest</Text>
+          <Text style={styles.secondaryButtonText}>
+            {t.harvestResult.addAnotherHarvest}
+          </Text>
         </Pressable>
       </Animated.ScrollView>
     </SafeAreaView>
@@ -534,17 +696,29 @@ interface SummaryRowProps {
   value: string;
 }
 
-function SummaryRow({ icon, label, value }: SummaryRowProps) {
+function SummaryRow({
+  icon,
+  label,
+  value,
+}: SummaryRowProps) {
   return (
     <View style={styles.summaryRow}>
       <View style={styles.summaryIcon}>
-        <Ionicons name={icon} size={20} color="#15803D" />
+        <Ionicons
+          name={icon}
+          size={20}
+          color="#15803D"
+        />
       </View>
 
       <View style={styles.summaryTextArea}>
-        <Text style={styles.summaryLabel}>{label}</Text>
+        <Text style={styles.summaryLabel}>
+          {label}
+        </Text>
 
-        <Text style={styles.summaryValue}>{value}</Text>
+        <Text style={styles.summaryValue}>
+          {value}
+        </Text>
       </View>
     </View>
   );
@@ -561,18 +735,75 @@ function toNumber(value?: string): number | null {
 
   const numberValue = Number(value);
 
-  return Number.isFinite(numberValue) ? numberValue : null;
+  return Number.isFinite(numberValue)
+    ? numberValue
+    : null;
 }
 
-function formatLabel(value?: string): string {
+function translatePaddyType(
+  value: string | undefined,
+  t: any,
+  fallback: string,
+): string {
   if (!value) {
-    return "Not available";
+    return fallback;
+  }
+
+  const normalized = value.trim().toLowerCase();
+
+  if (normalized === "nadu") {
+    return t.c3paddyTypes.Nadu;
+  }
+
+  if (normalized === "samba") {
+    return t.c3paddyTypes.Samba;
+  }
+
+  if (normalized === "keeri samba" || normalized === "keerisamba") {
+    return t.c3paddyTypes.KeeriSamba;
+  }
+
+  return formatLabel(value, fallback);
+}
+
+function translateSeason(
+  value: string | undefined,
+  t: any,
+  fallback: string,
+): string {
+  if (!value) {
+    return fallback;
+  }
+
+  const normalized = value.trim().toLowerCase();
+
+  if (normalized === "maha") {
+    return t.c3seasons.Maha;
+  }
+
+  if (normalized === "yala") {
+    return t.c3seasons.Yala;
+  }
+
+  return formatLabel(value, fallback);
+}
+
+function formatLabel(
+  value?: string,
+  fallback = "Not available",
+): string {
+  if (!value) {
+    return fallback;
   }
 
   return value
     .trim()
     .split(/[\s_-]+/)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+    .map(
+      (part) =>
+        part.charAt(0).toUpperCase() +
+        part.slice(1).toLowerCase(),
+    )
     .join(" ");
 }
 
@@ -589,15 +820,18 @@ function formatCurrency(value: number): string {
   }).format(value)}`;
 }
 
-function formatDate(value?: string): string {
+function formatDate(
+  value?: string,
+  fallback = "Not available",
+): string {
   if (!value) {
-    return "Not available";
+    return fallback;
   }
 
   const date = new Date(value);
 
   if (Number.isNaN(date.getTime())) {
-    return "Not available";
+    return fallback;
   }
 
   return new Intl.DateTimeFormat("en-LK", {
@@ -610,56 +844,46 @@ function formatDate(value?: string): string {
 function createRecommendation(
   expectedPrice: number | null,
   predictedPrice: number | null,
+  t: any,
 ): string {
-  if (expectedPrice === null || predictedPrice === null) {
-    return (
-      "The AI prediction is still being processed. " +
-      "Review this harvest again after the market " +
-      "analysis is complete."
-    );
+  if (
+    expectedPrice === null ||
+    predictedPrice === null
+  ) {
+    return t.harvestResult.predictionProcessing;
   }
 
-  const difference = predictedPrice - expectedPrice;
+  const difference =
+    predictedPrice - expectedPrice;
 
   if (difference >= 5) {
-    return (
-      "The predicted market price is higher than your " +
-      "expected price. Consider listing near the AI " +
-      "recommended price while allowing a small range " +
-      "for negotiation."
-    );
+    return t.harvestResult.predictedPriceHigher;
   }
 
   if (difference <= -5) {
-    return (
-      "Your expected price is higher than the current " +
-      "AI estimate. Consider reviewing current demand " +
-      "or waiting for stronger market conditions before " +
-      "accepting an offer."
-    );
+    return t.harvestResult.expectedPriceHigher;
   }
 
-  return (
-    "Your expected price is close to the AI market " +
-    "estimate. This is a competitive price for matching " +
-    "with suitable millers."
-  );
+  return t.harvestResult.priceCloseToEstimate;
 }
 
-function getScoreDescription(score: number): string {
+function getScoreDescription(
+  score: number,
+  harvestResult: any,
+): string {
   if (score >= 80) {
-    return "Excellent market readiness";
+    return harvestResult.excellentMarketReadiness;
   }
 
   if (score >= 60) {
-    return "Good market readiness";
+    return harvestResult.goodMarketReadiness;
   }
 
   if (score >= 40) {
-    return "Moderate market readiness";
+    return harvestResult.moderateMarketReadiness;
   }
 
-  return "Market conditions may need improvement";
+  return harvestResult.marketConditionsNeedImprovement;
 }
 
 const styles = StyleSheet.create({

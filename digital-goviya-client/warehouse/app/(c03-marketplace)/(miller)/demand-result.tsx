@@ -20,6 +20,8 @@ import {
   Poppins_500Medium,
 } from "@expo-google-fonts/poppins";
 
+import { useLanguage } from "@/contexts/LanguageContext";
+
 const CREAM = "#FBF8F1";
 const CARD_BORDER = "#ECE6D6";
 const INK = "#16241C";
@@ -27,6 +29,7 @@ const INK_MUTED = "#7A7364";
 
 export default function DemandResultScreen() {
   const params = useLocalSearchParams();
+  const { t } = useLanguage();
 
   const [fontsLoaded] = useFonts({
     Poppins_800ExtraBold,
@@ -101,14 +104,17 @@ export default function DemandResultScreen() {
 
             <View style={styles.heroBadge}>
               <Ionicons name="sparkles" size={12} color="#78350F" />
-              <Text style={styles.heroBadgeText}>Demand submitted</Text>
+              <Text style={styles.heroBadgeText}>
+                {t.c3demandResult.demandSubmitted}
+              </Text>
             </View>
 
-            <Text style={styles.heroTitle}>Demand Published</Text>
+            <Text style={styles.heroTitle}>
+              {t.c3demandResult.title}
+            </Text>
 
             <Text style={styles.heroSubtitle}>
-              Your requirement is now visible to the marketplace and ready
-              for AI-based matching against farmer harvests.
+              {t.c3demandResult.subtitle}
             </Text>
           </LinearGradient>
 
@@ -128,12 +134,14 @@ export default function DemandResultScreen() {
               <View style={styles.ticketHeaderIcon}>
                 <Ionicons name="document-text-outline" size={16} color="#92400E" />
               </View>
-              <Text style={styles.ticketHeaderText}>Demand summary</Text>
+              <Text style={styles.ticketHeaderText}>
+                {t.c3demandResult.demandSummary}
+              </Text>
 
               <View style={[styles.statusPill, { backgroundColor: statusStyle.background }]}>
                 <View style={[styles.statusDot, { backgroundColor: statusStyle.text }]} />
                 <Text style={[styles.statusPillText, { color: statusStyle.text }]}>
-                  {formatLabel(status)}
+                  {getStatusLabel(status, t)}
                 </Text>
               </View>
             </View>
@@ -142,20 +150,23 @@ export default function DemandResultScreen() {
 
             <InfoRow
               icon="leaf-outline"
-              label="Paddy type"
-              value={formatLabel(String(params.paddyType ?? ""))}
+              label={t.c3demandResult.paddyType}
+              value={translatePaddyType(
+                String(params.paddyType ?? ""),
+                t,
+              )}
             />
 
             <InfoRow
               icon="cube-outline"
-              label="Quantity needed"
-              value={`${formatNumber(params.quantityNeeded)} kg`}
+              label={t.c3demandResult.quantityNeeded}
+              value={`${formatNumber(params.quantityNeeded, t.c3demandResult.notAvailable)} ${t.c3demandResult.kg}`}
             />
 
             <InfoRow
               icon="cash-outline"
-              label="Offered price"
-              value={`LKR ${formatNumber(params.offeredPrice)}/kg`}
+              label={t.c3demandResult.offeredPrice}
+              value={`LKR ${formatNumber(params.offeredPrice, t.c3demandResult.notAvailable)}/${t.c3demandResult.kg}`}
               last
             />
           </View>
@@ -172,7 +183,9 @@ export default function DemandResultScreen() {
               style={styles.primaryButton}
             >
               <Ionicons name="document-text-outline" size={18} color="#78350F" />
-              <Text style={styles.primaryButtonText}>View My Demands</Text>
+              <Text style={styles.primaryButtonText}>
+                {t.c3demandResult.viewMyDemands}
+              </Text>
             </LinearGradient>
           </TouchableOpacity>
 
@@ -184,7 +197,9 @@ export default function DemandResultScreen() {
             ]}
           >
             <Ionicons name="add-circle-outline" size={17} color="#92400E" />
-            <Text style={styles.secondaryButtonText}>Publish Another Demand</Text>
+            <Text style={styles.secondaryButtonText}>
+              {t.c3demandResult.publishAnotherDemand}
+            </Text>
           </Pressable>
         </Animated.View>
       </ScrollView>
@@ -222,11 +237,50 @@ function formatLabel(value: string): string {
     .join(" ");
 }
 
-function formatNumber(value: unknown): string {
+function translatePaddyType(value: string, t: any): string {
+  const normalized = value.trim().toLowerCase();
+
+  if (normalized === "nadu") {
+    return t.c3paddyTypes.Nadu;
+  }
+
+  if (normalized === "samba") {
+    return t.c3paddyTypes.Samba;
+  }
+
+  if (normalized === "keeri samba" || normalized === "keerisamba") {
+    return t.c3paddyTypes.KeeriSamba;
+  }
+
+  return formatLabel(value) || t.c3demandResult.notAvailable;
+}
+
+function getStatusLabel(status: string, t: any): string {
+  switch (status) {
+    case "open":
+      return t.c3demandResult.statusOpen;
+    case "negotiation_ready":
+      return t.c3demandResult.statusNegotiationReady;
+    case "negotiating":
+      return t.c3demandResult.statusNegotiating;
+    case "agreement_reached":
+      return t.c3demandResult.statusAgreementReached;
+    case "negotiation_failed":
+      return t.c3demandResult.statusNegotiationFailed;
+    case "rejected":
+      return t.c3demandResult.statusRejected;
+    case "cancelled":
+      return t.c3demandResult.statusCancelled;
+    default:
+      return formatLabel(status);
+  }
+}
+
+function formatNumber(value: unknown, fallback: string): string {
   const parsed = Number(value);
 
   if (!Number.isFinite(parsed)) {
-    return String(value ?? "-");
+    return String(value ?? fallback);
   }
 
   return new Intl.NumberFormat("en-LK", {
