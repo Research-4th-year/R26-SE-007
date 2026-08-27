@@ -18,6 +18,7 @@ import {
   Poppins_600SemiBold,
   Poppins_500Medium,
 } from "@expo-google-fonts/poppins";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const HOME_ROUTE = "/(c04-analytics)/home";
 
@@ -44,6 +45,8 @@ function formatDate(dateStr: string) {
 }
 
 export default function WeeklyBreakdownScreen() {
+  const { t } = useLanguage();
+
   const { data } = useLocalSearchParams<{
     data: string;
   }>();
@@ -59,9 +62,6 @@ export default function WeeklyBreakdownScreen() {
     Poppins_500Medium,
   });
 
-  /*
-   * Main screen animation
-   */
   const fade = useRef(
     new Animated.Value(0)
   ).current;
@@ -70,12 +70,6 @@ export default function WeeklyBreakdownScreen() {
     new Animated.Value(16)
   ).current;
 
-  /*
-   * Weekly cards animation.
-   *
-   * Each card gets its own Animated.Value so the cards
-   * can appear one after another.
-   */
   const cardAnimations = useRef(
     new Map<
       number,
@@ -100,9 +94,6 @@ export default function WeeklyBreakdownScreen() {
   useEffect(() => {
     if (!fontsLoaded || !result) return;
 
-    /*
-     * Main screen fade + slide animation
-     */
     fade.setValue(0);
     rise.setValue(16);
 
@@ -120,9 +111,7 @@ export default function WeeklyBreakdownScreen() {
       }),
     ]).start();
 
-    /*
-     * Reset all card animations
-     */
+ 
     result.forecast.forEach((item) => {
       const animation = getCardAnimation(item.week);
 
@@ -130,9 +119,7 @@ export default function WeeklyBreakdownScreen() {
       animation.translateY.setValue(12);
     });
 
-    /*
-     * Staggered card animation
-     */
+
     const cardAnimationsSequence =
       result.forecast.map((item, index) => {
         const animation = getCardAnimation(
@@ -210,12 +197,15 @@ export default function WeeklyBreakdownScreen() {
             />
 
             <Text style={styles.eyebrow}>
-              WEEKLY BREAKDOWN
+              {t.weeklyBreakdown.eyebrow}
             </Text>
           </View>
 
           <Text style={styles.heroTitle}>
-            {result.weeks}-Week Forecast Detail
+            {t.weeklyBreakdown.title.replace(
+              "{weeks}",
+              String(result.weeks)
+            )}
           </Text>
 
           <Text style={styles.heroSub}>
@@ -302,7 +292,7 @@ export default function WeeklyBreakdownScreen() {
                       <Text
                         style={styles.weekLabel}
                       >
-                        Week {item.week}
+                        {t.weeklyBreakdown.week} {item.week}
                       </Text>
 
                       <Text
@@ -330,7 +320,7 @@ export default function WeeklyBreakdownScreen() {
                           }
                         >
                           {" "}
-                          LKR/kg
+                          {t.weeklyBreakdown.priceUnit}
                         </Text>
                       </Text>
 
@@ -394,7 +384,7 @@ export default function WeeklyBreakdownScreen() {
                 <Text
                   style={styles.doneBtnText}
                 >
-                  Back to Home
+                  {t.weeklyBreakdown.backToHome}
                 </Text>
 
                 <Ionicons
