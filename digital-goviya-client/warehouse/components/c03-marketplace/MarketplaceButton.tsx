@@ -1,10 +1,10 @@
+import type { ViewStyle } from "@/components/c03-marketplace/themed-native";
 import {
   ActivityIndicator,
   Pressable,
   StyleSheet,
   Text,
-  ViewStyle,
-} from "react-native";
+} from "@/components/c03-marketplace/themed-native";
 
 interface MarketplaceButtonProps {
   title: string;

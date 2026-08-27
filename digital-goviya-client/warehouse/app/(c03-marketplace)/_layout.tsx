@@ -2,15 +2,21 @@ import {
   Stack,
   usePathname,
 } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 
 import {
   StyleSheet,
   View,
-} from "react-native";
+} from "@/components/c03-marketplace/themed-native";
 
 import {
   MarketplaceAuthProvider,
 } from "@/contexts/c03-marketplace/MarketplaceAuthContext";
+
+import {
+  MarketplaceAppearanceProvider,
+  useMarketplaceAppearance,
+} from "@/contexts/c03-marketplace/MarketplaceAppearanceContext";
 
 import {
   FloatingRagBot,
@@ -27,7 +33,9 @@ import {
 export default function MarketplaceLayout() {
   return (
     <MarketplaceAuthProvider>
-      <MarketplaceLayoutContent />
+      <MarketplaceAppearanceProvider>
+        <MarketplaceLayoutContent />
+      </MarketplaceAppearanceProvider>
     </MarketplaceAuthProvider>
   );
 }
@@ -41,6 +49,9 @@ function MarketplaceLayoutContent() {
     isAuthenticated,
     isLoading,
   } = useMarketplaceAuth();
+
+  const { isDark } =
+    useMarketplaceAppearance();
 
   const isAuthScreen =
     pathname.includes("/login") ||
@@ -58,15 +69,24 @@ function MarketplaceLayoutContent() {
     !isAuthScreen &&
     !mustChangePassword;
 
+  const pageBackground =
+    isDark ? "#0F172A" : "#F8FAF8";
+
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { backgroundColor: pageBackground },
+      ]}
+    >
+      <StatusBar style={isDark ? "light" : "dark"} />
       <Stack
         screenOptions={{
           headerShown: false,
 
           contentStyle: {
             backgroundColor:
-              "#F8FAF8",
+              pageBackground,
           },
         }}
       />

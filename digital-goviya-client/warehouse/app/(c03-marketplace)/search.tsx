@@ -1,4 +1,4 @@
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons } from "@/components/c03-marketplace/themed-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
@@ -13,7 +13,7 @@ import {
   Text,
   TextInput,
   View,
-} from "react-native";
+} from "@/components/c03-marketplace/themed-native";
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useMarketplaceAuth } from "@/hooks/c03-marketplace/useMarketplaceAuth";

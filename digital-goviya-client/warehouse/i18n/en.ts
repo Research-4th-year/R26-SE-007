@@ -1147,6 +1147,16 @@ c3MillerHome: {
     profile: "Profile",
   },
 
+  c3appearance: {
+    title: "Display",
+    fontSize: "Font size",
+    defaultSize: "Default",
+    largeSize: "Large",
+    theme: "Theme",
+    light: "Light",
+    dark: "Dark",
+  },
+
   // C3 Marketplace - Search
   c3search: {
     eyebrow: "MARKETPLACE DISCOVERY",

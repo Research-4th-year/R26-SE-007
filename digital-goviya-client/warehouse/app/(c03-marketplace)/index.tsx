@@ -3,7 +3,7 @@ import {
   ActivityIndicator,
   StyleSheet,
   View,
-} from "react-native";
+} from "@/components/c03-marketplace/themed-native";
 
 import {
   useMarketplaceAuth,

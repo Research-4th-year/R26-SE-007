@@ -436,6 +436,201 @@ const evaluateDemand = ({
   };
 };
 
+const asId = (value) => {
+  if (!value) {
+    return "";
+  }
+
+  if (typeof value === "object" && value._id) {
+    return String(value._id);
+  }
+
+  return String(value);
+};
+
+const readQueryId = (value) => {
+  if (Array.isArray(value)) {
+    return value[0];
+  }
+
+  return value;
+};
+
+/**
+ * Keep the normal top-5 ranking, then pin a connected-partner
+ * match that would otherwise be sliced away.
+ */
+const includeFocusedMatch = ({
+  matched,
+  getPartnerId,
+  getResourceId,
+  focusPartnerId,
+  focusResourceId,
+}) => {
+  const topMatches = matched.slice(0, 5);
+
+  if (!focusPartnerId && !focusResourceId) {
+    return topMatches;
+  }
+
+  const focused =
+    matched.find(
+      (item) =>
+        Boolean(focusResourceId) &&
+        asId(getResourceId(item)) === asId(focusResourceId)
+    ) ||
+    matched.find(
+      (item) =>
+        Boolean(focusPartnerId) &&
+        asId(getPartnerId(item)) === asId(focusPartnerId)
+    );
+
+  if (!focused) {
+    return topMatches;
+  }
+
+  const focusedPartnerId = asId(getPartnerId(focused));
+  const existingIndex = topMatches.findIndex(
+    (item) => asId(getPartnerId(item)) === focusedPartnerId
+  );
+
+  if (existingIndex >= 0) {
+    if (
+      asId(getResourceId(topMatches[existingIndex])) ===
+      asId(getResourceId(focused))
+    ) {
+      return topMatches;
+    }
+
+    const next = topMatches.slice();
+    next[existingIndex] = focused;
+    return next;
+  }
+
+  return [...topMatches, focused];
+};
+
+const millerMatchPopulate = {
+  path: "millerId",
+  select:
+    "name millName district location businessRegistrationNumber purchasingCapacityKg",
+};
+
+const farmerMatchPopulate = {
+  path: "farmerId",
+  select:
+    "farmerName district location farmName farmSizeAcres mainPaddyVariety",
+};
+
+const ensureFocusedDemandInMatches = async ({
+  matched,
+  harvest,
+  farmer,
+  focusDemandId,
+  focusMillerId,
+}) => {
+  if (
+    !focusDemandId ||
+    !mongoose.Types.ObjectId.isValid(focusDemandId)
+  ) {
+    return;
+  }
+
+  const alreadyIncluded = matched.some(
+    (item) => asId(item.demand._id) === asId(focusDemandId)
+  );
+
+  if (alreadyIncluded) {
+    return;
+  }
+
+  const demand = await MillerDemand.findOne({
+    _id: focusDemandId,
+    status: "open",
+  }).populate(millerMatchPopulate);
+
+  if (!demand || !demand.millerId) {
+    return;
+  }
+
+  if (
+    focusMillerId &&
+    asId(demand.millerId._id) !== asId(focusMillerId)
+  ) {
+    return;
+  }
+
+  const evaluation = evaluateDemand({
+    demand,
+    harvest,
+    farmer,
+    perspective: "farmer",
+  });
+
+  matched.push({
+    demand,
+    miller: demand.millerId,
+    ...evaluation,
+  });
+};
+
+const ensureFocusedHarvestInMatches = async ({
+  matched,
+  demand,
+  miller,
+  focusHarvestId,
+  focusFarmerId,
+}) => {
+  if (
+    !focusHarvestId ||
+    !mongoose.Types.ObjectId.isValid(focusHarvestId)
+  ) {
+    return;
+  }
+
+  const alreadyIncluded = matched.some(
+    (item) => asId(item.harvest._id) === asId(focusHarvestId)
+  );
+
+  if (alreadyIncluded) {
+    return;
+  }
+
+  const harvest = await Harvest.findOne({
+    _id: focusHarvestId,
+    status: "available",
+  }).populate(farmerMatchPopulate);
+
+  if (!harvest || !harvest.farmerId) {
+    return;
+  }
+
+  if (
+    focusFarmerId &&
+    asId(harvest.farmerId._id) !== asId(focusFarmerId)
+  ) {
+    return;
+  }
+
+  const evaluationDemand = {
+    ...demand.toObject(),
+    millerId: miller,
+  };
+
+  const evaluation = evaluateDemand({
+    demand: evaluationDemand,
+    harvest,
+    farmer: harvest.farmerId,
+    perspective: "miller",
+  });
+
+  matched.push({
+    harvest,
+    farmer: harvest.farmerId,
+    ...evaluation,
+  });
+};
+
 /**
  * FARMER FLOW
  *
@@ -570,6 +765,29 @@ const matchHarvest = async (
         first.matchingPercentage
     );
 
+    const focusDemandId = readQueryId(
+      req.query.focusDemandId
+    );
+    const focusMillerId = readQueryId(
+      req.query.focusMillerId
+    );
+
+    await ensureFocusedDemandInMatches({
+      matched,
+      harvest,
+      farmer,
+      focusDemandId,
+      focusMillerId,
+    });
+
+    const matches = includeFocusedMatch({
+      matched,
+      getPartnerId: (item) => item.miller._id,
+      getResourceId: (item) => item.demand._id,
+      focusPartnerId: focusMillerId,
+      focusResourceId: focusDemandId,
+    });
+
     return res
       .status(200)
       .json({
@@ -595,11 +813,7 @@ const matchHarvest = async (
           totalOpenMatchingDemands:
             matched.length,
 
-          matches:
-            matched.slice(
-              0,
-              5
-            ),
+          matches,
         },
       });
   } catch (error) {
@@ -774,6 +988,29 @@ const matchDemand = async (
         first.matchingPercentage
     );
 
+    const focusHarvestId = readQueryId(
+      req.query.focusHarvestId
+    );
+    const focusFarmerId = readQueryId(
+      req.query.focusFarmerId
+    );
+
+    await ensureFocusedHarvestInMatches({
+      matched,
+      demand,
+      miller,
+      focusHarvestId,
+      focusFarmerId,
+    });
+
+    const matches = includeFocusedMatch({
+      matched,
+      getPartnerId: (item) => item.farmer._id,
+      getResourceId: (item) => item.harvest._id,
+      focusPartnerId: focusFarmerId,
+      focusResourceId: focusHarvestId,
+    });
+
     return res
       .status(200)
       .json({
@@ -802,11 +1039,7 @@ const matchDemand = async (
           totalAvailableMatchingHarvests:
             matched.length,
 
-          matches:
-            matched.slice(
-              0,
-              5
-            ),
+          matches,
         },
       });
   } catch (error) {

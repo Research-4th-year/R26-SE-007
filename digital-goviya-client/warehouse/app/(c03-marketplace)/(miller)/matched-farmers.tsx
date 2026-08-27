@@ -1,4 +1,4 @@
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons } from "@/components/c03-marketplace/themed-native";
 import {
   router,
   useLocalSearchParams,
@@ -20,7 +20,7 @@ import {
   StyleSheet,
   Text,
   View,
-} from "react-native";
+} from "@/components/c03-marketplace/themed-native";
 
 import {
   matchingService,
@@ -50,6 +50,8 @@ export default function MatchedFarmersScreen() {
   const { t } = useLanguage();
   const params = useLocalSearchParams();
   const demandId = readString(params.demandId);
+  const focusFarmerId = readString(params.focusFarmerId);
+  const focusHarvestId = readString(params.focusHarvestId);
 
   const [data, setData] =
     useState<MillerMatchingResponse["data"] | null>(null);
@@ -82,7 +84,10 @@ export default function MatchedFarmersScreen() {
         }
 
         const response =
-          await matchingService.getDemandMatches(demandId);
+          await matchingService.getDemandMatches(demandId, {
+            focusFarmerId,
+            focusHarvestId,
+          });
 
         setData(response.data);
 
@@ -108,7 +113,7 @@ export default function MatchedFarmersScreen() {
         setRefreshing(false);
       }
     },
-    [demandId, fade, rise, t],
+    [demandId, focusFarmerId, focusHarvestId, fade, rise, t],
   );
 
   useEffect(() => {

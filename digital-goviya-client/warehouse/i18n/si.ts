@@ -1224,6 +1224,16 @@ c3MillerHome: {
     profile: "පැතිකඩ",
   },
 
+  c3appearance: {
+    title: "දර්ශනය",
+    fontSize: "අකුරු ප්‍රමාණය",
+    defaultSize: "සාමාන්‍ය",
+    largeSize: "විශාල",
+    theme: "තේමාව",
+    light: "ආලෝක",
+    dark: "අඳුරු",
+  },
+
   // C3 Marketplace - Search
   c3search: {
     eyebrow: "වෙළඳපොළ සොයාගැනීම",

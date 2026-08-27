@@ -1,4 +1,4 @@
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons } from "@/components/c03-marketplace/themed-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import React, { useMemo, useState } from "react";
@@ -15,7 +15,7 @@ import {
   Text,
   TextInput,
   View,
-} from "react-native";
+} from "@/components/c03-marketplace/themed-native";
 
 import {
   useFonts,

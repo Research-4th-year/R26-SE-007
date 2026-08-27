@@ -1,4 +1,4 @@
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons } from "@/components/c03-marketplace/themed-native";
 import { LinearGradient } from "expo-linear-gradient";
 import {
   router,
@@ -18,7 +18,7 @@ import {
   StyleSheet,
   Text,
   View,
-} from "react-native";
+} from "@/components/c03-marketplace/themed-native";
 import {
   useFonts,
   Poppins_800ExtraBold,
@@ -263,19 +263,39 @@ export default function PartnerDetailScreen() {
     if (!selectedResourceId) return;
 
     const resourceId = selectedResourceId;
+    const connectedPartnerId = partnerId;
+    const connectedDemandId = selectedPartnerDemand?._id;
+    const connectedHarvestId = selectedPartnerHarvest?._id;
+
     closeOpportunityModal();
 
     if (user?.role === "farmer") {
       router.push({
         pathname: "/(c03-marketplace)/(farmer)/matched-millers" as any,
-        params: { harvestId: resourceId },
+        params: {
+          harvestId: resourceId,
+          ...(connectedPartnerId
+            ? { focusMillerId: connectedPartnerId }
+            : {}),
+          ...(connectedDemandId
+            ? { focusDemandId: connectedDemandId }
+            : {}),
+        },
       });
       return;
     }
 
     router.push({
       pathname: "/(c03-marketplace)/(miller)/matched-farmers" as any,
-      params: { demandId: resourceId },
+      params: {
+        demandId: resourceId,
+        ...(connectedPartnerId
+          ? { focusFarmerId: connectedPartnerId }
+          : {}),
+        ...(connectedHarvestId
+          ? { focusHarvestId: connectedHarvestId }
+          : {}),
+      },
     });
   }
 
