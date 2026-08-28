@@ -95,8 +95,8 @@ export default function YieldPredictionScreen() {
     City: "Anuradhapura City",
     lat: districtData["Anuradhapura"][0].lat,
     lon: districtData["Anuradhapura"][0].lon,
-    Total_Land_Size: "1000",
-    Land_Size_Unit: "Hectares",
+    Total_Land_Size: "100",
+    Land_Size_Unit: "Perches",
     Paddy_Type: "Bg 352",
     useFirebase: false
   });
@@ -305,7 +305,7 @@ export default function YieldPredictionScreen() {
                     value={formData.Total_Land_Size}
                     onChangeText={(t) => setFormData({...formData, Total_Land_Size: t})}
                     keyboardType="numeric"
-                    placeholder="E.g. 1000"
+                    placeholder="E.g. 100"
                   />
                 </View>
               </View>
@@ -352,7 +352,7 @@ export default function YieldPredictionScreen() {
 
             <View style={styles.mapInfoBox}>
               <View style={{ flex: 1 }}>
-                <Text style={styles.mapInfoLabel}>Nearest City (Auto-detected)</Text>
+                <Text style={styles.mapInfoLabel}>Nearest City</Text>
                 <Text style={styles.mapInfoValue}>{formData.City}, {formData.District}</Text>
               </View>
               <View style={{ alignItems: "flex-end" }}>
@@ -376,7 +376,7 @@ export default function YieldPredictionScreen() {
             {envData && (
               <View style={styles.envPanel}>
                 <View style={styles.envHeader}>
-                  <Text style={styles.envTitle}>Live Environmental Factors</Text>
+                  <Text style={styles.envTitle}>Live Environmental Factors (IoT Device)</Text>
                   {fetchingData && <ActivityIndicator size="small" color="#10b981" />}
                 </View>
                 
@@ -394,9 +394,7 @@ export default function YieldPredictionScreen() {
                     <Text style={styles.envItemValue}>{envData.Soil_Moisture?.toFixed(2)} m³/m³</Text>
                   </View>
                 </View>
-                <Text style={styles.envFooter}>
-                  {formData.useFirebase ? 'Fetched directly from IoT Device' : 'Fetched from 14-day Weather Forecast'}
-                </Text>
+                
               </View>
             )}
           </View>
@@ -413,7 +411,7 @@ export default function YieldPredictionScreen() {
 
           {result && (
             <View style={styles.resultCard}>
-              <Text style={styles.resultTitle}>Production Estimate</Text>
+              <Text style={styles.resultTitle}>Estimated Yield</Text>
               <View style={styles.productionHighlight}>
                 <Text style={styles.productionValue}>{result.total_estimated_production_mt?.toFixed(2)}</Text>
                 <Text style={styles.productionUnit}>Metric Tons</Text>
@@ -422,7 +420,7 @@ export default function YieldPredictionScreen() {
                 ({getTotalYieldKg(result.predicted_yield_kg_per_ha).toFixed(2)} kg)
               </Text>
 
-              <Text style={[styles.resultSubtitle, { marginTop: 25 }]}>Automated Environmental Data</Text>
+              <Text style={[styles.resultSubtitle, { marginTop: 25 }]}>Environmental Data (from IoT Device)</Text>
               <View style={styles.envGrid}>
                 <View style={styles.envItem}>
                   <Text style={styles.envItemLabel}>Temp</Text>
@@ -451,7 +449,7 @@ export default function YieldPredictionScreen() {
                 </View>
               </View>
 
-              <View style={styles.recommendationsBox}>
+              {/* <View style={styles.recommendationsBox}>
                 <Text style={styles.recommendationsTitle}>Agronomic Recommendations</Text>
                 {result.agronomic_recommendations?.map((insight: string, idx: number) => (
                   <View key={idx} style={styles.recommendationBullet}>
@@ -459,7 +457,7 @@ export default function YieldPredictionScreen() {
                     <Text style={styles.recommendationText}>{insight}</Text>
                   </View>
                 ))}
-              </View>
+              </View> */}
 
               <TouchableOpacity style={styles.saveBtn} onPress={handleSaveToProfile}>
                 <Text style={styles.saveBtnText}>{saveStatus || 'Save to Profile'}</Text>

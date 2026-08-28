@@ -1905,6 +1905,49 @@ c3MillerHome: {
     backToHome: "Back to Home",
   },
 
+
+  c02Farming: {
+
+    farmerGuidance: {
+      title: "Farmer Crop Guidance",
+      subtitle: "(වගා උපදෙස්)",
+      infoPart1: "Your recommended variety (",
+      infoPart2: ") has an approximate crop duration of ",
+      infoPart3: ". The following guidance is organized according to crop age and Sri Lankan agricultural recommendations for the ",
+      action: "Action",
+      water: "Water",
+      fertilizer: "Fertilizer",
+      warning: "Warning",
+      source: "Source"
+    },
+
+    home: {
+      eyebrow: "AI-POWERED FARMING INSIGHTS",
+      title: "Smart Farming\n& Advisory",
+      subtitle: "Optimize your harvest with data-driven insights and disease detection.",
+      introText: "Leverage advanced machine learning and real-time IoT data to manage your paddy fields.",
+      
+      iotDashboardTitle: "IoT Dashboard",
+      iotDashboardDesc: "Monitor real-time sensor data from your ESP32 IoT device — temperature, humidity, soil moisture, NPK, and more.",
+      iotDashboardBtn: "View Dashboard",
+      
+      varietyTitle: "Variety Prediction & Suitability",
+      varietyDesc: "Find the best paddy variety for your district and check if your field is ready for planting.",
+      varietyBtn: "Check Suitability",
+      
+      yieldTitle: "Yield Prediction",
+      yieldDesc: "Predict your harvest yield based on field size, variety, and historical data.",
+      yieldBtn: "Predict Yield",
+      
+      diseaseTitle: "Paddy Disease Detection",
+      diseaseDesc: "Upload or capture a photo of a paddy leaf to identify diseases instantly using AI.",
+      diseaseBtn: "Scan Leaf",
+      
+      fertilizerTitle: "Smart Fertilizer Guide",
+      fertilizerDesc: "Calculate the exact fertilizer requirements based on Department of Agriculture guidelines.",
+      fertilizerBtn: "Get Guide",
+    }
+  },
 };
 
 export default en;

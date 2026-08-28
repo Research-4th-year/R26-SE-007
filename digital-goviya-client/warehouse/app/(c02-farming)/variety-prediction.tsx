@@ -357,7 +357,7 @@ export default function VarietyPredictionScreen() {
 
         <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
           <View style={styles.card}>
-            <Text style={styles.cardTitle}>📍 Select Location via Map</Text>
+            <Text style={styles.cardTitle}>Select Location via Map</Text>
             <View style={{ height: 200, borderRadius: 16, overflow: 'hidden', marginBottom: 20, borderWidth: 1, borderColor: '#E5E7EB', justifyContent: 'center', alignItems: 'center' }}>
               {Platform.OS === 'web' ? (
                 <Text style={{ color: '#6B7280' }}>Map is not supported on web. Please select from dropdowns.</Text>
@@ -424,7 +424,7 @@ export default function VarietyPredictionScreen() {
 
             <View style={styles.row}>
               <View style={{ flex: 1, marginRight: 10 }}>
-                <Text style={styles.label}>💧 Irrigation</Text>
+                <Text style={styles.label}>Irrigation</Text>
                 <CustomSelect 
                   label="Irrigation Method" 
                   value={formData.Irrigation} 
@@ -433,7 +433,7 @@ export default function VarietyPredictionScreen() {
                 />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.label}>🌱 Cultivation Date</Text>
+                <Text style={styles.label}>Cultivation Date</Text>
                 <TouchableOpacity 
                   style={[styles.inputBox, { justifyContent: 'center' }]} 
                   onPress={() => setShowDatePicker(true)}
@@ -501,9 +501,7 @@ export default function VarietyPredictionScreen() {
                     <Text style={{ fontFamily: "Poppins_600SemiBold", fontSize: 16, color: "#0F172A" }}>{envData.Soil_Moisture?.toFixed(2)} m³/m³</Text>
                   </View>
                 </View>
-                <Text style={{ fontFamily: "Poppins_400Regular", fontSize: 11, color: "#94A3B8", textAlign: "center", marginTop: 15 }}>
-                  {formData.useFirebase ? 'Fetched directly from IoT Device' : 'Fetched from 14-day Weather Forecast'}
-                </Text>
+                
               </View>
             )}
 
@@ -517,7 +515,6 @@ export default function VarietyPredictionScreen() {
               ) : (
                 <>
                   <Text style={styles.primaryBtnText}>Analyze Farm</Text>
-                  <Ionicons name="analytics" size={18} color="white" />
                 </>
               )}
             </TouchableOpacity>
@@ -785,7 +782,7 @@ const styles = StyleSheet.create({
     flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 20, paddingTop: 40, paddingBottom: 20,
   },
   backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: "rgba(255,255,255,0.15)", justifyContent: "center", alignItems: "center" },
-  headerTitle: { fontFamily: "Poppins_600SemiBold", fontSize: 18, color: "#0d0d0d" },
+  headerTitle: { fontFamily: "Poppins_600SemiBold", fontSize: 18, color: "#ffffffff" },
   container: { padding: 20 },
   card: { backgroundColor: "white", borderRadius: 20, padding: 24, marginBottom: 20, shadowColor: "#000", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 10, elevation: 3 },
   cardTitle: { fontFamily: "Poppins_700Bold", fontSize: 20, color: "#1F2937", marginBottom: 20 },
