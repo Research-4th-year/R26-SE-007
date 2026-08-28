@@ -12,12 +12,22 @@ import type {
   MarketplaceSession,
 } from "@/types/c03-marketplace/auth.types";
 
-const API_BASE_URL =
-  process.env.EXPO_PUBLIC_MARKETPLACE_API_URL;
+import Constants from 'expo-constants';
+import { Platform } from 'react-native';
 
-if (!API_BASE_URL) {
+let LOCAL_IP = "127.0.0.1";
+if (__DEV__ && Constants.expoConfig?.hostUri) {
+  LOCAL_IP = Constants.expoConfig.hostUri.split(':')[0];
+} else if (Platform.OS === 'android') {
+  LOCAL_IP = "10.0.2.2";
+}
+
+const API_BASE_URL =
+  process.env.EXPO_PUBLIC_MARKETPLACE_API_URL || `http://${LOCAL_IP}:8000`;
+
+if (!process.env.EXPO_PUBLIC_MARKETPLACE_API_URL && !__DEV__) {
   console.warn(
-    "EXPO_PUBLIC_MARKETPLACE_API_URL is not configured."
+    "EXPO_PUBLIC_MARKETPLACE_API_URL is not configured for production."
   );
 }
 

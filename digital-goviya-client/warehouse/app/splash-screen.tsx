@@ -1,14 +1,6 @@
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useEffect, useRef, useState } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  SafeAreaView,
-  Animated,
-  Easing,
-  Dimensions,
-  Image,
-} from "react-native";
+import { View, Text, StyleSheet, Animated, Easing, Dimensions, Image,  } from "react-native";
 import { router } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import {
