@@ -3,12 +3,15 @@ import {
   View,
   Text,
   TouchableOpacity,
+  Pressable,
   StyleSheet,
   ScrollView,
   ActivityIndicator,
   Animated,
   Dimensions,
   RefreshControl,
+  Modal,
+  Platform,
 } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -38,63 +41,207 @@ interface SensorCardConfig {
   label: string;
   unit: string;
   icon: string;
+  accent: string;
   gradientColors: [string, string];
-  iconBg: string;
   min?: number;
   max?: number;
+  idealMin?: number;
+  idealMax?: number;
+  description?: string;
 }
 
 // ─── Sensor card configs ──────────────────────────────────────────────────────
 const SENSOR_CARDS: SensorCardConfig[] = [
   {
     key: "temperature", label: "Temperature", unit: "°C",
-    icon: "thermometer", gradientColors: ["rgba(245,158,11,0.15)", "rgba(245,158,11,0.08)"],
-    iconBg: "#F59E0B", min: 0, max: 50,
+    icon: "thermometer", accent: "#F59E0B",
+    gradientColors: ["rgba(245,158,11,0.18)", "rgba(245,158,11,0.05)"],
+    min: 0, max: 50, idealMin: 18, idealMax: 30,
+    description: "Ambient air temperature around the crop canopy. Extreme highs stress plants and speed up water loss; extreme lows slow growth.",
   },
   {
     key: "humidity", label: "Humidity", unit: "%",
-    icon: "water", gradientColors: ["rgba(59,130,246,0.15)", "rgba(59,130,246,0.08)"],
-    iconBg: "#3B82F6", min: 0, max: 100,
+    icon: "water", accent: "#3B82F6",
+    gradientColors: ["rgba(59,130,246,0.18)", "rgba(59,130,246,0.05)"],
+    min: 0, max: 100, idealMin: 40, idealMax: 70,
+    description: "Relative moisture in the surrounding air. Too low can cause wilting; too high raises the risk of fungal disease.",
   },
   {
     key: "soilMoisture", label: "Soil Moisture", unit: "%",
-    icon: "earth", gradientColors: ["rgba(16,185,129,0.15)", "rgba(16,185,129,0.08)"],
-    iconBg: "#10B981", min: 0, max: 100,
+    icon: "earth", accent: "#10B981",
+    gradientColors: ["rgba(16,185,129,0.18)", "rgba(16,185,129,0.05)"],
+    min: 0, max: 100, idealMin: 30, idealMax: 70,
+    description: "Water content held in the root zone. Keeping this in range avoids both drought stress and waterlogged roots.",
   },
   {
     key: "ph", label: "pH Level", unit: "",
-    icon: "flask", gradientColors: ["rgba(139,92,246,0.15)", "rgba(139,92,246,0.08)"],
-    iconBg: "#8B5CF6", min: 0, max: 14,
+    icon: "flask", accent: "#8B5CF6",
+    gradientColors: ["rgba(139,92,246,0.18)", "rgba(139,92,246,0.05)"],
+    min: 0, max: 14, idealMin: 5.5, idealMax: 7.5,
+    description: "Soil acidity or alkalinity. Most crops absorb nutrients best in a mildly acidic to neutral range.",
   },
   {
     key: "nitrogen", label: "Nitrogen (N)", unit: "mg/kg",
-    icon: "leaf", gradientColors: ["rgba(34,197,94,0.15)", "rgba(34,197,94,0.08)"],
-    iconBg: "#22C55E", min: 0, max: 100,
+    icon: "leaf", accent: "#22C55E",
+    gradientColors: ["rgba(34,197,94,0.18)", "rgba(34,197,94,0.05)"],
+    min: 0, max: 100, idealMin: 20, idealMax: 50,
+    description: "Drives leaf and stem growth. Low nitrogen shows up as pale, yellowing leaves and stunted growth.",
   },
   {
     key: "phosphorus", label: "Phosphorus (P)", unit: "mg/kg",
-    icon: "sunny", gradientColors: ["rgba(234,179,8,0.15)", "rgba(234,179,8,0.08)"],
-    iconBg: "#EAB308", min: 0, max: 60,
+    icon: "sunny", accent: "#EAB308",
+    gradientColors: ["rgba(234,179,8,0.18)", "rgba(234,179,8,0.05)"],
+    min: 0, max: 60, idealMin: 10, idealMax: 30,
+    description: "Supports root development, flowering and fruiting. Deficiency often slows maturity.",
   },
   {
     key: "potassium", label: "Potassium (K)", unit: "mg/kg",
-    icon: "flash", gradientColors: ["rgba(244,63,94,0.15)", "rgba(244,63,94,0.08)"],
-    iconBg: "#F43F5E", min: 0, max: 80,
+    icon: "flash", accent: "#F43F5E",
+    gradientColors: ["rgba(244,63,94,0.18)", "rgba(244,63,94,0.05)"],
+    min: 0, max: 80, idealMin: 15, idealMax: 40,
+    description: "Regulates water balance and disease resistance in the plant. Deficiency weakens stems and lowers yield quality.",
   },
 ];
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function getStatus(config: SensorCardConfig, value: number | undefined) {
+  if (value === undefined || config.idealMin === undefined || config.idealMax === undefined) {
+    return { label: "No data", color: "#9CA3AF" };
+  }
+  if (value < config.idealMin) return { label: "Low", color: "#F59E0B" };
+  if (value > config.idealMax) return { label: "High", color: "#EF4444" };
+  return { label: "Optimal", color: "#22C55E" };
+}
+
+// ─── Sensor Detail Modal ──────────────────────────────────────────────────────
+function SensorDetailModal({
+  visible,
+  onClose,
+  config,
+  value,
+  timestamp,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  config: SensorCardConfig | null;
+  value: number | undefined;
+  timestamp: string | undefined;
+}) {
+  const slideAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (visible) {
+      slideAnim.setValue(0);
+      Animated.spring(slideAnim, {
+        toValue: 1,
+        friction: 9,
+        tension: 70,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [visible]);
+
+  if (!config) return null;
+
+  const status = getStatus(config, value);
+  const min = config.min ?? 0;
+  const max = config.max ?? 100;
+  const clamped = value !== undefined ? Math.min(max, Math.max(min, value)) : min;
+  const pct = ((clamped - min) / (max - min)) * 100;
+  const idealStartPct = config.idealMin !== undefined ? ((config.idealMin - min) / (max - min)) * 100 : 0;
+  const idealEndPct = config.idealMax !== undefined ? ((config.idealMax - min) / (max - min)) * 100 : 100;
+
+  const translateY = slideAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [40, 0],
+  });
+
+  return (
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+      <Pressable style={modalStyles.backdrop} onPress={onClose} />
+
+      <View style={modalStyles.centerWrap} pointerEvents="box-none">
+        <Animated.View
+          style={[
+            modalStyles.sheet,
+            { opacity: slideAnim, transform: [{ translateY }] },
+          ]}
+        >
+          <LinearGradient
+            colors={["#123B24", "#0C2A19"]}
+            style={modalStyles.sheetGradient}
+          >
+            <View style={modalStyles.sheetHeader}>
+              <View style={[modalStyles.sheetIcon, { backgroundColor: config.accent }]}>
+                <Ionicons name={config.icon as any} size={20} color="white" />
+              </View>
+              <TouchableOpacity onPress={onClose} style={modalStyles.closeBtn} hitSlop={10}>
+                <Ionicons name="close" size={18} color="rgba(255,255,255,0.7)" />
+              </TouchableOpacity>
+            </View>
+
+            <Text style={modalStyles.sheetLabel}>{config.label}</Text>
+
+            <View style={modalStyles.valueRow}>
+              <Text style={modalStyles.sheetValue}>
+                {value !== undefined ? (typeof value === "number" ? value.toFixed(1) : value) : "—"}
+              </Text>
+              {!!config.unit && <Text style={modalStyles.sheetUnit}>{config.unit}</Text>}
+              <View style={[modalStyles.statusPill, { backgroundColor: `${status.color}26`, borderColor: `${status.color}55` }]}>
+                <View style={[modalStyles.statusDot, { backgroundColor: status.color }]} />
+                <Text style={[modalStyles.statusText, { color: status.color }]}>{status.label}</Text>
+              </View>
+            </View>
+
+            {/* Range bar with ideal band */}
+            <View style={modalStyles.rangeWrap}>
+              <View style={modalStyles.rangeTrack}>
+                <View
+                  style={[
+                    modalStyles.idealBand,
+                    { left: `${idealStartPct}%`, width: `${Math.max(0, idealEndPct - idealStartPct)}%` },
+                  ]}
+                />
+                <View style={[modalStyles.rangeMarker, { left: `${Math.min(97, Math.max(0, pct))}%`, backgroundColor: config.accent }]} />
+              </View>
+              <View style={modalStyles.rangeLabels}>
+                <Text style={modalStyles.rangeLabelText}>{min}</Text>
+                <Text style={modalStyles.rangeLabelText}>{max}</Text>
+              </View>
+            </View>
+
+            {config.description && (
+              <Text style={modalStyles.sheetDescription}>{config.description}</Text>
+            )}
+
+            <View style={modalStyles.sheetFooter}>
+              <Ionicons name="time-outline" size={13} color="rgba(255,255,255,0.45)" />
+              <Text style={modalStyles.sheetFooterText}>
+                Last updated {timestamp ? timestamp : "unknown"}
+              </Text>
+            </View>
+          </LinearGradient>
+        </Animated.View>
+      </View>
+    </Modal>
+  );
+}
 
 // ─── Animated Sensor Card ─────────────────────────────────────────────────────
 function SensorCard({
   config,
   value,
   index,
+  onPress,
 }: {
   config: SensorCardConfig;
   value: number | undefined;
   index: number;
+  onPress: () => void;
 }) {
   const scaleAnim = useRef(new Animated.Value(0.9)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
+  const pressAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     Animated.parallel([
@@ -114,11 +261,19 @@ function SensorCard({
     ]).start();
   }, []);
 
-  // Progress bar percentage
+  const status = getStatus(config, value);
+
   const progress =
     value !== undefined && config.max !== undefined
       ? Math.min(100, Math.max(0, ((value - (config.min || 0)) / (config.max - (config.min || 0))) * 100))
       : 0;
+
+  const handlePressIn = () => {
+    Animated.spring(pressAnim, { toValue: 0.96, friction: 8, useNativeDriver: true }).start();
+  };
+  const handlePressOut = () => {
+    Animated.spring(pressAnim, { toValue: 1, friction: 8, useNativeDriver: true }).start();
+  };
 
   return (
     <Animated.View
@@ -127,42 +282,57 @@ function SensorCard({
         { width: CARD_WIDTH, opacity: opacityAnim, transform: [{ scale: scaleAnim }] },
       ]}
     >
-      <LinearGradient
-        colors={config.gradientColors}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.sensorCardGradient}
+      <Pressable
+        onPress={onPress}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        android_ripple={{ color: "rgba(255,255,255,0.08)" }}
       >
-        {/* Icon */}
-        <View style={[styles.sensorIconCircle, { backgroundColor: config.iconBg }]}>
-          <Ionicons name={config.icon as any} size={18} color="white" />
-        </View>
+        <Animated.View style={{ transform: [{ scale: pressAnim }] }}>
+          <LinearGradient
+            colors={config.gradientColors}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.sensorCardGradient}
+          >
+            <View style={styles.sensorCardTop}>
+              <View style={[styles.sensorIconCircle, { backgroundColor: config.accent }]}>
+                <Ionicons name={config.icon as any} size={17} color="white" />
+              </View>
+              <View style={[styles.statusChip, { backgroundColor: `${status.color}22` }]}>
+                <View style={[styles.statusChipDot, { backgroundColor: status.color }]} />
+              </View>
+            </View>
 
-        {/* Label */}
-        <Text style={styles.sensorLabel}>{config.label}</Text>
+            <Text style={styles.sensorLabel}>{config.label}</Text>
 
-        {/* Value */}
-        <Text style={styles.sensorValue}>
-          {value !== undefined ? (
-            <>
-              {typeof value === "number" ? value.toFixed(1) : value}
-              <Text style={styles.sensorUnit}> {config.unit}</Text>
-            </>
-          ) : (
-            "—"
-          )}
-        </Text>
+            <Text style={styles.sensorValue}>
+              {value !== undefined ? (
+                <>
+                  {typeof value === "number" ? value.toFixed(1) : value}
+                  <Text style={styles.sensorUnit}> {config.unit}</Text>
+                </>
+              ) : (
+                "—"
+              )}
+            </Text>
 
-        {/* Mini progress bar */}
-        <View style={styles.progressTrack}>
-          <View
-            style={[
-              styles.progressBar,
-              { width: `${progress}%`, backgroundColor: config.iconBg },
-            ]}
-          />
-        </View>
-      </LinearGradient>
+            <View style={styles.progressTrack}>
+              <View
+                style={[
+                  styles.progressBar,
+                  { width: `${progress}%`, backgroundColor: config.accent },
+                ]}
+              />
+            </View>
+
+            <View style={styles.tapHintRow}>
+              <Text style={styles.tapHintText}>Details</Text>
+              <Ionicons name="chevron-forward" size={11} color="rgba(255,255,255,0.4)" />
+            </View>
+          </LinearGradient>
+        </Animated.View>
+      </Pressable>
     </Animated.View>
   );
 }
@@ -178,7 +348,7 @@ function DeviceStatusCard({
   return (
     <View style={[styles.sensorCard, { width: CARD_WIDTH }]}>
       <LinearGradient
-        colors={isOnline ? ["rgba(34,197,94,0.15)", "rgba(34,197,94,0.08)"] : ["rgba(239,68,68,0.15)", "rgba(239,68,68,0.08)"]}
+        colors={isOnline ? ["rgba(34,197,94,0.18)", "rgba(34,197,94,0.05)"] : ["rgba(239,68,68,0.18)", "rgba(239,68,68,0.05)"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={[styles.sensorCardGradient, { flex: 1, justifyContent: "space-between" }]}
@@ -206,10 +376,12 @@ function DeviceStatusCard({
 // ─── Temperature Dial Card ────────────────────────────────────────────────────
 function TemperatureDialCard({
   value,
-  config
+  config,
+  onPress,
 }: {
   value: number | undefined;
   config: SensorCardConfig;
+  onPress: () => void;
 }) {
   const size = CARD_WIDTH - 32; // minus padding
   const strokeWidth = 8;
@@ -217,7 +389,7 @@ function TemperatureDialCard({
   const circumference = radius * 2 * Math.PI;
   const angle = 270; // 3/4 circle
   const arcLength = (circumference * angle) / 360;
-  
+
   const min = config.min || 0;
   const max = config.max || 50;
   const val = value !== undefined ? Math.min(max, Math.max(min, value)) : 0;
@@ -225,7 +397,7 @@ function TemperatureDialCard({
   const strokeDashoffset = arcLength - (arcLength * progress) / 100;
 
   return (
-    <View style={[styles.sensorCard, { width: CARD_WIDTH }]}>
+    <Pressable style={[styles.sensorCard, { width: CARD_WIDTH }]} onPress={onPress}>
       <LinearGradient
         colors={config.gradientColors}
         start={{ x: 0, y: 0 }}
@@ -234,9 +406,9 @@ function TemperatureDialCard({
       >
         <View style={{ width: "100%", flexDirection: "row", justifyContent: "space-between" }}>
           <Text style={styles.sensorLabel}>{config.label}</Text>
-          <Ionicons name={config.icon as any} size={14} color={config.iconBg} />
+          <Ionicons name={config.icon as any} size={14} color={config.accent} />
         </View>
-        
+
         <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center', marginVertical: 12 }}>
           <Svg width={size} height={size} style={{ position: 'absolute', transform: [{ rotate: '135deg' }] }}>
             <Circle
@@ -253,7 +425,7 @@ function TemperatureDialCard({
               cx={size / 2}
               cy={size / 2}
               r={radius}
-              stroke={config.iconBg}
+              stroke={config.accent}
               strokeWidth={strokeWidth}
               strokeDasharray={`${arcLength} ${circumference}`}
               strokeDashoffset={strokeDashoffset}
@@ -268,8 +440,12 @@ function TemperatureDialCard({
             <Text style={[styles.sensorUnit, { fontSize: 12 }]}>{config.unit}</Text>
           </View>
         </View>
+        <View style={styles.tapHintRow}>
+          <Text style={styles.tapHintText}>Details</Text>
+          <Ionicons name="chevron-forward" size={11} color="rgba(255,255,255,0.4)" />
+        </View>
       </LinearGradient>
-    </View>
+    </Pressable>
   );
 }
 
@@ -279,6 +455,8 @@ export default function IoTDashboardScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [selectedSensor, setSelectedSensor] = useState<SensorCardConfig | null>(null);
+  const [modalVisible, setModalVisible] = useState(false);
 
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
@@ -342,6 +520,11 @@ export default function IoTDashboardScreen() {
     setTimeout(() => setRefreshing(false), 1500);
   };
 
+  const openSensorDetail = (config: SensorCardConfig) => {
+    setSelectedSensor(config);
+    setModalVisible(true);
+  };
+
   // ─── Loading state ──────────────────────────────────────────────────────────
   if (loading) {
     return (
@@ -367,7 +550,10 @@ export default function IoTDashboardScreen() {
         <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
           <Ionicons name="chevron-back" size={20} color="white" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>IoT Dashboard</Text>
+        <View style={{ alignItems: "center" }}>
+          <Text style={styles.headerTitle}>IoT Dashboard</Text>
+          <Text style={styles.headerSubtitle}>Live Farm Monitoring</Text>
+        </View>
         <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
           <View style={[styles.liveIndicator, { backgroundColor: isOnline ? "#22C55E" : "#EF4444" }]}>
             <View style={[styles.liveDotInner, { backgroundColor: isOnline ? "#BBF7D0" : "#FECACA" }]} />
@@ -387,9 +573,10 @@ export default function IoTDashboardScreen() {
         {/* Top Row: Device Status & Temperature Dial */}
         <View style={[styles.cardsGrid, { marginBottom: 16 }]}>
           <DeviceStatusCard timestamp={sensorData?.timestamp} isOnline={isOnline} />
-          <TemperatureDialCard 
-            value={sensorData?.temperature} 
-            config={SENSOR_CARDS.find(c => c.key === 'temperature')!} 
+          <TemperatureDialCard
+            value={sensorData?.temperature}
+            config={SENSOR_CARDS.find(c => c.key === 'temperature')!}
+            onPress={() => openSensorDetail(SENSOR_CARDS.find(c => c.key === 'temperature')!)}
           />
         </View>
 
@@ -403,7 +590,10 @@ export default function IoTDashboardScreen() {
 
         {/* Section title */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Other Sensors</Text>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+            <Ionicons name="stats-chart" size={15} color="rgba(255,255,255,0.85)" />
+            <Text style={styles.sectionTitle}>Other Sensors</Text>
+          </View>
           <View style={styles.liveBadge}>
             <View style={styles.liveDotSmall} />
             <Text style={styles.liveBadgeText}>LIVE</Text>
@@ -418,6 +608,7 @@ export default function IoTDashboardScreen() {
               config={config}
               value={sensorData?.[config.key]}
               index={index}
+              onPress={() => openSensorDetail(config)}
             />
           ))}
         </View>
@@ -438,6 +629,14 @@ export default function IoTDashboardScreen() {
 
         <View style={{ height: 40 }} />
       </ScrollView>
+
+      <SensorDetailModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        config={selectedSensor}
+        value={selectedSensor ? sensorData?.[selectedSensor.key] : undefined}
+        timestamp={sensorData?.timestamp}
+      />
     </View>
   );
 }
@@ -467,6 +666,17 @@ function NPKBar({
 }
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
+const cardShadow = Platform.select({
+  ios: {
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.18,
+    shadowRadius: 12,
+  },
+  android: { elevation: 4 },
+  default: {},
+});
+
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: "#0A331D" },
   heroBg: { ...StyleSheet.absoluteFill },
@@ -488,6 +698,9 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontFamily: "Poppins_700Bold", fontSize: 18, color: "white",
   },
+  headerSubtitle: {
+    fontFamily: "Poppins_500Medium", fontSize: 11, color: "rgba(255,255,255,0.55)", marginTop: 1,
+  },
   liveIndicator: {
     width: 28, height: 28, borderRadius: 14,
     justifyContent: "center", alignItems: "center",
@@ -499,43 +712,6 @@ const styles = StyleSheet.create({
   // Scroll
   scrollView: { flex: 1 },
   scrollContent: { padding: 20, paddingTop: 8 },
-
-  // Device banner – glass
-  deviceBanner: {
-    backgroundColor: "rgba(255,255,255,0.1)", borderRadius: 20, padding: 18,
-    marginBottom: 16,
-    borderWidth: 1, borderColor: "rgba(255,255,255,0.15)",
-  },
-  deviceRow: {
-    flexDirection: "row", justifyContent: "space-between", alignItems: "center",
-    marginBottom: 14,
-  },
-  deviceLeft: { flexDirection: "row", alignItems: "center", gap: 12 },
-  statusDot: {
-    width: 12, height: 12, borderRadius: 6,
-    borderWidth: 2, borderColor: "rgba(255,255,255,0.3)",
-    shadowColor: "#22C55E", shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.5, shadowRadius: 4,
-  },
-  deviceName: {
-    fontFamily: "Poppins_700Bold", fontSize: 15, color: "white",
-  },
-  deviceSubtext: {
-    fontFamily: "Poppins_500Medium", fontSize: 11, color: "rgba(255,255,255,0.6)", marginTop: 1,
-  },
-
-  // Pills – glass
-  pillRow: { flexDirection: "row", gap: 8, marginBottom: 12 },
-  pill: {
-    flexDirection: "row", alignItems: "center", gap: 5,
-    paddingHorizontal: 10, paddingVertical: 5, borderRadius: 20,
-    borderWidth: 1, borderColor: "rgba(255,255,255,0.1)",
-  },
-  pillText: { fontFamily: "Poppins_600SemiBold", fontSize: 11 },
-
-  // Sync
-  syncRow: { flexDirection: "row", alignItems: "center", gap: 5 },
-  syncText: { fontFamily: "Poppins_500Medium", fontSize: 11, color: "rgba(255,255,255,0.5)" },
 
   // Error – glass
   errorBox: {
@@ -551,7 +727,7 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   sectionTitle: {
-    fontFamily: "Poppins_700Bold", fontSize: 17, color: "white",
+    fontFamily: "Poppins_700Bold", fontSize: 16, color: "white",
   },
   liveBadge: {
     flexDirection: "row", alignItems: "center", gap: 5,
@@ -571,14 +747,26 @@ const styles = StyleSheet.create({
   },
 
   // Individual sensor card – glass
-  sensorCard: { marginBottom: 14 },
+  sensorCard: { marginBottom: 14, borderRadius: 18, ...cardShadow },
   sensorCardGradient: {
     borderRadius: 18, padding: 16,
-    borderWidth: 1, borderColor: "rgba(255,255,255,0.12)",
+    borderWidth: 1, borderColor: "rgba(255,255,255,0.14)",
+    overflow: "hidden",
+  },
+  sensorCardTop: {
+    flexDirection: "row", justifyContent: "space-between", alignItems: "center",
+    marginBottom: 10,
   },
   sensorIconCircle: {
     width: 34, height: 34, borderRadius: 10,
-    justifyContent: "center", alignItems: "center", marginBottom: 10,
+    justifyContent: "center", alignItems: "center",
+  },
+  statusChip: {
+    width: 20, height: 20, borderRadius: 10,
+    justifyContent: "center", alignItems: "center",
+  },
+  statusChipDot: {
+    width: 7, height: 7, borderRadius: 3.5,
   },
   sensorLabel: {
     fontFamily: "Poppins_600SemiBold", fontSize: 11, color: "rgba(255,255,255,0.7)",
@@ -596,11 +784,18 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   progressBar: { height: "100%", borderRadius: 2 },
+  tapHintRow: {
+    flexDirection: "row", alignItems: "center", justifyContent: "flex-end",
+    gap: 2, marginTop: 10,
+  },
+  tapHintText: {
+    fontFamily: "Poppins_500Medium", fontSize: 10, color: "rgba(255,255,255,0.4)",
+  },
 
   // NPK Summary – glass
   npkCard: {
     backgroundColor: "rgba(255,255,255,0.1)", borderRadius: 20, padding: 20, marginTop: 4,
-    borderWidth: 1, borderColor: "rgba(255,255,255,0.15)",
+    borderWidth: 1, borderColor: "rgba(255,255,255,0.15)", ...cardShadow,
   },
   npkTitle: {
     fontFamily: "Poppins_700Bold", fontSize: 14, color: "white", marginBottom: 16,
@@ -620,5 +815,83 @@ const styles = StyleSheet.create({
   npkValue: {
     fontFamily: "Poppins_600SemiBold", fontSize: 13, color: "rgba(255,255,255,0.8)", width: 40,
     textAlign: "right",
+  },
+});
+
+// ─── Modal Styles ─────────────────────────────────────────────────────────────
+const modalStyles = StyleSheet.create({
+  backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(4,20,12,0.72)" },
+  centerWrap: {
+    flex: 1, justifyContent: "center", alignItems: "center", padding: 24,
+  },
+  sheet: {
+    width: "100%", maxWidth: 400, borderRadius: 24, overflow: "hidden",
+    borderWidth: 1, borderColor: "rgba(255,255,255,0.14)",
+    ...Platform.select({
+      ios: { shadowColor: "#000", shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.35, shadowRadius: 24 },
+      android: { elevation: 10 },
+      default: {},
+    }),
+  },
+  sheetGradient: { padding: 22 },
+  sheetHeader: {
+    flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14,
+  },
+  sheetIcon: {
+    width: 40, height: 40, borderRadius: 12,
+    justifyContent: "center", alignItems: "center",
+  },
+  closeBtn: {
+    width: 30, height: 30, borderRadius: 15,
+    backgroundColor: "rgba(255,255,255,0.08)",
+    justifyContent: "center", alignItems: "center",
+  },
+  sheetLabel: {
+    fontFamily: "Poppins_600SemiBold", fontSize: 13, color: "rgba(255,255,255,0.6)", marginBottom: 4,
+  },
+  valueRow: {
+    flexDirection: "row", alignItems: "flex-end", flexWrap: "wrap", gap: 8, marginBottom: 18,
+  },
+  sheetValue: {
+    fontFamily: "Poppins_800ExtraBold", fontSize: 34, color: "white",
+  },
+  sheetUnit: {
+    fontFamily: "Poppins_500Medium", fontSize: 14, color: "rgba(255,255,255,0.5)", marginBottom: 6,
+  },
+  statusPill: {
+    flexDirection: "row", alignItems: "center", gap: 5,
+    borderWidth: 1, borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4, marginBottom: 4,
+  },
+  statusDot: { width: 6, height: 6, borderRadius: 3 },
+  statusText: { fontFamily: "Poppins_700Bold", fontSize: 11 },
+  rangeWrap: { marginBottom: 16 },
+  rangeTrack: {
+    height: 8, borderRadius: 4, backgroundColor: "rgba(255,255,255,0.1)",
+    overflow: "visible", justifyContent: "center",
+  },
+  idealBand: {
+    position: "absolute", top: 0, bottom: 0, borderRadius: 4,
+    backgroundColor: "rgba(34,197,94,0.35)",
+  },
+  rangeMarker: {
+    position: "absolute", width: 14, height: 14, borderRadius: 7,
+    borderWidth: 2, borderColor: "white", top: -3,
+  },
+  rangeLabels: {
+    flexDirection: "row", justifyContent: "space-between", marginTop: 6,
+  },
+  rangeLabelText: {
+    fontFamily: "Poppins_500Medium", fontSize: 10, color: "rgba(255,255,255,0.4)",
+  },
+  sheetDescription: {
+    fontFamily: "Poppins_500Medium", fontSize: 13, lineHeight: 19, color: "rgba(255,255,255,0.75)",
+    marginBottom: 16,
+  },
+  sheetFooter: {
+    flexDirection: "row", alignItems: "center", gap: 6,
+    borderTopWidth: 1, borderTopColor: "rgba(255,255,255,0.1)", paddingTop: 12,
+  },
+  sheetFooterText: {
+    fontFamily: "Poppins_500Medium", fontSize: 11, color: "rgba(255,255,255,0.45)",
   },
 });

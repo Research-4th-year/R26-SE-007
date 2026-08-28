@@ -9,6 +9,7 @@ import {
   TextInput,
   Modal,
   FlatList,
+  Image,
 } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -220,24 +221,44 @@ export default function FertilizerGuideScreen() {
                 <Text style={styles.resultHeader}>Total Requirements</Text>
               </View>
               
-              <View style={styles.metricRow}>
-                <View style={[styles.metricItem, { backgroundColor: "#F0F9FF" }]}>
-                  <Text style={styles.metricLabel}>Urea</Text>
-                  <Text style={[styles.metricValue, { color: "#0284C7" }]}>
-                    {(durationData.total.urea * multiplier).toFixed(1)} kg
-                  </Text>
+              <View style={{ gap: 12 }}>
+                <View style={[styles.metricItem, { width: "100%", backgroundColor: "#F0F9FF", flexDirection: "row", alignItems: "center" }]}>
+                  <View style={{ backgroundColor: "white", padding: 8, borderRadius: 12, marginRight: 15, shadowColor: "#0284C7", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 2 }}>
+                    <Image source={require("../../assets/farming-icons/fertilizer.png")} style={{ width: 35, height: 35 }} resizeMode="contain" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.metricLabel}>Urea</Text>
+                    <Text style={[styles.metricValue, { color: "#0284C7" }]}>
+                      {(durationData.total.urea * multiplier).toFixed(1)} kg
+                    </Text>
+                  </View>
+                  <Ionicons name="water" size={24} color="#0284C7" style={{ opacity: 0.15 }} />
                 </View>
-                <View style={[styles.metricItem, { backgroundColor: "#FFFBEB" }]}>
-                  <Text style={styles.metricLabel}>TSP</Text>
-                  <Text style={[styles.metricValue, { color: "#D97706" }]}>
-                    {(durationData.total.tsp * multiplier).toFixed(1)} kg
-                  </Text>
+
+                <View style={[styles.metricItem, { width: "100%", backgroundColor: "#FFFBEB", flexDirection: "row", alignItems: "center" }]}>
+                  <View style={{ backgroundColor: "white", padding: 8, borderRadius: 12, marginRight: 15, shadowColor: "#D97706", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 2 }}>
+                    <Image source={require("../../assets/farming-icons/fertilizer.png")} style={{ width: 35, height: 35 }} resizeMode="contain" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.metricLabel}>TSP (Triple Super Phosphate)</Text>
+                    <Text style={[styles.metricValue, { color: "#D97706" }]}>
+                      {(durationData.total.tsp * multiplier).toFixed(1)} kg
+                    </Text>
+                  </View>
+                  <Ionicons name="flask" size={24} color="#D97706" style={{ opacity: 0.15 }} />
                 </View>
-                <View style={[styles.metricItem, { backgroundColor: "#FEF2F2", marginTop: 10 }]}>
-                  <Text style={styles.metricLabel}>MOP</Text>
-                  <Text style={[styles.metricValue, { color: "#DC2626" }]}>
-                    {(durationData.total.mop * multiplier).toFixed(1)} kg
-                  </Text>
+
+                <View style={[styles.metricItem, { width: "100%", backgroundColor: "#FEF2F2", flexDirection: "row", alignItems: "center" }]}>
+                  <View style={{ backgroundColor: "white", padding: 8, borderRadius: 12, marginRight: 15, shadowColor: "#DC2626", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 2 }}>
+                    <Image source={require("../../assets/farming-icons/fertilizer.png")} style={{ width: 35, height: 35 }} resizeMode="contain" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.metricLabel}>MOP (Muriate of Potash)</Text>
+                    <Text style={[styles.metricValue, { color: "#DC2626" }]}>
+                      {(durationData.total.mop * multiplier).toFixed(1)} kg
+                    </Text>
+                  </View>
+                  <Ionicons name="leaf" size={24} color="#DC2626" style={{ opacity: 0.15 }} />
                 </View>
               </View>
 

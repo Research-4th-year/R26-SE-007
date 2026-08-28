@@ -29,7 +29,7 @@ import {
   Poppins_500Medium,
 } from "@expo-google-fonts/poppins";
 
-const API_BASE = "http://127.0.0.1:8000";
+const API_BASE = "http://192.168.133.181:8000";
 const WEEKLY_BREAKDOWN_ROUTE = "/(c04-analytics)/price-forecasting/weekly-breakdown";
 
 const { width: screenWidth } = Dimensions.get("window");

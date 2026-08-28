@@ -127,10 +127,46 @@ export default function VarietyPredictionScreen() {
     Iron_Toxicity_Prone: "No",
     field_id: "field_001",
     Irrigation: "Irrigated",
-    Cultivation_Date: new Date()
+    Cultivation_Date: new Date(),
+    useFirebase: false
   });
 
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [envData, setEnvData] = useState<any>(null);
+  const [fetchingData, setFetchingData] = useState(false);
+
+  // Fetch Environmental Data automatically when coordinates or IoT switch changes
+  useEffect(() => {
+    const fetchEnvData = async () => {
+      setFetchingData(true);
+      setError(null);
+      try {
+        const response = await fetch(`${API_URL}/api/environment_data`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            lat: parseFloat(formData.lat) || 8.3114,
+            lon: parseFloat(formData.lon) || 80.4037,
+            use_firebase: formData.useFirebase,
+            field_id: formData.field_id
+          }),
+        });
+        if (!response.ok) throw new Error('Failed to fetch environmental data');
+        const data = await response.json();
+        setEnvData(data);
+      } catch (err: any) {
+        console.error("Auto-fetch error:", err.message);
+      } finally {
+        setFetchingData(false);
+      }
+    };
+
+    const timeoutId = setTimeout(() => {
+      fetchEnvData();
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [formData.lat, formData.lon, formData.useFirebase, formData.field_id]);
 
   const findClosestLocation = (lat: number, lon: number) => {
     let bestMatch = null;
@@ -256,7 +292,7 @@ export default function VarietyPredictionScreen() {
       setResult(varData);
 
       const suitRes = await fetch(
-        `${API_URL}/predict_suitability?field_id=${formData.field_id}&lat=${formData.lat}&lon=${formData.lon}`
+        `${API_URL}/predict_suitability?field_id=${formData.field_id}&lat=${formData.lat}&lon=${formData.lon}&use_firebase=${formData.useFirebase}`
       );
       if (!suitRes.ok) throw new Error("Could not fetch IoT Field Status. Please check field ID.");
       const suitData = await suitRes.json();
@@ -431,6 +467,45 @@ export default function VarietyPredictionScreen() {
                 placeholder="E.g., field_001"
               />
             </View>
+
+            <TouchableOpacity 
+              style={[styles.inputBox, { marginBottom: 15, marginTop: 10, justifyContent: 'flex-start' }]} 
+              onPress={() => setFormData({...formData, useFirebase: !formData.useFirebase})}
+            >
+              <Ionicons 
+                name={formData.useFirebase ? "checkbox" : "square-outline"} 
+                size={24} 
+                color={formData.useFirebase ? "#10b981" : "#9CA3AF"} 
+              />
+              <Text style={[styles.label, { marginBottom: 0, marginLeft: 10 }]}>Data Get From IoT Device</Text>
+            </TouchableOpacity>
+
+            {envData && (
+              <View style={{ backgroundColor: "#F0FDF4", padding: 15, borderRadius: 12, borderWidth: 1, borderColor: "#A7F3D0", marginBottom: 20 }}>
+                <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 15 }}>
+                  <Text style={{ fontFamily: "Poppins_600SemiBold", fontSize: 14, color: "#059669" }}>Live Environmental Factors</Text>
+                  {fetchingData && <ActivityIndicator size="small" color="#10b981" />}
+                </View>
+                
+                <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between" }}>
+                  <View style={{ width: "48%", backgroundColor: "rgba(255,255,255,0.6)", padding: 12, borderRadius: 8, borderWidth: 1, borderColor: "rgba(167,243,208,0.5)" }}>
+                    <Text style={{ fontFamily: "Poppins_500Medium", fontSize: 12, color: "#64748B" }}>Temp</Text>
+                    <Text style={{ fontFamily: "Poppins_600SemiBold", fontSize: 16, color: "#0F172A" }}>{envData.Temperature_C?.toFixed(2)}°C</Text>
+                  </View>
+                  <View style={{ width: "48%", backgroundColor: "rgba(255,255,255,0.6)", padding: 12, borderRadius: 8, borderWidth: 1, borderColor: "rgba(167,243,208,0.5)" }}>
+                    <Text style={{ fontFamily: "Poppins_500Medium", fontSize: 12, color: "#64748B" }}>Humidity</Text>
+                    <Text style={{ fontFamily: "Poppins_600SemiBold", fontSize: 16, color: "#0F172A" }}>{envData.Humidity?.toFixed(2)}%</Text>
+                  </View>
+                  <View style={{ width: "100%", backgroundColor: "rgba(255,255,255,0.6)", padding: 12, borderRadius: 8, borderWidth: 1, borderColor: "rgba(167,243,208,0.5)", marginTop: 10 }}>
+                    <Text style={{ fontFamily: "Poppins_500Medium", fontSize: 12, color: "#64748B" }}>Soil Moisture</Text>
+                    <Text style={{ fontFamily: "Poppins_600SemiBold", fontSize: 16, color: "#0F172A" }}>{envData.Soil_Moisture?.toFixed(2)} m³/m³</Text>
+                  </View>
+                </View>
+                <Text style={{ fontFamily: "Poppins_400Regular", fontSize: 11, color: "#94A3B8", textAlign: "center", marginTop: 15 }}>
+                  {formData.useFirebase ? 'Fetched directly from IoT Device' : 'Fetched from 14-day Weather Forecast'}
+                </Text>
+              </View>
+            )}
 
             <TouchableOpacity 
               style={styles.primaryBtn} 

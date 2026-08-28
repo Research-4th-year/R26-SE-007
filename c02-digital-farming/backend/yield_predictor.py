@@ -77,24 +77,26 @@ def load_model():
     with open(MODEL_PATH, 'rb') as f:
         return pickle.load(f)
 
-def predict_yield_suitability(field_id, lat, lon):
+def predict_yield_suitability(field_id, lat, lon, use_firebase=False):
     """
     Predicts yield suitability (1-5) for a given field based on real-time IoT and forecast weather.
     """
     # 1. Init Firebase and load Model
-    init_firebase()
     model = load_model()
     
     # 2. Fetch realtime IoT
-    iot_data = fetch_iot_data(field_id)
-    if not iot_data:
-        print(f"Warning: No IoT data found for field {field_id}. Using sample data.")
-        # Fallback to sample data instead of crashing
-        iot_data = {
-            'temp_mean': 28.5,
-            'humidity_mean': 75.0,
-            'soil_moisture_7': 0.35
-        }
+    iot_data = None
+    if use_firebase:
+        init_firebase()
+        iot_data = fetch_iot_data(field_id)
+        if not iot_data:
+            print(f"Warning: No IoT data found for field {field_id}. Using sample data.")
+            # Fallback to sample data instead of crashing
+            iot_data = {
+                'temp_mean': 28.5,
+                'humidity_mean': 75.0,
+                'soil_moisture_7': 0.35
+            }
     
     # 3. Fetch Forecast Weather
     forecast_data = fetch_forecast_weather(lat, lon)
@@ -104,9 +106,14 @@ def predict_yield_suitability(field_id, lat, lon):
     # 4. Combine Features
     # We mix realtime and forecast to get an "overall" current state.
     # In a real system, you might weight these differently.
-    combined_temp = (iot_data['temp_mean'] + forecast_data['forecast_temp_mean']) / 2
-    combined_hum = (iot_data['humidity_mean'] + forecast_data['forecast_humidity_mean']) / 2
-    combined_moisture = iot_data['soil_moisture_7'] # Use realtime soil moisture
+    if iot_data:
+        combined_temp = (iot_data['temp_mean'] + forecast_data['forecast_temp_mean']) / 2
+        combined_hum = (iot_data['humidity_mean'] + forecast_data['forecast_humidity_mean']) / 2
+        combined_moisture = iot_data['soil_moisture_7'] # Use realtime soil moisture
+    else:
+        combined_temp = forecast_data['forecast_temp_mean']
+        combined_hum = forecast_data['forecast_humidity_mean']
+        combined_moisture = 0.35 # Default fallback
     
     # Create input vector matching the training features
     X_input = np.array([[combined_temp, combined_hum, combined_moisture]])
