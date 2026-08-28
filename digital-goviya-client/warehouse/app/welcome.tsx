@@ -26,23 +26,28 @@ import {
   Poppins_600SemiBold,
   Poppins_500Medium,
 } from "@expo-google-fonts/poppins";
+import {
+  useLanguage,
+} from "@/contexts/LanguageContext";
 
 const { width } = Dimensions.get("window");
 
 const LOGO = require("../assets/logo.png");
 
-type LangCode = "en" | "si" | "ta";
-
-const LANGUAGES: { code: LangCode; label: string; native: string }[] = [
-  { code: "en", label: "English", native: "EN" },
-  { code: "si", label: "Sinhala", native: "සිං" },
-  { code: "ta", label: "Tamil", native: "தமி" },
+const LANGUAGES = [
+  {
+    code: "en" as const,
+    label: "English",
+    native: "EN",
+  },
+  {
+    code: "si" as const,
+    label: "සිංහල",
+    native: "සිං",
+  },
 ];
 
-// ---------------------------------------------------------
-// Hero backdrop — sunrise over a paddy field, sits behind
-// the content and fades into the white sheet below.
-// ---------------------------------------------------------
+
 function PaddyBackdrop() {
   const h = 350;
   return (
@@ -92,7 +97,11 @@ function PaddyBackdrop() {
 }
 
 export default function WelcomeScreen() {
-  const [language, setLanguage] = useState<LangCode>("en");
+const {
+  language,
+  setLanguage,
+  t,
+} = useLanguage();
 
   const [fontsLoaded] = useFonts({
     Poppins_800ExtraBold,
@@ -139,53 +148,74 @@ export default function WelcomeScreen() {
             <Animated.View style={{ transform: [{ scale: logoScale }] }}>
               <View style={styles.logoRing}>
                 <View style={styles.logoCircle}>
-                  <Image source={LOGO} style={styles.logoImage} resizeMode="contain" />
+                  <Image
+                    source={LOGO}
+                    style={styles.logoImage}
+                    resizeMode="contain"
+                  />
                 </View>
               </View>
             </Animated.View>
 
             <Animated.View
-              style={{ opacity: fade, transform: [{ translateY: rise }], alignItems: "center" }}
+              style={{
+                opacity: fade,
+                transform: [{ translateY: rise }],
+                alignItems: "center",
+              }}
             >
               <View style={styles.eyebrowPill}>
                 <Ionicons name="sparkles" size={11} color="#F5C542" />
-                <Text style={styles.eyebrow}>SMART AGRICULTURE PLATFORM</Text>
+                <Text style={styles.eyebrow}>{t.welcome.eyebrow}</Text>
               </View>
 
-              <Text style={styles.title}>Digital Goviya</Text>
-              <Text style={styles.slogan}>Smart Paddy Management System</Text>
+              <Text style={styles.title}>{t.welcome.title}</Text>
+              <Text style={styles.slogan}>{t.welcome.slogan}</Text>
             </Animated.View>
           </View>
         </View>
 
         {/* Bottom sheet */}
         <Animated.View
-          style={[styles.sheet, { opacity: fade, transform: [{ translateY: rise }] }]}
+          style={[
+            styles.sheet,
+            { opacity: fade, transform: [{ translateY: rise }] },
+          ]}
         >
           <View style={styles.sheetHandle} />
 
           <View style={styles.featureRow}>
-            <FeatureItem icon="business-outline" label="Warehouse" />
-            <FeatureItem icon="leaf-outline" label="Farming" />
-            <FeatureItem icon="storefront-outline" label="Market" />
-            <FeatureItem icon="trending-up-outline" label="Forecast" />
+            <FeatureItem icon="business-outline" label={t.welcome.warehouse} />
+
+            <FeatureItem icon="leaf-outline" label={t.welcome.farming} />
+
+            <FeatureItem icon="storefront-outline" label={t.welcome.market} />
+
+            <FeatureItem
+              icon="trending-up-outline"
+              label={t.welcome.forecast}
+            />
           </View>
 
-          <TouchableOpacity activeOpacity={0.9} onPress={handleGetStarted} style={styles.ctaShadow}>
+          <TouchableOpacity
+            activeOpacity={0.9}
+            onPress={handleGetStarted}
+            style={styles.ctaShadow}
+          >
             <LinearGradient
               colors={["#F5C542", "#D97706"]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={styles.getStartedBtn}
             >
-              <Text style={styles.getStartedText}>Get Started</Text>
+              <Text style={styles.getStartedText}>{t.welcome.getStarted}</Text>
               <Ionicons name="arrow-forward" size={18} color="#0B3B22" />
             </LinearGradient>
           </TouchableOpacity>
 
           {/* Language selector */}
           <View style={styles.languageSection}>
-            <Text style={styles.languageLabel}>Choose your language</Text>
+            <Text style={styles.languageLabel}>{t.welcome.chooseLanguage}</Text>
             <View style={styles.languageRow}>
               {LANGUAGES.map((lang) => {
                 const active = language === lang.code;
@@ -196,26 +226,42 @@ export default function WelcomeScreen() {
                     onPress={() => setLanguage(lang.code)}
                     activeOpacity={0.85}
                   >
-                    <Text style={[styles.langNative, active && styles.langNativeActive]}>
+                    <Text
+                      style={[
+                        styles.langNative,
+                        active && styles.langNativeActive,
+                      ]}
+                    >
                       {lang.native}
                     </Text>
-                    <Text style={[styles.langLabel, active && styles.langLabelActive]}>
+                    <Text
+                      style={[
+                        styles.langLabel,
+                        active && styles.langLabelActive,
+                      ]}
+                    >
                       {lang.label}
                     </Text>
                     {active && (
                       <View style={styles.langCheck}>
-                        <Ionicons name="checkmark-circle" size={14} color="#15803D" />
+                        <Ionicons
+                          name="checkmark-circle"
+                          size={14}
+                          color="#15803D"
+                        />
                       </View>
                     )}
                   </TouchableOpacity>
                 );
               })}
             </View>
-            <Text style={styles.languageHint}>You can change this anytime in Settings</Text>
+            <Text style={styles.languageHint}>{t.welcome.languageHint}</Text>
           </View>
         </Animated.View>
 
-        <Text style={styles.footer}>Digital Goviya v1.0 · SLIIT Research 2026</Text>
+        <Text style={styles.footer}>
+          Digital Goviya v1.0 · SLIIT Research 2026
+        </Text>
       </SafeAreaView>
     </View>
   );

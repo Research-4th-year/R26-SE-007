@@ -1,9 +1,21 @@
-const express = require('express');
-const { registerMiller } = require('../controllers/miller.controller');
+const express = require("express");
+
+const {
+  getMillerProfile,
+  updateMillerProfile,
+} = require("../controllers/miller.controller");
+
+const {
+  authenticate,
+  authorizeRoles,
+} = require("../middlewares/auth.middleware");
 
 const router = express.Router();
 
-//Miller registration route
-router.post("/register", registerMiller);
+router.use(authenticate);
+router.use(authorizeRoles("miller"));
+
+router.get("/me", getMillerProfile);
+router.patch("/me", updateMillerProfile);
 
 module.exports = router;

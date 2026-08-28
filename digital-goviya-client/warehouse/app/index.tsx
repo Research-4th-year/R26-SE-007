@@ -6,7 +6,7 @@ export default function IndexScreen() {
   useEffect(() => {
     // Defer navigation until Root Layout <Stack> is mounted
     const timer = setTimeout(() => {
-      router.replace("/welcome");
+      router.replace("/splash-screen");
     }, 0);
     return () => clearTimeout(timer);
   }, []);

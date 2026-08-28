@@ -1,4 +1,3 @@
-import { SafeAreaView } from "react-native-safe-area-context";
 import { useState, useRef, useEffect, useMemo } from "react";
 import {
   View,
@@ -9,12 +8,10 @@ import {
   Modal,
   FlatList,
   ScrollView,
-  Platform,
 } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import DateTimePicker from "@react-native-community/datetimepicker";
 import {
   useFonts,
   Poppins_800ExtraBold,
@@ -22,26 +19,40 @@ import {
   Poppins_600SemiBold,
   Poppins_500Medium,
 } from "@expo-google-fonts/poppins";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useLanguage } from "@/contexts/LanguageContext";
 
+const RESULT_ROUTE =
+  "/(c04-analytics)/price-forecasting/forecast-result";
 
-const RESULT_ROUTE = "/(c04-analytics)/price-forecasting/forecast-result";
+const DISTRICTS = [
+  "Ampara",
+  "Anuradhapura",
+  "Polonnaruwa",
+  "Kurunagala",
+];
 
-const DISTRICTS = ["Ampara", "Anuradhapura", "Polonnaruwa", "Kurunagala"];
 const WEEK_OPTIONS = [1, 2, 3, 4, 5, 6];
-const MAX_FORECAST_DAYS = 30;
 
 function formatDate(d: Date) {
-  return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+  return d.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
 }
 
 function toApiDate(d: Date) {
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, "0");
   const day = String(d.getDate()).padStart(2, "0");
+
   return `${y}-${m}-${day}`;
 }
 
 export default function ForecastInputScreen() {
+  const { t } = useLanguage();
+  
   const [fontsLoaded] = useFonts({
     Poppins_800ExtraBold,
     Poppins_700Bold,
@@ -50,65 +61,55 @@ export default function ForecastInputScreen() {
   });
 
   const [district, setDistrict] = useState<string | null>(null);
-  const [date, setDate] = useState<Date | null>(null);
+
+  // Automatically set the start date to today's date.
+  // The user cannot change this date.
+  const [date] = useState<Date>(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return today;
+  });
+
   const [weeks, setWeeks] = useState<number | null>(null);
   const [districtModalOpen, setDistrictModalOpen] = useState(false);
-  const [showDatePicker, setShowDatePicker] = useState(false);
-
-  const isWeb = Platform.OS === "web";
-
-  const today = useMemo(() => {
-    const t = new Date();
-    t.setHours(0, 0, 0, 0);
-    return t;
-  }, []);
-  const maxDate = useMemo(() => {
-    const m = new Date(today);
-    m.setDate(m.getDate() + MAX_FORECAST_DAYS);
-    return m;
-  }, [today]);
 
   const fade = useRef(new Animated.Value(0)).current;
   const rise = useRef(new Animated.Value(16)).current;
 
   useEffect(() => {
     if (!fontsLoaded) return;
+
     Animated.parallel([
-      Animated.timing(fade, { toValue: 1, duration: 450, useNativeDriver: true }),
-      Animated.timing(rise, { toValue: 0, duration: 450, useNativeDriver: true }),
+      Animated.timing(fade, {
+        toValue: 1,
+        duration: 450,
+        useNativeDriver: true,
+      }),
+      Animated.timing(rise, {
+        toValue: 0,
+        duration: 450,
+        useNativeDriver: true,
+      }),
     ]).start();
   }, [fontsLoaded]);
 
   if (!fontsLoaded) return null;
 
-  const isValid = !!district && !!date && !!weeks;
+  // Date is automatically available, so only district and weeks
+  // are required from the user.
+  const isValid = !!district && !!weeks;
 
   const handleGenerate = () => {
-    if (!isValid || !date || !district || !weeks) return;
+    if (!isValid || !district || !weeks) return;
+
     router.push({
       pathname: RESULT_ROUTE as any,
-      params: { district, date: toApiDate(date), weeks: String(weeks) },
+      params: {
+        district,
+        date: toApiDate(date),
+        weeks: String(weeks),
+      },
     });
-  };
-
-  const handleDateChange = (_event: any, selected?: Date) => {
-    if (selected) {
-      setDate(selected);
-      if (Platform.OS !== "ios") setShowDatePicker(false);
-    }
-  };
-
-  const handleWebDateChange = (event: any) => {
-    const value = event.target.value;
-    if (!value) return;
-
-    const [year, month, day] = value.split("-").map(Number);
-    const selected = new Date(year, month - 1, day);
-
-    if (!Number.isNaN(selected.getTime())) {
-      setDate(selected);
-      setShowDatePicker(false);
-    }
   };
 
   return (
@@ -125,24 +126,51 @@ export default function ForecastInputScreen() {
         <View style={styles.hero}>
           <TouchableOpacity
             style={styles.backBtn}
-            onPress={() => router.back()}
+            onPress={() => {
+              if (router.canGoBack()) {
+                router.back();
+              } else {
+                router.replace(
+                  "/(c04-analytics)/home" as any
+                );
+              }
+            }}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
-            <Ionicons name="chevron-back" size={20} color="white" />
+            <Ionicons
+              name="chevron-back"
+              size={20}
+              color="white"
+            />
           </TouchableOpacity>
 
           <View style={styles.eyebrowPill}>
-            <Ionicons name="trending-up" size={11} color="#F5C542" />
-            <Text style={styles.eyebrow}>PRICE FORECAST</Text>
+            <Ionicons
+              name="trending-up"
+              size={11}
+              color="#F5C542"
+            />
+            <Text style={styles.eyebrow}> {t.forecastInput.eyebrow} </Text>
           </View>
 
-          <Text style={styles.heroTitle}>See Where Prices{"\n"}Are Headed</Text>
-          <Text style={styles.heroSub}>Choose a district, date, and forecast length</Text>
+          <Text style={styles.heroTitle}>
+            {t.forecastInput.title}
+          </Text>
+
+          <Text style={styles.heroSub}>
+            {t.forecastInput.subtitle}
+          </Text>
         </View>
 
         {/* Sheet */}
         <Animated.View
-          style={[styles.sheet, { opacity: fade, transform: [{ translateY: rise }] }]}
+          style={[
+            styles.sheet,
+            {
+              opacity: fade,
+              transform: [{ translateY: rise }],
+            },
+          ]}
         >
           <View style={styles.sheetHandle} />
 
@@ -152,115 +180,165 @@ export default function ForecastInputScreen() {
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
           >
-            <Text style={styles.fieldLabel}>District</Text>
+            {/* District */}
+            <Text style={styles.fieldLabel}>{t.forecastInput.district}</Text>
+
             <TouchableOpacity
               style={styles.selectField}
               activeOpacity={0.8}
               onPress={() => setDistrictModalOpen(true)}
             >
               <View style={styles.selectFieldLeft}>
-                <Ionicons name="location-outline" size={18} color="#15803D" />
-                <Text style={[styles.selectFieldText, !district && styles.placeholderText]}>
-                  {district ?? "Select district"}
+                <Ionicons
+                  name="location-outline"
+                  size={18}
+                  color="#15803D"
+                />
+
+                <Text
+                  style={[
+                    styles.selectFieldText,
+                    !district && styles.placeholderText,
+                  ]}
+                >
+                  {district ?? t.forecastInput.selectDistrict}
                 </Text>
               </View>
-              <Ionicons name="chevron-down" size={18} color="#9CA3AF" />
+
+              <Ionicons
+                name="chevron-down"
+                size={18}
+                color="#9CA3AF"
+              />
             </TouchableOpacity>
 
-            <Text style={[styles.fieldLabel, { marginTop: 18 }]}>Start Date</Text>
-            <TouchableOpacity
-              style={styles.selectField}
-              activeOpacity={0.8}
-              onPress={() => setShowDatePicker(true)}
+            {/* Start Date */}
+            <Text
+              style={[
+                styles.fieldLabel,
+                { marginTop: 18 },
+              ]}
             >
-              <View style={styles.selectFieldLeft}>
-                <Ionicons name="calendar-outline" size={18} color="#15803D" />
-                <Text style={[styles.selectFieldText, !date && styles.placeholderText]}>
-                  {date ? formatDate(date) : "Select date"}
-                </Text>
-              </View>
-              <Ionicons name="chevron-down" size={18} color="#9CA3AF" />
-            </TouchableOpacity>
-            <Text style={styles.helperText}>
-              Today up to {MAX_FORECAST_DAYS} days ahead ({formatDate(maxDate)})
+              {t.forecastInput.startDate}
             </Text>
 
-            {showDatePicker && isWeb ? (
-              <View style={styles.webPickerWrap}>
-                <Text style={styles.webPickerLabel}>Choose a date</Text>
-                <input
-                  type="date"
-                  value={date ? toApiDate(date) : ""}
-                  min={toApiDate(today)}
-                  max={toApiDate(maxDate)}
-                  onChange={handleWebDateChange}
-                  style={{
-                    width: "100%",
-                    padding: "10px 12px",
-                    borderRadius: 10,
-                    border: "1px solid #D1D5DB",
-                    fontSize: 14,
-                    fontFamily: "Poppins, sans-serif",
-                    color: "#111827",
-                    backgroundColor: "#fff",
-                  }}
+            {/* Read-only date field */}
+            <View style={styles.selectField}>
+              <View style={styles.selectFieldLeft}>
+                <Ionicons
+                  name="calendar-outline"
+                  size={18}
+                  color="#15803D"
                 />
-              </View>
-            ) : showDatePicker ? (
-              <DateTimePicker
-                value={date ?? today}
-                mode="date"
-                display={Platform.OS === "ios" ? "inline" : "default"}
-                minimumDate={today}
-                maximumDate={maxDate}
-                onChange={handleDateChange}
-                {...(Platform.OS === "ios" ? { themeVariant: "light" } : {})}
-              />
-            ) : null}
 
-            <Text style={[styles.fieldLabel, { marginTop: 18 }]}>Forecast Length</Text>
+                <Text style={styles.selectFieldText}>
+                  {formatDate(date)}
+                </Text>
+              </View>
+
+              {/* Lock icon instead of date picker arrow */}
+              <Ionicons
+                name="lock-closed-outline"
+                size={16}
+                color="#9CA3AF"
+              />
+            </View>
+
+            <Text style={styles.helperText}>
+              {t.forecastInput.startDateHelper}
+            </Text>
+
+            {/* Forecast Length */}
+            <Text
+              style={[
+                styles.fieldLabel,
+                { marginTop: 18 },
+              ]}
+            >
+              {t.forecastInput.forecastLength}
+            </Text>
+
             <View style={styles.weeksGrid}>
               {WEEK_OPTIONS.map((w) => {
                 const active = weeks === w;
+
                 return (
                   <TouchableOpacity
                     key={w}
-                    style={[styles.weekChip, active && styles.weekChipActive]}
+                    style={[
+                      styles.weekChip,
+                      active && styles.weekChipActive,
+                    ]}
                     onPress={() => setWeeks(w)}
                     activeOpacity={0.85}
                   >
-                    <Text style={[styles.weekChipNumber, active && styles.weekChipNumberActive]}>
+                    <Text
+                      style={[
+                        styles.weekChipNumber,
+                        active &&
+                          styles.weekChipNumberActive,
+                      ]}
+                    >
                       {w}
                     </Text>
-                    <Text style={[styles.weekChipLabel, active && styles.weekChipLabelActive]}>
-                      {w === 1 ? "Week" : "Weeks"}
+
+                    <Text
+                      style={[
+                        styles.weekChipLabel,
+                        active &&
+                          styles.weekChipLabelActive,
+                      ]}
+                    >
+                      {w === 1 ? t.forecastInput.week : t.forecastInput.weeks}
                     </Text>
                   </TouchableOpacity>
                 );
               })}
             </View>
 
+            {/* Note */}
             <View style={styles.noteBanner}>
-              <Ionicons name="leaf" size={16} color="#B45309" />
-              <Text style={styles.noteText}>Long Grain White Paddy</Text>
+              <Ionicons
+                name="leaf"
+                size={16}
+                color="#B45309"
+              />
+
+              <Text style={styles.noteText}>
+                {t.forecastInput.paddyType}
+              </Text>
             </View>
           </ScrollView>
 
+          {/* Generate Button */}
           <TouchableOpacity
-            style={[styles.primaryBtnShadow, !isValid && styles.disabledShadow]}
+            style={[
+              styles.primaryBtnShadow,
+              !isValid && styles.disabledShadow,
+            ]}
             activeOpacity={isValid ? 0.9 : 1}
             onPress={handleGenerate}
             disabled={!isValid}
           >
             <LinearGradient
-              colors={isValid ? ["#F5C542", "#D97706"] : ["#E5E7EB", "#D1D5DB"]}
+              colors={
+                isValid
+                  ? ["#F5C542", "#D97706"]
+                  : ["#E5E7EB", "#D1D5DB"]
+              }
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={styles.primaryBtn}
             >
-              <Text style={[styles.primaryBtnText, !isValid && styles.disabledBtnText]}>
-                Generate Forecast
+              <Text
+                style={[
+                  styles.primaryBtnText,
+                  !isValid && styles.disabledBtnText,
+                ]}
+              >
+                {t.forecastInput.generateForecast}
               </Text>
+
               <Ionicons
                 name="arrow-forward"
                 size={18}
@@ -271,38 +349,66 @@ export default function ForecastInputScreen() {
         </Animated.View>
       </SafeAreaView>
 
-      {/* District picker modal */}
+      {/* District Picker Modal */}
       <Modal
         visible={districtModalOpen}
         animationType="slide"
         transparent
-        onRequestClose={() => setDistrictModalOpen(false)}
+        onRequestClose={() =>
+          setDistrictModalOpen(false)
+        }
       >
         <TouchableOpacity
           style={styles.modalOverlay}
           activeOpacity={1}
-          onPress={() => setDistrictModalOpen(false)}
+          onPress={() =>
+            setDistrictModalOpen(false)
+          }
         >
-          <TouchableOpacity activeOpacity={1} style={styles.modalCard}>
+          <TouchableOpacity
+            activeOpacity={1}
+            style={styles.modalCard}
+          >
             <View style={styles.sheetHandle} />
-            <Text style={styles.modalTitle}>Select District</Text>
+
+            <Text style={styles.modalTitle}>
+              {t.forecastInput.selectDistrictTitle}
+            </Text>
+
             <FlatList
               data={DISTRICTS}
               keyExtractor={(item) => item}
               renderItem={({ item }) => {
                 const active = item === district;
+
                 return (
                   <TouchableOpacity
-                    style={[styles.modalItem, active && styles.modalItemActive]}
+                    style={[
+                      styles.modalItem,
+                      active && styles.modalItemActive,
+                    ]}
                     onPress={() => {
                       setDistrict(item);
                       setDistrictModalOpen(false);
                     }}
                   >
-                    <Text style={[styles.modalItemText, active && styles.modalItemTextActive]}>
+                    <Text
+                      style={[
+                        styles.modalItemText,
+                        active &&
+                          styles.modalItemTextActive,
+                      ]}
+                    >
                       {item}
                     </Text>
-                    {active && <Ionicons name="checkmark-circle" size={18} color="#15803D" />}
+
+                    {active && (
+                      <Ionicons
+                        name="checkmark-circle"
+                        size={18}
+                        color="#15803D"
+                      />
+                    )}
                   </TouchableOpacity>
                 );
               }}
@@ -315,9 +421,22 @@ export default function ForecastInputScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: "#0B3B22" },
-  heroBg: { position: "absolute", top: 0, left: 0, right: 0, height: 240 },
-  safe: { flex: 1 },
+  screen: {
+    flex: 1,
+    backgroundColor: "#0B3B22",
+  },
+
+  heroBg: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 240,
+  },
+
+  safe: {
+    flex: 1,
+  },
 
   hero: {
     paddingTop: 8,
@@ -326,6 +445,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 10,
   },
+
   backBtn: {
     alignSelf: "flex-start",
     width: 34,
@@ -336,6 +456,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginBottom: 4,
   },
+
   eyebrowPill: {
     flexDirection: "row",
     alignItems: "center",
@@ -347,12 +468,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(245,197,66,0.25)",
   },
+
   eyebrow: {
     color: "rgba(253,230,138,0.85)",
     fontSize: 9.5,
     fontFamily: "Poppins_600SemiBold",
     letterSpacing: 1.4,
   },
+
   heroTitle: {
     color: "white",
     fontSize: 23,
@@ -361,6 +484,7 @@ const styles = StyleSheet.create({
     lineHeight: 29,
     marginTop: 2,
   },
+
   heroSub: {
     color: "rgba(255,255,255,0.65)",
     fontSize: 12.5,
@@ -379,9 +503,13 @@ const styles = StyleSheet.create({
     shadowColor: "#000",
     shadowOpacity: 0.15,
     shadowRadius: 16,
-    shadowOffset: { width: 0, height: -6 },
+    shadowOffset: {
+      width: 0,
+      height: -6,
+    },
     elevation: 10,
   },
+
   sheetHandle: {
     width: 40,
     height: 4,
@@ -390,9 +518,11 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     marginBottom: 16,
   },
+
   sheetScroll: {
     flex: 1,
   },
+
   sheetScrollContent: {
     flexGrow: 1,
     paddingBottom: 8,
@@ -406,6 +536,7 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
     marginBottom: 8,
   },
+
   selectField: {
     flexDirection: "row",
     alignItems: "center",
@@ -417,32 +548,29 @@ const styles = StyleSheet.create({
     borderWidth: 1.4,
     borderColor: "#E5E7EB",
   },
-  selectFieldLeft: { flexDirection: "row", alignItems: "center", gap: 10 },
+
+  selectFieldLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+
   selectFieldText: {
     fontSize: 14,
     fontFamily: "Poppins_600SemiBold",
     color: "#1F2937",
   },
-  placeholderText: { color: "#9CA3AF", fontFamily: "Poppins_500Medium" },
+
+  placeholderText: {
+    color: "#9CA3AF",
+    fontFamily: "Poppins_500Medium",
+  },
+
   helperText: {
     fontSize: 11,
     color: "#9CA3AF",
     marginTop: 6,
     fontFamily: "Poppins_500Medium",
-  },
-  webPickerWrap: {
-    marginTop: 10,
-    padding: 12,
-    borderRadius: 12,
-    backgroundColor: "#F9FAFB",
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-  },
-  webPickerLabel: {
-    fontSize: 12,
-    fontFamily: "Poppins_600SemiBold",
-    color: "#6B7280",
-    marginBottom: 8,
   },
 
   weeksGrid: {
@@ -450,6 +578,7 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     gap: 8,
   },
+
   weekChip: {
     width: "30%",
     alignItems: "center",
@@ -460,23 +589,32 @@ const styles = StyleSheet.create({
     borderWidth: 1.4,
     borderColor: "#E5E7EB",
   },
+
   weekChipActive: {
     backgroundColor: "#F0FDF4",
     borderColor: "#15803D",
   },
+
   weekChipNumber: {
     fontSize: 17,
     fontFamily: "Poppins_800ExtraBold",
     color: "#374151",
   },
-  weekChipNumberActive: { color: "#15803D" },
+
+  weekChipNumberActive: {
+    color: "#15803D",
+  },
+
   weekChipLabel: {
     fontSize: 10.5,
     fontFamily: "Poppins_500Medium",
     color: "#9CA3AF",
     marginTop: 1,
   },
-  weekChipLabelActive: { color: "#15803D" },
+
+  weekChipLabelActive: {
+    color: "#15803D",
+  },
 
   noteBanner: {
     flexDirection: "row",
@@ -487,6 +625,7 @@ const styles = StyleSheet.create({
     padding: 12,
     marginTop: 20,
   },
+
   noteText: {
     fontSize: 12.5,
     color: "#92400E",
@@ -498,11 +637,19 @@ const styles = StyleSheet.create({
     shadowColor: "#D97706",
     shadowOpacity: 0.3,
     shadowRadius: 10,
-    shadowOffset: { width: 0, height: 5 },
+    shadowOffset: {
+      width: 0,
+      height: 5,
+    },
     elevation: 5,
     marginTop: 16,
   },
-  disabledShadow: { shadowOpacity: 0, elevation: 0 },
+
+  disabledShadow: {
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+
   primaryBtn: {
     flexDirection: "row",
     alignItems: "center",
@@ -511,18 +658,23 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     paddingVertical: 16,
   },
+
   primaryBtnText: {
     color: "#0B3B22",
     fontSize: 15.5,
     fontFamily: "Poppins_700Bold",
   },
-  disabledBtnText: { color: "#9CA3AF" },
+
+  disabledBtnText: {
+    color: "#9CA3AF",
+  },
 
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(11,59,34,0.45)",
     justifyContent: "flex-end",
   },
+
   modalCard: {
     backgroundColor: "white",
     borderTopLeftRadius: 24,
@@ -532,6 +684,7 @@ const styles = StyleSheet.create({
     paddingBottom: 28,
     maxHeight: "60%",
   },
+
   modalTitle: {
     fontSize: 15,
     fontFamily: "Poppins_700Bold",
@@ -539,6 +692,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     textAlign: "center",
   },
+
   modalItem: {
     flexDirection: "row",
     alignItems: "center",
@@ -547,11 +701,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     borderRadius: 12,
   },
-  modalItemActive: { backgroundColor: "#F0FDF4" },
+
+  modalItemActive: {
+    backgroundColor: "#F0FDF4",
+  },
+
   modalItemText: {
     fontSize: 14.5,
     fontFamily: "Poppins_500Medium",
     color: "#374151",
   },
-  modalItemTextActive: { color: "#15803D", fontFamily: "Poppins_700Bold" },
+
+  modalItemTextActive: {
+    color: "#15803D",
+    fontFamily: "Poppins_700Bold",
+  },
 });

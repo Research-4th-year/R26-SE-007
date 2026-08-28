@@ -18,14 +18,13 @@ import {
   Poppins_600SemiBold,
   Poppins_500Medium,
 } from "@expo-google-fonts/poppins";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const LOGO = require("../assets/logo.png");
 
 const COMPONENTS = [
   {
     id: "warehouse",
-    title: "Warehouse Management",
-    desc: "PMB paddy warehouse coordination & blockchain audit",
     icon: "business",
     color: "#15803D",
     bg: "#DCFCE7",
@@ -34,8 +33,6 @@ const COMPONENTS = [
   },
   {
     id: "farming",
-    title: "Digital Farming",
-    desc: "Smart farming assistance and crop management",
     icon: "leaf",
     color: "#0369A1",
     bg: "#E0F2FE",
@@ -44,18 +41,14 @@ const COMPONENTS = [
   },
   {
     id: "marketplace",
-    title: "Marketplace",
-    desc: "Agricultural produce trading platform",
     icon: "storefront",
     color: "#B45309",
     bg: "#FEF3C7",
     route: "/(c03-marketplace)",
-    ready: false,
+    ready: true,
   },
   {
     id: "analytics",
-    title: "Paddy Price Forecasting",
-    desc: "Price Forecasting & Week Predictions with Explanations",
     icon: "trending-up-outline",
     color: "#7C3AED",
     bg: "#EDE9FE",
@@ -65,6 +58,7 @@ const COMPONENTS = [
 ];
 
 export default function LandingScreen() {
+  const { t } = useLanguage();
   const [fontsLoaded] = useFonts({
     Poppins_800ExtraBold,
     Poppins_600SemiBold,
@@ -98,64 +92,89 @@ export default function LandingScreen() {
         <View style={styles.hero}>
           <View style={styles.logoRing}>
             <View style={styles.logoCircle}>
-              <Image source={LOGO} style={styles.logoImage} resizeMode="contain" />
+              <Image
+                source={LOGO}
+                style={styles.logoImage}
+                resizeMode="contain"
+              />
             </View>
           </View>
 
           <View style={styles.eyebrowPill}>
             <Ionicons name="sparkles" size={11} color="#F5C542" />
-            <Text style={styles.eyebrow}>SMART AGRICULTURE PLATFORM</Text>
+            <Text style={styles.eyebrow}>{t.landing.eyebrow}</Text>
           </View>
 
-          <Text style={styles.title}>Digital Goviya</Text>
-          <Text style={styles.slogan}>Smart Agricultural Management System</Text>
+          <Text style={styles.title}>{t.landing.title}</Text>
+          <Text style={styles.slogan}>{t.landing.slogan}</Text>
         </View>
 
         {/* Bottom sheet */}
         <Animated.View
-          style={[styles.sheet, { opacity: fade, transform: [{ translateY: rise }] }]}
+          style={[
+            styles.sheet,
+            { opacity: fade, transform: [{ translateY: rise }] },
+          ]}
         >
           <View style={styles.sheetHandle} />
-          <Text style={styles.sectionLabel}>MODULES</Text>
+          <Text style={styles.sectionLabel}>{t.landing.modules}</Text>
 
           <ScrollView
             style={{ flex: 1 }}
             contentContainerStyle={styles.grid}
             showsVerticalScrollIndicator={false}
           >
-            {COMPONENTS.map((c) => (
-              <TouchableOpacity
-                key={c.id}
-                style={[styles.card, !c.ready && styles.cardDisabled]}
-                onPress={() => c.ready && router.push(c.route as any)}
-                disabled={!c.ready}
-                activeOpacity={c.ready ? 0.7 : 1}
-              >
-                <View style={[styles.iconBox, { backgroundColor: c.bg }]}>
-                  <Ionicons name={c.icon as any} size={26} color={c.color} />
-                </View>
-                <View style={styles.cardText}>
-                  <View style={styles.cardTitleRow}>
-                    <Text style={styles.cardTitle}>{c.title}</Text>
-                    {!c.ready && (
-                      <View style={styles.soonBadge}>
-                        <Text style={styles.soonText}>Soon</Text>
-                      </View>
-                    )}
+            {COMPONENTS.map((c) => {
+              const moduleTranslation =
+                t.landing[c.id as keyof typeof t.landing];
+
+              const module = moduleTranslation as {
+                title: string;
+                desc: string;
+              };
+
+              return (
+                <TouchableOpacity
+                  key={c.id}
+                  style={[styles.card, !c.ready && styles.cardDisabled]}
+                  onPress={() => c.ready && router.push(c.route as any)}
+                  disabled={!c.ready}
+                  activeOpacity={c.ready ? 0.7 : 1}
+                >
+                  <View style={[styles.iconBox, { backgroundColor: c.bg }]}>
+                    <Ionicons name={c.icon as any} size={26} color={c.color} />
                   </View>
-                  <Text style={styles.cardDesc}>{c.desc}</Text>
-                </View>
-                {c.ready && (
-                  <View style={styles.chevronCircle}>
-                    <Ionicons name="chevron-forward" size={16} color="#15803D" />
+
+                  <View style={styles.cardText}>
+                    <View style={styles.cardTitleRow}>
+                      <Text style={styles.cardTitle}>{module.title}</Text>
+
+                      {!c.ready && (
+                        <View style={styles.soonBadge}>
+                          <Text style={styles.soonText}>{t.landing.soon}</Text>
+                        </View>
+                      )}
+                    </View>
+
+                    <Text style={styles.cardDesc}>{module.desc}</Text>
                   </View>
-                )}
-              </TouchableOpacity>
-            ))}
+
+                  {c.ready && (
+                    <View style={styles.chevronCircle}>
+                      <Ionicons
+                        name="chevron-forward"
+                        size={16}
+                        color="#15803D"
+                      />
+                    </View>
+                  )}
+                </TouchableOpacity>
+              );
+            })}
           </ScrollView>
         </Animated.View>
 
-        <Text style={styles.footer}>Digital Goviya v1.0 · SLIIT Research 2026</Text>
+        <Text style={styles.footer}>{t.landing.footer}</Text>
       </SafeAreaView>
     </View>
   );
@@ -292,8 +311,8 @@ const styles = StyleSheet.create({
     gap: 8,
     marginBottom: 3,
   },
-  cardTitle: { fontSize: 14.5, fontWeight: "700", color: "#1F2937" },
-  cardDesc: { fontSize: 11.5, color: "#6B7280", lineHeight: 15 },
+  cardTitle: { fontSize: 14.5, fontWeight: "700", color: "#1F2937", lineHeight: 20 },
+  cardDesc: { fontSize: 11.5, color: "#6B7280", lineHeight: 18 },
   soonBadge: {
     backgroundColor: "#FEF3C7",
     borderRadius: 999,

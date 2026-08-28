@@ -6,8 +6,8 @@ import {
   TouchableOpacity,
   StyleSheet,
   Animated,
+  Easing,
   ScrollView,
-  ActivityIndicator,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -19,43 +19,117 @@ import {
   Poppins_600SemiBold,
   Poppins_500Medium,
 } from "@expo-google-fonts/poppins";
+import { useLanguage } from "@/contexts/LanguageContext";
 
-const API_BASE = "http://192.168.133.181:8000";
-const DETAILED_ANALYSIS_ROUTE = "/(c04-analytics)/price-prediction/detailed-analysis";
 
-type PredictionResponse = {
+const APP_LOGO = require("@/assets/logo2.png");
+
+const API_BASE = process.env.EXPO_PUBLIC_API_URL;
+const PREDICT_ENDPOINT = `${API_BASE}/prediction/explanation`;
+
+const EXPLANATION_ROUTE = "/(c04-analytics)/price-prediction/prediction-explanation";
+const ADVANCED_DETAILS_ROUTE = "/(c04-analytics)/price-prediction/detailed-analysis";
+
+
+export type PredictionSection = {
   district: string;
   date: string;
-  prediction: number;
-  trend: string;
-  confidence: string;
-  market_outlook: string;
-  recommendation: string;
-  risk_level: string;
-  summary: string;
-  top_features: { Feature: string; Value: number; Contribution: number }[];
-  reasons: string[];
+  predicted_price: number;
+  previous_price: number;
+  currency: string;
 };
 
-function chipTone(kind: "trend" | "confidence" | "risk", value: string) {
-  const v = value.toLowerCase();
-  if (kind === "trend") {
-    if (v.includes("rising") || v.includes("up")) return { bg: "#DCFCE7", fg: "#15803D", icon: "trending-up" };
-    if (v.includes("falling") || v.includes("down")) return { bg: "#FEE2E2", fg: "#DC2626", icon: "trending-down" };
-    return { bg: "#E0F2FE", fg: "#0369A1", icon: "remove-outline" };
-  }
-  if (kind === "confidence") {
-    if (v === "high") return { bg: "#DCFCE7", fg: "#15803D", icon: "shield-checkmark" };
-    if (v === "medium") return { bg: "#FEF3C7", fg: "#B45309", icon: "shield-half" };
-    return { bg: "#FEE2E2", fg: "#DC2626", icon: "shield-outline" };
-  }
-  // risk
-  if (v === "low") return { bg: "#DCFCE7", fg: "#15803D", icon: "checkmark-circle" };
-  if (v === "medium") return { bg: "#FEF3C7", fg: "#B45309", icon: "alert-circle" };
-  return { bg: "#FEE2E2", fg: "#DC2626", icon: "warning" };
+export type MarketSection = {
+  trend: string;
+  confidence: string;
+  risk_level: string;
+  outlook: string;
+  recommendation: string;
+};
+
+export type ExplanationSection = {
+  headline: string;
+  explanation: string;
+  key_factors: string[];
+  generated_by: string;
+};
+
+export type TechnicalFeature = {
+  feature: string;
+  value: number;
+  contribution: number;
+};
+
+export type TechnicalSection = {
+  top_features: TechnicalFeature[];
+  shap_reasons: string[];
+};
+
+export type PredictionApiResponse = {
+  prediction: PredictionSection;
+  market: MarketSection;
+  explanation: ExplanationSection;
+  technical: TechnicalSection;
+};
+
+function LogoLoadingState({ title, label }: { title: string; label: string }) {
+  const spin = useRef(new Animated.Value(0)).current;
+  const pulse = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    const spinLoop = Animated.loop(
+      Animated.timing(spin, {
+        toValue: 1,
+        duration: 2200,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      })
+    );
+    const pulseLoop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulse, {
+          toValue: 1.08,
+          duration: 850,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulse, {
+          toValue: 1,
+          duration: 850,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    spinLoop.start();
+    pulseLoop.start();
+    return () => {
+      spinLoop.stop();
+      pulseLoop.stop();
+    };
+  }, []);
+
+  const rotate = spin.interpolate({ inputRange: [0, 1], outputRange: ["0deg", "360deg"] });
+
+  return (
+    <View style={styles.centerState}>
+      <View style={styles.logoLoadingWrap}>
+        <Animated.View style={[styles.logoRing, { transform: [{ rotate }] }]} />
+        <Animated.Image
+          source={APP_LOGO}
+          resizeMode="contain"
+          style={[styles.logoImage, { transform: [{ scale: pulse }] }]}
+        />
+      </View>
+      <Text style={styles.centerStateTitle}>{title}</Text>
+      <Text style={styles.centerStateText}>{label}</Text>
+    </View>
+  );
 }
 
 export default function PredictionResultScreen() {
+  const { t } = useLanguage();
+  
   const { district, date } = useLocalSearchParams<{ district: string; date: string }>();
 
   const [fontsLoaded] = useFonts({
@@ -67,7 +141,7 @@ export default function PredictionResultScreen() {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<PredictionResponse | null>(null);
+  const [result, setResult] = useState<PredictionApiResponse | null>(null);
 
   const fade = useRef(new Animated.Value(0)).current;
   const rise = useRef(new Animated.Value(16)).current;
@@ -76,19 +150,19 @@ export default function PredictionResultScreen() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`${API_BASE}/predict`, {
+      const res = await fetch(PREDICT_ENDPOINT, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ district, date }),
       });
       if (!res.ok) throw new Error(`Server responded with ${res.status}`);
-      const data: PredictionResponse = await res.json();
+      const data: PredictionApiResponse = await res.json();
       setResult(data);
     } catch (e: any) {
       setError(
         e?.message === "Network request failed"
-          ? "Couldn't reach the prediction server. Check your connection and try again."
-          : "Something went wrong while getting your prediction."
+          ? t.predictionResult.error.network
+          : t.predictionResult.error.general
       );
     } finally {
       setLoading(false);
@@ -109,9 +183,25 @@ export default function PredictionResultScreen() {
 
   if (!fontsLoaded) return null;
 
-  const trendTone = result ? chipTone("trend", result.trend) : null;
-  const confTone = result ? chipTone("confidence", result.confidence) : null;
-  const riskTone = result ? chipTone("risk", result.risk_level) : null;
+  const goToExplanation = () => {
+    if (!result) return;
+    router.push({
+      pathname: EXPLANATION_ROUTE as any,
+      params: { data: JSON.stringify(result) },
+    });
+  };
+
+  const goToAdvancedDetails = () => {
+    if (!result) return;
+    router.push({
+      pathname: ADVANCED_DETAILS_ROUTE as any,
+      params: { data: JSON.stringify(result) },
+    });
+  };
+
+  const p = result?.prediction;
+  const delta = p ? p.predicted_price - p.previous_price : 0;
+  const deltaUp = delta >= 0;
 
   return (
     <View style={styles.screen}>
@@ -135,10 +225,10 @@ export default function PredictionResultScreen() {
 
           <View style={styles.eyebrowPill}>
             <Ionicons name="pricetag" size={11} color="#F5C542" />
-            <Text style={styles.eyebrow}>PREDICTION RESULT</Text>
+            <Text style={styles.eyebrow}>{t.predictionResult.eyebrow}</Text>
           </View>
 
-          <Text style={styles.heroTitle}>Today's Price Estimate</Text>
+          <Text style={styles.heroTitle}>{t.predictionResult.title}</Text>
           <Text style={styles.heroSub}>
             {district} · {date}
           </Text>
@@ -148,111 +238,105 @@ export default function PredictionResultScreen() {
         <Animated.View style={styles.sheet}>
           <View style={styles.sheetHandle} />
 
-          {loading && (
-            <View style={styles.centerState}>
-              <ActivityIndicator size="large" color="#15803D" />
-              <Text style={styles.centerStateText}>Getting your price estimate…</Text>
-            </View>
-          )}
+          {loading && 
+            <LogoLoadingState 
+              title={t.predictionResult.loading.title}
+              label={t.predictionResult.loading.message}
+            />
+          }
 
           {!loading && error && (
             <View style={styles.centerState}>
               <View style={styles.errorIconBox}>
                 <Ionicons name="cloud-offline-outline" size={30} color="#DC2626" />
               </View>
-              <Text style={styles.errorTitle}>Prediction failed</Text>
+              <Text style={styles.errorTitle}>{t.predictionResult.error.title}</Text>
               <Text style={styles.centerStateText}>{error}</Text>
               <TouchableOpacity style={styles.retryBtn} onPress={fetchPrediction} activeOpacity={0.85}>
                 <Ionicons name="refresh" size={16} color="#15803D" />
-                <Text style={styles.retryText}>Try Again</Text>
+                <Text style={styles.retryText}>{t.predictionResult.error.retry}</Text>
               </TouchableOpacity>
             </View>
           )}
 
-          {!loading && !error && result && (
+          {!loading && !error && result && p && (
             <Animated.View style={{ opacity: fade, transform: [{ translateY: rise }], flex: 1 }}>
               <ScrollView
                 style={{ flex: 1 }}
                 contentContainerStyle={styles.scrollContent}
                 showsVerticalScrollIndicator={false}
               >
-                {/* Hero price card */}
+                {/* Hero price card — Prediction section */}
                 <LinearGradient
                   colors={["#F5C542", "#D97706"]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                   style={styles.priceCard}
                 >
-                  <Text style={styles.priceLabel}>Predicted Price</Text>
+                  <Text style={styles.priceLabel}>{t.predictionResult.price.predictedPrice}</Text>
                   <View style={styles.priceRow}>
-                    <Text style={styles.priceValue}>{result.prediction.toFixed(2)}</Text>
-                    <Text style={styles.priceUnit}>LKR/kg</Text>
+                    <Text style={styles.priceValue}>{p.predicted_price.toFixed(2)}</Text>
+                    <Text style={styles.priceUnit}>{p.currency}</Text>
                   </View>
+
+                  <View style={styles.deltaPill}>
+                    <Ionicons
+                      name={deltaUp ? "arrow-up" : "arrow-down"}
+                      size={12}
+                      color="#0B3B22"
+                    />
+                    <Text style={styles.deltaPillText}>
+                      {deltaUp ? "+" : ""}
+                      {delta.toFixed(2)} {t.predictionResult.price.vsPrevious} ({p.previous_price.toFixed(2)} {p.currency})
+                    </Text>
+                  </View>
+
                   <View style={styles.paddyTypePill}>
                     <Ionicons name="leaf" size={11} color="#0B3B22" />
-                    <Text style={styles.paddyTypePillText}>Long Grain White</Text>
+                    <Text style={styles.paddyTypePillText}>{t.predictionResult.price.paddyType}</Text>
                   </View>
+
+                  {/* Explanation button, anchored right next to the predicted price */}
+                  <TouchableOpacity
+                    style={styles.explanationBtn}
+                    activeOpacity={0.85}
+                    onPress={goToExplanation}
+                  >
+                    <Ionicons name="bulb" size={16} color="#F5C542" />
+                    <Text style={styles.explanationBtnText}>{t.predictionResult.price.whyThisPrice}</Text>
+                    <Ionicons name="arrow-forward" size={14} color="#F5C542" />
+                  </TouchableOpacity>
                 </LinearGradient>
 
-                {/* Status chips */}
-                <View style={styles.chipRow}>
-                  <View style={[styles.statusChip, { backgroundColor: trendTone!.bg }]}>
-                    <Ionicons name={trendTone!.icon as any} size={16} color={trendTone!.fg} />
-                    <Text style={[styles.statusChipLabel, { color: trendTone!.fg }]}>Trend</Text>
-                    <Text style={[styles.statusChipValue, { color: trendTone!.fg }]}>
-                      {result.trend}
-                    </Text>
+                <View style={styles.contextCard}>
+                  <View style={styles.contextRow}>
+                    <Ionicons name="location-outline" size={16} color="#15803D" />
+                    <Text style={styles.contextLabel}>{t.predictionResult.context.district}</Text>
+                    <Text style={styles.contextValue}>{p.district}</Text>
                   </View>
-                  <View style={[styles.statusChip, { backgroundColor: confTone!.bg }]}>
-                    <Ionicons name={confTone!.icon as any} size={16} color={confTone!.fg} />
-                    <Text style={[styles.statusChipLabel, { color: confTone!.fg }]}>Confidence</Text>
-                    <Text style={[styles.statusChipValue, { color: confTone!.fg }]}>
-                      {result.confidence}
-                    </Text>
+                  <View style={styles.contextDivider} />
+                  <View style={styles.contextRow}>
+                    <Ionicons name="calendar-outline" size={16} color="#15803D" />
+                    <Text style={styles.contextLabel}>{t.predictionResult.context.date}</Text>
+                    <Text style={styles.contextValue}>{p.date}</Text>
                   </View>
-                  <View style={[styles.statusChip, { backgroundColor: riskTone!.bg }]}>
-                    <Ionicons name={riskTone!.icon as any} size={16} color={riskTone!.fg} />
-                    <Text style={[styles.statusChipLabel, { color: riskTone!.fg }]}>Risk</Text>
-                    <Text style={[styles.statusChipValue, { color: riskTone!.fg }]}>
-                      {result.risk_level}
-                    </Text>
-                  </View>
-                </View>
-
-                {/* Market outlook */}
-                <View style={styles.infoCard}>
-                  <View style={styles.infoCardHeader}>
-                    <View style={[styles.infoIconBox, { backgroundColor: "#E0F2FE" }]}>
-                      <Ionicons name="bar-chart" size={17} color="#0369A1" />
-                    </View>
-                    <Text style={styles.infoCardTitle}>Market Outlook</Text>
-                  </View>
-                  <Text style={styles.infoCardText}>{result.market_outlook}</Text>
-                </View>
-
-                {/* AI recommendation */}
-                <View style={styles.infoCard}>
-                  <View style={styles.infoCardHeader}>
-                    <View style={[styles.infoIconBox, { backgroundColor: "#DCFCE7" }]}>
-                      <Ionicons name="bulb" size={17} color="#15803D" />
-                    </View>
-                    <Text style={styles.infoCardTitle}>AI Recommendation</Text>
-                  </View>
-                  <Text style={styles.infoCardText}>{result.recommendation}</Text>
                 </View>
 
                 <TouchableOpacity
-                  style={styles.detailBtn}
+                  style={styles.advancedBtn}
                   activeOpacity={0.85}
-                  onPress={() =>
-                    router.push({
-                      pathname: DETAILED_ANALYSIS_ROUTE as any,
-                      params: { data: JSON.stringify(result) },
-                    })
-                  }
+                  onPress={goToAdvancedDetails}
                 >
-                  <Text style={styles.detailBtnText}>View Detailed Analysis</Text>
-                  <Ionicons name="arrow-forward" size={17} color="#0B3B22" />
+                  <View style={styles.advancedBtnLeft}>
+                    <View style={styles.advancedIconBox}>
+                      <Ionicons name="stats-chart" size={17} color="#15803D" />
+                    </View>
+                    <View>
+                      <Text style={styles.advancedBtnTitle}>{t.predictionResult.advanced.title}</Text>
+                      <Text style={styles.advancedBtnSub}>{t.predictionResult.advanced.subtitle}</Text>
+                    </View>
+                  </View>
+                  <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
                 </TouchableOpacity>
               </ScrollView>
             </Animated.View>
@@ -344,7 +428,33 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 10,
     paddingHorizontal: 30,
-    paddingTop: 60,
+    paddingTop: 50,
+  },
+  logoLoadingWrap: {
+    width: 96,
+    height: 96,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 6,
+  },
+  logoRing: {
+    position: "absolute",
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    borderWidth: 3,
+    borderColor: "#DCFCE7",
+    borderTopColor: "#15803D",
+  },
+  logoImage: {
+    width: 54,
+    height: 54,
+  },
+  centerStateTitle: {
+    fontSize: 14.5,
+    fontFamily: "Poppins_700Bold",
+    color: "#1F2937",
+    marginTop: 4,
   },
   centerStateText: {
     fontSize: 13,
@@ -416,6 +526,21 @@ const styles = StyleSheet.create({
     color: "rgba(11,59,34,0.75)",
     marginBottom: 6,
   },
+  deltaPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    backgroundColor: "rgba(11,59,34,0.10)",
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    marginTop: 10,
+  },
+  deltaPillText: {
+    fontSize: 10.5,
+    fontFamily: "Poppins_600SemiBold",
+    color: "#0B3B22",
+  },
   paddyTypePill: {
     flexDirection: "row",
     alignItems: "center",
@@ -424,7 +549,7 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     paddingHorizontal: 10,
     paddingVertical: 5,
-    marginTop: 12,
+    marginTop: 8,
   },
   paddyTypePillText: {
     fontSize: 10.5,
@@ -432,67 +557,78 @@ const styles = StyleSheet.create({
     color: "#0B3B22",
   },
 
-  chipRow: { flexDirection: "row", gap: 10, marginBottom: 16 },
-  statusChip: {
-    flex: 1,
-    borderRadius: 16,
-    padding: 12,
+  explanationBtn: {
+    flexDirection: "row",
     alignItems: "center",
-    gap: 4,
+    gap: 7,
+    backgroundColor: "#0B3B22",
+    borderRadius: 999,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    marginTop: 16,
   },
-  statusChipLabel: {
-    fontSize: 9.5,
-    fontFamily: "Poppins_600SemiBold",
-    letterSpacing: 0.3,
-    textTransform: "uppercase",
-    opacity: 0.8,
-  },
-  statusChipValue: {
+  explanationBtnText: {
     fontSize: 12.5,
     fontFamily: "Poppins_700Bold",
+    color: "#F5C542",
   },
 
-  infoCard: {
+  contextCard: {
     backgroundColor: "white",
-    borderRadius: 18,
-    padding: 16,
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 4,
     marginBottom: 14,
     borderWidth: 1,
     borderColor: "#F1F1EF",
   },
-  infoCardHeader: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 8 },
-  infoIconBox: {
-    width: 32,
-    height: 32,
-    borderRadius: 10,
+  contextRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingVertical: 12,
+  },
+  contextDivider: { height: 1, backgroundColor: "#F3F4F6" },
+  contextLabel: {
+    fontSize: 12.5,
+    fontFamily: "Poppins_500Medium",
+    color: "#6B7280",
+    flex: 1,
+  },
+  contextValue: {
+    fontSize: 13,
+    fontFamily: "Poppins_700Bold",
+    color: "#1F2937",
+  },
+
+  advancedBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "white",
+    borderRadius: 16,
+    padding: 14,
+    borderWidth: 1.4,
+    borderColor: "#E5E7EB",
+  },
+  advancedBtnLeft: { flexDirection: "row", alignItems: "center", gap: 12 },
+  advancedIconBox: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: "#F0FDF4",
     alignItems: "center",
     justifyContent: "center",
   },
-  infoCardTitle: {
+  advancedBtnTitle: {
     fontSize: 13.5,
     fontFamily: "Poppins_700Bold",
     color: "#1F2937",
   },
-  infoCardText: {
-    fontSize: 12.5,
-    lineHeight: 19,
-    color: "#4B5563",
+  advancedBtnSub: {
+    fontSize: 11,
     fontFamily: "Poppins_500Medium",
-  },
-
-  detailBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    borderRadius: 14,
-    paddingVertical: 15,
-    backgroundColor: "#FEF3C7",
-    marginTop: 4,
-  },
-  detailBtnText: {
-    fontSize: 14.5,
-    fontFamily: "Poppins_700Bold",
-    color: "#92400E",
+    color: "#9CA3AF",
+    marginTop: 1,
   },
 });

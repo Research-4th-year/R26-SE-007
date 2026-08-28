@@ -9,6 +9,14 @@ const harvestRoutes = require('./routes/harvest.routes');
 const matchingRoutes = require('./routes/matching.routes');
 const millerDemandRoutes = require('./routes/millerDemand.routes');
 const flRoutes = require('./routes/fl.routes');
+const matchSelectionRoutes = require("./routes/matchSelection.routes");
+const notificationRoutes = require("./routes/notification.routes");
+const dashboardRoutes = require("./routes/dashboard.routes");
+const negotiationRoutes = require("./routes/negotiation.routes");
+const authRoutes = require("./routes/auth.routes");
+const contactRequestRoutes = require("./routes/contactRequest.routes");
+const partnerRoutes = require("./routes/partner.routes");
+const connectionRoutes = require("./routes/connection.routes");
 
 const app = express();
 
@@ -23,6 +31,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 
 // api routes
+app.use("/api/auth", authRoutes);
 app.use('/api/rag', ragRoutes);
 app.use("/api/millers", millerRoutes);
 app.use('/api/farmers', farmerRoutes);
@@ -30,7 +39,13 @@ app.use('/api/harvests', harvestRoutes);
 app.use('/api/matching', matchingRoutes);
 app.use('/api/miller-demand', millerDemandRoutes);
 app.use('/api/fl', flRoutes);
-
+app.use("/api/match-selections", matchSelectionRoutes);
+app.use("/api/notifications", notificationRoutes);
+app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/negotiations", negotiationRoutes );
+app.use("/api/contact-requests", contactRequestRoutes);
+app.use("/api/partners", partnerRoutes);
+app.use("/api/connections", connectionRoutes );
 
 // send back a 404 error for any unknown api request
 app.use((req, res, next) => {
