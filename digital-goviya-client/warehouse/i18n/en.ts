@@ -1908,6 +1908,18 @@ c3MillerHome: {
 
   c02Farming: {
 
+    diseaseAdvisory: {
+      symptoms: "Symptoms",
+      prevention: "Prevention & Control",
+      fertilizer: "Fertilizer Guidance",
+      chemical: "Chemical Treatments",
+      reason: "Reason",
+      nitrogen: "Nitrogen Mgmt",
+      potassium: "Potassium Mgmt",
+      general: "General Nutrition"
+    },
+
+
     farmerGuidance: {
       title: "Farmer Crop Guidance",
       subtitle: "(වගා උපදෙස්)",

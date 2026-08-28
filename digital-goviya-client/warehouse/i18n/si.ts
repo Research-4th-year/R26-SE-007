@@ -1990,6 +1990,18 @@ c3MillerHome: {
 
   c02Farming: {
 
+    diseaseAdvisory: {
+      symptoms: "රෝග ලක්ෂණ",
+      prevention: "වැළැක්වීම සහ පාලනය",
+      fertilizer: "පොහොර මාර්ගෝපදේශ",
+      chemical: "රසායනික ප්‍රතිකාර",
+      reason: "හේතුව",
+      nitrogen: "නයිට්‍රජන් කළමනාකරණය",
+      potassium: "පොටෑසියම් කළමනාකරණය",
+      general: "සාමාන්‍ය පෝෂණය"
+    },
+
+
     farmerGuidance: {
       title: "ගොවි බෝග මාර්ගෝපදේශය",
       subtitle: "(Crop Guidance)",
