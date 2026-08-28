@@ -1908,6 +1908,50 @@ c3MillerHome: {
 
   c02Farming: {
 
+    fertilizerGuide: {
+      headerTitle: "Fertilizer Guide",
+      farmDetails: "Farm Details",
+      climaticZone: "Climatic Zone",
+      cultivationCondition: "Cultivation Condition",
+      cropDuration: "Crop Duration",
+      landSize: "Land Size",
+      select: "Select",
+      saveToProfile: "Save to Profile",
+      savedToProfile: "Saved to Profile ✓",
+      failedToSave: "Failed to Save",
+      dryZone: "Dry Zone",
+      intermediateZone: "Intermediate Zone",
+      wetZone: "Wet Zone",
+      irrigated: "Irrigated paddy fields",
+      rainfed: "Rainfed paddy fields",
+      totalRequirement: "Total Requirement",
+      baseFertilizer: "Base Fertilizer (V1)",
+      topDressing1: "Top Dressing 1",
+      topDressing2: "Top Dressing 2",
+      topDressing3: "Top Dressing 3",
+      urea: "Urea",
+      tsp: "TSP",
+      mop: "MOP",
+      zinc: "Zinc Sulphate"
+    },
+
+
+    diseaseDetection: {
+      headerTitle: "Disease Detection",
+      cardTitle: "Upload Leaf Image",
+      cardDesc: "Upload or snap a picture of a paddy leaf to check for Fungal or Bacterial diseases.",
+      noImage: "No image selected",
+      gallery: "Gallery",
+      camera: "Camera",
+      analyze: "Analyze Image",
+      analysisResult: "Analysis Result",
+      type: "Type",
+      confidence: "Confidence",
+      saveToProfile: "Save to Profile",
+      pastPredictions: "Past Predictions"
+    },
+
+
     diseaseAdvisory: {
       symptoms: "Symptoms",
       prevention: "Prevention & Control",

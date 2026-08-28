@@ -34,6 +34,7 @@ export default function DiseaseDetectionScreen() {
   const { currentUser } = useFarmingAuth();
   const { language } = useLanguage();
   const t = translations[language].c02Farming.diseaseAdvisory;
+  const tMain = translations[language].c02Farming.diseaseDetection;
 
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -278,15 +279,15 @@ export default function DiseaseDetectionScreen() {
           >
             <Ionicons name="chevron-back" size={20} color="white" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Disease Detection</Text>
+          <Text style={styles.headerTitle}>{tMain.headerTitle}</Text>
           <View style={{ width: 40 }} />
         </View>
 
         <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
           <View style={styles.card}>
-            <Text style={styles.cardTitle}>Upload Leaf Image</Text>
+            <Text style={styles.cardTitle}>{tMain.cardTitle}</Text>
             <Text style={styles.cardDesc}>
-              Upload or snap a picture of a paddy leaf to check for Fungal or Bacterial diseases.
+              {tMain.cardDesc}
             </Text>
 
             {imageUri ? (
@@ -294,18 +295,18 @@ export default function DiseaseDetectionScreen() {
             ) : (
               <View style={styles.placeholderBox}>
                 <Ionicons name="image-outline" size={48} color="#9CA3AF" />
-                <Text style={styles.placeholderText}>No image selected</Text>
+                <Text style={styles.placeholderText}>{tMain.noImage}</Text>
               </View>
             )}
 
             <View style={styles.btnRow}>
               <TouchableOpacity style={styles.actionBtn} onPress={pickImage}>
                 <Ionicons name="images" size={20} color="#15803D" />
-                <Text style={styles.actionBtnText}>Gallery</Text>
+                <Text style={styles.actionBtnText}>{tMain.gallery}</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.actionBtn} onPress={takePhoto}>
                 <Ionicons name="camera" size={20} color="#15803D" />
-                <Text style={styles.actionBtnText}>Camera</Text>
+                <Text style={styles.actionBtnText}>{tMain.camera}</Text>
               </TouchableOpacity>
             </View>
 
@@ -319,7 +320,7 @@ export default function DiseaseDetectionScreen() {
                   <ActivityIndicator color="white" />
                 ) : (
                   <>
-                    <Text style={styles.primaryBtnText}>Analyze Image</Text>
+                    <Text style={styles.primaryBtnText}>{tMain.analyze}</Text>
                     <Ionicons name="scan" size={18} color="white" />
                   </>
                 )}
@@ -337,7 +338,7 @@ export default function DiseaseDetectionScreen() {
           {result && (
             <View>
               <View style={styles.resultCard}>
-                <Text style={styles.resultHeader}>Analysis Result</Text>
+                <Text style={styles.resultHeader}>{tMain.analysisResult}</Text>
                 
                 <Text style={[
                   styles.diseaseName,
@@ -348,7 +349,7 @@ export default function DiseaseDetectionScreen() {
                 
                 <View style={styles.metricRow}>
                   <View style={styles.metricItem}>
-                    <Text style={styles.metricLabel}>Type</Text>
+                    <Text style={styles.metricLabel}>{tMain.type}</Text>
                     <Text style={[
                       styles.metricValue, 
                       { color: result.disease_type === 'Fungal' ? '#D97706' : result.disease_type === 'Bacterial' ? '#DC2626' : '#374151' }
@@ -357,7 +358,7 @@ export default function DiseaseDetectionScreen() {
                     </Text>
                   </View>
                   <View style={styles.metricItem}>
-                    <Text style={styles.metricLabel}>Confidence</Text>
+                    <Text style={styles.metricLabel}>{tMain.confidence}</Text>
                     <Text style={styles.metricValue}>{result.confidence.toFixed(1)}%</Text>
                   </View>
                 </View>
@@ -366,7 +367,7 @@ export default function DiseaseDetectionScreen() {
                   style={[styles.primaryBtn, { marginTop: 20, backgroundColor: "#3B82F6", width: '100%' }]}
                   onPress={handleSaveToProfile}
                 >
-                  <Text style={styles.primaryBtnText}>{saveStatus || "Save to Profile"}</Text>
+                  <Text style={styles.primaryBtnText}>{saveStatus || tMain.saveToProfile}</Text>
                 </TouchableOpacity>
               </View>
 
@@ -376,7 +377,7 @@ export default function DiseaseDetectionScreen() {
 
           {history.length > 0 && (
             <View style={styles.historySection}>
-              <Text style={styles.historySectionTitle}>Past Predictions</Text>
+              <Text style={styles.historySectionTitle}>{tMain.pastPredictions}</Text>
               {history.map((item, index) => {
                 const formattedName = item.disease_name.replace(/_/g, ' ').replace(/\b\w/g, (l: any) => l.toUpperCase());
                 let dateStr = "Unknown Date";

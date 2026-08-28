@@ -16,6 +16,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useFarmingAuth } from "@/contexts/FarmingAuthContext";
 import data from "./fertilizer.json";
+import { useLanguage } from "../../contexts/LanguageContext";
+import { translations } from "../../i18n";
 
 const rawData = (data as any).default || data;
 const fertilizerData: any[] = Array.isArray(rawData) ? rawData : (rawData.recommendations || []);
@@ -66,6 +68,8 @@ function CustomSelect({ label, value, options, onSelect }: any) {
 
 export default function FertilizerGuideScreen() {
   const { currentUser } = useFarmingAuth();
+  const { language } = useLanguage();
+  const t = translations[language].c02Farming.fertilizerGuide;
 
   const [formData, setFormData] = useState({
     Zone: "Dry Zone",
@@ -158,33 +162,39 @@ export default function FertilizerGuideScreen() {
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
             <Ionicons name="chevron-back" size={20} color="white" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Fertilizer Guide</Text>
+          <Text style={styles.headerTitle}>{t.headerTitle}</Text>
           <View style={{ width: 40 }} />
         </View>
 
         <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
           <View style={styles.card}>
-            <Text style={styles.cardTitle}>Farm Details</Text>
+            <Text style={styles.cardTitle}>{t.farmDetails}</Text>
             
-            <Text style={styles.label}>Climatic Zone</Text>
+            <Text style={styles.label}>{t.climaticZone}</Text>
             <CustomSelect 
-              label="Zone" 
-              value={formData.Zone} 
-              options={["Dry Zone", "Intermediate Zone", "Wet Zone"]}
-              onSelect={(val: string) => setFormData({ ...formData, Zone: val })} 
+              label={t.climaticZone} 
+              value={formData.Zone === "Dry Zone" ? t.dryZone : formData.Zone === "Wet Zone" ? t.wetZone : t.intermediateZone} 
+              options={[t.dryZone, t.intermediateZone, t.wetZone]}
+              onSelect={(val: string) => {
+                const enVal = val === t.dryZone ? "Dry Zone" : val === t.wetZone ? "Wet Zone" : "Intermediate Zone";
+                setFormData({ ...formData, Zone: enVal });
+              }} 
             />
 
-            <Text style={styles.label}>Cultivation Condition</Text>
+            <Text style={styles.label}>{t.cultivationCondition}</Text>
             <CustomSelect 
-              label="Irrigation" 
-              value={formData.Irrigation} 
-              options={["Irrigated paddy fields", "Rainfed paddy fields"]}
-              onSelect={(val: string) => setFormData({ ...formData, Irrigation: val })} 
+              label={t.cultivationCondition} 
+              value={formData.Irrigation === "Irrigated paddy fields" ? t.irrigated : t.rainfed} 
+              options={[t.irrigated, t.rainfed]}
+              onSelect={(val: string) => {
+                const enVal = val === t.irrigated ? "Irrigated paddy fields" : "Rainfed paddy fields";
+                setFormData({ ...formData, Irrigation: enVal });
+              }} 
             />
 
-            <Text style={styles.label}>Crop Duration</Text>
+            <Text style={styles.label}>{t.cropDuration}</Text>
             <CustomSelect 
-              label="Duration" 
+              label={t.cropDuration} 
               value={formData.Duration} 
               options={DURATIONS} 
               onSelect={(v: string) => setFormData({...formData, Duration: v})} 
@@ -192,7 +202,7 @@ export default function FertilizerGuideScreen() {
 
             <View style={styles.row}>
               <View style={{ flex: 1, marginRight: 10 }}>
-                <Text style={styles.label}>Land Size</Text>
+                <Text style={styles.label}>{t.landSize}</Text>
                 <View style={styles.inputBox}>
                   <TextInput 
                     style={[styles.input, { flex: 1 }]}
@@ -218,7 +228,7 @@ export default function FertilizerGuideScreen() {
             <View style={styles.resultCard}>
               <View style={styles.resultHeaderBox}>
                 <Ionicons name="leaf" size={24} color="#10B981" />
-                <Text style={styles.resultHeader}>Total Requirements</Text>
+                <Text style={styles.resultHeader}>{t.totalRequirement}</Text>
               </View>
               
               <View style={{ gap: 12 }}>
@@ -226,8 +236,8 @@ export default function FertilizerGuideScreen() {
                   <View style={{ backgroundColor: "white", padding: 8, borderRadius: 12, marginRight: 15, shadowColor: "#0284C7", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 2 }}>
                     <Image source={require("../../assets/farming-icons/fertilizer.png")} style={{ width: 35, height: 35 }} resizeMode="contain" />
                   </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.metricLabel}>Urea</Text>
+          <View style={{ flex: 1 }}>
+                    <Text style={styles.metricLabel}>{t.urea}</Text>
                     <Text style={[styles.metricValue, { color: "#0284C7" }]}>
                       {(durationData.total.urea * multiplier).toFixed(1)} kg
                     </Text>
@@ -240,7 +250,7 @@ export default function FertilizerGuideScreen() {
                     <Image source={require("../../assets/farming-icons/fertilizer.png")} style={{ width: 35, height: 35 }} resizeMode="contain" />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.metricLabel}>TSP (Triple Super Phosphate)</Text>
+                    <Text style={styles.metricLabel}>{t.tsp}</Text>
                     <Text style={[styles.metricValue, { color: "#D97706" }]}>
                       {(durationData.total.tsp * multiplier).toFixed(1)} kg
                     </Text>
@@ -253,7 +263,7 @@ export default function FertilizerGuideScreen() {
                     <Image source={require("../../assets/farming-icons/fertilizer.png")} style={{ width: 35, height: 35 }} resizeMode="contain" />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.metricLabel}>MOP (Muriate of Potash)</Text>
+                    <Text style={styles.metricLabel}>{t.mop}</Text>
                     <Text style={[styles.metricValue, { color: "#DC2626" }]}>
                       {(durationData.total.mop * multiplier).toFixed(1)} kg
                     </Text>
@@ -266,7 +276,7 @@ export default function FertilizerGuideScreen() {
                 style={[styles.primaryBtn, { marginTop: 20, backgroundColor: "#3B82F6" }]}
                 onPress={handleSaveToProfile}
               >
-                <Text style={styles.primaryBtnText}>{saveStatus || "Save to Profile"}</Text>
+                <Text style={styles.primaryBtnText}>{saveStatus || t.saveToProfile}</Text>
               </TouchableOpacity>
             </View>
           )}

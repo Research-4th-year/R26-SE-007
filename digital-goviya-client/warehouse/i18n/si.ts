@@ -1990,6 +1990,50 @@ c3MillerHome: {
 
   c02Farming: {
 
+    fertilizerGuide: {
+      headerTitle: "පොහොර මාර්ගෝපදේශය",
+      farmDetails: "ගොවිපල විස්තර",
+      climaticZone: "දේශගුණික කලාපය",
+      cultivationCondition: "වගා තත්ත්වය",
+      cropDuration: "වගා කාලය",
+      landSize: "ඉඩම් ප්‍රමාණය",
+      select: "තෝරන්න",
+      saveToProfile: "පැතිකඩට සුරකින්න",
+      savedToProfile: "පැතිකඩට සුරැකිණි ✓",
+      failedToSave: "සුරැකීම අසාර්ථකයි",
+      dryZone: "වියළි කලාපය",
+      intermediateZone: "අතරමැදි කලාපය",
+      wetZone: "තෙත් කලාපය",
+      irrigated: "වාරිමාර්ග සහිත කුඹුරු",
+      rainfed: "වර්ෂාපෝෂිත කුඹුරු",
+      totalRequirement: "මුළු අවශ්‍යතාවය",
+      baseFertilizer: "මූලික පොහොර (V1)",
+      topDressing1: "මතුපිට පොහොර 1",
+      topDressing2: "මතුපිට පොහොර 2",
+      topDressing3: "මතුපිට පොහොර 3",
+      urea: "යූරියා",
+      tsp: "TSP (මඩ පොහොර)",
+      mop: "MOP (බණ්ඩි පොහොර)",
+      zinc: "සින්ක් සල්ෆේට්"
+    },
+
+
+    diseaseDetection: {
+      headerTitle: "රෝග හඳුනාගැනීම",
+      cardTitle: "කොළයේ ඡායාරූපයක් උඩුගත කරන්න",
+      cardDesc: "දිලීර හෝ බැක්ටීරියා රෝග සඳහා පරීක්ෂා කිරීමට වී කොළයක ඡායාරූපයක් උඩුගත කරන්න හෝ ලබා ගන්න.",
+      noImage: "ඡායාරූපයක් තෝරා නැත",
+      gallery: "ගැලරිය",
+      camera: "කැමරාව",
+      analyze: "පරීක්ෂා කරන්න",
+      analysisResult: "පරීක්ෂණ ප්‍රතිඵලය",
+      type: "වර්ගය",
+      confidence: "විශ්වාසය",
+      saveToProfile: "පැතිකඩට සුරකින්න",
+      pastPredictions: "පෙර පරීක්ෂණ"
+    },
+
+
     diseaseAdvisory: {
       symptoms: "රෝග ලක්ෂණ",
       prevention: "වැළැක්වීම සහ පාලනය",
