@@ -12,6 +12,8 @@ import {
   FlatList,
 } from "react-native";
 import { router } from "expo-router";
+import { useLanguage } from "../../contexts/LanguageContext";
+import { translations } from "../../i18n";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import MapView, { Marker } from "react-native-maps";
@@ -88,6 +90,8 @@ function CustomSelect({ label, value, options, onSelect }: any) {
 }
 
 export default function YieldPredictionScreen() {
+  const { language } = useLanguage();
+  const t = translations[language].c02Farming.yieldPrediction;
   const { currentUser } = useFarmingAuth();
 
   const [formData, setFormData] = useState({
@@ -225,7 +229,7 @@ export default function YieldPredictionScreen() {
 
   const handleSaveToProfile = async () => {
     if (!result) return;
-    setSaveStatus('Saving...');
+    setSaveStatus(t.saving);
     try {
       let convertedSize = parseFloat(formData.Total_Land_Size) || 0;
       if (formData.Land_Size_Unit === 'Perches') convertedSize = convertedSize * 0.00252929;
@@ -247,16 +251,16 @@ export default function YieldPredictionScreen() {
       });
 
       if (res.ok) {
-        setSaveStatus('Saved to Profile ✓');
+        setSaveStatus(t.savedProfile);
         setTimeout(() => setSaveStatus(''), 3000);
       } else {
         const errText = await res.text();
         console.error('Save yield error:', errText);
-        setSaveStatus('Failed to Save');
+        setSaveStatus(t.failedSave);
       }
     } catch (err) {
       console.error('handleSaveToProfile error:', err);
-      setSaveStatus('Failed to Save');
+      setSaveStatus(t.failedSave);
     }
   };
 
@@ -281,7 +285,7 @@ export default function YieldPredictionScreen() {
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
             <Ionicons name="chevron-back" size={20} color="white" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Yield Prediction</Text>
+          <Text style={styles.headerTitle}>{t.title}</Text>
           <View style={{ width: 40 }} />
         </View>
 
@@ -294,11 +298,11 @@ export default function YieldPredictionScreen() {
           )}
 
           <View style={styles.card}>
-            <Text style={styles.cardTitle}>Harvest Parameters</Text>
+            <Text style={styles.cardTitle}>{t.harvestParams}</Text>
             
             <View style={styles.row}>
               <View style={{ flex: 1, marginRight: 10 }}>
-                <Text style={styles.label}>Land Size</Text>
+                <Text style={styles.label}>{t.landSize}</Text>
                 <View style={styles.inputBox}>
                   <TextInput
                     style={styles.input}
@@ -310,7 +314,7 @@ export default function YieldPredictionScreen() {
                 </View>
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.label}>Unit</Text>
+                <Text style={styles.label}>{t.unit}</Text>
                 <CustomSelect 
                   label="Unit" 
                   value={formData.Land_Size_Unit} 
@@ -320,7 +324,7 @@ export default function YieldPredictionScreen() {
               </View>
             </View>
 
-            <Text style={styles.label}>Paddy Variety</Text>
+            <Text style={styles.label}>{t.paddyVariety}</Text>
             <CustomSelect 
               label="Paddy Variety" 
               value={formData.Paddy_Type} 
@@ -328,7 +332,7 @@ export default function YieldPredictionScreen() {
               onSelect={(v: string) => setFormData({...formData, Paddy_Type: v})} 
             />
             
-            <Text style={[styles.label, { marginTop: 10 }]}>District (Map Centers Here)</Text>
+            <Text style={[styles.label, { marginTop: 10 }]}>{t.districtMap}</Text>
             <CustomSelect 
               label="District" 
               value={formData.District} 
@@ -338,7 +342,7 @@ export default function YieldPredictionScreen() {
           </View>
 
           <View style={styles.card}>
-            <Text style={styles.cardTitle}>Select Location via Map</Text>
+            <Text style={styles.cardTitle}>{t.selectLocation}</Text>
             <View style={styles.mapContainer}>
               <MapView
                 style={styles.map}
@@ -352,11 +356,11 @@ export default function YieldPredictionScreen() {
 
             <View style={styles.mapInfoBox}>
               <View style={{ flex: 1 }}>
-                <Text style={styles.mapInfoLabel}>Nearest City</Text>
+                <Text style={styles.mapInfoLabel}>{t.nearestCity}</Text>
                 <Text style={styles.mapInfoValue}>{formData.City}, {formData.District}</Text>
               </View>
               <View style={{ alignItems: "flex-end" }}>
-                <Text style={styles.mapInfoLabel}>Coordinates</Text>
+                <Text style={styles.mapInfoLabel}>{t.coordinates}</Text>
                 <Text style={styles.mapInfoCoords}>{formData.lat.toFixed(4)}, {formData.lon.toFixed(4)}</Text>
               </View>
             </View>
@@ -370,27 +374,27 @@ export default function YieldPredictionScreen() {
                 size={24} 
                 color={formData.useFirebase ? "#10b981" : "#9CA3AF"} 
               />
-              <Text style={styles.checkboxLabel}>Data Get From IoT Device</Text>
+              <Text style={styles.checkboxLabel}>{t.dataFromIot}</Text>
             </TouchableOpacity>
 
             {envData && (
               <View style={styles.envPanel}>
                 <View style={styles.envHeader}>
-                  <Text style={styles.envTitle}>Live Environmental Factors (IoT Device)</Text>
+                  <Text style={styles.envTitle}>{t.liveEnv}</Text>
                   {fetchingData && <ActivityIndicator size="small" color="#10b981" />}
                 </View>
                 
                 <View style={styles.envGrid}>
                   <View style={styles.envItem}>
-                    <Text style={styles.envItemLabel}>Temp</Text>
+                    <Text style={styles.envItemLabel}>{t.temp}</Text>
                     <Text style={styles.envItemValue}>{envData.Temperature_C?.toFixed(2)}°C</Text>
                   </View>
                   <View style={styles.envItem}>
-                    <Text style={styles.envItemLabel}>Humidity</Text>
+                    <Text style={styles.envItemLabel}>{t.humidity}</Text>
                     <Text style={styles.envItemValue}>{envData.Humidity?.toFixed(2)}%</Text>
                   </View>
                   <View style={[styles.envItem, { width: "100%", marginTop: 10 }]}>
-                    <Text style={styles.envItemLabel}>Soil Moisture</Text>
+                    <Text style={styles.envItemLabel}>{t.soilMoisture}</Text>
                     <Text style={styles.envItemValue}>{envData.Soil_Moisture?.toFixed(2)} m³/m³</Text>
                   </View>
                 </View>
@@ -404,45 +408,45 @@ export default function YieldPredictionScreen() {
               {loading ? (
                 <ActivityIndicator color="white" />
               ) : (
-                <Text style={styles.submitText}>Predict Yield & Production</Text>
+                <Text style={styles.submitText}>{t.predictBtn}</Text>
               )}
             </LinearGradient>
           </TouchableOpacity>
 
           {result && (
             <View style={styles.resultCard}>
-              <Text style={styles.resultTitle}>Estimated Yield</Text>
+              <Text style={styles.resultTitle}>{t.estimatedYield}</Text>
               <View style={styles.productionHighlight}>
                 <Text style={styles.productionValue}>{result.total_estimated_production_mt?.toFixed(2)}</Text>
-                <Text style={styles.productionUnit}>Metric Tons</Text>
+                <Text style={styles.productionUnit}>{t.metricTons}</Text>
               </View>
               <Text style={styles.productionAltValue}>
                 ({getTotalYieldKg(result.predicted_yield_kg_per_ha).toFixed(2)} kg)
               </Text>
 
-              <Text style={[styles.resultSubtitle, { marginTop: 25 }]}>Environmental Data (from IoT Device)</Text>
+              <Text style={[styles.resultSubtitle, { marginTop: 25 }]}>{t.envDataTitle}</Text>
               <View style={styles.envGrid}>
                 <View style={styles.envItem}>
-                  <Text style={styles.envItemLabel}>Temp</Text>
+                  <Text style={styles.envItemLabel}>{t.temp}</Text>
                   <Text style={styles.envItemValue}>{result.environmental_factors.Temperature_C?.toFixed(2)}°C</Text>
                 </View>
                 <View style={styles.envItem}>
-                  <Text style={styles.envItemLabel}>Humidity</Text>
+                  <Text style={styles.envItemLabel}>{t.humidity}</Text>
                   <Text style={styles.envItemValue}>{result.environmental_factors.Humidity?.toFixed(2)}%</Text>
                 </View>
                 <View style={[styles.envItem, { width: "100%", marginTop: 10 }]}>
-                  <Text style={styles.envItemLabel}>Soil Moisture</Text>
+                  <Text style={styles.envItemLabel}>{t.soilMoisture}</Text>
                   <Text style={styles.envItemValue}>{result.environmental_factors.Soil_Moisture?.toFixed(2)} m³/m³</Text>
                 </View>
               </View>
 
               <View style={styles.yieldBreakdown}>
                 <View style={styles.yieldRow}>
-                  <Text style={styles.yieldLabel}>Yield per Hectare</Text>
+                  <Text style={styles.yieldLabel}>{t.yieldPerHa}</Text>
                   <Text style={styles.yieldValue}>{result.predicted_yield_kg_per_ha?.toFixed(2)} kg/ha</Text>
                 </View>
                 <View style={[styles.yieldRow, { borderBottomWidth: 0 }]}>
-                  <Text style={styles.yieldLabel}>Total Expected Yield</Text>
+                  <Text style={styles.yieldLabel}>{t.totalExpectedYield}</Text>
                   <Text style={[styles.yieldValue, { color: "#10b981" }]}>
                     {getTotalYieldKg(result.predicted_yield_kg_per_ha).toFixed(2)} kg
                   </Text>
@@ -460,7 +464,7 @@ export default function YieldPredictionScreen() {
               </View> */}
 
               <TouchableOpacity style={styles.saveBtn} onPress={handleSaveToProfile}>
-                <Text style={styles.saveBtnText}>{saveStatus || 'Save to Profile'}</Text>
+                <Text style={styles.saveBtnText}>{saveStatus || t.saveProfile}</Text>
               </TouchableOpacity>
             </View>
           )}

@@ -184,7 +184,7 @@ export default function FarmingHomeScreen() {
             {/* Disease card */}
             <View style={styles.featureCard}>
               <View style={[styles.featureIconBox, { backgroundColor: "#FEE2E2", padding: 8 }]}>
-                <Image source={require("../../assets/farming-icons/paddy2.png")} style={{ width: 32, height: 32 }} resizeMode="contain" />
+                <Image source={require("../../assets/farming-icons/paddy iot.png")} style={{ width: 32, height: 32 }} resizeMode="contain" />
               </View>
               <Text style={styles.featureTitle}>{t.diseaseTitle}</Text>
               <Text style={styles.featureDesc}>
@@ -224,16 +224,14 @@ export default function FarmingHomeScreen() {
               <View style={[styles.featureIconBox, { backgroundColor: "#EDE9FE", padding: 8 }]}>
                 <Image source={require("../../assets/farming-icons/settings.png")} style={{ width: 32, height: 32 }} resizeMode="contain" />
               </View>
-              <Text style={styles.featureTitle}>Farmer Profile</Text>
-              <Text style={styles.featureDesc}>
-                View and manage your account details, and browse your advisory, yield, disease, and fertilizer history.
-              </Text>
+              <Text style={styles.featureTitle}>{t.profileTitle}</Text>
+              <Text style={styles.featureDesc}>{t.profileDesc}</Text>
               <TouchableOpacity
                 style={[styles.secondaryBtn, { backgroundColor: "#F5F3FF" }]}
                 activeOpacity={0.85}
                 onPress={() => router.push(ROUTES.profile as any)}
               >
-                <Text style={[styles.secondaryBtnText, { color: "#7C3AED" }]}>View Profile</Text>
+                <Text style={[styles.secondaryBtnText, { color: "#7C3AED" }]}>{t.profileBtn}</Text>
                 <Ionicons name="arrow-forward" size={16} color="#7C3AED" />
               </TouchableOpacity>
             </View>

@@ -13,6 +13,8 @@ import {
   Platform,
 } from "react-native";
 import { router } from "expo-router";
+import { useLanguage } from "../../contexts/LanguageContext";
+import { translations } from "../../i18n";
 import { Ionicons } from "@expo/vector-icons";
 import { database } from "@/services/c02-farming/firebase";
 import { ref, onValue, off } from "firebase/database";
@@ -136,15 +138,17 @@ const SECONDARY_SENSORS: SensorConfig[] = [
   },
 ];
 
-function getStatus(config: SensorConfig, value?: number) {
-  if (value === undefined) return { label: "No Data", color: "#64748B" };
-  if (value < config.idealMin) return { label: "Low", color: "#D97706" };
-  if (value > config.idealMax) return { label: "High", color: "#DC2626" };
-  return { label: "Optimal", color: "#16A34A" };
+function getStatus(config: SensorConfig, t: any, value?: number) {
+  if (value === undefined) return { label: t.noData, color: "#64748B" };
+  if (value < config.idealMin) return { label: t.low, color: "#D97706" };
+  if (value > config.idealMax) return { label: t.high, color: "#DC2626" };
+  return { label: t.optimal, color: "#16A34A" };
 }
 
 // ─── Main Screen Component ───────────────────────────────────────────────────
 export default function IoTDashboardScreen() {
+  const { language } = useLanguage();
+  const t = translations[language].c02Farming.iotDashboard;
   const [sensorData, setSensorData] = useState<SensorData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -197,7 +201,7 @@ export default function IoTDashboardScreen() {
     return (
       <View style={[styles.screen, styles.center]}>
         <ActivityIndicator size="large" color="#059669" />
-        <Text style={styles.loadingText}>Connecting to hardware...</Text>
+        <Text style={styles.loadingText}>{t.connecting}</Text>
       </View>
     );
   }
@@ -210,8 +214,8 @@ export default function IoTDashboardScreen() {
           <Ionicons name="chevron-back" size={20} color="#0F172A" />
         </TouchableOpacity>
         <View style={styles.headerTitleWrap}>
-          <Text style={styles.headerTitle}>IoT Control Panel</Text>
-          <Text style={styles.headerSubtitle}>Real-time Field Telemetry</Text>
+          <Text style={styles.headerTitle}>{t.title}</Text>
+          <Text style={styles.headerSubtitle}>{t.subtitle}</Text>
         </View>
         <View style={[styles.statusDot, { backgroundColor: isOnline ? "#16A34A" : "#DC2626" }]} />
       </View>
@@ -238,30 +242,30 @@ export default function IoTDashboardScreen() {
             <View style={[styles.badge, { backgroundColor: isOnline ? "#DCFCE7" : "#FEE2E2" }]}>
               <View style={[styles.badgeDot, { backgroundColor: isOnline ? "#16A34A" : "#DC2626" }]} />
               <Text style={[styles.badgeText, { color: isOnline ? "#15803D" : "#B91C1C" }]}>
-                {isOnline ? "ONLINE" : "OFFLINE"}
+                {isOnline ? t.online : t.offline}
               </Text>
             </View>
           </View>
 
           <View style={styles.espBody}>
-            <Text style={styles.espTitle}>ESP32 Microcontroller</Text>
+            <Text style={styles.espTitle}>{t.espTitle}</Text>
             <Text style={styles.espSubtitle}>
-              {sensorData?.timestamp ? `Sync Time: ${sensorData.timestamp}` : "No telemetry received"}
+              {sensorData?.timestamp ? `Sync Time: ${sensorData.timestamp}` : t.noTelemetry}
             </Text>
           </View>
 
           <View style={styles.espFooter}>
-            <Text style={styles.espActionText}>Tap to view board hardware details</Text>
+            <Text style={styles.espActionText}>{t.tapToView}</Text>
             <Ionicons name="chevron-forward" size={16} color="#64748B" />
           </View>
         </Pressable>
 
         {/* Section: Main Sensors (Temperature, Soil Moisture, Humidity) */}
-        <Text style={styles.sectionTitle}>Main Metrics</Text>
+        <Text style={styles.sectionTitle}>{t.mainMetrics}</Text>
         <View style={styles.primaryGrid}>
           {PRIMARY_SENSORS.map((config) => {
             const val = sensorData?.[config.key];
-            const status = getStatus(config, val);
+            const status = getStatus(config, t, val);
             return (
               <Pressable key={config.key} style={styles.primaryCard} onPress={() => setSelectedSensor(config)}>
                 <View style={styles.primaryHeader}>
@@ -273,7 +277,7 @@ export default function IoTDashboardScreen() {
                   </View>
                 </View>
 
-                <Text style={styles.primaryLabel}>{config.label}</Text>
+                <Text style={styles.primaryLabel}>{(t as any)[config.key]}</Text>
                 <Text style={styles.primaryValue}>
                   {val !== undefined ? val.toFixed(1) : "—"}
                   <Text style={styles.primaryUnit}> {config.unit}</Text>
@@ -296,7 +300,7 @@ export default function IoTDashboardScreen() {
         </View>
 
         {/* Section: Small Sensor Metrics (NPK, pH) */}
-        <Text style={styles.sectionTitle}>Soil Nutrients & pH</Text>
+        <Text style={styles.sectionTitle}>{t.soilNutrients}</Text>
         <View style={styles.secondaryGrid}>
           {SECONDARY_SENSORS.map((config) => {
             const val = sensorData?.[config.key];
@@ -305,7 +309,7 @@ export default function IoTDashboardScreen() {
                 <View style={styles.secondaryHeader}>
                   <Ionicons name={config.icon as any} size={15} color={config.accent} />
                   <Text style={styles.secondaryLabel} numberOfLines={1}>
-                    {config.label}
+                    {(t as any)[config.key]}
                   </Text>
                 </View>
                 <Text style={styles.secondaryValue}>
@@ -325,7 +329,7 @@ export default function IoTDashboardScreen() {
             <View style={styles.modalHeader}>
               <View style={styles.modalTitleRow}>
                 <Ionicons name="hardware-chip-outline" size={22} color="#059669" />
-                <Text style={styles.modalTitle}>ESP32 Board Info</Text>
+                <Text style={styles.modalTitle}>{t.boardInfo}</Text>
               </View>
               <TouchableOpacity onPress={() => setEspModalVisible(false)} style={styles.modalCloseBtn}>
                 <Ionicons name="close" size={18} color="#64748B" />
@@ -333,26 +337,26 @@ export default function IoTDashboardScreen() {
             </View>
 
             <View style={styles.infoRow}>
-              <Text style={styles.infoKey}>Connection Status</Text>
+              <Text style={styles.infoKey}>{t.connStatus}</Text>
               <Text style={[styles.infoVal, { color: isOnline ? "#16A34A" : "#DC2626" }]}>
-                {isOnline ? "Active" : "Disconnected"}
+                {isOnline ? t.active : t.disconnected}
               </Text>
             </View>
             <View style={styles.infoRow}>
-              <Text style={styles.infoKey}>Board Chipset</Text>
+              <Text style={styles.infoKey}>{t.chipset}</Text>
               <Text style={styles.infoVal}>ESP32 Dual-Core</Text>
             </View>
             <View style={styles.infoRow}>
-              <Text style={styles.infoKey}>Firmware</Text>
+              <Text style={styles.infoKey}>{t.firmware}</Text>
               <Text style={styles.infoVal}>v2.4.1-build</Text>
             </View>
             <View style={styles.infoRow}>
-              <Text style={styles.infoKey}>Database Protocol</Text>
+              <Text style={styles.infoKey}>{t.dbProtocol}</Text>
               <Text style={styles.infoVal}>Firebase Realtime DB</Text>
             </View>
             <View style={styles.infoRow}>
-              <Text style={styles.infoKey}>Last Transmission</Text>
-              <Text style={styles.infoVal}>{sensorData?.timestamp || "N/A"}</Text>
+              <Text style={styles.infoKey}>{t.lastTrans}</Text>
+              <Text style={styles.infoVal}>{sensorData?.timestamp || t.na}</Text>
             </View>
           </Pressable>
         </Pressable>
@@ -372,16 +376,16 @@ export default function IoTDashboardScreen() {
                 </TouchableOpacity>
               </View>
 
-              <Text style={styles.modalSensorTitle}>{selectedSensor.label}</Text>
+              <Text style={styles.modalSensorTitle}>{(t as any)[selectedSensor.key]}</Text>
               <Text style={styles.modalSensorValue}>
                 {sensorData?.[selectedSensor.key] !== undefined ? sensorData[selectedSensor.key].toFixed(1) : "—"} {selectedSensor.unit}
               </Text>
 
-              <Text style={styles.modalSensorDesc}>{selectedSensor.description}</Text>
+              <Text style={styles.modalSensorDesc}>{(t as any)[selectedSensor.key === "temperature" ? "tempDesc" : selectedSensor.key === "soilMoisture" ? "soilDesc" : selectedSensor.key === "humidity" ? "humDesc" : selectedSensor.key === "ph" ? "phDesc" : selectedSensor.key === "nitrogen" ? "nDesc" : selectedSensor.key === "phosphorus" ? "pDesc" : "kDesc"]}</Text>
 
               <View style={styles.idealRangeBox}>
                 <Text style={styles.idealRangeText}>
-                  Ideal Target Range: {selectedSensor.idealMin} {selectedSensor.unit} – {selectedSensor.idealMax} {selectedSensor.unit}
+                  {t.idealTarget} {selectedSensor.idealMin} {selectedSensor.unit} – {selectedSensor.idealMax} {selectedSensor.unit}
                 </Text>
               </View>
             </Pressable>

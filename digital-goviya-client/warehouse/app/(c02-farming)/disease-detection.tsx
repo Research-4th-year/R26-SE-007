@@ -198,7 +198,7 @@ export default function DiseaseDetectionScreen() {
         {data.symptoms && (
           <View style={[styles.advisoryBox, { backgroundColor: '#FEF2F2', borderColor: '#FECACA' }]}>
             <View style={styles.boxHeaderRow}>
-              <Ionicons name="medical" size={18} color="#DC2626" />
+              {/* <Ionicons name="medical" size={18} color="#DC2626" /> */}
               <Text style={[styles.boxTitle, { color: '#B91C1C' }]}>{t.symptoms}</Text>
             </View>
             {data.symptoms.map((symptom: string, idx: number) => (
@@ -211,7 +211,7 @@ export default function DiseaseDetectionScreen() {
         {data.prevention && (
           <View style={[styles.advisoryBox, { backgroundColor: '#F0FDF4', borderColor: '#BBF7D0' }]}>
             <View style={styles.boxHeaderRow}>
-              <Ionicons name="shield-checkmark" size={18} color="#16A34A" />
+              {/* <Ionicons name="shield-checkmark" size={18} color="#16A34A" /> */}
               <Text style={[styles.boxTitle, { color: '#15803D' }]}>{t.prevention}</Text>
             </View>
             {data.prevention.map((item: string, idx: number) => (
@@ -224,7 +224,7 @@ export default function DiseaseDetectionScreen() {
         {data.fertilizer && (
           <View style={[styles.advisoryBox, { backgroundColor: '#FFFBEB', borderColor: '#FDE68A' }]}>
             <View style={styles.boxHeaderRow}>
-              <Ionicons name="leaf" size={18} color="#D97706" />
+              {/* <Ionicons name="leaf" size={18} color="#D97706" /> */}
               <Text style={[styles.boxTitle, { color: '#B45309' }]}>{t.fertilizer}</Text>
             </View>
             {data.fertilizer.nitrogen && data.fertilizer.nitrogen.map((item: string, idx: number) => (
@@ -248,7 +248,7 @@ export default function DiseaseDetectionScreen() {
         {data.chemical && (
           <View style={[styles.advisoryBox, { backgroundColor: '#F8FAFC', borderColor: '#E2E8F0' }]}>
             <View style={styles.boxHeaderRow}>
-              <Ionicons name="flask" size={18} color="#475569" />
+              {/* <Ionicons name="flask" size={18} color="#475569" /> */}
               <Text style={[styles.boxTitle, { color: '#334155' }]}>{t.chemical}</Text>
             </View>
             {data.chemical.instruction && (

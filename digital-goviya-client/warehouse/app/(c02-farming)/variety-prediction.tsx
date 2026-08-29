@@ -12,6 +12,8 @@ import {
   FlatList,
 } from "react-native";
 import { router } from "expo-router";
+import { useLanguage } from "../../contexts/LanguageContext";
+import { translations } from "../../i18n";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useFarmingAuth } from "@/contexts/FarmingAuthContext";
@@ -114,6 +116,9 @@ const districtToZoneMap: Record<string, string> = {
 };
 
 export default function VarietyPredictionScreen() {
+  const { language } = useLanguage();
+  const t = translations[language].c02Farming.varietyPrediction;
+  const yt = translations[language].c02Farming.yieldPrediction;
   const { currentUser } = useFarmingAuth();
 
   const [formData, setFormData] = useState({
@@ -307,7 +312,7 @@ export default function VarietyPredictionScreen() {
 
   const handleSaveToProfile = async () => {
     if (!result || !suitability) return;
-    setSaveStatus('Saving...');
+    setSaveStatus(yt.saving);
     try {
       const payload = {
         user_id: currentUser?.uid || 'mobile_user',
@@ -327,14 +332,14 @@ export default function VarietyPredictionScreen() {
       });
 
       if (res.ok) {
-        setSaveStatus('Saved successfully!');
+        setSaveStatus(yt.savedProfile);
         setTimeout(() => setSaveStatus(''), 3000);
         fetchHistory(); // Refresh list
       } else {
-        setSaveStatus('Failed to Save');
+        setSaveStatus(yt.failedSave);
       }
     } catch (err) {
-      setSaveStatus('Failed to Save');
+      setSaveStatus(yt.failedSave);
     }
   };
 
@@ -351,13 +356,13 @@ export default function VarietyPredictionScreen() {
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
             <Ionicons name="chevron-back" size={20} color="white" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Advisory & Suitability</Text>
+          <Text style={styles.headerTitle}>{t.title}</Text>
           <View style={{ width: 40 }} />
         </View>
 
         <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
           <View style={styles.card}>
-            <Text style={styles.cardTitle}>Select Location via Map</Text>
+            <Text style={styles.cardTitle}>{yt.selectLocation}</Text>
             <View style={{ height: 200, borderRadius: 16, overflow: 'hidden', marginBottom: 20, borderWidth: 1, borderColor: '#E5E7EB', justifyContent: 'center', alignItems: 'center' }}>
               {Platform.OS === 'web' ? (
                 <Text style={{ color: '#6B7280' }}>Map is not supported on web. Please select from dropdowns.</Text>
@@ -383,9 +388,9 @@ export default function VarietyPredictionScreen() {
               )}
             </View>
 
-            <Text style={styles.cardTitle}>Farm Details</Text>
+            <Text style={styles.cardTitle}>{t.farmDetails}</Text>
             
-            <Text style={styles.label}>District</Text>
+            <Text style={styles.label}>{t.district}</Text>
             <CustomSelect 
               label="District" 
               value={formData.District} 
@@ -393,7 +398,7 @@ export default function VarietyPredictionScreen() {
               onSelect={handleDistrictChange} 
             />
             
-            <Text style={styles.label}>City</Text>
+            <Text style={styles.label}>{t.city}</Text>
             <CustomSelect 
               label="City" 
               value={formData.City} 
@@ -403,7 +408,7 @@ export default function VarietyPredictionScreen() {
 
             <View style={styles.row}>
               <View style={{ flex: 1, marginRight: 10 }}>
-                <Text style={styles.label}>Climatic Zone</Text>
+                <Text style={styles.label}>{t.climaticZone}</Text>
                 <CustomSelect 
                   label="Zone" 
                   value={formData.Zone} 
@@ -412,7 +417,7 @@ export default function VarietyPredictionScreen() {
                 />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.label}>Season</Text>
+                <Text style={styles.label}>{t.season}</Text>
                 <CustomSelect 
                   label="Season" 
                   value={formData.Season} 
@@ -424,7 +429,7 @@ export default function VarietyPredictionScreen() {
 
             <View style={styles.row}>
               <View style={{ flex: 1, marginRight: 10 }}>
-                <Text style={styles.label}>Irrigation</Text>
+                <Text style={styles.label}>{t.irrigationMethod}</Text>
                 <CustomSelect 
                   label="Irrigation Method" 
                   value={formData.Irrigation} 
@@ -433,7 +438,7 @@ export default function VarietyPredictionScreen() {
                 />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.label}>Cultivation Date</Text>
+                <Text style={styles.label}>{t.cultivationDate}</Text>
                 <TouchableOpacity 
                   style={[styles.inputBox, { justifyContent: 'center' }]} 
                   onPress={() => setShowDatePicker(true)}
@@ -458,7 +463,7 @@ export default function VarietyPredictionScreen() {
               </View>
             </View>
 
-            <Text style={styles.label}>IoT Field ID</Text>
+            <Text style={styles.label}>{t.iotFieldId}</Text>
             <View style={styles.inputBox}>
               <TextInput 
                 style={[styles.input, { flex: 1 }]}
@@ -477,27 +482,27 @@ export default function VarietyPredictionScreen() {
                 size={24} 
                 color={formData.useFirebase ? "#10b981" : "#9CA3AF"} 
               />
-              <Text style={[styles.label, { marginBottom: 0, marginLeft: 10 }]}>Data Get From IoT Device</Text>
+              <Text style={[styles.label, { marginBottom: 0, marginLeft: 10 }]}>{yt.dataFromIot}</Text>
             </TouchableOpacity>
 
             {envData && (
               <View style={{ backgroundColor: "#F0FDF4", padding: 15, borderRadius: 12, borderWidth: 1, borderColor: "#A7F3D0", marginBottom: 20 }}>
                 <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 15 }}>
-                  <Text style={{ fontFamily: "Poppins_600SemiBold", fontSize: 14, color: "#059669" }}>Live Environmental Factors</Text>
+                  <Text style={{ fontFamily: "Poppins_600SemiBold", fontSize: 14, color: "#059669" }}>{yt.liveEnv.replace(" (IoT Device)", "")}</Text>
                   {fetchingData && <ActivityIndicator size="small" color="#10b981" />}
                 </View>
                 
                 <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between" }}>
                   <View style={{ width: "48%", backgroundColor: "rgba(255,255,255,0.6)", padding: 12, borderRadius: 8, borderWidth: 1, borderColor: "rgba(167,243,208,0.5)" }}>
-                    <Text style={{ fontFamily: "Poppins_500Medium", fontSize: 12, color: "#64748B" }}>Temp</Text>
+                    <Text style={{ fontFamily: "Poppins_500Medium", fontSize: 12, color: "#64748B" }}>{yt.temp}</Text>
                     <Text style={{ fontFamily: "Poppins_600SemiBold", fontSize: 16, color: "#0F172A" }}>{envData.Temperature_C?.toFixed(2)}°C</Text>
                   </View>
                   <View style={{ width: "48%", backgroundColor: "rgba(255,255,255,0.6)", padding: 12, borderRadius: 8, borderWidth: 1, borderColor: "rgba(167,243,208,0.5)" }}>
-                    <Text style={{ fontFamily: "Poppins_500Medium", fontSize: 12, color: "#64748B" }}>Humidity</Text>
+                    <Text style={{ fontFamily: "Poppins_500Medium", fontSize: 12, color: "#64748B" }}>{yt.humidity}</Text>
                     <Text style={{ fontFamily: "Poppins_600SemiBold", fontSize: 16, color: "#0F172A" }}>{envData.Humidity?.toFixed(2)}%</Text>
                   </View>
                   <View style={{ width: "100%", backgroundColor: "rgba(255,255,255,0.6)", padding: 12, borderRadius: 8, borderWidth: 1, borderColor: "rgba(167,243,208,0.5)", marginTop: 10 }}>
-                    <Text style={{ fontFamily: "Poppins_500Medium", fontSize: 12, color: "#64748B" }}>Soil Moisture</Text>
+                    <Text style={{ fontFamily: "Poppins_500Medium", fontSize: 12, color: "#64748B" }}>{yt.soilMoisture}</Text>
                     <Text style={{ fontFamily: "Poppins_600SemiBold", fontSize: 16, color: "#0F172A" }}>{envData.Soil_Moisture?.toFixed(2)} m³/m³</Text>
                   </View>
                 </View>
@@ -514,7 +519,7 @@ export default function VarietyPredictionScreen() {
                 <ActivityIndicator color="white" />
               ) : (
                 <>
-                  <Text style={styles.primaryBtnText}>Analyze Farm</Text>
+                  <Text style={styles.primaryBtnText}>{t.analyzeFarm}</Text>
                 </>
               )}
             </TouchableOpacity>
@@ -534,8 +539,8 @@ export default function VarietyPredictionScreen() {
                   <Text style={{ fontSize: 24 }}>🌾</Text>
                 </View>
                 <View>
-                  <Text style={[styles.resultHeader, { color: '#065F46', marginLeft: 0 }]}>Optimal Variety</Text>
-                  <Text style={{ color: '#059669', fontSize: 12, fontFamily: 'Poppins_500Medium' }}>AI Recommended</Text>
+                  <Text style={[styles.resultHeader, { color: '#065F46', marginLeft: 0 }]}>{t.optimalVariety}</Text>
+                  <Text style={{ color: '#059669', fontSize: 12, fontFamily: 'Poppins_500Medium' }}>{t.aiRecommended}</Text>
                 </View>
               </View>
               <View style={{ backgroundColor: '#10B981', paddingHorizontal: 20, paddingVertical: 10, borderRadius: 30, alignSelf: 'flex-start', marginBottom: 20 }}>
@@ -545,15 +550,15 @@ export default function VarietyPredictionScreen() {
               {result.details && (
                 <View style={{ backgroundColor: 'rgba(255,255,255,0.7)', padding: 15, borderRadius: 12, borderWidth: 1, borderColor: '#E2E8F0', gap: 12 }}>
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', borderBottomWidth: 1, borderBottomColor: '#F1F5F9', paddingBottom: 8 }}>
-                    <Text style={{ color: '#64748B', fontFamily: 'Poppins_500Medium' }}>🌾 Grain Type</Text>
+                    <Text style={{ color: '#64748B', fontFamily: 'Poppins_500Medium' }}>{t.grainType}</Text>
                     <Text style={{ color: '#0F172A', fontFamily: 'Poppins_600SemiBold' }}>{result.details.Grain_Type}</Text>
                   </View>
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', borderBottomWidth: 1, borderBottomColor: '#F1F5F9', paddingBottom: 8 }}>
-                    <Text style={{ color: '#64748B', fontFamily: 'Poppins_500Medium' }}>⏱️ Age Group</Text>
+                    <Text style={{ color: '#64748B', fontFamily: 'Poppins_500Medium' }}>{t.ageGroup}</Text>
                     <Text style={{ color: '#0F172A', fontFamily: 'Poppins_600SemiBold' }}>{result.details.Age_Group}</Text>
                   </View>
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                    <Text style={{ color: '#64748B', fontFamily: 'Poppins_500Medium' }}>🏷️ Category</Text>
+                    <Text style={{ color: '#64748B', fontFamily: 'Poppins_500Medium' }}>{t.category}</Text>
                     <Text style={{ color: '#0F172A', fontFamily: 'Poppins_600SemiBold' }}>{result.details.Category}</Text>
                   </View>
                 </View>
@@ -568,8 +573,8 @@ export default function VarietyPredictionScreen() {
                   <Text style={{ fontSize: 24 }}>🛰️</Text>
                 </View>
                 <View>
-                  <Text style={[styles.resultHeader, { color: '#1E3A8A', marginLeft: 0 }]}>Field Suitability</Text>
-                  <Text style={{ color: '#2563EB', fontSize: 12, fontFamily: 'Poppins_500Medium' }}>Real-time IoT Analysis</Text>
+                  <Text style={[styles.resultHeader, { color: '#1E3A8A', marginLeft: 0 }]}>{t.fieldSuitability}</Text>
+                  <Text style={{ color: '#2563EB', fontSize: 12, fontFamily: 'Poppins_500Medium' }}>{t.realTimeIoT}</Text>
                 </View>
               </View>
 
@@ -607,11 +612,11 @@ export default function VarietyPredictionScreen() {
                 {(() => {
                   const s = suitability.suitability_score;
                   const labels = {
-                    1: { text: "Excellent", desc: "Optimal conditions for maximum yield", color: "#10B981" },
-                    2: { text: "Good", desc: "Good conditions with minor limitations", color: "#84CC16" },
-                    3: { text: "Moderate", desc: "Fair conditions, requires management", color: "#F59E0B" },
-                    4: { text: "Poor", desc: "Severe limitations present", color: "#F97316" },
-                    5: { text: "Very Poor", desc: "Conditions not suitable for this crop", color: "#EF4444" }
+                    1: { text: t.excellent, desc: t.excellentDesc, color: "#10B981" },
+                    2: { text: t.good, desc: t.goodDesc, color: "#84CC16" },
+                    3: { text: t.moderate, desc: t.moderateDesc, color: "#F59E0B" },
+                    4: { text: t.poor, desc: t.poorDesc, color: "#F97316" },
+                    5: { text: t.veryPoor, desc: t.veryPoorDesc, color: "#EF4444" }
                   };
                   const current = labels[s as keyof typeof labels] || labels[1];
                   return (
@@ -635,17 +640,17 @@ export default function VarietyPredictionScreen() {
                 <View style={styles.readingsGrid}>
                   <View style={[styles.readingBox, { backgroundColor: '#F8FAFC', borderWidth: 1, borderColor: '#E2E8F0' }]}>
                     <Text style={{ fontSize: 24, marginBottom: 5 }}>🌡️</Text>
-                    <Text style={styles.readingLabel}>Temp</Text>
+                    <Text style={styles.readingLabel}>{yt.temp}</Text>
                     <Text style={styles.readingVal}>{suitability.metrics.temperature}°C</Text>
                   </View>
                   <View style={[styles.readingBox, { backgroundColor: '#F8FAFC', borderWidth: 1, borderColor: '#E2E8F0' }]}>
                     <Text style={{ fontSize: 24, marginBottom: 5 }}>💧</Text>
-                    <Text style={styles.readingLabel}>Humidity</Text>
+                    <Text style={styles.readingLabel}>{yt.humidity}</Text>
                     <Text style={styles.readingVal}>{suitability.metrics.humidity}%</Text>
                   </View>
                   <View style={[styles.readingBox, { backgroundColor: '#F8FAFC', borderWidth: 1, borderColor: '#E2E8F0' }]}>
                     <Text style={{ fontSize: 24, marginBottom: 5 }}>🌱</Text>
-                    <Text style={styles.readingLabel}>Moisture</Text>
+                    <Text style={styles.readingLabel}>{yt.soilMoisture}</Text>
                     <Text style={styles.readingVal}>{suitability.metrics.soil_moisture}</Text>
                   </View>
                 </View>
@@ -659,7 +664,7 @@ export default function VarietyPredictionScreen() {
               onPress={handleSaveToProfile}
               disabled={saveStatus === 'Saving...'}
             >
-              <Text style={styles.primaryBtnText}>{saveStatus || "💾 Save Result to History"}</Text>
+              <Text style={styles.primaryBtnText}>{saveStatus || t.saveHistory}</Text>
             </TouchableOpacity>
           )}
 
@@ -683,7 +688,7 @@ export default function VarietyPredictionScreen() {
           {/* History Section */}
           {historyData.length > 0 && (
             <View style={{ marginTop: 30 }}>
-              <Text style={{ fontFamily: 'Poppins_700Bold', fontSize: 18, color: '#1E293B', marginBottom: 15 }}>Saved Advisory History</Text>
+              <Text style={{ fontFamily: 'Poppins_700Bold', fontSize: 18, color: '#1E293B', marginBottom: 15 }}>{t.savedHistory}</Text>
               {historyData.map(row => (
                 <TouchableOpacity 
                   key={row.id}
@@ -722,37 +727,37 @@ export default function VarietyPredictionScreen() {
               <ScrollView>
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }}>
                   <View style={{ width: '48%', marginBottom: 15 }}>
-                    <Text style={{ color: '#64748B', fontSize: 12, fontFamily: 'Poppins_500Medium' }}>Field ID</Text>
+                    <Text style={{ color: '#64748B', fontSize: 12, fontFamily: 'Poppins_500Medium' }}>{t.fieldId}</Text>
                     <Text style={{ color: '#1E293B', fontSize: 14, fontFamily: 'Poppins_700Bold' }}>{selectedHistory.field_id}</Text>
                   </View>
                   <View style={{ width: '48%', marginBottom: 15 }}>
-                    <Text style={{ color: '#64748B', fontSize: 12, fontFamily: 'Poppins_500Medium' }}>Location</Text>
+                    <Text style={{ color: '#64748B', fontSize: 12, fontFamily: 'Poppins_500Medium' }}>{t.location}</Text>
                     <Text style={{ color: '#1E293B', fontSize: 14, fontFamily: 'Poppins_700Bold' }}>{selectedHistory.city}, {selectedHistory.district}</Text>
                   </View>
                   <View style={{ width: '48%', marginBottom: 15 }}>
-                    <Text style={{ color: '#64748B', fontSize: 12, fontFamily: 'Poppins_500Medium' }}>Climatic Zone</Text>
+                    <Text style={{ color: '#64748B', fontSize: 12, fontFamily: 'Poppins_500Medium' }}>{t.climaticZone}</Text>
                     <Text style={{ color: '#1E293B', fontSize: 14, fontFamily: 'Poppins_700Bold' }}>{selectedHistory.zone}</Text>
                   </View>
                   <View style={{ width: '48%', marginBottom: 15 }}>
-                    <Text style={{ color: '#64748B', fontSize: 12, fontFamily: 'Poppins_500Medium' }}>Season</Text>
+                    <Text style={{ color: '#64748B', fontSize: 12, fontFamily: 'Poppins_500Medium' }}>{t.season}</Text>
                     <Text style={{ color: '#1E293B', fontSize: 14, fontFamily: 'Poppins_700Bold' }}>{selectedHistory.season}</Text>
                   </View>
                 </View>
 
                 <View style={{ backgroundColor: '#F8FAFC', padding: 15, borderRadius: 8, borderWidth: 1, borderColor: '#E2E8F0', marginBottom: 15 }}>
-                  <Text style={{ color: '#64748B', fontSize: 12, fontFamily: 'Poppins_500Medium' }}>Predicted Optimal Variety</Text>
+                  <Text style={{ color: '#64748B', fontSize: 12, fontFamily: 'Poppins_500Medium' }}>{t.predOptimalVariety}</Text>
                   <Text style={{ color: '#10B981', fontSize: 24, fontFamily: 'Poppins_700Bold' }}>{selectedHistory.predicted_variety}</Text>
                 </View>
 
                 <View style={{ alignItems: 'flex-end' }}>
-                  <Text style={{ color: '#64748B', fontSize: 12, fontFamily: 'Poppins_500Medium' }}>Field Suitability</Text>
+                  <Text style={{ color: '#64748B', fontSize: 12, fontFamily: 'Poppins_500Medium' }}>{t.fieldSuitability}</Text>
                   {(() => {
                     const s = selectedHistory.suitability_score;
                     const c = s === 1 ? '#10B981' : s === 2 ? '#84CC16' : s === 3 ? '#F59E0B' : s === 4 ? '#F97316' : '#EF4444';
-                    const t = s === 1 ? 'Excellent' : s === 2 ? 'Good' : s === 3 ? 'Moderate' : s === 4 ? 'Poor' : 'Very Poor';
+                    const t_label = s === 1 ? t.excellent : s === 2 ? t.good : s === 3 ? t.moderate : s === 4 ? t.poor : t.veryPoor;
                     return (
                       <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
-                        <Text style={{ color: c, fontSize: 16, fontFamily: 'Poppins_700Bold', marginRight: 6 }}>{t}</Text>
+                        <Text style={{ color: c, fontSize: 16, fontFamily: 'Poppins_700Bold', marginRight: 6 }}>{t_label}</Text>
                         <View style={{ backgroundColor: c, width: 22, height: 22, borderRadius: 11, justifyContent: 'center', alignItems: 'center' }}>
                           <Text style={{ color: 'white', fontFamily: 'Poppins_700Bold', fontSize: 12 }}>{s}/5</Text>
                         </View>
