@@ -119,30 +119,14 @@ A decentralised warehouse management system using Ethereum smart contracts to re
 ## 📁 Repository Structure
 
 ```
-smart-paddy-farming/
+R26-SE-007/
 │── c01-price-forecasting/
 │── c02-digital-dashboard/
 │── c03-marketplace/
 │── c04-blockchain-warehouse/
 ├── digital-goviya-client/
-├── .gitignore
-├── LICENSE
 └── README.md                   
 ```
-
----
-
-## 🌿 Branch Strategy
-
-| Branch | Purpose | Protection |
-|--------|---------|-----------|
-| `main` | Production-ready releases | 2 approvals required |
-| `develop` | Integration & testing | 1 approval required |
-| `feature/price-forecasting` | C01 development | C01 member |
-| `feature/digital-dashboard` | C02 development | C02 member |
-| `feature/marketplace` | C03 development | C03 member |
-| `feature/blockchain-warehouse` | C04 development | C04 member |
-| `feature/digital-goviya-client` | Academic documentation | All members |
 
 ---
 
@@ -151,15 +135,12 @@ smart-paddy-farming/
 | Member | Component |
 |--------|-----------|
 | **Ransara N.S.** | C01 — Price Forecasting |
-| **Kumarasinghe P.A.N.D.** | C02 — IoT Dashboard |
+| **Kumarasinghe P.A.N.D.** | C02 — Digital Dashboard |
 | **Chamudi K.S.I.** | C03 — Marketplace | 
-| **Senarathne S.M.B.V.B.** | C04 — Blockchain |
+| **Senarathne S.M.B.V.B.** | C04 — Warehouse Management |
 
 > **Supervisor:** Dr. Mahima Weerasinghe | SLIIT
 > **Co-Supervisor:** Mr. Eishan Weerasinghe | SLIIT
+> **External-Supervisor:** Mr. Suranaga Senanayake | PMB
 
 <div align="center">
-
-Made with ❤️ by the Smart Paddy Farming Research Group · [Institution Name] · 2024/2025
-
-</div>
