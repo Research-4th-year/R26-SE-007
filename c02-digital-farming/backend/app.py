@@ -1,9 +1,9 @@
 # pyrefly: ignore [missing-import]
 from fastapi import FastAPI, HTTPException, File, UploadFile
 # pyrefly: ignore [missing-import]
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.cors import CORSMiddleware # Allow requests from any frontend domains
 # pyrefly: ignore [missing-import]
-from pydantic import BaseModel
+from pydantic import BaseModel # For Data validation
 # pyrefly: ignore [missing-import]
 import joblib
 import pandas as pd
