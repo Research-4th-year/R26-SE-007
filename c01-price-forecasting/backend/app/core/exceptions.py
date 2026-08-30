@@ -61,3 +61,18 @@ class ModelException(AppException):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             error_code="MODEL_ERROR"
         )
+
+
+class ValidationError(AppException):
+
+    def __init__(
+        self,
+        message: str,
+        error_code: str = "VALIDATION_ERROR"
+    ):
+
+        super().__init__(
+            message=message,
+            status_code=status.HTTP_400_BAD_REQUEST,
+            error_code=error_code
+        )
