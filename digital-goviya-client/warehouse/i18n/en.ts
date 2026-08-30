@@ -261,6 +261,7 @@ const en = {
     total: "Total",
     available: "Available",
     matched: "Matched",
+    agreementReached: "Agreement Reached",
     sold: "Sold",
     filterHarvestsBy: "Filter harvests by",
     of: "of",

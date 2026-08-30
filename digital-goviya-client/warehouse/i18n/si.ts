@@ -279,6 +279,7 @@ const si = {
     total: "මුළු",
     available: "ලබා ගත හැකි",
     matched: "ගැළපුම් කළ",
+    agreementReached: "එකඟතාවකට එළඹුණි",
     sold: "අලෙවි කළ",
 
     searchPlaceholder: "වී වර්ගය, කන්නය, තත්ත්වය සොයන්න...",

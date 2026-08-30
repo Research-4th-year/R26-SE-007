@@ -832,7 +832,8 @@ function HarvestCard({
 
   const canMarkSold =
     harvest.status === "available" ||
-    harvest.status === "matched";
+    harvest.status === "matched" ||
+    harvest.status === "agreement_reached";
 
   const predictedPrice =
     harvest.aiPredictedPrice;
@@ -1276,7 +1277,9 @@ function HarvestStatusBadge({
       ? t.c3myHarvests.available
       : status === "matched"
         ? t.c3myHarvests.matched
-        : status === "sold"
+        : status === "agreement_reached"
+          ? t.c3myHarvests.agreementReached
+          : status === "sold"
           ? t.c3myHarvests.sold
           : formatStatus(status);
 
@@ -1611,6 +1614,12 @@ function getHarvestStatusStyle(
       return {
         background: "#DBEAFE",
         text: "#1D4ED8",
+      };
+
+    case "agreement_reached":
+      return {
+        background: "#FEF3C7",
+        text: "#92400E",
       };
 
     case "sold":

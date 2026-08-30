@@ -258,6 +258,7 @@ const getMyHarvests = async (req, res) => {
 const MARKABLE_HARVEST_STATUSES = [
   "available",
   "matched",
+  "agreement_reached",
 ];
 
 const cancelPendingHarvestSelections = async (harvestId) => {
@@ -325,7 +326,7 @@ const markHarvestSold = async (req, res) => {
       return res.status(409).json({
         success: false,
         message:
-          "Only available or matched harvests can be marked as sold.",
+          "Only available, matched, or agreed harvests can be marked as sold.",
       });
     }
 

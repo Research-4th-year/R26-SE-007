@@ -103,7 +103,13 @@ const harvestSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ["available", "matched", "sold", "cancelled"],
+      enum: [
+        "available",
+        "matched",
+        "agreement_reached",
+        "sold",
+        "cancelled",
+      ],
       default: "available",
     },
   },
