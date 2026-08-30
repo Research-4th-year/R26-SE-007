@@ -8,6 +8,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { api } from "@/services/shared/api";
 import { authService } from "@/services/shared/auth.service";
 import { COLORS, getUtilizationColors } from "@/constants/theme";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 
 interface StockEvent {
@@ -30,11 +31,13 @@ const EVENT_COLORS: Record<string, { bg: string; text: string; icon: string }> =
 };
 
 export default function MyWarehouseScreen() {
+  const { t } = useLanguage();
+
   const [warehouse, setWarehouse] = useState<any>(null);
   const [events, setEvents]       = useState<StockEvent[]>([]);
   const [loading, setLoading]     = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-const loadingRef = useRef(false);   //prevent multiple simultaneous loads
+  const loadingRef = useRef(false);
 
   const load = async () => {
     if (loadingRef.current) return;
@@ -42,7 +45,7 @@ const loadingRef = useRef(false);   //prevent multiple simultaneous loads
     try {
       const user = await authService.getStoredUser();
       if (!user?.warehouseId) {
-        Alert.alert("Error", "No warehouse assigned to your account");
+        Alert.alert(t.warehouse.errors.title, t.warehouse.myWarehouse.noWarehouseAssigned);
         return;
       }
       const [whRes, evRes] = await Promise.all([
@@ -52,7 +55,7 @@ const loadingRef = useRef(false);   //prevent multiple simultaneous loads
       setWarehouse(whRes.data.data);
       setEvents(evRes.data.data.items);
     } catch (err: any) {
-      Alert.alert("Error", "Failed to load warehouse data");
+      Alert.alert(t.warehouse.errors.title, t.warehouse.myWarehouse.loadError);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -60,9 +63,9 @@ const loadingRef = useRef(false);   //prevent multiple simultaneous loads
   };
 
   const handleLogout = async () => {
-  await authService.logout();
-  router.replace("/(c01-warehouse)/(auth)/login" as any);
-};
+    await authService.logout();
+    router.replace("/(c01-warehouse)/(auth)/login" as any);
+  };
 
   useEffect(() => { load(); }, []);
 
@@ -70,7 +73,7 @@ const loadingRef = useRef(false);   //prevent multiple simultaneous loads
     return (
       <View style={styles.centered}>
         <ActivityIndicator size="large" color={COLORS.primary} />
-        <Text style={styles.loadingText}>Loading warehouse...</Text>
+        <Text style={styles.loadingText}>{t.warehouse.myWarehouse.loading}</Text>
       </View>
     );
   }
@@ -81,21 +84,17 @@ const loadingRef = useRef(false);   //prevent multiple simultaneous loads
 
   return (
     <View style={styles.screen}>
-      {/* <View style={styles.header}>
-        <Text style={styles.headerTitle}>{warehouse.name}</Text>
-        <Text style={styles.headerSub}>{warehouse.code} · {warehouse.district}</Text>
-      </View> */}
       <View style={styles.header}>
-  <View style={styles.headerRow}>
-    <View>
-      <Text style={styles.headerTitle}>{warehouse.name}</Text>
-      <Text style={styles.headerSub}>{warehouse.code} · {warehouse.district}</Text>
-    </View>
-    <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-      <Ionicons name="log-out-outline" size={24} color={COLORS.white} />
-    </TouchableOpacity>
-  </View>
-</View>
+        <View style={styles.headerRow}>
+          <View>
+            <Text style={styles.headerTitle}>{warehouse.name}</Text>
+            <Text style={styles.headerSub}>{warehouse.code} · {warehouse.district}</Text>
+          </View>
+          <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
+            <Ionicons name="log-out-outline" size={24} color={COLORS.white} />
+          </TouchableOpacity>
+        </View>
+      </View>
 
       <ScrollView
         style={styles.scroll}
@@ -108,17 +107,17 @@ const loadingRef = useRef(false);   //prevent multiple simultaneous loads
             <View style={styles.statRow}>
               <View style={styles.stat}>
                 <Text style={styles.statValue}>{warehouse.currentStockTons}</Text>
-                <Text style={styles.statLabel}>Current (t)</Text>
+                <Text style={styles.statLabel}>{t.warehouse.myWarehouse.current}</Text>
               </View>
               <View style={styles.stat}>
                 <Text style={[styles.statValue, { color: COLORS.info }]}>
                   {warehouse.availableTons}
                 </Text>
-                <Text style={styles.statLabel}>Available (t)</Text>
+                <Text style={styles.statLabel}>{t.warehouse.myWarehouse.available}</Text>
               </View>
               <View style={styles.stat}>
                 <Text style={styles.statValue}>{warehouse.capacityTons}</Text>
-                <Text style={styles.statLabel}>Capacity (t)</Text>
+                <Text style={styles.statLabel}>{t.warehouse.myWarehouse.capacity}</Text>
               </View>
             </View>
 
@@ -129,14 +128,14 @@ const loadingRef = useRef(false);   //prevent multiple simultaneous loads
               }]} />
             </View>
             <Text style={[styles.utilText, { color: util.text }]}>
-              {warehouse.utilizationPct}% utilized
+              {t.warehouse.myWarehouse.utilized.replace("{percent}", String(warehouse.utilizationPct))}
             </Text>
 
             {warehouse.latestScore && (
               <View style={styles.gnnRow}>
                 <Ionicons name="analytics" size={14} color={COLORS.info} />
                 <Text style={styles.gnnText}>
-                  GNN Reliability: {(warehouse.latestScore.reliabilityScore * 100).toFixed(0)}%
+                  {t.warehouse.myWarehouse.gnnReliability.replace("{percent}", (warehouse.latestScore.reliabilityScore * 100).toFixed(0))}
                 </Text>
               </View>
             )}
@@ -151,15 +150,15 @@ const loadingRef = useRef(false);   //prevent multiple simultaneous loads
             })}
           >
             <Ionicons name="add-circle" size={20} color={COLORS.white} />
-            <Text style={styles.recordBtnText}>Record Stock Event</Text>
+            <Text style={styles.recordBtnText}>{t.warehouse.myWarehouse.recordEvent}</Text>
           </TouchableOpacity>
 
           {/* Recent events */}
-          <Text style={styles.sectionTitle}>Recent Events</Text>
+          <Text style={styles.sectionTitle}>{t.warehouse.myWarehouse.recentEvents}</Text>
           {events.length === 0 ? (
             <View style={styles.emptyState}>
               <Text style={styles.emptyIcon}>📋</Text>
-              <Text style={styles.emptyText}>No events recorded yet</Text>
+              <Text style={styles.emptyText}>{t.warehouse.myWarehouse.noEvents}</Text>
             </View>
           ) : (
             events.map((ev) => {
@@ -177,9 +176,11 @@ const loadingRef = useRef(false);   //prevent multiple simultaneous loads
                     <Ionicons name={cfg.icon as any} size={18} color={cfg.text} />
                   </View>
                   <View style={styles.eventInfo}>
-                    <Text style={styles.eventType}>{ev.eventType}</Text>
+                    <Text style={styles.eventType}>
+                      {t.warehouse.eventTypes[ev.eventType as keyof typeof t.warehouse.eventTypes] ?? ev.eventType}
+                    </Text>
                     <Text style={styles.eventNotes} numberOfLines={1}>
-                      {ev.notes ?? "No notes"}
+                      {ev.notes ?? t.warehouse.myWarehouse.noNotes}
                     </Text>
                     <Text style={styles.eventTime}>
                       {new Date(ev.timestamp).toLocaleDateString("en-US", {
@@ -190,7 +191,7 @@ const loadingRef = useRef(false);   //prevent multiple simultaneous loads
                   <View style={styles.eventRight}>
                     <Text style={[styles.eventQty, { color: cfg.text }]}>
                       {["OUTFLOW","REDISTRIBUTION","DAMAGE"].includes(ev.eventType) ? "-" : "+"}
-                      {ev.quantityTons}t
+                      {ev.quantityTons}{t.warehouse.units.tonsShort}
                     </Text>
                     <View style={styles.eventBadges}>
                       {ev.documentHash && (
@@ -220,14 +221,14 @@ const styles = StyleSheet.create({
   scroll:   { flex: 1 },
   content:  { padding: 16 },
 
-header: {
-  backgroundColor: COLORS.primaryDark,
-  paddingHorizontal: 16, paddingTop: 52, paddingBottom: 16,
-},
-headerRow:   { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
-headerTitle: { color: COLORS.white, fontSize: 20, fontWeight: "bold" },
-headerSub:   { color: COLORS.primaryLight, fontSize: 13, marginTop: 2 },
-logoutButton:{ padding: 8 },
+  header: {
+    backgroundColor: COLORS.primaryDark,
+    paddingHorizontal: 16, paddingTop: 52, paddingBottom: 16,
+  },
+  headerRow:   { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
+  headerTitle: { color: COLORS.white, fontSize: 20, fontWeight: "bold" },
+  headerSub:   { color: COLORS.primaryLight, fontSize: 13, marginTop: 2 },
+  logoutButton:{ padding: 8 },
 
   overviewCard: {
     backgroundColor: COLORS.bgCard, borderRadius: 14, padding: 16,

@@ -22,9 +22,12 @@ import {
   getUtilizationColors,
   getReliabilityColor,
 } from "@/constants/theme";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 
 export default function DashboardScreen() {
+  const { t } = useLanguage();
+
   const [summary, setSummary] = useState<NetworkSummary | null>(null);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [loading, setLoading] = useState(true);
@@ -33,7 +36,7 @@ export default function DashboardScreen() {
   const loadingRef = useRef(false);
 
   const load = async () => {
-    if (loadingRef.current) return; //prevent concurrent calls
+    if (loadingRef.current) return;
     loadingRef.current = true;
     try {
       const [s, w, u] = await Promise.all([
@@ -45,7 +48,7 @@ export default function DashboardScreen() {
       setWarehouses(w);
       setUser(u);
     } catch (err: any) {
-      Alert.alert("Error", "Failed to load dashboard data");
+      Alert.alert(t.warehouse.errors.title, t.warehouse.dashboard.loadError);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -60,7 +63,7 @@ export default function DashboardScreen() {
   useEffect(() => {
     authService.getStoredUser().then((u) => {
       if (u?.role === "WAREHOUSE_SUPERVISOR") {
-router.replace("/(c01-warehouse)/(supervisor)/my-warehouse" as any);
+        router.replace("/(c01-warehouse)/(supervisor)/my-warehouse" as any);
       } else if (u?.role === "AUDITOR") {
         router.replace("/(c01-warehouse)/(auditor)/dashboard" as any);
       }
@@ -74,14 +77,14 @@ router.replace("/(c01-warehouse)/(supervisor)/my-warehouse" as any);
 
   const handleLogout = async () => {
     await authService.logout();
-      router.replace("/(c01-warehouse)/(auth)/login" as any);
+    router.replace("/(c01-warehouse)/(auth)/login" as any);
   };
 
   if (loading) {
     return (
       <View style={styles.centered}>
         <ActivityIndicator size="large" color={COLORS.primary} />
-        <Text style={styles.loadingText}>Loading dashboard...</Text>
+        <Text style={styles.loadingText}>{t.warehouse.dashboard.loading}</Text>
       </View>
     );
   }
@@ -97,11 +100,11 @@ router.replace("/(c01-warehouse)/(supervisor)/my-warehouse" as any);
       <View style={styles.header}>
         <View style={styles.headerRow}>
           <View>
-            <Text style={styles.headerGreeting}>Welcome back</Text>
+            <Text style={styles.headerGreeting}>{t.warehouse.dashboard.welcomeBack}</Text>
             <Text style={styles.headerName}>{user?.fullName}</Text>
             <View style={styles.roleBadge}>
               <Text style={styles.roleBadgeText}>
-                {user?.role?.replace("_", " ")}
+                {user?.role ? t.warehouse.roles[user.role as keyof typeof t.warehouse.roles] : ""}
               </Text>
             </View>
           </View>
@@ -119,9 +122,11 @@ router.replace("/(c01-warehouse)/(supervisor)/my-warehouse" as any);
             onPress={() => router.push("/(c01-warehouse)/(tabs)/disasters" as any)}
           >
             <Ionicons name="warning" size={20} color={COLORS.white} />
-            <Text style={styles.disasterBannerText}>
-              {summary.openDisasters} Active Disaster
-              {summary.openDisasters > 1 ? "s" : ""}
+            <Text style={styles.disasterBannerText} numberOfLines={1}>
+              {(summary.openDisasters > 1
+                ? t.warehouse.dashboard.activeDisasters
+                : t.warehouse.dashboard.activeDisaster
+              ).replace("{count}", String(summary.openDisasters))}
             </Text>
             <Ionicons
               name="chevron-forward"
@@ -135,33 +140,33 @@ router.replace("/(c01-warehouse)/(supervisor)/my-warehouse" as any);
         {/* Network Summary Cards */}
         {summary && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Network Overview</Text>
+            <Text style={styles.sectionTitle}>{t.warehouse.dashboard.networkOverview}</Text>
             <View style={styles.statRow}>
               <View style={styles.statCard}>
-                <Text style={styles.statLabel}>Total Capacity</Text>
+                <Text style={styles.statLabel}>{t.warehouse.dashboard.totalCapacity}</Text>
                 <Text style={styles.statValue}>
                   {summary.totalCapacityTons.toLocaleString()}
                 </Text>
-                <Text style={styles.statUnit}>tons</Text>
+                <Text style={styles.statUnit}>{t.warehouse.units.tons}</Text>
               </View>
               <View style={styles.statCard}>
-                <Text style={styles.statLabel}>Current Stock</Text>
+                <Text style={styles.statLabel}>{t.warehouse.dashboard.currentStock}</Text>
                 <Text style={[styles.statValue, { color: COLORS.success }]}>
                   {summary.totalStockTons.toLocaleString()}
                 </Text>
-                <Text style={styles.statUnit}>tons</Text>
+                <Text style={styles.statUnit}>{t.warehouse.units.tons}</Text>
               </View>
             </View>
             <View style={styles.statRow}>
               <View style={styles.statCard}>
-                <Text style={styles.statLabel}>Available</Text>
+                <Text style={styles.statLabel}>{t.warehouse.dashboard.available}</Text>
                 <Text style={[styles.statValue, { color: COLORS.info }]}>
                   {summary.totalAvailableTons.toLocaleString()}
                 </Text>
-                <Text style={styles.statUnit}>tons</Text>
+                <Text style={styles.statUnit}>{t.warehouse.units.tons}</Text>
               </View>
               <View style={styles.statCard}>
-                <Text style={styles.statLabel}>Utilization</Text>
+                <Text style={styles.statLabel}>{t.warehouse.dashboard.utilization}</Text>
                 <Text
                   style={[
                     styles.statValue,
@@ -175,34 +180,34 @@ router.replace("/(c01-warehouse)/(supervisor)/my-warehouse" as any);
                 >
                   {summary.networkUtilPct}%
                 </Text>
-                <Text style={styles.statUnit}>network-wide</Text>
+                <Text style={styles.statUnit}>{t.warehouse.dashboard.networkWide}</Text>
               </View>
             </View>
           </View>
         )}
 
         {/* Quick Actions */}
-        <Text style={styles.sectionTitle}>Quick Actions</Text>
+        <Text style={styles.sectionTitle}>{t.warehouse.dashboard.quickActions}</Text>
         <View style={styles.actionsRow}>
           <TouchableOpacity
             style={[styles.actionButton, { backgroundColor: COLORS.danger }]}
             onPress={() => router.push("/(c01-warehouse)/(tabs)/disasters" as any)}
           >
             <Ionicons name="warning" size={24} color={COLORS.white} />
-            <Text style={styles.actionButtonText}>Disasters</Text>
+            <Text style={styles.actionButtonText} numberOfLines={1}>{t.warehouse.disasters.title}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.actionButton, { backgroundColor: COLORS.info }]}
             onPress={() => router.push("/(c01-warehouse)/(tabs)/warehouses" as any)}
           >
             <Ionicons name="business" size={24} color={COLORS.white} />
-            <Text style={styles.actionButtonText}>Warehouses</Text>
+            <Text style={styles.actionButtonText} numberOfLines={1}>{t.warehouse.warehouses.title}</Text>
           </TouchableOpacity>
         </View>
 
         {/* Warehouse List */}
         <Text style={styles.sectionTitle}>
-          Warehouses ({warehouses.length})
+          {t.warehouse.dashboard.warehousesCount.replace("{count}", String(warehouses.length))}
         </Text>
         {warehouses.map((wh) => {
           const util = getUtilizationColors(wh.utilizationPct);
@@ -245,7 +250,7 @@ router.replace("/(c01-warehouse)/(supervisor)/my-warehouse" as any);
 
               <View style={styles.warehouseCardFooter}>
                 <Text style={styles.stockText}>
-                  {wh.currentStockTons} tons in stock
+                  {t.warehouse.dashboard.tonsInStock.replace("{tons}", String(wh.currentStockTons))}
                 </Text>
                 {wh.reliabilityScore !== null && (
                   <Text
@@ -254,7 +259,7 @@ router.replace("/(c01-warehouse)/(supervisor)/my-warehouse" as any);
                       { color: getReliabilityColor(wh.reliabilityScore) },
                     ]}
                   >
-                    GNN: {(wh.reliabilityScore * 100).toFixed(0)}%
+                    {t.warehouse.dashboard.gnnScore.replace("{score}", (wh.reliabilityScore * 100).toFixed(0))}
                   </Text>
                 )}
               </View>
@@ -295,11 +300,11 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
     borderRadius: 999,
     paddingHorizontal: 12,
-    paddingVertical: 4,
+    paddingVertical: 6,
     marginTop: 4,
     alignSelf: "flex-start",
   },
-  roleBadgeText: { color: COLORS.primaryLight, fontSize: 12 },
+  roleBadgeText: { color: COLORS.primaryLight, fontSize: 12, lineHeight: 18 },
   logoutButton: { padding: 8 },
 
   content: { paddingHorizontal: 16, marginTop: -16 },
@@ -316,6 +321,7 @@ const styles = StyleSheet.create({
     color: COLORS.white,
     fontWeight: "bold",
     marginLeft: 8,
+    flex: 1,
   },
   disasterBannerChevron: { marginLeft: "auto" },
 

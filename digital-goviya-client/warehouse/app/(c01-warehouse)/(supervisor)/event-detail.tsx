@@ -7,8 +7,11 @@ import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { api } from "@/services/shared/api";
 import { COLORS } from "@/constants/theme";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function EventDetailScreen() {
+  const { t } = useLanguage();
+
   const { eventId, warehouseId } = useLocalSearchParams<{
     eventId:     string;
     warehouseId: string;
@@ -20,7 +23,7 @@ export default function EventDetailScreen() {
   useEffect(() => {
     api.get(`/api/blockchain/stock-events/${eventId}`)
       .then((res) => setEvent(res.data.data))
-      .catch(() => Alert.alert("Error", "Failed to load event"))
+      .catch(() => Alert.alert(t.warehouse.errors.title, t.warehouse.eventDetail.loadError))
       .finally(() => setLoading(false));
   }, [eventId]);
 
@@ -43,7 +46,7 @@ export default function EventDetailScreen() {
           <Ionicons name="arrow-back" size={24} color={COLORS.white} />
         </TouchableOpacity>
         <View>
-          <Text style={styles.headerTitle}>Stock Event Detail</Text>
+          <Text style={styles.headerTitle}>{t.warehouse.eventDetail.title}</Text>
           <Text style={styles.headerSub}>{database?.warehouse?.name}</Text>
         </View>
       </View>
@@ -68,19 +71,19 @@ export default function EventDetailScreen() {
           </View>
 
           {/* Database record */}
-          <Text style={styles.sectionTitle}>Stock Event</Text>
+          <Text style={styles.sectionTitle}>{t.warehouse.eventDetail.stockEvent}</Text>
           <View style={styles.card}>
-            <Row label="Type"      value={database?.eventType} />
-            <Row label="Quantity"  value={`${database?.quantityTons} tons`} />
-            <Row label="Recorded"  value={new Date(database?.timestamp).toLocaleString()} />
-            <Row label="By"        value={database?.reportedBy?.fullName} />
-            {database?.notes && <Row label="Notes" value={database.notes} />}
+            <Row label={t.warehouse.eventDetail.type}      value={t.warehouse.eventTypes[database?.eventType as keyof typeof t.warehouse.eventTypes] ?? database?.eventType} />
+            <Row label={t.warehouse.eventDetail.quantity}  value={`${database?.quantityTons} ${t.warehouse.units.tons}`} />
+            <Row label={t.warehouse.eventDetail.recorded}  value={new Date(database?.timestamp).toLocaleString()} />
+            <Row label={t.warehouse.eventDetail.by}        value={database?.reportedBy?.fullName} />
+            {database?.notes && <Row label={t.warehouse.eventDetail.notes} value={database.notes} />}
           </View>
 
           {/* Document hash */}
           {database?.documentHash && (
             <>
-              <Text style={styles.sectionTitle}>Document Hash (SHA-256)</Text>
+              <Text style={styles.sectionTitle}>{t.warehouse.eventDetail.documentHash}</Text>
               <View style={styles.card}>
                 <Text style={styles.hashText}>{database.documentHash}</Text>
                 <TouchableOpacity
@@ -91,7 +94,7 @@ export default function EventDetailScreen() {
                   })}
                 >
                   <Ionicons name="search" size={14} color={COLORS.info} />
-                  <Text style={styles.verifyBtnText}>Verify document integrity</Text>
+                  <Text style={styles.verifyBtnText}>{t.warehouse.eventDetail.verifyIntegrity}</Text>
                 </TouchableOpacity>
               </View>
             </>
@@ -100,12 +103,12 @@ export default function EventDetailScreen() {
           {/* Blockchain record */}
           {ledger && (
             <>
-              <Text style={styles.sectionTitle}>Blockchain Record</Text>
+              <Text style={styles.sectionTitle}>{t.warehouse.eventDetail.blockchainRecord}</Text>
               <View style={styles.card}>
-                <Row label="Asset Type"  value={ledger.assetType} />
-                <Row label="Reported By MSP" value={ledger.reportedByMsp} />
-                <Row label="Timestamp"   value={ledger.timestamp} />
-                <Row label="Doc Hash"    value={ledger.documentHash?.slice(0, 20) + "..."} />
+                <Row label={t.warehouse.eventDetail.assetType}  value={ledger.assetType} />
+                <Row label={t.warehouse.eventDetail.reportedByMsp} value={ledger.reportedByMsp} />
+                <Row label={t.warehouse.eventDetail.timestamp}   value={ledger.timestamp} />
+                <Row label={t.warehouse.eventDetail.docHash}    value={ledger.documentHash?.slice(0, 20) + "..."} />
               </View>
             </>
           )}
@@ -120,7 +123,7 @@ export default function EventDetailScreen() {
               })}
             >
               <Ionicons name="document" size={18} color={COLORS.white} />
-              <Text style={styles.attachBtnText}>Attach Physical Receipt</Text>
+              <Text style={styles.attachBtnText}>{t.warehouse.eventDetail.attachReceipt}</Text>
             </TouchableOpacity>
           )}
 

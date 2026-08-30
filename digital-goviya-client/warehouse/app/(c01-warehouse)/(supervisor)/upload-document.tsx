@@ -8,8 +8,11 @@ import { Ionicons } from "@expo/vector-icons";
 import * as DocumentPicker from "expo-document-picker";
 import { api } from "@/services/shared/api";
 import { COLORS } from "@/constants/theme";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function UploadDocumentScreen() {
+  const { t } = useLanguage();
+
   const { eventId, warehouseId } = useLocalSearchParams<{
     eventId:     string;
     warehouseId: string;
@@ -33,7 +36,7 @@ export default function UploadDocumentScreen() {
         setLinked(false);
       }
     } catch {
-      Alert.alert("Error", "Failed to pick document");
+      Alert.alert(t.warehouse.errors.title, t.warehouse.uploadDocument.pickError);
     }
   };
 
@@ -55,11 +58,11 @@ export default function UploadDocumentScreen() {
       const hash = res.data.data.hash;
       setUploadedHash(hash);
       Alert.alert(
-        "Uploaded ✅",
-        `SHA-256: ${hash.slice(0, 16)}...\n\nTap 'Link to Event' to attach this document to your stock event.`
+        t.warehouse.uploadDocument.uploadedTitle,
+        t.warehouse.uploadDocument.uploadedBody.replace("{hash}", hash.slice(0, 16))
       );
     } catch (err: any) {
-      Alert.alert("Upload Failed", err?.response?.data?.message || "Failed to upload document");
+      Alert.alert(t.warehouse.uploadDocument.uploadFailedTitle, err?.response?.data?.message || t.warehouse.uploadDocument.uploadError);
     } finally {
       setUploading(false);
     }
@@ -75,12 +78,12 @@ export default function UploadDocumentScreen() {
       });
       setLinked(true);
       Alert.alert(
-        "Linked ✅",
-        "Document hash linked to stock event. The SHA-256 fingerprint is now part of the audit record.",
-        [{ text: "Done", onPress: () => router.back() }]
+        t.warehouse.uploadDocument.linkedTitle,
+        t.warehouse.uploadDocument.linkedBody,
+        [{ text: t.warehouse.recordEvent.done, onPress: () => router.back() }]
       );
     } catch (err: any) {
-      Alert.alert("Error", err?.response?.data?.message || "Failed to link document");
+      Alert.alert(t.warehouse.errors.title, err?.response?.data?.message || t.warehouse.uploadDocument.linkError);
     } finally {
       setLinking(false);
     }
@@ -93,8 +96,8 @@ export default function UploadDocumentScreen() {
           <Ionicons name="arrow-back" size={24} color={COLORS.white} />
         </TouchableOpacity>
         <View>
-          <Text style={styles.headerTitle}>Attach Document</Text>
-          <Text style={styles.headerSub}>Link physical receipt to stock event</Text>
+          <Text style={styles.headerTitle}>{t.warehouse.uploadDocument.title}</Text>
+          <Text style={styles.headerSub}>{t.warehouse.uploadDocument.subtitle}</Text>
         </View>
       </View>
 
@@ -105,9 +108,7 @@ export default function UploadDocumentScreen() {
           <View style={styles.explainCard}>
             <Ionicons name="information-circle" size={16} color={COLORS.info} />
             <Text style={styles.explainText}>
-              Upload a photo or PDF of the physical delivery receipt.
-              Its SHA-256 hash will be computed and linked to this stock event,
-              creating a tamper-evident audit record.
+              {t.warehouse.uploadDocument.explanation}
             </Text>
           </View>
 
@@ -115,14 +116,14 @@ export default function UploadDocumentScreen() {
           <View style={styles.stepCard}>
             <View style={styles.stepHeader}>
               <View style={styles.stepNum}><Text style={styles.stepNumText}>1</Text></View>
-              <Text style={styles.stepTitle}>Select Document</Text>
+              <Text style={styles.stepTitle}>{t.warehouse.uploadDocument.step1Title}</Text>
             </View>
-            <Text style={styles.stepDesc}>PDF, JPEG, PNG or WEBP · Max 10 MB</Text>
+            <Text style={styles.stepDesc}>{t.warehouse.uploadDocument.step1Desc}</Text>
 
             <TouchableOpacity style={styles.pickBtn} onPress={handlePickFile}>
               <Ionicons name="folder-open" size={20} color={COLORS.primary} />
               <Text style={styles.pickBtnText}>
-                {file ? file.name : "Choose file..."}
+                {file ? file.name : t.warehouse.uploadDocument.chooseFile}
               </Text>
             </TouchableOpacity>
 
@@ -144,11 +145,11 @@ export default function UploadDocumentScreen() {
                 <Text style={styles.stepNumText}>2</Text>
               </View>
               <Text style={[styles.stepTitle, !file && styles.stepTitleInactive]}>
-                Compute SHA-256 Hash
+                {t.warehouse.uploadDocument.step2Title}
               </Text>
             </View>
             <Text style={styles.stepDesc}>
-              The server hashes the file and stores it in the document registry
+              {t.warehouse.uploadDocument.step2Desc}
             </Text>
 
             {uploadedHash ? (
@@ -163,8 +164,8 @@ export default function UploadDocumentScreen() {
                 disabled={!file || uploading}
               >
                 {uploading
-                  ? <><ActivityIndicator size="small" color={COLORS.white} /><Text style={styles.btnText}>Hashing...</Text></>
-                  : <><Ionicons name="cloud-upload" size={18} color={COLORS.white} /><Text style={styles.btnText}>Upload & Hash</Text></>
+                  ? <><ActivityIndicator size="small" color={COLORS.white} /><Text style={styles.btnText}>{t.warehouse.uploadDocument.hashing}</Text></>
+                  : <><Ionicons name="cloud-upload" size={18} color={COLORS.white} /><Text style={styles.btnText}>{t.warehouse.uploadDocument.uploadButton}</Text></>
                 }
               </TouchableOpacity>
             )}
@@ -177,17 +178,17 @@ export default function UploadDocumentScreen() {
                 <Text style={styles.stepNumText}>3</Text>
               </View>
               <Text style={[styles.stepTitle, !uploadedHash && styles.stepTitleInactive]}>
-                Link to Stock Event
+                {t.warehouse.uploadDocument.step3Title}
               </Text>
             </View>
             <Text style={styles.stepDesc}>
-              Attaches the hash to event {eventId?.slice(0, 8)}...
+              {t.warehouse.uploadDocument.step3Desc.replace("{eventId}", eventId?.slice(0, 8) ?? "")}
             </Text>
 
             {linked ? (
               <View style={styles.linkedCard}>
                 <Ionicons name="link" size={16} color={COLORS.success} />
-                <Text style={styles.linkedText}>Successfully linked to stock event</Text>
+                <Text style={styles.linkedText}>{t.warehouse.uploadDocument.linkedSuccess}</Text>
               </View>
             ) : (
               <TouchableOpacity
@@ -196,8 +197,8 @@ export default function UploadDocumentScreen() {
                 disabled={!uploadedHash || linking}
               >
                 {linking
-                  ? <><ActivityIndicator size="small" color={COLORS.white} /><Text style={styles.btnText}>Linking...</Text></>
-                  : <><Ionicons name="link" size={18} color={COLORS.white} /><Text style={styles.btnText}>Link to Event</Text></>
+                  ? <><ActivityIndicator size="small" color={COLORS.white} /><Text style={styles.btnText}>{t.warehouse.uploadDocument.linking}</Text></>
+                  : <><Ionicons name="link" size={18} color={COLORS.white} /><Text style={styles.btnText}>{t.warehouse.uploadDocument.linkButton}</Text></>
                 }
               </TouchableOpacity>
             )}
