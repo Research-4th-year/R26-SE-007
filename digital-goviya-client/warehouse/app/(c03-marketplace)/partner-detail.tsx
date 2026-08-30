@@ -410,7 +410,11 @@ export default function PartnerDetailScreen() {
           style={{ opacity: contentFade, transform: [{ translateY: contentRise }] }}
         >
           <LinearGradient
-            colors={[theme.dark, theme.primary]}
+            colors={
+              isFarmer
+                ? ["#0A331D", "#12522E", "#0B3B22"]
+                : [theme.dark, theme.primary]
+            }
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.profileHero}

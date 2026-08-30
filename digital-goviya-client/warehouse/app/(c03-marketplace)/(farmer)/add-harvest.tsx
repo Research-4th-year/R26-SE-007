@@ -422,8 +422,9 @@ export default function AddHarvestScreen() {
           {/* Hero */}
           <LinearGradient
             colors={[
-              "#1B5E3A",
-              "#0F3D26",
+              "#0A331D",
+              "#12522E",
+              "#0B3B22",
             ]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
@@ -435,7 +436,7 @@ export default function AddHarvestScreen() {
               <Ionicons
                 name="leaf"
                 size={12}
-                color="#BBF7D0"
+                color="#F5C542"
               />
 
               <Text
@@ -1242,7 +1243,7 @@ const styles = StyleSheet.create({
   },
 
   heroEyebrow: {
-    color: "#BBF7D0",
+    color: "#FDE68A",
     fontSize: 10.5,
     fontFamily:
       "Poppins_700Bold",
@@ -1259,7 +1260,7 @@ const styles = StyleSheet.create({
   },
 
   heroSubtitle: {
-    color: "#DCEFE1",
+    color: "rgba(255,255,255,0.68)",
     fontSize: 13,
     lineHeight: 19,
     fontFamily:

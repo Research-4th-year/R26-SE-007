@@ -178,6 +178,7 @@ const startNegotiation = async (
 
     if (
       harvest.status === "sold" ||
+      harvest.status === "agreement_reached" ||
       harvest.status === "cancelled"
     ) {
       return res.status(409).json({
@@ -332,7 +333,7 @@ const startNegotiation = async (
         Harvest.findByIdAndUpdate(
           harvest._id,
           {
-            status: "sold",
+            status: "agreement_reached",
           },
           {
             runValidators: true,
