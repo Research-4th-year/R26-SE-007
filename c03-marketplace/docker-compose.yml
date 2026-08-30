@@ -1,0 +1,26 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    ports:
+      - "5000:5000"
+    env_file:
+      - ./backend/.env
+    environment:
+      NEGOTIATION_API_URL: http://negotiation:8000
+    depends_on:
+      - negotiation
+
+  negotiation:
+    build:
+      context: .
+      dockerfile: negotiation_agents/Dockerfile
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./negotiation_agents/.env
+    environment:
+      OLLAMA_HOST: http://host.docker.internal:11434
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

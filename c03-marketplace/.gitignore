@@ -47,6 +47,7 @@ share/python-wheels/
 
 # RAG / data files
 *.txt
+!**/requirements.txt
 
 negotiation_agents/.venv/
 negotiation_agents/__pycache__/

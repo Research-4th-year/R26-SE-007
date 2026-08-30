@@ -1,0 +1,5 @@
+ollama>=0.4.7
+pydantic>=2.10.0
+python-dotenv>=1.0.1
+fastapi>=0.100.0
+uvicorn>=0.23.0
