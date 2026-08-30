@@ -1,8 +1,14 @@
 import { Platform } from 'react-native';
+import Constants from 'expo-constants';
 
-// Use the computer's local IP address so physical devices and emulators can reach the backend
-// For Android emulator specifically, 10.0.2.2 points to the host's 127.0.0.1
-// However, using the actual network IP (192.168.8.105) works for both emulators and physical devices
-const LOCAL_IP = "192.168.8.105";
+let LOCAL_IP = "127.0.0.1";
+
+// In development with Expo, dynamically get the IP address of the machine running Metro bundler
+if (__DEV__ && Constants.expoConfig?.hostUri) {
+  LOCAL_IP = Constants.expoConfig.hostUri.split(':')[0];
+} else if (Platform.OS === 'android') {
+  // Fallback for Android emulator if not using Expo Go network routing
+  LOCAL_IP = "10.0.2.2";
+}
 
 export const API_URL = process.env.EXPO_PUBLIC_API_URL || `http://${LOCAL_IP}:8000`;

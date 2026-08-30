@@ -1,5 +1,7 @@
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRef, useEffect } from "react";
+import { useLanguage } from "../../contexts/LanguageContext";
+import { translations } from "../../i18n";
 import {
   View,
   Text,
@@ -7,6 +9,7 @@ import {
   StyleSheet,
   Animated,
   ScrollView,
+  Image,
 } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -29,6 +32,9 @@ const ROUTES = {
 };
 
 export default function FarmingHomeScreen() {
+  const { language } = useLanguage();
+  const t = translations[language].c02Farming.home;
+
   const [fontsLoaded] = useFonts({
     Poppins_800ExtraBold,
     Poppins_700Bold,
@@ -80,12 +86,12 @@ export default function FarmingHomeScreen() {
 
           <View style={styles.eyebrowPill}>
             <Ionicons name="sparkles" size={11} color="#F5C542" />
-            <Text style={styles.eyebrow}>AI-POWERED FARMING INSIGHTS</Text>
+            <Text style={styles.eyebrow}>{t.eyebrow}</Text>
           </View>
 
-          <Text style={styles.heroTitle}>Smart Farming{"\n"}& Advisory</Text>
+          <Text style={styles.heroTitle}>{t.title}</Text>
           <Text style={styles.heroSub}>
-            Optimize your harvest with data-driven insights and disease detection.
+            {t.subtitle}
           </Text>
         </View>
 
@@ -101,17 +107,17 @@ export default function FarmingHomeScreen() {
             showsVerticalScrollIndicator={false}
           >
             <Text style={styles.welcomeText}>
-              Leverage advanced machine learning and real-time IoT data to manage your paddy fields.
+              {t.introText}
             </Text>
 
             {/* IoT Dashboard card */}
             <View style={styles.featureCard}>
-              <View style={[styles.featureIconBox, { backgroundColor: "#E0F2FE" }]}>
-                <Ionicons name="hardware-chip" size={26} color="#0369A1" />
+              <View style={[styles.featureIconBox, { backgroundColor: "#E0F2FE", padding: 8 }]}>
+                <Image source={require("../../assets/farming-icons/iotsensors.png")} style={{ width: 32, height: 32 }} resizeMode="contain" />
               </View>
-              <Text style={styles.featureTitle}>IoT Dashboard</Text>
+              <Text style={styles.featureTitle}>{t.iotDashboardTitle}</Text>
               <Text style={styles.featureDesc}>
-                Monitor real-time sensor data from your ESP32 IoT device — temperature, humidity, soil moisture, NPK, and more.
+                {t.iotDashboardDesc}
               </Text>
               <TouchableOpacity
                 style={styles.primaryBtnShadow}
@@ -124,7 +130,7 @@ export default function FarmingHomeScreen() {
                   end={{ x: 1, y: 0 }}
                   style={styles.primaryBtn}
                 >
-                  <Text style={[styles.primaryBtnText, { color: "white" }]}>View Dashboard</Text>
+                  <Text style={[styles.primaryBtnText, { color: "white" }]}>{t.iotDashboardBtn}</Text>
                   <Ionicons name="arrow-forward" size={16} color="white" />
                 </LinearGradient>
               </TouchableOpacity>
@@ -132,12 +138,12 @@ export default function FarmingHomeScreen() {
 
             {/* Advisory card */}
             <View style={styles.featureCard}>
-              <View style={[styles.featureIconBox, { backgroundColor: "#DCFCE7" }]}>
-                <Ionicons name="leaf" size={26} color="#15803D" />
+              <View style={[styles.featureIconBox, { backgroundColor: "#DCFCE7", padding: 8 }]}>
+                <Image source={require("../../assets/farming-icons/wheat.png")} style={{ width: 32, height: 32 }} resizeMode="contain" />
               </View>
-              <Text style={styles.featureTitle}>Variety Prediction & Suitability</Text>
+              <Text style={styles.featureTitle}>{t.varietyTitle}</Text>
               <Text style={styles.featureDesc}>
-                Find the best paddy variety for your district and check if your field is ready for planting.
+                {t.varietyDesc}
               </Text>
               <TouchableOpacity
                 style={styles.primaryBtnShadow}
@@ -150,7 +156,7 @@ export default function FarmingHomeScreen() {
                   end={{ x: 1, y: 0 }}
                   style={styles.primaryBtn}
                 >
-                  <Text style={styles.primaryBtnText}>Check Suitability</Text>
+                  <Text style={styles.primaryBtnText}>{t.varietyBtn}</Text>
                   <Ionicons name="arrow-forward" size={16} color="#0B3B22" />
                 </LinearGradient>
               </TouchableOpacity>
@@ -158,76 +164,74 @@ export default function FarmingHomeScreen() {
 
             {/* Yield card */}
             <View style={styles.featureCard}>
-              <View style={[styles.featureIconBox, { backgroundColor: "#E0F2FE" }]}>
-                <Ionicons name="stats-chart" size={26} color="#0369A1" />
+              <View style={[styles.featureIconBox, { backgroundColor: "#E0F2FE", padding: 8 }]}>
+                <Image source={require("../../assets/farming-icons/yield.png")} style={{ width: 32, height: 32 }} resizeMode="contain" />
               </View>
-              <Text style={styles.featureTitle}>Yield Prediction</Text>
+              <Text style={styles.featureTitle}>{t.yieldTitle}</Text>
               <Text style={styles.featureDesc}>
-                Estimate your expected harvest volume based on your land size and IoT metrics.
+                {t.yieldDesc}
               </Text>
               <TouchableOpacity
                 style={styles.secondaryBtn}
                 activeOpacity={0.85}
                 onPress={() => router.push(ROUTES.yield as any)}
               >
-                <Text style={styles.secondaryBtnText}>Predict Yield</Text>
+                <Text style={styles.secondaryBtnText}>{t.yieldBtn}</Text>
                 <Ionicons name="arrow-forward" size={16} color="#0369A1" />
               </TouchableOpacity>
             </View>
             
             {/* Disease card */}
             <View style={styles.featureCard}>
-              <View style={[styles.featureIconBox, { backgroundColor: "#FEE2E2" }]}>
-                <Ionicons name="scan" size={26} color="#B91C1C" />
+              <View style={[styles.featureIconBox, { backgroundColor: "#FEE2E2", padding: 8 }]}>
+                <Image source={require("../../assets/farming-icons/paddy iot.png")} style={{ width: 32, height: 32 }} resizeMode="contain" />
               </View>
-              <Text style={styles.featureTitle}>Disease Detection</Text>
+              <Text style={styles.featureTitle}>{t.diseaseTitle}</Text>
               <Text style={styles.featureDesc}>
-                Snap a picture of a paddy leaf to instantly detect Bacterial Blight or Fungal infections.
+                {t.diseaseDesc}
               </Text>
               <TouchableOpacity
                 style={[styles.secondaryBtn, { backgroundColor: "#FEF2F2" }]}
                 activeOpacity={0.85}
                 onPress={() => router.push(ROUTES.disease as any)}
               >
-                <Text style={[styles.secondaryBtnText, { color: "#B91C1C" }]}>Scan Leaf</Text>
+                <Text style={[styles.secondaryBtnText, { color: "#B91C1C" }]}>{t.diseaseBtn}</Text>
                 <Ionicons name="arrow-forward" size={16} color="#B91C1C" />
               </TouchableOpacity>
             </View>
 
             {/* Fertilizer card */}
             <View style={styles.featureCard}>
-              <View style={[styles.featureIconBox, { backgroundColor: "#DCFCE7" }]}>
-                <Ionicons name="leaf" size={26} color="#15803D" />
+              <View style={[styles.featureIconBox, { backgroundColor: "#DCFCE7", padding: 8 }]}>
+                <Image source={require("../../assets/farming-icons/fertilizer.png")} style={{ width: 32, height: 32 }} resizeMode="contain" />
               </View>
-              <Text style={styles.featureTitle}>Fertilizer Guide</Text>
+              <Text style={styles.featureTitle}>{t.fertilizerTitle}</Text>
               <Text style={styles.featureDesc}>
-                Calculate optimal Urea, TSP, and MOP requirements based on RRDI guidelines.
+                {t.fertilizerDesc}
               </Text>
               <TouchableOpacity
                 style={[styles.secondaryBtn, { backgroundColor: "#F0FDF4" }]}
                 activeOpacity={0.85}
                 onPress={() => router.push(ROUTES.fertilizer as any)}
               >
-                <Text style={[styles.secondaryBtnText, { color: "#15803D" }]}>Calculate Needs</Text>
+                <Text style={[styles.secondaryBtnText, { color: "#15803D" }]}>{t.fertilizerBtn}</Text>
                 <Ionicons name="arrow-forward" size={16} color="#15803D" />
               </TouchableOpacity>
             </View>
             
             {/* Profile card */}
             <View style={styles.featureCard}>
-              <View style={[styles.featureIconBox, { backgroundColor: "#EDE9FE" }]}>
-                <Ionicons name="person" size={26} color="#7C3AED" />
+              <View style={[styles.featureIconBox, { backgroundColor: "#EDE9FE", padding: 8 }]}>
+                <Image source={require("../../assets/farming-icons/settings.png")} style={{ width: 32, height: 32 }} resizeMode="contain" />
               </View>
-              <Text style={styles.featureTitle}>Farmer Profile</Text>
-              <Text style={styles.featureDesc}>
-                View and manage your account details, and browse your advisory, yield, disease, and fertilizer history.
-              </Text>
+              <Text style={styles.featureTitle}>{t.profileTitle}</Text>
+              <Text style={styles.featureDesc}>{t.profileDesc}</Text>
               <TouchableOpacity
                 style={[styles.secondaryBtn, { backgroundColor: "#F5F3FF" }]}
                 activeOpacity={0.85}
                 onPress={() => router.push(ROUTES.profile as any)}
               >
-                <Text style={[styles.secondaryBtnText, { color: "#7C3AED" }]}>View Profile</Text>
+                <Text style={[styles.secondaryBtnText, { color: "#7C3AED" }]}>{t.profileBtn}</Text>
                 <Ionicons name="arrow-forward" size={16} color="#7C3AED" />
               </TouchableOpacity>
             </View>

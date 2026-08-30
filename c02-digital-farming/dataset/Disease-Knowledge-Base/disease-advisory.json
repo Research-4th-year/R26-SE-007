@@ -1,0 +1,345 @@
+{
+  "metadata": {
+    "dataset_name": "Sri Lanka Rice Disease Advisory Knowledge Base",
+    "version": "1.0",
+    "country": "Sri Lanka",
+    "primary_authority": "Department of Agriculture, Sri Lanka",
+    "institute": "Rice Research and Development Institute (RRDI), Bathalagoda",
+    "purpose": "Disease management and advisory information for a paddy disease detection application",
+    "source_policy": "Information is based primarily on Sri Lanka Department of Agriculture RRDI disease-management information.",
+    "important_note": "Disease identification from an image should be treated as a screening result. Field history, field symptoms, plant symptoms and expert diagnosis may be required for accurate diagnosis.",
+    "source": {
+      "organization": "Department of Agriculture, Sri Lanka",
+      "institute": "Rice Research and Development Institute (RRDI)",
+      "location": "Bathalagoda, Ibbagamuwa, Sri Lanka",
+      "email": "rrdi@doa.gov.lk"
+    }
+  },
+
+  "diseases": [
+
+    {
+      "id": "leaf_blast",
+      "disease": "Leaf Blast",
+      "official_rrdi_name": "Rice Blast",
+      "cause": "Magnaporthe grisea (Pyricularia grisea)",
+      "type": "Fungal disease",
+
+      "affected_parts": [
+        "Leaves",
+        "Nodes",
+        "Panicles",
+        "Seeds"
+      ],
+
+      "life_stage": "Any life stage of the rice plant",
+
+      "symptoms": [
+        "Spindle-shaped leaf spots",
+        "Brown or reddish/yellowish-brown margins",
+        "Ashy-colored centers",
+        "Pointed ends of lesions",
+        "Blackening and rotting of infected nodes",
+        "Panicle base infection can cause neck rot and panicle falling",
+        "Severe infection may produce partly filled grains or whiteheads"
+      ],
+
+      "favorable_conditions": [
+        "Low night temperature around 17-20°C",
+        "High humidity",
+        "Excessive nitrogen fertilizer application",
+        "Foggy and dark climatic conditions",
+        "High plant density",
+        "Susceptible rice varieties"
+      ],
+
+      "prevention": [
+        "Use resistant rice varieties",
+        "Use certified disease-free seed paddy",
+        "Avoid excessive nitrogen fertilizer application",
+        "Apply nitrogen according to recommended rates or leaf colour chart guidance",
+        "Maintain appropriate field management",
+        "Control weeds",
+        "Avoid using disease-infected straw",
+        "Improve soil condition using burnt paddy husk during land preparation where recommended"
+      ],
+
+      "fertilizer": {
+        "nitrogen": [
+          "Avoid excessive nitrogen application",
+          "Apply urea at recommended dosages",
+          "Use leaf colour chart guidance where appropriate"
+        ],
+        "general": [
+          "Maintain balanced nutrient management"
+        ],
+        "reason": "RRDI identifies excessive nitrogen application as a condition favoring rice blast."
+      },
+
+      "chemical": {
+        "type": "Fungicide",
+        "condition": "If the disease spreads rapidly",
+        "products_listed_by_rrdi": [
+          {
+            "active_ingredient": "Tebuconazole",
+            "formulation": "250 g/l EC",
+            "rrdi_rate": "10 ml in 16 L of water",
+            "rrdi_field_rate": "8-10 tanks per acre"
+          },
+          {
+            "active_ingredient": "Isoprothiolane",
+            "formulation": "400 g/l EC",
+            "rrdi_rate": "20 ml in 16 L of water",
+            "rrdi_field_rate": "8-10 tanks per acre"
+          },
+          {
+            "active_ingredient": "Carbendazim",
+            "formulation": "50% WP/WG",
+            "rrdi_rate": "11 g or 11 ml in 16 L of water",
+            "rrdi_field_rate": "8-10 tanks per acre"
+          },
+          {
+            "active_ingredient": "Tricyclazole",
+            "formulation": "75% WP",
+            "rrdi_rate": "10 g in 16 L of water",
+            "rrdi_field_rate": "8-10 tanks per acre"
+          }
+        ],
+        "safety_note": "Chemical recommendations should be verified against the current Sri Lankan registered-product label and current Department of Agriculture recommendations before being presented as an application instruction."
+      },
+
+      "monitoring": [
+        "Check leaves regularly for spindle-shaped lesions",
+        "Monitor fields during high-humidity conditions",
+        "Monitor during periods of low night temperature",
+        "Pay particular attention where excessive nitrogen has been applied",
+        "Monitor susceptible varieties",
+        "Monitor nodes and panicles as the crop develops"
+      ],
+
+      "resistant_varieties_listed_by_rrdi": [
+        "Bg 403",
+        "Bg 406",
+        "Bg 366",
+        "Bg 359",
+        "Bw 361",
+        "Bg 250"
+      ],
+
+      "next_season_management": [
+        "Use resistant varieties",
+        "Use certified disease-free seed paddy",
+        "Add burnt paddy husk during land preparation where recommended",
+        "Avoid infected straw"
+      ],
+
+      "source": {
+        "organization": "Department of Agriculture, Sri Lanka",
+        "institute": "Rice Research and Development Institute (RRDI)",
+        "source_title": "Rice Blast",
+        "url": "https://doa.gov.lk/rrdi_ricediseases_riceblast/"
+      }
+    },
+
+    {
+      "id": "bacterial_leaf_blight",
+      "disease": "Bacterial Leaf Blight",
+      "cause": "Xanthomonas oryzae pv. oryzae",
+      "type": "Bacterial disease",
+
+      "affected_parts": [
+        "Leaves"
+      ],
+
+      "life_stage": [
+        "Seedling stage",
+        "Maturity stage"
+      ],
+
+      "symptoms": [
+        "Wilting and yellowing of leaves at seedling stage",
+        "Wilting of seedlings known as kresek",
+        "Yellowish bacterial ooze may be observed from cut leaf ends",
+        "Water-soaked orange stripes on mature leaves",
+        "Lesions may begin at leaf tips",
+        "Lesions may progress toward the leaf base",
+        "Wavy lesion margins"
+      ],
+
+      "favorable_conditions": [
+        "Temperature around 25-34°C",
+        "Strong winds",
+        "Continuous heavy rain",
+        "High humidity",
+        "Excessive nitrogen fertilizer application"
+      ],
+
+      "prevention": [
+        "Use appropriate nitrogen fertilizer rates",
+        "Avoid excessive nitrogen application",
+        "Maintain good field drainage",
+        "Prevent drainage water from infected fields entering disease-free fields",
+        "Use appropriate potassium management when disease is observed",
+        "Use resistant varieties where available",
+        "Use healthy and quality seed"
+      ],
+
+      "fertilizer": {
+        "nitrogen": [
+          "Apply urea at recommended dosages",
+          "Use leaf colour chart guidance where appropriate",
+          "Avoid excessive nitrogen application"
+        ],
+        "potassium": [
+          "Potassium fertilizer may be used to help manage further disease spread after disease is observed, according to RRDI guidance"
+        ],
+        "general": [
+          "Maintain balanced nutrient management"
+        ]
+      },
+
+      "water_management": [
+        "Ensure good field drainage",
+        "When disease is observed, stop water supply and allow the field to dry",
+        "Where complete water removal is not possible, use drainage ditches or water courses",
+        "Avoid directing drainage water from infected fields into disease-free fields"
+      ],
+
+      "chemical": {
+        "type": "Bacterial disease management",
+        "fungicide_recommendation": "Do not automatically recommend a fungicide because this is a bacterial disease.",
+        "instruction": "Use integrated disease-management practices and current Sri Lankan Department of Agriculture recommendations."
+      },
+
+      "monitoring": [
+        "Check seedlings for wilting and yellowing",
+        "Check mature leaves for water-soaked orange stripes",
+        "Monitor during continuous heavy rain",
+        "Monitor during high-humidity conditions",
+        "Monitor fields where excessive nitrogen has been applied",
+        "Check drainage water movement between fields"
+      ],
+
+      "source": {
+        "organization": "Department of Agriculture, Sri Lanka",
+        "institute": "Rice Research and Development Institute (RRDI)",
+        "source_title": "Bacterial Leaf Blight",
+        "url": "https://doa.gov.lk/rrdi_ricediseases_bacterialleafblight/"
+      }
+    },
+
+    {
+      "id": "brown_spot",
+      "disease": "Brown Spot",
+      "cause": "Cochliobolus miyabeanus (Bipolaris oryzae)",
+      "type": "Fungal disease",
+
+      "affected_parts": [
+        "Coleoptiles",
+        "Leaves",
+        "Leaf sheaths",
+        "Immature florets",
+        "Panicle branches",
+        "Glumes",
+        "Grains"
+      ],
+
+      "life_stage": "More prevalent as plants approach maturity",
+
+      "symptoms": [
+        "Brown circular to oval spots",
+        "Small dark brown to reddish-brown spots",
+        "Large oval or circular lesions",
+        "Dark brown margins",
+        "Light reddish-brown or gray centers",
+        "Seedling blight",
+        "Sparse or inadequate plant stands",
+        "Weak plants",
+        "Black discoloration of infected glumes",
+        "Light-weight or chalky kernels may develop"
+      ],
+
+      "favorable_conditions": [
+        "Temperature around 16-36°C",
+        "High humidity around 86-100%",
+        "Low soil nutrient levels",
+        "Problem soils",
+        "High soil salinity",
+        "Iron toxicity",
+        "Drought"
+      ],
+
+      "prevention": [
+        "Use certified disease-free seed paddy",
+        "Improve soil quality",
+        "Apply appropriate organic fertilizer",
+        "Maintain balanced nutrient management",
+        "Control weeds",
+        "Avoid infected straw",
+        "Use crop rotation where appropriate",
+        "Maintain proper land leveling",
+        "Use seed treatment where recommended"
+      ],
+
+      "fertilizer": {
+        "nitrogen": [
+          "Apply urea at recommended dosages",
+          "Use leaf colour chart guidance where appropriate"
+        ],
+        "general": [
+          "Maintain adequate and balanced plant nutrition",
+          "Improve soil fertility where nutrient deficiency is present",
+          "Consider soil conditions such as salinity and iron toxicity when interpreting disease risk"
+        ]
+      },
+
+      "soil_management": [
+        "Improve soil quality using organic fertilizer",
+        "Add burnt paddy husk during land preparation where recommended",
+        "Consider soil salinity and iron toxicity",
+        "Maintain proper land leveling"
+      ],
+
+      "seed_management": [
+        "Use certified disease-free seed paddy",
+        "Hot-water treatment of seed at 53-54°C for 10-12 minutes",
+        "Use seed-protectant fungicide where recommended"
+      ],
+
+      "chemical": {
+        "type": "Fungicide / seed treatment",
+        "instruction": "RRDI recommends seed treatment with a seed-protectant fungicide as one management option. Any product and application rate should be verified against current Sri Lankan registration and recommendations."
+      },
+
+      "monitoring": [
+        "Check leaves regularly for brown circular or oval lesions",
+        "Monitor seedlings for seedling blight",
+        "Monitor crop approaching maturity",
+        "Monitor fields with nutrient-deficient soils",
+        "Monitor fields affected by salinity",
+        "Monitor fields affected by iron toxicity",
+        "Monitor during high-humidity conditions",
+        "Monitor crops experiencing drought stress"
+      ],
+
+      "next_season_management": [
+        "Apply organic fertilizer to improve soil quality",
+        "Use certified disease-free seed paddy",
+        "Add burnt paddy husk during land preparation where recommended",
+        "Avoid infected straw",
+        "Treat seed with hot water where appropriate",
+        "Use seed-protectant fungicide where recommended",
+        "Practice crop rotation",
+        "Maintain proper land leveling"
+      ],
+
+      "source": {
+        "organization": "Department of Agriculture, Sri Lanka",
+        "institute": "Rice Research and Development Institute (RRDI)",
+        "source_title": "Brown Spot",
+        "url": "https://doa.gov.lk/rrdi_ricediseases_brownspot/"
+      }
+    }
+
+  ]
+}

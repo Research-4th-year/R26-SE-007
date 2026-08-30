@@ -32,7 +32,7 @@ export const warehouseService = {
   },
 
   async listWarehouses(): Promise<Warehouse[]> {
-    const res = await api.get("/api/warehouses?limit=50");
+    const res = await api.get("/api/warehouses?limit=50&isActive=true");
     return res.data.data.items;
   },
 

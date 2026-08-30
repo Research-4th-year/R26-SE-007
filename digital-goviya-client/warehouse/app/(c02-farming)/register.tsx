@@ -14,6 +14,8 @@ import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useFarmingAuth } from "@/contexts/FarmingAuthContext";
+import { useLanguage } from "../../contexts/LanguageContext";
+import { translations } from "../../i18n";
 import districtData from "./districtData.json";
 
 import { API_URL } from "@/services/c02-farming/apiConfig";
@@ -54,6 +56,8 @@ function PickerField({
 
 export default function RegisterScreen() {
   const { signup } = useFarmingAuth();
+  const { language } = useLanguage();
+  const t = translations[language].c02Farming.authAndProfile;
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -159,10 +163,8 @@ export default function RegisterScreen() {
             <View style={styles.logoCircle}>
               <Ionicons name="leaf" size={32} color="#0A331D" />
             </View>
-            <Text style={styles.brandName}>Register as Farmer</Text>
-            <Text style={styles.brandTagline}>
-              Create an account to track your farm's history
-            </Text>
+            <Text style={styles.brandName}>{t.registerTitle}</Text>
+            <Text style={styles.brandTagline}>{t.registerSubtitle}</Text>
           </View>
 
           {/* Card */}
@@ -175,11 +177,11 @@ export default function RegisterScreen() {
             )}
 
             {/* ── Personal Info ── */}
-            <Text style={styles.sectionLabel}>Personal Information</Text>
+            <Text style={styles.sectionLabel}>{t.personalInfo}</Text>
 
             <View style={styles.row}>
               <View style={{ flex: 1 }}>
-                <Text style={styles.inputLabel}>Full Name *</Text>
+                <Text style={styles.inputLabel}>{t.fullName}</Text>
                 <View style={styles.inputWrapper}>
                   <Ionicons name="person-outline" size={16} color="#9CA3AF" style={styles.inputIcon} />
                   <TextInput
@@ -194,7 +196,7 @@ export default function RegisterScreen() {
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Phone</Text>
+              <Text style={styles.inputLabel}>{t.phone}</Text>
               <View style={styles.inputWrapper}>
                 <Ionicons name="call-outline" size={16} color="#9CA3AF" style={styles.inputIcon} />
                 <TextInput
@@ -209,10 +211,10 @@ export default function RegisterScreen() {
             </View>
 
             {/* ── Farm Details ── */}
-            <Text style={[styles.sectionLabel, { marginTop: 8 }]}>Farm Details</Text>
+            <Text style={[styles.sectionLabel, { marginTop: 8 }]}>{t.farmDetails}</Text>
 
             <PickerField
-              label="Location (District) *"
+              label={t.locationDistrict}
               value={location}
               options={DISTRICTS}
               onSelect={setLocation}
@@ -220,7 +222,7 @@ export default function RegisterScreen() {
 
             <View style={styles.row}>
               <View style={{ flex: 2, marginRight: 10 }}>
-                <Text style={styles.inputLabel}>Farm Size *</Text>
+                <Text style={styles.inputLabel}>{t.farmSize}</Text>
                 <View style={styles.inputWrapper}>
                   <TextInput
                     style={styles.input}
@@ -234,7 +236,7 @@ export default function RegisterScreen() {
               </View>
               <View style={{ flex: 1 }}>
                 <PickerField
-                  label="Unit"
+                  label={t.unit}
                   value={farmUnit}
                   options={["Acres", "Perch", "Hectares"]}
                   onSelect={setFarmUnit}
@@ -243,17 +245,17 @@ export default function RegisterScreen() {
             </View>
 
             {/* ── Account ── */}
-            <Text style={[styles.sectionLabel, { marginTop: 8 }]}>Account</Text>
+            <Text style={[styles.sectionLabel, { marginTop: 8 }]}>{t.account}</Text>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Email *</Text>
+              <Text style={styles.inputLabel}>{t.email}</Text>
               <View style={styles.inputWrapper}>
                 <Ionicons name="mail-outline" size={16} color="#9CA3AF" style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
                   value={email}
                   onChangeText={setEmail}
-                  placeholder="you@example.com"
+                  placeholder={t.emailPlaceholder}
                   placeholderTextColor="#9CA3AF"
                   keyboardType="email-address"
                   autoCapitalize="none"
@@ -264,7 +266,7 @@ export default function RegisterScreen() {
 
             <View style={styles.row}>
               <View style={{ flex: 1, marginRight: 8 }}>
-                <Text style={styles.inputLabel}>Password *</Text>
+                <Text style={styles.inputLabel}>{t.password}</Text>
                 <View style={styles.inputWrapper}>
                   <Ionicons name="lock-closed-outline" size={16} color="#9CA3AF" style={styles.inputIcon} />
                   <TextInput
@@ -282,7 +284,7 @@ export default function RegisterScreen() {
                 </View>
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.inputLabel}>Confirm *</Text>
+                <Text style={styles.inputLabel}>{t.confirmPass}</Text>
                 <View style={styles.inputWrapper}>
                   <Ionicons name="lock-closed-outline" size={16} color="#9CA3AF" style={styles.inputIcon} />
                   <TextInput
@@ -317,7 +319,7 @@ export default function RegisterScreen() {
                   <ActivityIndicator color="white" />
                 ) : (
                   <>
-                    <Text style={styles.registerBtnText}>Create Account</Text>
+                    <Text style={styles.registerBtnText}>{t.createAccount}</Text>
                     <Ionicons name="checkmark-circle" size={18} color="white" />
                   </>
                 )}
@@ -326,9 +328,9 @@ export default function RegisterScreen() {
 
             {/* Login link */}
             <View style={styles.footer}>
-              <Text style={styles.footerText}>Already have an account? </Text>
+              <Text style={styles.footerText}>{t.alreadyAccount}</Text>
               <TouchableOpacity onPress={() => router.replace("/(c02-farming)/login" as any)}>
-                <Text style={styles.footerLink}>Log in here</Text>
+                <Text style={styles.footerLink}>{t.loginHere}</Text>
               </TouchableOpacity>
             </View>
           </View>

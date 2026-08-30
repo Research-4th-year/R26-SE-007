@@ -8,22 +8,25 @@ import { Ionicons } from "@expo/vector-icons";
 import { api } from "@/services/shared/api";
 import { COLORS } from "@/constants/theme";
 import { useDebouncedCallback } from "@/hooks/shared/useDebounce";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const ROLES = [
-  { value: "REGIONAL_MANAGER",     label: "Regional Manager",     icon: "person-circle",   desc: "Can trigger disasters and issue redistribution orders" },
-  { value: "WAREHOUSE_SUPERVISOR", label: "Warehouse Supervisor",  icon: "business",        desc: "Records stock events for their assigned warehouse" },
-  { value: "AUDITOR",              label: "Auditor",               icon: "search",          desc: "Read-only access to all data and blockchain trails" },
-  { value: "ADMIN",                label: "Admin",                 icon: "shield-checkmark",desc: "Full system access including user and warehouse management" },
-];
+  { value: "REGIONAL_MANAGER",     icon: "person-circle" },
+  { value: "WAREHOUSE_SUPERVISOR", icon: "business" },
+  { value: "AUDITOR",              icon: "search" },
+  { value: "ADMIN",                icon: "shield-checkmark" },
+] as const;
 
 // Password rules — keep these in sync with the backend zod schema
 const PASSWORD_RULES = [
-  { key: "length", label: "At least 8 characters", test: (p: string) => p.length >= 8 },
-  { key: "upper",  label: "One uppercase letter",   test: (p: string) => /[A-Z]/.test(p) },
-  { key: "number", label: "One number",             test: (p: string) => /[0-9]/.test(p) },
+  { key: "length", test: (p: string) => p.length >= 8 },
+  { key: "upper",  test: (p: string) => /[A-Z]/.test(p) },
+  { key: "number", test: (p: string) => /[0-9]/.test(p) },
 ];
 
 export default function RegisterUserScreen() {
+  const { t } = useLanguage();
+
   const [email, setEmail]         = useState("");
   const [password, setPassword]   = useState("");
   const [fullName, setFullName]   = useState("");
@@ -36,6 +39,13 @@ export default function RegisterUserScreen() {
 
   // field-level errors, keyed by field name — populated from backend or client checks
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
+
+  // Map password rule keys to translated labels
+  const pwLabels: Record<string, string> = {
+    length: t.changePassword.atLeast8Characters,
+    upper:  t.changePassword.oneUppercaseLetter,
+    number: t.changePassword.oneNumber,
+  };
 
   useEffect(() => {
     api.get("/api/warehouses?limit=50").then((res) => {
@@ -58,14 +68,14 @@ export default function RegisterUserScreen() {
   const handleSubmit = useDebouncedCallback(async () => {
     const errors: Record<string, string[]> = {};
 
-    if (!email.trim())    errors.email = ["Enter email address"];
-    if (!fullName.trim()) errors.fullName = ["Enter full name"];
-    if (!role)             errors.role = ["Select a role"];
+    if (!email.trim())    errors.email = [t.warehouse.registerUser.requiredEmail];
+    if (!fullName.trim()) errors.fullName = [t.warehouse.registerUser.requiredName];
+    if (!role)             errors.role = [t.warehouse.registerUser.requiredRole];
     if (passwordFailures.length > 0) {
-      errors.password = passwordFailures.map((r) => r.label);
+      errors.password = passwordFailures.map((r) => pwLabels[r.key]);
     }
     if (role === "WAREHOUSE_SUPERVISOR" && !warehouseId) {
-      errors.warehouseId = ["Select a warehouse for this supervisor"];
+      errors.warehouseId = [t.warehouse.registerUser.requiredWarehouse];
     }
 
     if (Object.keys(errors).length > 0) {
@@ -83,20 +93,26 @@ export default function RegisterUserScreen() {
         role,
         warehouseId: role === "WAREHOUSE_SUPERVISOR" ? warehouseId : undefined,
       });
-      Alert.alert("User Created", `${fullName} has been registered as ${role.replace(/_/g, " ")}`, [
-        { text: "Done", onPress: () => router.back() },
-        { text: "Add Another", onPress: () => {
-          setEmail(""); setPassword(""); setFullName("");
-          setRole(""); setWarehouseId(""); setFieldErrors({}); setPasswordTouched(false);
-        }},
-      ]);
+      Alert.alert(
+        t.warehouse.registerUser.createdTitle,
+        t.warehouse.registerUser.createdMessage
+          .replace("{name}", fullName)
+          .replace("{role}", t.warehouse.roles[role as keyof typeof t.warehouse.roles]),
+        [
+          { text: t.common.close, onPress: () => router.back() },
+          { text: t.warehouse.registerUser.addAnother, onPress: () => {
+            setEmail(""); setPassword(""); setFullName("");
+            setRole(""); setWarehouseId(""); setFieldErrors({}); setPasswordTouched(false);
+          }},
+        ]
+      );
     } catch (err: any) {
       const data = err?.response?.data;
       if (data?.errors) {
         // backend returned field-level zod errors — show them inline
         setFieldErrors(data.errors);
       } else {
-        Alert.alert("Error", data?.message || "Failed to register user");
+        Alert.alert(t.warehouse.errors.title, data?.message || t.warehouse.registerUser.createError);
       }
     } finally {
       setSubmitting(false);
@@ -110,20 +126,20 @@ export default function RegisterUserScreen() {
           <Ionicons name="arrow-back" size={24} color={COLORS.white} />
         </TouchableOpacity>
         <View>
-          <Text style={styles.headerTitle}>Register User</Text>
-          <Text style={styles.headerSub}>Admin only</Text>
+          <Text style={styles.headerTitle}>{t.warehouse.registerUser.title}</Text>
+          <Text style={styles.headerSub}>{t.warehouse.createWarehouse.adminOnly}</Text>
         </View>
       </View>
 
       <ScrollView style={styles.scroll} keyboardShouldPersistTaps="handled">
         <View style={styles.content}>
 
-          <Text style={styles.sectionTitle}>👤 User Details</Text>
+          <Text style={styles.sectionTitle}>{t.warehouse.registerUser.userDetails}</Text>
 
-          <Text style={styles.label}>Full Name *</Text>
+          <Text style={styles.label}>{t.warehouse.registerUser.fullName}</Text>
           <TextInput
             style={[styles.input, fieldErrors.fullName && styles.inputError]}
-            placeholder="e.g. Nimal Perera"
+            placeholder={t.warehouse.registerUser.fullNamePlaceholder}
             placeholderTextColor={COLORS.textFaint}
             value={fullName}
             onChangeText={(v) => { setFullName(v); clearFieldError("fullName"); }}
@@ -132,10 +148,10 @@ export default function RegisterUserScreen() {
             <Text key={i} style={styles.errorText}>{msg}</Text>
           ))}
 
-          <Text style={styles.label}>Email *</Text>
+          <Text style={styles.label}>{t.warehouse.registerUser.email}</Text>
           <TextInput
             style={[styles.input, fieldErrors.email && styles.inputError]}
-            placeholder="e.g. nimal@pmb.lk"
+            placeholder={t.warehouse.registerUser.emailPlaceholder}
             placeholderTextColor={COLORS.textFaint}
             autoCapitalize="none"
             keyboardType="email-address"
@@ -146,11 +162,11 @@ export default function RegisterUserScreen() {
             <Text key={i} style={styles.errorText}>{msg}</Text>
           ))}
 
-          <Text style={styles.label}>Password *</Text>
+          <Text style={styles.label}>{t.warehouse.registerUser.password}</Text>
           <View style={[styles.passwordRow, fieldErrors.password && styles.inputError]}>
             <TextInput
               style={styles.passwordInput}
-              placeholder="Min 8 chars, 1 uppercase, 1 number"
+              placeholder={t.warehouse.registerUser.passwordPlaceholder}
               placeholderTextColor={COLORS.textFaint}
               secureTextEntry={!showPassword}
               value={password}
@@ -186,7 +202,7 @@ export default function RegisterUserScreen() {
                       color={passed ? COLORS.primary : COLORS.textFaint}
                     />
                     <Text style={[styles.checklistText, passed && styles.checklistTextPassed]}>
-                      {rule.label}
+                      {pwLabels[rule.key]}
                     </Text>
                   </View>
                 );
@@ -196,13 +212,13 @@ export default function RegisterUserScreen() {
 
           {/* Backend-returned password errors not covered by the live checklist */}
           {fieldErrors.password
-            ?.filter((msg) => !PASSWORD_RULES.some((r) => r.label === msg))
+            ?.filter((msg) => !Object.values(pwLabels).includes(msg))
             .map((msg, i) => (
               <Text key={i} style={styles.errorText}>{msg}</Text>
             ))}
 
           {/* Role selection */}
-          <Text style={styles.sectionTitle}>🎭 Role</Text>
+          <Text style={styles.sectionTitle}>{t.warehouse.registerUser.roleSection}</Text>
           {fieldErrors.role?.map((msg, i) => (
             <Text key={i} style={styles.errorText}>{msg}</Text>
           ))}
@@ -221,9 +237,11 @@ export default function RegisterUserScreen() {
               </View>
               <View style={styles.roleInfo}>
                 <Text style={[styles.roleLabel, role === r.value && styles.roleLabelSelected]}>
-                  {r.label}
+                  {t.warehouse.roles[r.value as keyof typeof t.warehouse.roles]}
                 </Text>
-                <Text style={styles.roleDesc}>{r.desc}</Text>
+                <Text style={styles.roleDesc}>
+                  {t.warehouse.registerUser.roleDesc[r.value as keyof typeof t.warehouse.registerUser.roleDesc]}
+                </Text>
               </View>
               {role === r.value && (
                 <Ionicons name="checkmark-circle" size={20} color={COLORS.primary} />
@@ -233,8 +251,8 @@ export default function RegisterUserScreen() {
 
           {role === "WAREHOUSE_SUPERVISOR" && (
             <>
-              <Text style={styles.sectionTitle}>🏭 Assign Warehouse *</Text>
-              <Text style={styles.hint}>Supervisors can only record events for their assigned warehouse</Text>
+              <Text style={styles.sectionTitle}>{t.warehouse.registerUser.assignWarehouse}</Text>
+              <Text style={styles.hint}>{t.warehouse.registerUser.assignHint}</Text>
               {fieldErrors.warehouseId?.map((msg, i) => (
                 <Text key={i} style={styles.errorText}>{msg}</Text>
               ))}
@@ -265,7 +283,7 @@ export default function RegisterUserScreen() {
               ? <ActivityIndicator color={COLORS.white} />
               : <>
                   <Ionicons name="person-add" size={20} color={COLORS.white} />
-                  <Text style={styles.submitBtnText}>Register User</Text>
+                  <Text style={styles.submitBtnText}>{t.warehouse.registerUser.submit}</Text>
                 </>
             }
           </TouchableOpacity>

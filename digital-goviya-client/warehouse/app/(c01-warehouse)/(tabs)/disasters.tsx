@@ -7,10 +7,13 @@ import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { disasterService, Disaster } from "@/services/warehouse/disaster.service";
 import { COLORS, getStatusColors, DISASTER_ICONS } from "@/constants/theme";
+import { useLanguage } from "@/contexts/LanguageContext";
 
-const FILTERS: (string | undefined)[] = [undefined, "OPEN", "IN_PROGRESS", "RESOLVED"];
+const FILTER_KEYS = [undefined, "OPEN", "IN_PROGRESS", "RESOLVED"] as const;
 
 export default function DisastersScreen() {
+  const { t } = useLanguage();
+
   const [disasters, setDisasters]   = useState<Disaster[]>([]);
   const [loading, setLoading]       = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -21,7 +24,7 @@ export default function DisastersScreen() {
       const data = await disasterService.listDisasters(filter);
       setDisasters(data);
     } catch {
-      Alert.alert("Error", "Failed to load disasters");
+      Alert.alert(t.warehouse.errors.title, t.warehouse.disasters.loadError);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -31,6 +34,19 @@ export default function DisastersScreen() {
   useEffect(() => { load(); }, [filter]);
 
   const onRefresh = () => { setRefreshing(true); load(); };
+
+  const getFilterLabel = (s: string | undefined): string => {
+    if (!s) return t.warehouse.status.all;
+    return t.warehouse.status[s as keyof typeof t.warehouse.status] ?? s;
+  };
+
+  const getStatusLabel = (s: string): string => {
+    return t.warehouse.status[s as keyof typeof t.warehouse.status] ?? s;
+  };
+
+  const getDisasterTypeLabel = (dtype: string): string => {
+    return t.warehouse.disasterTypes[dtype as keyof typeof t.warehouse.disasterTypes] ?? dtype;
+  };
 
   if (loading) {
     return (
@@ -44,13 +60,13 @@ export default function DisastersScreen() {
     <View style={styles.screen}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Disaster Events</Text>
-        <Text style={styles.headerSubtitle}>PMB Warehouse Network</Text>
+        <Text style={styles.headerTitle}>{t.warehouse.disasters.title}</Text>
+        <Text style={styles.headerSubtitle}>{t.warehouse.disasters.subtitle}</Text>
       </View>
 
       {/* Filter tabs */}
       <View style={styles.filterRow}>
-        {FILTERS.map((s) => {
+        {FILTER_KEYS.map((s) => {
           const active = filter === s;
           return (
             <TouchableOpacity
@@ -59,7 +75,7 @@ export default function DisastersScreen() {
               style={[styles.filterChip, active && styles.filterChipActive]}
             >
               <Text style={[styles.filterChipText, active && styles.filterChipTextActive]}>
-                {s ?? "All"}
+                {getFilterLabel(s)}
               </Text>
             </TouchableOpacity>
           );
@@ -74,9 +90,11 @@ export default function DisastersScreen() {
           {disasters.length === 0 ? (
             <View style={styles.emptyState}>
               <Text style={styles.emptyIcon}>✅</Text>
-              <Text style={styles.emptyTitle}>No disasters found</Text>
+              <Text style={styles.emptyTitle}>{t.warehouse.disasters.noneFound}</Text>
               <Text style={styles.emptySubtitle}>
-                {filter ? `No ${filter.toLowerCase()} disasters` : "All clear"}
+                {filter
+                  ? t.warehouse.disasters.noneWithStatus.replace("{status}", getFilterLabel(filter).toLowerCase())
+                  : t.warehouse.disasters.allClear}
               </Text>
             </View>
           ) : (
@@ -92,35 +110,37 @@ export default function DisastersScreen() {
                     <View style={styles.cardHeaderLeft}>
                       <Text style={styles.disasterIcon}>{DISASTER_ICONS[d.disasterType] ?? "⚠️"}</Text>
                       <View style={styles.cardHeaderInfo}>
-                        <Text style={styles.disasterType}>{d.disasterType.replace("_", " ")}</Text>
+                        <Text style={styles.disasterType}>{getDisasterTypeLabel(d.disasterType)}</Text>
                         <Text style={styles.warehouseName}>{d.affectedWarehouse.name}</Text>
                         <Text style={styles.warehouseDistrict}>{d.affectedWarehouse.district}</Text>
                       </View>
                     </View>
                     <View style={[styles.statusBadge, { backgroundColor: status.bg }]}>
                       <Text style={[styles.statusBadgeText, { color: status.text }]}>
-                        {d.status.replace("_", " ")}
+                        {getStatusLabel(d.status)}
                       </Text>
                     </View>
                   </View>
 
                   <View style={styles.cardFooter}>
                     <View style={styles.cardFooterItem}>
-                      <Text style={styles.footerLabel}>Estimated Loss</Text>
-                      <Text style={styles.footerValue}>{d.estimatedLossTons ?? "—"} tons</Text>
+                      <Text style={styles.footerLabel}>{t.warehouse.disasters.estimatedLoss}</Text>
+                      <Text style={styles.footerValue}>
+                        {d.estimatedLossTons ?? "—"} {t.warehouse.units.tons}
+                      </Text>
                     </View>
                     <View style={styles.cardFooterItem}>
-                      <Text style={styles.footerLabel}>Reported by</Text>
+                      <Text style={styles.footerLabel}>{t.warehouse.disasters.reportedBy}</Text>
                       <Text style={styles.footerValue}>{d.reportedBy.fullName}</Text>
                     </View>
                     <View style={styles.cardFooterEnd}>
                       {d.blockchainTxId ? (
                         <View style={styles.onChainBadge}>
                           <Ionicons name="lock-closed" size={10} color={COLORS.info} />
-                          <Text style={styles.onChainText}>On-chain</Text>
+                          <Text style={styles.onChainText}>{t.warehouse.disasters.onChain}</Text>
                         </View>
                       ) : (
-                        <Text style={styles.notAnchoredText}>Not anchored</Text>
+                        <Text style={styles.notAnchoredText}>{t.warehouse.disasters.notAnchored}</Text>
                       )}
                     </View>
                   </View>
