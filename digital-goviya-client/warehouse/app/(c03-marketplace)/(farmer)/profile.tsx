@@ -129,7 +129,7 @@ export default function FarmerProfileScreen() {
 
         <View style={styles.profileCardShadow}>
           <LinearGradient
-            colors={["#0A331D", "#14532D", "#166534"]}
+            colors={["#0A331D", "#12522E", "#0B3B22"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.profileCard}
@@ -139,7 +139,7 @@ export default function FarmerProfileScreen() {
                 <Ionicons
                   name="leaf"
                   size={30}
-                  color="#FFFFFF"
+                  color="#15803D"
                 />
               </View>
             </View>
@@ -528,7 +528,7 @@ const styles = StyleSheet.create({
     borderRadius: 37,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(255,255,255,0.14)",
+    backgroundColor: "#FFFFFF",
   },
 
   name: {

@@ -120,8 +120,8 @@ export default function PartnersScreen() {
             border: "#BBF7D0",
             page: "#F5F8F5",
             glow: "rgba(21,128,61,0.16)",
-            gradientStart: "#14532D",
-            gradientEnd: "#16A34A",
+            gradientStart: "#0A331D",
+            gradientEnd: "#0B3B22",
           }
         : {
             primary: "#A16207",
@@ -597,7 +597,11 @@ export default function PartnersScreen() {
         {/* ------------------------------------------------------------- */}
 
         <LinearGradient
-          colors={[theme.gradientStart, theme.gradientEnd]}
+          colors={
+            isFarmer
+              ? ["#0A331D", "#12522E", "#0B3B22"]
+              : [theme.gradientStart, theme.gradientEnd]
+          }
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.hero}
@@ -2986,7 +2990,7 @@ const styles = StyleSheet.create({
     width: 13,
     height: 13,
     borderRadius: 7,
-    backgroundColor: "#22C55E",
+    backgroundColor: "#4ADE80",
     borderWidth: 2,
   },
 

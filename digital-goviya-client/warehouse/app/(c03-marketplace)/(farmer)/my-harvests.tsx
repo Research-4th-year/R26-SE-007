@@ -339,7 +339,7 @@ export default function MyHarvestsScreen() {
           ]}
         >
           <LinearGradient
-            colors={["#22C55E", "#15803D"]}
+            colors={["#15803D", "#0B3B22"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.addHeaderButton}
@@ -393,7 +393,7 @@ export default function MyHarvestsScreen() {
           ) : (
             <>
               <LinearGradient
-                colors={["#166534", "#14532D"]}
+                colors={["#0A331D", "#12522E", "#0B3B22"]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.summaryHero}
@@ -1849,7 +1849,7 @@ const styles = StyleSheet.create({
   },
 
   summaryEyebrow: {
-    color: "#BBF7D0",
+    color: "#FDE68A",
     fontSize: 9,
     fontFamily: "Poppins_700Bold",
     letterSpacing: 1.1,
