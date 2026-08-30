@@ -10,3 +10,9 @@ fabric-samples/test-network/organizations/
 
 # Build output
 dist/
+
+# Python
+__pycache__/
+*.pyc
+venv/
+.pytest_cache/
