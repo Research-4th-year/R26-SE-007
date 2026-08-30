@@ -7,6 +7,7 @@ import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { api } from "@/services/shared/api";
 import { COLORS } from "@/constants/theme";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface User {
   id:          string;
@@ -27,6 +28,8 @@ const ROLE_COLORS: Record<string, { bg: string; text: string }> = {
 };
 
 export default function ManageUsersScreen() {
+  const { t } = useLanguage();
+
   const [users, setUsers]           = useState<User[]>([]);
   const [warehouses, setWarehouses] = useState<any[]>([]);
   const [loading, setLoading]       = useState(true);
@@ -41,7 +44,7 @@ export default function ManageUsersScreen() {
       setUsers(usersRes.data.data);
       setWarehouses(whRes.data.data.items);
     } catch {
-      Alert.alert("Error", "Failed to load users");
+      Alert.alert(t.warehouse.errors.title, t.warehouse.manageUsers.loadError);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -52,7 +55,7 @@ export default function ManageUsersScreen() {
 
   const handleReassign = (user: User) => {
     if (user.role !== "WAREHOUSE_SUPERVISOR") {
-      Alert.alert("Not applicable", "Only Warehouse Supervisors can be assigned to a warehouse");
+      Alert.alert(t.warehouse.manageUsers.notApplicableTitle, t.warehouse.manageUsers.notApplicableBody);
       return;
     }
 
@@ -62,48 +65,61 @@ export default function ManageUsersScreen() {
       onPress: async () => {
         try {
           await api.patch(`/api/users/${user.id}`, { warehouseId: wh.id });
-          Alert.alert("Reassigned", `${user.fullName} is now assigned to ${wh.name}`);
+          Alert.alert(
+            t.warehouse.manageUsers.reassignedTitle,
+            t.warehouse.manageUsers.reassignedMessage
+              .replace("{name}", user.fullName)
+              .replace("{warehouse}", wh.name)
+          );
           load();
         } catch (err: any) {
-          Alert.alert("Error", err?.response?.data?.message || "Failed to reassign");
+          Alert.alert(t.warehouse.errors.title, err?.response?.data?.message || t.warehouse.manageUsers.reassignError);
         }
       },
     }));
 
     Alert.alert(
-      `Reassign ${user.fullName}`,
-      `Currently: ${user.warehouse?.name ?? "Unassigned"}\n\nSelect new warehouse:`,
+      t.warehouse.manageUsers.reassignTitle.replace("{name}", user.fullName),
+      t.warehouse.manageUsers.reassignBody
+        .replace("{current}", user.warehouse?.name ?? t.warehouse.manageUsers.unassigned),
       [
         ...options,
-        { text: "Unassign", style: "destructive", onPress: async () => {
+        { text: t.warehouse.manageUsers.unassign, style: "destructive", onPress: async () => {
           try {
             await api.patch(`/api/users/${user.id}`, { warehouseId: null });
-            Alert.alert("Unassigned", `${user.fullName} has been unassigned`);
+            Alert.alert(
+              t.warehouse.manageUsers.unassignedTitle,
+              t.warehouse.manageUsers.unassignedMessage.replace("{name}", user.fullName)
+            );
             load();
           } catch (err: any) {
-            Alert.alert("Error", err?.response?.data?.message || "Failed to unassign");
+            Alert.alert(t.warehouse.errors.title, err?.response?.data?.message || t.warehouse.manageUsers.unassignError);
           }
         }},
-        { text: "Cancel", style: "cancel" },
+        { text: t.common.cancel, style: "cancel" },
       ]
     );
   };
 
   const handleToggleActive = (user: User) => {
+    const action = user.isActive ? t.warehouse.manageUsers.deactivate : t.warehouse.manageUsers.reactivate;
+
     Alert.alert(
-      user.isActive ? "Deactivate User" : "Reactivate User",
-      `${user.isActive ? "Deactivate" : "Reactivate"} ${user.fullName}?`,
+      user.isActive ? t.warehouse.manageUsers.deactivateTitle : t.warehouse.manageUsers.reactivateTitle,
+      t.warehouse.manageUsers.toggleConfirm
+        .replace("{action}", action)
+        .replace("{name}", user.fullName),
       [
-        { text: "Cancel", style: "cancel" },
+        { text: t.common.cancel, style: "cancel" },
         {
-          text: user.isActive ? "Deactivate" : "Reactivate",
+          text: action,
           style: user.isActive ? "destructive" : "default",
           onPress: async () => {
             try {
               await api.patch(`/api/users/${user.id}`, { isActive: !user.isActive });
               load();
             } catch (err: any) {
-              Alert.alert("Error", err?.response?.data?.message || "Failed to update");
+              Alert.alert(t.warehouse.errors.title, err?.response?.data?.message || t.warehouse.manageUsers.updateError);
             }
           },
         },
@@ -133,8 +149,10 @@ export default function ManageUsersScreen() {
           <Ionicons name="arrow-back" size={24} color={COLORS.white} />
         </TouchableOpacity>
         <View>
-          <Text style={styles.headerTitle}>Manage Users</Text>
-          <Text style={styles.headerSub}>{users.length} registered users</Text>
+          <Text style={styles.headerTitle}>{t.warehouse.manageUsers.title}</Text>
+          <Text style={styles.headerSub}>
+            {t.warehouse.manageUsers.subtitle.replace("{count}", String(users.length))}
+          </Text>
         </View>
       </View>
 
@@ -151,7 +169,7 @@ export default function ManageUsersScreen() {
                 <View style={styles.sectionHeader}>
                   <View style={[styles.rolePill, { backgroundColor: colors.bg }]}>
                     <Text style={[styles.rolePillText, { color: colors.text }]}>
-                      {role.replace(/_/g, " ")}
+                      {t.warehouse.roles[role as keyof typeof t.warehouse.roles]}
                     </Text>
                   </View>
                   <Text style={styles.roleCount}>{roleUsers.length}</Text>
@@ -172,7 +190,7 @@ export default function ManageUsersScreen() {
                           </Text>
                           {!user.isActive && (
                             <View style={styles.inactiveBadge}>
-                              <Text style={styles.inactiveBadgeText}>INACTIVE</Text>
+                              <Text style={styles.inactiveBadgeText}>{t.warehouse.manageUsers.inactiveBadge}</Text>
                             </View>
                           )}
                         </View>
@@ -188,7 +206,7 @@ export default function ManageUsersScreen() {
                         {role === "WAREHOUSE_SUPERVISOR" && !user.warehouse && (
                           <View style={styles.unassignedTag}>
                             <Ionicons name="warning" size={11} color={COLORS.warning} />
-                            <Text style={styles.unassignedTagText}>No warehouse assigned</Text>
+                            <Text style={styles.unassignedTagText}>{t.warehouse.manageUsers.noWarehouseAssigned}</Text>
                           </View>
                         )}
                       </View>
@@ -202,7 +220,7 @@ export default function ManageUsersScreen() {
                           onPress={() => handleReassign(user)}
                         >
                           <Ionicons name="swap-horizontal" size={14} color={COLORS.info} />
-                          <Text style={styles.actionBtnText}>Reassign</Text>
+                          <Text style={styles.actionBtnText}>{t.warehouse.manageUsers.reassign}</Text>
                         </TouchableOpacity>
                       )}
                       <TouchableOpacity
@@ -217,7 +235,7 @@ export default function ManageUsersScreen() {
                         <Text style={[styles.actionBtnText, {
                           color: user.isActive ? COLORS.danger : COLORS.success
                         }]}>
-                          {user.isActive ? "Deactivate" : "Reactivate"}
+                          {user.isActive ? t.warehouse.manageUsers.deactivate : t.warehouse.manageUsers.reactivate}
                         </Text>
                       </TouchableOpacity>
                     </View>

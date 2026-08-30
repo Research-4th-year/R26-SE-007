@@ -8,10 +8,13 @@ import { Ionicons } from "@expo/vector-icons";
 import { disasterService } from "@/services/warehouse/disaster.service";
 import { warehouseService, Warehouse } from "@/services/warehouse/warehouse.service";
 import { COLORS } from "@/constants/theme";
+import { useLanguage } from "@/contexts/LanguageContext";
 
-const DISASTER_TYPES = ["FLOOD", "CYCLONE", "ELEPHANT_ATTACK", "FIRE", "OTHER"];
+const DISASTER_TYPE_KEYS = ["FLOOD", "CYCLONE", "ELEPHANT_ATTACK", "FIRE", "OTHER"] as const;
 
 export default function CreateDisasterScreen() {
+  const { t } = useLanguage();
+
   const [warehouses, setWarehouses]           = useState<Warehouse[]>([]);
   const [selectedWarehouse, setSelectedWarehouse] = useState<string>("");
   const [disasterType, setDisasterType]       = useState<string>("");
@@ -28,8 +31,8 @@ export default function CreateDisasterScreen() {
   }, []);
 
   const handleCreate = async () => {
-    if (!selectedWarehouse) { Alert.alert("Error", "Select an affected warehouse"); return; }
-    if (!disasterType)      { Alert.alert("Error", "Select a disaster type"); return; }
+    if (!selectedWarehouse) { Alert.alert(t.warehouse.errors.title, t.warehouse.createDisaster.errorNoWarehouse); return; }
+    if (!disasterType)      { Alert.alert(t.warehouse.errors.title, t.warehouse.createDisaster.errorNoType); return; }
 
     setLoading(true);
     try {
@@ -40,11 +43,11 @@ export default function CreateDisasterScreen() {
         estimatedLossTons: estimatedLoss ? parseFloat(estimatedLoss) : undefined,
         occurredAt: new Date().toISOString(),
       });
-      Alert.alert("Success", "Disaster event recorded and anchored on blockchain", [
-        { text: "View", onPress: () => router.replace(`/disaster/${disaster.id}`) },
+      Alert.alert(t.warehouse.createDisaster.successTitle, t.warehouse.createDisaster.successMessage, [
+        { text: t.warehouse.createDisaster.view, onPress: () => router.replace(`/disaster/${disaster.id}`) },
       ]);
     } catch (err: any) {
-      Alert.alert("Error", err?.response?.data?.message || "Failed to create disaster");
+      Alert.alert(t.warehouse.errors.title, err?.response?.data?.message || t.warehouse.createDisaster.createError);
     } finally {
       setLoading(false);
     }
@@ -56,15 +59,15 @@ export default function CreateDisasterScreen() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color={COLORS.white} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Report Disaster</Text>
-        <Text style={styles.headerSubtitle}>Creates a blockchain-anchored record</Text>
+        <Text style={styles.headerTitle}>{t.warehouse.createDisaster.title}</Text>
+        <Text style={styles.headerSubtitle}>{t.warehouse.createDisaster.subtitle}</Text>
       </View>
 
       <ScrollView style={styles.list}>
         {/* Disaster Type */}
-        <Text style={styles.label}>Disaster Type *</Text>
+        <Text style={styles.label}>{t.warehouse.createDisaster.disasterType}</Text>
         <View style={styles.typeRow}>
-          {DISASTER_TYPES.map((type) => {
+          {DISASTER_TYPE_KEYS.map((type) => {
             const selected = disasterType === type;
             return (
               <TouchableOpacity
@@ -73,7 +76,7 @@ export default function CreateDisasterScreen() {
                 style={[styles.typeChip, selected && styles.typeChipSelected]}
               >
                 <Text style={[styles.typeChipText, selected && styles.typeChipTextSelected]}>
-                  {type.replace("_", " ")}
+                  {t.warehouse.disasterTypes[type]}
                 </Text>
               </TouchableOpacity>
             );
@@ -81,7 +84,7 @@ export default function CreateDisasterScreen() {
         </View>
 
         {/* Affected Warehouse */}
-        <Text style={styles.label}>Affected Warehouse *</Text>
+        <Text style={styles.label}>{t.warehouse.createDisaster.affectedWarehouse}</Text>
         {loadingWarehouses ? (
           <ActivityIndicator color={COLORS.primary} />
         ) : (
@@ -105,10 +108,10 @@ export default function CreateDisasterScreen() {
         )}
 
         {/* Description */}
-        <Text style={styles.label}>Description</Text>
+        <Text style={styles.label}>{t.warehouse.createDisaster.description}</Text>
         <TextInput
           style={styles.textArea}
-          placeholder="Describe the damage..."
+          placeholder={t.warehouse.createDisaster.descriptionPlaceholder}
           placeholderTextColor={COLORS.textFaint}
           multiline
           numberOfLines={3}
@@ -117,10 +120,10 @@ export default function CreateDisasterScreen() {
         />
 
         {/* Estimated Loss */}
-        <Text style={styles.label}>Estimated Loss (tons)</Text>
+        <Text style={styles.label}>{t.warehouse.createDisaster.estimatedLoss}</Text>
         <TextInput
           style={styles.input}
-          placeholder="e.g. 45"
+          placeholder={t.warehouse.createDisaster.estimatedLossPlaceholder}
           placeholderTextColor={COLORS.textFaint}
           keyboardType="numeric"
           value={estimatedLoss}
@@ -134,7 +137,7 @@ export default function CreateDisasterScreen() {
         >
           {loading
             ? <ActivityIndicator color={COLORS.white} />
-            : <Text style={styles.submitButtonText}>Report Disaster</Text>
+            : <Text style={styles.submitButtonText}>{t.warehouse.createDisaster.submit}</Text>
           }
         </TouchableOpacity>
       </ScrollView>

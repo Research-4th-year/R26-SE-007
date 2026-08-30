@@ -7,8 +7,11 @@ import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { api } from "@/services/shared/api";
 import { COLORS } from "@/constants/theme";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function LedgerHistoryScreen() {
+  const { t } = useLanguage();
+
   const { id }                      = useLocalSearchParams<{ id: string }>();
   const [data, setData]             = useState<any>(null);
   const [loading, setLoading]       = useState(true);
@@ -19,7 +22,7 @@ export default function LedgerHistoryScreen() {
       const res = await api.get(`/api/blockchain/warehouses/${id}/history`);
       setData(res.data.data);
     } catch (err: any) {
-      Alert.alert("Error", err?.response?.data?.message || "Failed to load ledger history");
+      Alert.alert(t.warehouse.errors.title, err?.response?.data?.message || t.warehouse.ledger.loadError);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -32,7 +35,7 @@ export default function LedgerHistoryScreen() {
     return (
       <View style={styles.centered}>
         <ActivityIndicator size="large" color={COLORS.primary} />
-        <Text style={styles.loadingText}>Reading from Fabric ledger...</Text>
+        <Text style={styles.loadingText}>{t.warehouse.ledger.loading}</Text>
       </View>
     );
   }
@@ -46,12 +49,12 @@ export default function LedgerHistoryScreen() {
           <Ionicons name="arrow-back" size={24} color={COLORS.white} />
         </TouchableOpacity>
         <View style={styles.headerInfo}>
-          <Text style={styles.headerTitle}>Blockchain Ledger</Text>
+          <Text style={styles.headerTitle}>{t.warehouse.ledger.title}</Text>
           <Text style={styles.headerSub}>{data?.warehouse?.name}</Text>
         </View>
         <View style={styles.chainBadge}>
           <Ionicons name="lock-closed" size={11} color={COLORS.info} />
-          <Text style={styles.chainBadgeText}>Fabric</Text>
+          <Text style={styles.chainBadgeText}>{t.warehouse.ledger.fabric}</Text>
         </View>
       </View>
 
@@ -66,21 +69,17 @@ export default function LedgerHistoryScreen() {
             <Ionicons name="shield-checkmark" size={20} color={COLORS.success} />
             <View style={styles.summaryText}>
               <Text style={styles.summaryTitle}>
-                {events.length} events on-chain
+                {t.warehouse.ledger.eventsOnChain.replace("{count}", String(events.length))}
               </Text>
-              {/* <Text style={styles.summaryDesc}>
-                All records are immutable and tamper-proof on Hyperledger Fabric.
-                Even if MySQL is modified, this ledger remains unchanged.
-              </Text> */}
             </View>
           </View>
 
           {events.length === 0 ? (
             <View style={styles.emptyState}>
               <Text style={styles.emptyIcon}>⛓</Text>
-              <Text style={styles.emptyTitle}>No on-chain records</Text>
+              <Text style={styles.emptyTitle}>{t.warehouse.ledger.noRecords}</Text>
               <Text style={styles.emptyDesc}>
-                Stock events are anchored on the blockchain when recorded
+                {t.warehouse.ledger.noRecordsDesc}
               </Text>
             </View>
           ) : (
@@ -91,17 +90,19 @@ export default function LedgerHistoryScreen() {
                     <Text style={styles.ledgerIndexText}>#{index + 1}</Text>
                   </View>
                   <View style={styles.ledgerInfo}>
-                    <Text style={styles.ledgerEventType}>{ev.eventType}</Text>
+                    <Text style={styles.ledgerEventType}>
+                      {t.warehouse.eventTypes[ev.eventType as keyof typeof t.warehouse.eventTypes] ?? ev.eventType}
+                    </Text>
                     <Text style={styles.ledgerTimestamp}>{ev.timestamp}</Text>
                   </View>
-                  <Text style={styles.ledgerQty}>{ev.quantityTons}t</Text>
+                  <Text style={styles.ledgerQty}>{ev.quantityTons}{t.warehouse.units.tonsShort}</Text>
                 </View>
 
                 <View style={styles.ledgerFields}>
-                  <LedgerField label="MSP ID"    value={ev.reportedByMsp} />
-                  <LedgerField label="Reporter" value={ev.reportedById ? ev.reportedById.slice(0, 16) + "..." : "—"} />
-                  <LedgerField label="Doc Hash" value={ev.documentHash ? ev.documentHash.slice(0, 20) + "..." : "—"} />
-                  {ev.notes && <LedgerField label="Notes" value={ev.notes} />}
+                  <LedgerField label={t.warehouse.ledger.mspId}    value={ev.reportedByMsp} />
+                  <LedgerField label={t.warehouse.ledger.reporter} value={ev.reportedById ? ev.reportedById.slice(0, 16) + "..." : "—"} />
+                  <LedgerField label={t.warehouse.ledger.docHash} value={ev.documentHash ? ev.documentHash.slice(0, 20) + "..." : "—"} />
+                  {ev.notes && <LedgerField label={t.warehouse.ledger.notes} value={ev.notes} />}
                 </View>
               </View>
             ))

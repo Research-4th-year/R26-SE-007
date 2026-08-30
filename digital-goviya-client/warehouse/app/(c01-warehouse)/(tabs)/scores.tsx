@@ -6,6 +6,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { api } from "@/services/shared/api";
 import { COLORS, getReliabilityColor } from "@/constants/theme";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface WarehouseScore {
   warehouseId:      string;
@@ -21,6 +22,8 @@ interface ScoreWithWarehouse extends WarehouseScore {
 }
 
 export default function ScoresScreen() {
+  const { t } = useLanguage();
+
   const [scores, setScores]         = useState<ScoreWithWarehouse[]>([]);
   const [warehouses, setWarehouses] = useState<Record<string, any>>({});
   const [loading, setLoading]       = useState(true);
@@ -50,7 +53,6 @@ export default function ScoresScreen() {
         })
       );
 
-      // Sort: anomalous first, then by score ascending (lowest trust first)
       enriched.sort((a, b) => {
         if (a.isAnomalous !== b.isAnomalous) return a.isAnomalous ? -1 : 1;
         return a.reliabilityScore - b.reliabilityScore;
@@ -58,7 +60,7 @@ export default function ScoresScreen() {
 
       setScores(enriched);
     } catch (err: any) {
-      Alert.alert("Error", "Failed to load scores");
+      Alert.alert(t.warehouse.errors.title, t.warehouse.scores.loadError);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -70,9 +72,9 @@ export default function ScoresScreen() {
     try {
       await api.post("/api/scores/refresh");
       await load();
-      Alert.alert("Done", "Scores refreshed successfully");
+      Alert.alert(t.warehouse.scores.refreshedTitle, t.warehouse.scores.refreshedMessage);
     } catch (err: any) {
-      Alert.alert("Error", err?.response?.data?.message || "Failed to refresh scores");
+      Alert.alert(t.warehouse.errors.title, err?.response?.data?.message || t.warehouse.scores.refreshError);
     } finally {
       setRefreshingScores(false);
     }
@@ -80,11 +82,22 @@ export default function ScoresScreen() {
 
   useEffect(() => { load(); }, []);
 
+  const getScoreNote = (score: number): string => {
+    if (score > 0.8) return t.warehouse.scores.note.normal;
+    if (score > 0.6) return t.warehouse.scores.note.slight;
+    if (score > 0.4) return t.warehouse.scores.note.moderate;
+    return t.warehouse.scores.note.high;
+  };
+
+  const getAnomalyFlagLabel = (flag: string): string => {
+    return t.warehouse.anomalyFlags[flag as keyof typeof t.warehouse.anomalyFlags] ?? flag.replace(/_/g, " ");
+  };
+
   if (loading) {
     return (
       <View style={styles.centered}>
         <ActivityIndicator size="large" color={COLORS.primary} />
-        <Text style={styles.loadingText}>Loading scores...</Text>
+        <Text style={styles.loadingText}>{t.warehouse.scores.loading}</Text>
       </View>
     );
   }
@@ -99,8 +112,8 @@ export default function ScoresScreen() {
       {/* Header */}
       <View style={styles.header}>
         <View>
-          <Text style={styles.headerTitle}>Reliability Scores</Text>
-          <Text style={styles.headerSub}>Anomaly detection</Text>
+          <Text style={styles.headerTitle}>{t.warehouse.scores.title}</Text>
+          <Text style={styles.headerSub}>{t.warehouse.scores.subtitle}</Text>
         </View>
         <TouchableOpacity
           style={[styles.refreshBtn, refreshingScores && styles.refreshBtnDisabled]}
@@ -124,13 +137,13 @@ export default function ScoresScreen() {
           <View style={styles.summaryRow}>
             <View style={styles.summaryCard}>
               <Text style={styles.summaryValue}>{scores.length}</Text>
-              <Text style={styles.summaryLabel}>Warehouses</Text>
+              <Text style={styles.summaryLabel}>{t.warehouse.scores.warehouses}</Text>
             </View>
             <View style={styles.summaryCard}>
               <Text style={[styles.summaryValue, { color: COLORS.success }]}>
                 {(avgScore * 100).toFixed(0)}%
               </Text>
-              <Text style={styles.summaryLabel}>Avg Score</Text>
+              <Text style={styles.summaryLabel}>{t.warehouse.scores.avgScore}</Text>
             </View>
             <View style={styles.summaryCard}>
               <Text style={[styles.summaryValue, {
@@ -138,7 +151,7 @@ export default function ScoresScreen() {
               }]}>
                 {anomalousCount}
               </Text>
-              <Text style={styles.summaryLabel}>Anomalous</Text>
+              <Text style={styles.summaryLabel}>{t.warehouse.scores.anomalous}</Text>
             </View>
           </View>
 
@@ -146,8 +159,7 @@ export default function ScoresScreen() {
           <View style={styles.explainCard}>
             <Ionicons name="information-circle" size={16} color={COLORS.info} />
             <Text style={styles.explainText}>
-              Scores below 40% indicate anomalous
-              behavior 
+              {t.warehouse.scores.explanation}
             </Text>
           </View>
 
@@ -155,9 +167,9 @@ export default function ScoresScreen() {
           {scores.length === 0 ? (
             <View style={styles.emptyState}>
               <Text style={styles.emptyIcon}>🤖</Text>
-              <Text style={styles.emptyTitle}>No scores yet</Text>
+              <Text style={styles.emptyTitle}>{t.warehouse.scores.noScores}</Text>
               <Text style={styles.emptyText}>
-                Tap the refresh button to run GNN inference
+                {t.warehouse.scores.noScoresHint}
               </Text>
             </View>
           ) : (
@@ -169,7 +181,6 @@ export default function ScoresScreen() {
               return (
                 <View key={s.warehouseId} style={[styles.scoreCard, s.isAnomalous && styles.scoreCardAnomalous]}>
                   <View style={styles.scoreCardHeader}>
-                    {/* Rank + name */}
                     <View style={styles.scoreCardLeft}>
                       <View style={[styles.rankBadge, { backgroundColor: s.isAnomalous ? COLORS.dangerBg : COLORS.successBg }]}>
                         <Text style={[styles.rankText, { color: s.isAnomalous ? COLORS.dangerText : COLORS.successText }]}>
@@ -182,7 +193,6 @@ export default function ScoresScreen() {
                       </View>
                     </View>
 
-                    {/* Score */}
                     <View style={styles.scoreRight}>
                       <Text style={[styles.scoreValue, { color: scoreColor }]}>
                         {scorePct}%
@@ -190,7 +200,7 @@ export default function ScoresScreen() {
                       {s.isAnomalous && (
                         <View style={styles.anomalousBadge}>
                           <Ionicons name="warning" size={10} color={COLORS.dangerText} />
-                          <Text style={styles.anomalousBadgeText}>ANOMALOUS</Text>
+                          <Text style={styles.anomalousBadgeText}>{t.warehouse.scores.anomalousBadge}</Text>
                         </View>
                       )}
                     </View>
@@ -210,7 +220,7 @@ export default function ScoresScreen() {
                       {s.anomalyFlags.map((flag) => (
                         <View key={flag} style={styles.flagPill}>
                           <Text style={styles.flagText}>
-                            {flag.replace(/_/g, " ")}
+                            {getAnomalyFlagLabel(flag)}
                           </Text>
                         </View>
                       ))}
@@ -219,13 +229,7 @@ export default function ScoresScreen() {
 
                   {/* GNN confidence note */}
                   <Text style={styles.scoreNote}>
-                    {s.reliabilityScore > 0.8
-                      ? "Normal behavior pattern"
-                      : s.reliabilityScore > 0.6
-                      ? "Slightly elevated risk"
-                      : s.reliabilityScore > 0.4
-                      ? "Moderate anomaly signals"
-                      : "High anomaly risk — review recommended"}
+                    {getScoreNote(s.reliabilityScore)}
                   </Text>
                 </View>
               );

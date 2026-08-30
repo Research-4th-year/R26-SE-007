@@ -11,25 +11,26 @@ import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
 import { authService } from "@/services/shared/auth.service";
 import { COLORS } from "@/constants/theme";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const ADMIN_ACTIONS = [
   {
-    title: "Create Warehouse",
-    desc: "Add a new PMB warehouse with address search",
+    titleKey: "createWarehouseTitle" as const,
+    descKey: "createWarehouseDesc" as const,
     icon: "add-circle",
     color: COLORS.primary,
     route: "/(c01-warehouse)/(admin)/create-warehouse",
   },
   {
-    title: "Register User",
-    desc: "Add a new RM, Supervisor, Auditor or Admin",
+    titleKey: "registerUserTitle" as const,
+    descKey: "registerUserDesc" as const,
     icon: "person-add",
     color: COLORS.info,
     route: "/(c01-warehouse)/(admin)/register-user",
   },
   {
-    title: "Manage Users",
-    desc: "Reassign supervisors, deactivate accounts",
+    titleKey: "manageUsersTitle" as const,
+    descKey: "manageUsersDesc" as const,
     icon: "people",
     color: COLORS.warning,
     route: "/(c01-warehouse)/(admin)/manage-users",
@@ -37,6 +38,7 @@ const ADMIN_ACTIONS = [
 ];
 
 export default function AdminScreen() {
+  const { t } = useLanguage();
   const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
@@ -47,9 +49,9 @@ export default function AdminScreen() {
     return (
       <View style={styles.centered}>
         <Ionicons name="lock-closed" size={48} color={COLORS.textFaint} />
-        <Text style={styles.lockedTitle}>Admin Only</Text>
+        <Text style={styles.lockedTitle}>{t.warehouse.admin.lockedTitle}</Text>
         <Text style={styles.lockedSub}>
-          You don't have permission to view this screen
+          {t.warehouse.admin.lockedMessage}
         </Text>
       </View>
     );
@@ -58,13 +60,13 @@ export default function AdminScreen() {
   return (
     <View style={styles.screen}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Admin Panel</Text>
-        <Text style={styles.headerSub}>PMB System Administration</Text>
+        <Text style={styles.headerTitle}>{t.warehouse.admin.title}</Text>
+        <Text style={styles.headerSub}>{t.warehouse.admin.subtitle}</Text>
       </View>
 
       <ScrollView style={styles.scroll}>
         <View style={styles.content}>
-          <Text style={styles.sectionTitle}>Management</Text>
+          <Text style={styles.sectionTitle}>{t.warehouse.admin.management}</Text>
           {ADMIN_ACTIONS.map((action) => (
             <TouchableOpacity
               key={action.route}
@@ -84,8 +86,12 @@ export default function AdminScreen() {
                 />
               </View>
               <View style={styles.actionInfo}>
-                <Text style={styles.actionTitle}>{action.title}</Text>
-                <Text style={styles.actionDesc}>{action.desc}</Text>
+                <Text style={styles.actionTitle}>
+                  {t.warehouse.admin[action.titleKey]}
+                </Text>
+                <Text style={styles.actionDesc}>
+                  {t.warehouse.admin[action.descKey]}
+                </Text>
               </View>
               <Ionicons
                 name="chevron-forward"

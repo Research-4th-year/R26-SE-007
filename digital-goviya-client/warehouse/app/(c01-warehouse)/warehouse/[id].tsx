@@ -17,6 +17,8 @@ import {
   getUtilizationColors,
   getReliabilityColor,
 } from "@/constants/theme";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { authService } from "@/services/shared/auth.service";
 
 interface StockEvent {
   id: string;
@@ -38,16 +40,18 @@ const EVENT_COLORS: Record<string, { bg: string; text: string; icon: string }> =
     ADJUSTMENT: { bg: "#F3F4F6", text: "#374151", icon: "pencil" },
   };
 
-const EVENT_TYPE_FILTER = [
+const EVENT_TYPE_FILTER_KEYS = [
   "ALL",
   "INFLOW",
   "OUTFLOW",
   "REDISTRIBUTION",
   "DAMAGE",
   "ADJUSTMENT",
-];
+] as const;
 
 export default function WarehouseDetailScreen() {
+  const { t } = useLanguage();
+
   const { id } = useLocalSearchParams<{ id: string }>();
 
   const [warehouse, setWarehouse] = useState<any>(null);
@@ -58,6 +62,8 @@ export default function WarehouseDetailScreen() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const [deactivating, setDeactivating] = useState(false);
 
   const loadWarehouse = async () => {
     const res = await api.get(`/api/warehouses/${id}`);
@@ -74,16 +80,21 @@ export default function WarehouseDetailScreen() {
     setEvents((prev) => (append ? [...prev, ...data.items] : data.items));
   };
 
-  const load = async () => {
-    try {
-      await Promise.all([loadWarehouse(), loadEvents(1)]);
-    } catch {
-      Alert.alert("Error", "Failed to load warehouse data");
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
+const load = async () => {
+  try {
+    const [, , u] = await Promise.all([
+      loadWarehouse(),
+      loadEvents(1),
+      authService.getStoredUser(),
+    ]);
+    setUser(u);
+  } catch {
+    Alert.alert(t.warehouse.errors.title, t.warehouse.warehouses.loadError);
+  } finally {
+    setLoading(false);
+    setRefreshing(false);
+  }
+};
 
   useEffect(() => {
     load();
@@ -116,11 +127,46 @@ export default function WarehouseDetailScreen() {
     router.push(`/warehouse/ledger/${id}` as any);
   };
 
+  const getFilterLabel = (f: string): string => {
+    if (f === "ALL") return t.warehouse.status.all;
+    return t.warehouse.eventTypes[f as keyof typeof t.warehouse.eventTypes] ?? f;
+  };
+
+  const handleDeactivate = () => {
+  Alert.alert(
+    "Deactivate Warehouse",
+    `${warehouse.name} (${warehouse.code}) will be removed from disaster ranking and GNN scoring.\n\nStock history and blockchain records are preserved.`,
+    [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Deactivate",
+        style: "destructive",
+        onPress: async () => {
+          setDeactivating(true);
+          try {
+            await api.delete(`/api/warehouses/${id}`);
+            Alert.alert("Deactivated", `${warehouse.code} is no longer active.`, [
+              { text: "Done", onPress: () => router.back() },
+            ]);
+          } catch (err: any) {
+            Alert.alert(
+              t.warehouse.errors.title,
+              err?.response?.data?.message ?? "Failed to deactivate warehouse"
+            );
+          } finally {
+            setDeactivating(false);
+          }
+        },
+      },
+    ]
+  );
+};
+
   if (loading) {
     return (
       <View style={styles.centered}>
         <ActivityIndicator size="large" color={COLORS.primary} />
-        <Text style={styles.loadingText}>Loading warehouse...</Text>
+        <Text style={styles.loadingText}>{t.warehouse.warehouses.loadingWarehouse}</Text>
       </View>
     );
   }
@@ -169,19 +215,19 @@ export default function WarehouseDetailScreen() {
                 <Text style={styles.statValue}>
                   {warehouse.currentStockTons}
                 </Text>
-                <Text style={styles.statLabel}>Stock (t)</Text>
+                <Text style={styles.statLabel}>{t.warehouse.warehouses.stock} ({t.warehouse.units.tonsShort})</Text>
               </View>
               <View style={styles.statDivider} />
               <View style={styles.stat}>
                 <Text style={[styles.statValue, { color: COLORS.info }]}>
                   {warehouse.availableTons}
                 </Text>
-                <Text style={styles.statLabel}>Available (t)</Text>
+                <Text style={styles.statLabel}>{t.warehouse.warehouses.available} ({t.warehouse.units.tonsShort})</Text>
               </View>
               <View style={styles.statDivider} />
               <View style={styles.stat}>
                 <Text style={styles.statValue}>{warehouse.capacityTons}</Text>
-                <Text style={styles.statLabel}>Capacity (t)</Text>
+                <Text style={styles.statLabel}>{t.warehouse.warehouses.capacity} ({t.warehouse.units.tonsShort})</Text>
               </View>
             </View>
 
@@ -199,10 +245,10 @@ export default function WarehouseDetailScreen() {
             </View>
             <View style={styles.barLabels}>
               <Text style={[styles.utilLabel, { color: util.text }]}>
-                {warehouse.utilizationPct}% utilized
+                {t.warehouse.warehouses.utilized.replace("{percent}", String(warehouse.utilizationPct))}
               </Text>
               <Text style={styles.totalEvents}>
-                {warehouse.totalEvents} total events
+                {t.warehouse.warehouses.totalEvents.replace("{count}", String(warehouse.totalEvents))}
               </Text>
             </View>
           </View>
@@ -213,7 +259,7 @@ export default function WarehouseDetailScreen() {
               <View style={styles.infoCard}>
                 <Ionicons name="analytics" size={16} color={COLORS.info} />
                 <View style={styles.infoCardText}>
-                  <Text style={styles.infoCardLabel}>GNN Score</Text>
+                  <Text style={styles.infoCardLabel}>{t.warehouse.warehouses.gnnScore}</Text>
                   <Text
                     style={[
                       styles.infoCardValue,
@@ -224,8 +270,7 @@ export default function WarehouseDetailScreen() {
                       },
                     ]}
                   >
-                    {(warehouse.latestScore.reliabilityScore * 100).toFixed(0)}%
-                    reliable
+                    {t.warehouse.warehouses.reliable.replace("{percent}", (warehouse.latestScore.reliabilityScore * 100).toFixed(0))}
                   </Text>
                 </View>
               </View>
@@ -233,9 +278,9 @@ export default function WarehouseDetailScreen() {
             <View style={styles.infoCard}>
               <Ionicons name="people" size={16} color={COLORS.primary} />
               <View style={styles.infoCardText}>
-                <Text style={styles.infoCardLabel}>Supervisors</Text>
+                <Text style={styles.infoCardLabel}>{t.warehouse.warehouses.supervisors}</Text>
                 <Text style={styles.infoCardValue}>
-                  {warehouse.supervisors?.length ?? 0} assigned
+                  {t.warehouse.warehouses.supervisorsAssigned.replace("{count}", String(warehouse.supervisors?.length ?? 0))}
                 </Text>
               </View>
             </View>
@@ -267,25 +312,25 @@ export default function WarehouseDetailScreen() {
               onPress={handleRecordEvent}
             >
               <Ionicons name="add-circle" size={18} color={COLORS.white} />
-              <Text style={styles.actionBtnText}>Record Event</Text>
+              <Text style={styles.actionBtnText}>{t.warehouse.warehouses.recordEvent}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.actionBtn, { backgroundColor: COLORS.info }]}
               onPress={handleViewOnChain}
             >
               <Ionicons name="lock-closed" size={18} color={COLORS.white} />
-              <Text style={styles.actionBtnText}>Ledger History</Text>
+              <Text style={styles.actionBtnText}>{t.warehouse.warehouses.ledgerHistory}</Text>
             </TouchableOpacity>
           </View>
 
           {/* Event filter tabs */}
-          <Text style={styles.sectionTitle}>Stock Events</Text>
+          <Text style={styles.sectionTitle}>{t.warehouse.warehouses.stockEvents}</Text>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
             style={styles.filterScroll}
           >
-            {EVENT_TYPE_FILTER.map((f) => (
+            {EVENT_TYPE_FILTER_KEYS.map((f) => (
               <TouchableOpacity
                 key={f}
                 style={[
@@ -300,7 +345,7 @@ export default function WarehouseDetailScreen() {
                     filter === f && styles.filterPillTextActive,
                   ]}
                 >
-                  {f === "ALL" ? "All" : f.charAt(0) + f.slice(1).toLowerCase()}
+                  {getFilterLabel(f)}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -310,7 +355,7 @@ export default function WarehouseDetailScreen() {
           {events.length === 0 ? (
             <View style={styles.emptyState}>
               <Text style={styles.emptyIcon}>📋</Text>
-              <Text style={styles.emptyText}>No events found</Text>
+              <Text style={styles.emptyText}>{t.warehouse.warehouses.noEventsFound}</Text>
             </View>
           ) : (
             events.map((ev) => {
@@ -341,10 +386,12 @@ export default function WarehouseDetailScreen() {
                     />
                   </View>
                   <View style={styles.eventInfo}>
-                    <Text style={styles.eventType}>{ev.eventType}</Text>
+                    <Text style={styles.eventType}>
+                      {t.warehouse.eventTypes[ev.eventType as keyof typeof t.warehouse.eventTypes] ?? ev.eventType}
+                    </Text>
                     <Text style={styles.eventReporter}>
                       {ev.reportedBy.fullName} ·{" "}
-                      {ev.reportedBy.role.replace(/_/g, " ")}
+                      {t.warehouse.roles[ev.reportedBy.role as keyof typeof t.warehouse.roles] ?? ev.reportedBy.role}
                     </Text>
                     <Text style={styles.eventTime}>
                       {new Date(ev.timestamp).toLocaleDateString("en-US", {
@@ -364,7 +411,7 @@ export default function WarehouseDetailScreen() {
                   <View style={styles.eventRight}>
                     <Text style={[styles.eventQty, { color: cfg.text }]}>
                       {isOutgoing ? "-" : "+"}
-                      {ev.quantityTons}t
+                      {ev.quantityTons}{t.warehouse.units.tonsShort}
                     </Text>
                     <View style={styles.eventBadges}>
                       {ev.documentHash && (
@@ -398,10 +445,34 @@ export default function WarehouseDetailScreen() {
               {loadingMore ? (
                 <ActivityIndicator size="small" color={COLORS.primary} />
               ) : (
-                <Text style={styles.loadMoreText}>Load more events</Text>
+                <Text style={styles.loadMoreText}>{t.warehouse.warehouses.loadMore}</Text>
               )}
             </TouchableOpacity>
           )}
+
+          {user?.role === "ADMIN" && (
+  <View style={styles.dangerZone}>
+    <Text style={styles.dangerTitle}>Admin Actions</Text>
+    <Text style={styles.dangerNote}>
+      Deactivating removes this warehouse from active operations. Stock
+      history and on-chain records are retained.
+    </Text>
+    <TouchableOpacity
+      style={[styles.dangerBtn, deactivating && styles.btnDisabled]}
+      onPress={handleDeactivate}
+      disabled={deactivating}
+    >
+      {deactivating ? (
+        <ActivityIndicator size="small" color={COLORS.danger} />
+      ) : (
+        <>
+          <Ionicons name="archive-outline" size={16} color={COLORS.danger} />
+          <Text style={styles.dangerBtnText}>Deactivate Warehouse</Text>
+        </>
+      )}
+    </TouchableOpacity>
+  </View>
+)}
 
           <View style={styles.bottomSpacer} />
         </View>
@@ -612,4 +683,43 @@ const styles = StyleSheet.create({
   loadMoreText: { color: COLORS.primary, fontWeight: "600", fontSize: 13 },
 
   bottomSpacer: { height: 40 },
+
+  dangerZone: {
+  marginTop: 24,
+  padding: 14,
+  borderRadius: 12,
+  borderWidth: 1,
+  borderColor: COLORS.dangerBg,
+  backgroundColor: COLORS.bgCard,
+},
+dangerTitle: {
+  fontSize: 13,
+  fontWeight: "700",
+  color: COLORS.dangerText,
+  marginBottom: 4,
+},
+dangerNote: {
+  fontSize: 11,
+  color: COLORS.textMuted,
+  lineHeight: 16,
+  marginBottom: 12,
+},
+dangerBtn: {
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: 8,
+  paddingVertical: 12,
+  borderRadius: 10,
+  borderWidth: 1,
+  borderColor: COLORS.danger,
+  backgroundColor: COLORS.dangerBg,
+},
+dangerBtnText: {
+  color: COLORS.danger,
+  fontWeight: "700",
+  fontSize: 13,
+},
+btnDisabled: { opacity: 0.5 },
+
 });

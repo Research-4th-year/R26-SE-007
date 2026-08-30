@@ -14,46 +14,19 @@ import { Ionicons } from "@expo/vector-icons";
 import { api } from "@/services/shared/api";
 import { COLORS } from "@/constants/theme";
 import { useDebouncedCallback } from "@/hooks/shared/useDebounce";
+import { useLanguage } from "@/contexts/LanguageContext";
 
-const EVENT_TYPES = [
-  {
-    value: "INFLOW",
-    label: "Inflow",
-    icon: "arrow-down-circle",
-    color: COLORS.success,
-    desc: "Stock received from farmers",
-  },
-  {
-    value: "OUTFLOW",
-    label: "Outflow",
-    icon: "arrow-up-circle",
-    color: COLORS.danger,
-    desc: "Stock dispatched to millers/traders",
-  },
-  {
-    value: "REDISTRIBUTION",
-    label: "Redistribution",
-    icon: "swap-horizontal",
-    color: COLORS.info,
-    desc: "Transfer to/from another warehouse",
-  },
-  {
-    value: "DAMAGE",
-    label: "Damage",
-    icon: "warning",
-    color: COLORS.warning,
-    desc: "Loss from disaster or spoilage",
-  },
-  {
-    value: "ADJUSTMENT",
-    label: "Adjustment",
-    icon: "pencil",
-    color: COLORS.textMuted,
-    desc: "Manual correction after stock count",
-  },
-];
+const EVENT_TYPE_KEYS = [
+  { value: "INFLOW",         icon: "arrow-down-circle", color: COLORS.success },
+  { value: "OUTFLOW",        icon: "arrow-up-circle",   color: COLORS.danger },
+  { value: "REDISTRIBUTION", icon: "swap-horizontal",   color: COLORS.info },
+  { value: "DAMAGE",         icon: "warning",           color: COLORS.warning },
+  { value: "ADJUSTMENT",     icon: "pencil",            color: COLORS.textMuted },
+] as const;
 
 export default function RecordEventScreen() {
+  const { t } = useLanguage();
+
   const { warehouseId, warehouseName } = useLocalSearchParams<{
     warehouseId: string;
     warehouseName: string;
@@ -67,11 +40,11 @@ export default function RecordEventScreen() {
 
   const handleSubmit = useDebouncedCallback(async () => {
     if (!eventType) {
-      Alert.alert("Required", "Select an event type");
+      Alert.alert(t.warehouse.createWarehouse.requiredTitle, t.warehouse.recordEvent.requiredType);
       return;
     }
     if (!quantity || isNaN(Number(quantity)) || Number(quantity) <= 0) {
-      Alert.alert("Required", "Enter a valid quantity in tons");
+      Alert.alert(t.warehouse.createWarehouse.requiredTitle, t.warehouse.recordEvent.requiredQuantity);
       return;
     }
 
@@ -90,12 +63,19 @@ export default function RecordEventScreen() {
       const summary = res.data.data.warehouseSummary;
       setLastEventId(event.id);
 
+      const eventTypeLabel = t.warehouse.eventTypes[eventType as keyof typeof t.warehouse.eventTypes] ?? eventType;
+
       Alert.alert(
-        "Event Recorded ✅",
-        `${eventType} of ${quantity} tons recorded.\n\nUpdated stock: ${summary.currentStockTons}t\nAvailable: ${summary.availableTons}t\n\nDocument hash: ${event.documentHash?.slice(0, 16)}...`,
+        t.warehouse.recordEvent.recordedTitle,
+        t.warehouse.recordEvent.recordedBody
+          .replace("{type}", eventTypeLabel)
+          .replace("{quantity}", quantity)
+          .replace("{stock}", String(summary.currentStockTons))
+          .replace("{available}", String(summary.availableTons))
+          .replace("{hash}", event.documentHash?.slice(0, 16) ?? ""),
         [
           {
-            text: "Attach Document",
+            text: t.warehouse.recordEvent.attachDocument,
             onPress: () =>
               router.push({
                 pathname:
@@ -104,15 +84,15 @@ export default function RecordEventScreen() {
               }),
           },
           {
-            text: "Done",
+            text: t.warehouse.recordEvent.done,
             onPress: () => router.back(),
           },
         ],
       );
     } catch (err: any) {
       Alert.alert(
-        "Error",
-        err?.response?.data?.message || "Failed to record event",
+        t.warehouse.errors.title,
+        err?.response?.data?.message || t.warehouse.recordEvent.recordError,
       );
     } finally {
       setSubmitting(false);
@@ -126,7 +106,7 @@ export default function RecordEventScreen() {
           <Ionicons name="arrow-back" size={24} color={COLORS.white} />
         </TouchableOpacity>
         <View>
-          <Text style={styles.headerTitle}>Record Stock Event</Text>
+          <Text style={styles.headerTitle}>{t.warehouse.recordEvent.title}</Text>
           <Text style={styles.headerSub} numberOfLines={1}>
             {warehouseName}
           </Text>
@@ -135,33 +115,35 @@ export default function RecordEventScreen() {
 
       <ScrollView style={styles.scroll} keyboardShouldPersistTaps="handled">
         <View style={styles.content}>
-          <Text style={styles.sectionTitle}>Event Type *</Text>
-          {EVENT_TYPES.map((t) => (
+          <Text style={styles.sectionTitle}>{t.warehouse.recordEvent.eventType}</Text>
+          {EVENT_TYPE_KEYS.map((et) => (
             <TouchableOpacity
-              key={t.value}
+              key={et.value}
               style={[
                 styles.typeCard,
-                eventType === t.value && styles.typeCardSelected,
+                eventType === et.value && styles.typeCardSelected,
               ]}
-              onPress={() => setEventType(t.value)}
+              onPress={() => setEventType(et.value)}
             >
               <View
-                style={[styles.typeIcon, { backgroundColor: t.color + "20" }]}
+                style={[styles.typeIcon, { backgroundColor: et.color + "20" }]}
               >
-                <Ionicons name={t.icon as any} size={22} color={t.color} />
+                <Ionicons name={et.icon as any} size={22} color={et.color} />
               </View>
               <View style={styles.typeInfo}>
                 <Text
                   style={[
                     styles.typeLabel,
-                    eventType === t.value && { color: COLORS.primaryDark },
+                    eventType === et.value && { color: COLORS.primaryDark },
                   ]}
                 >
-                  {t.label}
+                  {t.warehouse.eventTypes[et.value as keyof typeof t.warehouse.eventTypes]}
                 </Text>
-                <Text style={styles.typeDesc}>{t.desc}</Text>
+                <Text style={styles.typeDesc}>
+                  {t.warehouse.eventTypeDesc[et.value as keyof typeof t.warehouse.eventTypeDesc]}
+                </Text>
               </View>
-              {eventType === t.value && (
+              {eventType === et.value && (
                 <Ionicons
                   name="checkmark-circle"
                   size={20}
@@ -171,20 +153,20 @@ export default function RecordEventScreen() {
             </TouchableOpacity>
           ))}
 
-          <Text style={styles.sectionTitle}>Quantity (tons) *</Text>
+          <Text style={styles.sectionTitle}>{t.warehouse.recordEvent.quantity}</Text>
           <TextInput
             style={styles.input}
-            placeholder="e.g. 150"
+            placeholder={t.warehouse.recordEvent.quantityPlaceholder}
             placeholderTextColor={COLORS.textFaint}
             keyboardType="numeric"
             value={quantity}
             onChangeText={setQuantity}
           />
 
-          <Text style={styles.sectionTitle}>Notes</Text>
+          <Text style={styles.sectionTitle}>{t.warehouse.recordEvent.notes}</Text>
           <TextInput
             style={[styles.input, styles.textArea]}
-            placeholder="Farmer batch, invoice number, reason for damage..."
+            placeholder={t.warehouse.recordEvent.notesPlaceholder}
             placeholderTextColor={COLORS.textFaint}
             multiline
             numberOfLines={4}
@@ -195,8 +177,7 @@ export default function RecordEventScreen() {
           <View style={styles.hashNote}>
             <Ionicons name="shield-checkmark" size={14} color={COLORS.info} />
             <Text style={styles.hashNoteText}>
-              A document hash will be automatically generated and can be
-              linked to a physical receipt after submission.
+              {t.warehouse.recordEvent.hashNote}
             </Text>
           </View>
 
@@ -214,7 +195,7 @@ export default function RecordEventScreen() {
                   size={20}
                   color={COLORS.white}
                 />
-                <Text style={styles.submitBtnText}>Record Event</Text>
+                <Text style={styles.submitBtnText}>{t.warehouse.recordEvent.submit}</Text>
               </>
             )}
           </TouchableOpacity>

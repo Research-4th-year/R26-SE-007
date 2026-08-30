@@ -7,6 +7,7 @@ import { useLocalSearchParams, router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { api } from "@/services/shared/api";
 import { COLORS } from "@/constants/theme";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface RankedCandidate {
   warehouseId:      string;
@@ -30,6 +31,8 @@ interface ZKPProofRecord {
 }
 
 export default function ZKPScreen() {
+  const { t } = useLanguage();
+
   const { id }                          = useLocalSearchParams<{ id: string }>();
   const [candidates, setCandidates]     = useState<RankedCandidate[]>([]);
   const [existingProofs, setExistingProofs] = useState<ZKPProofRecord[]>([]);
@@ -49,11 +52,10 @@ export default function ZKPScreen() {
       ]);
       setCandidates(disasterRes.data.data.rankedCandidates ?? []);
       setExistingProofs(proofsRes.data.data);
-      // Auto-fill threshold from estimatedLossTons
       const loss = disasterRes.data.data.estimatedLossTons;
       if (loss) setThreshold(String(loss));
     } catch (err: any) {
-      Alert.alert("Error", "Failed to load ZKP data");
+      Alert.alert(t.warehouse.errors.title, t.warehouse.zkp.loadError);
     } finally {
       setLoading(false);
     }
@@ -63,15 +65,15 @@ export default function ZKPScreen() {
 
   const handleGenerate = async () => {
     if (!selectedWarehouse) {
-      Alert.alert("Select a warehouse", "Choose which warehouse will submit the proof");
+      Alert.alert(t.warehouse.zkp.selectWarehouseTitle, t.warehouse.zkp.selectWarehouseBody);
       return;
     }
     if (!availableCapacity || isNaN(Number(availableCapacity))) {
-      Alert.alert("Invalid input", "Enter the warehouse's available capacity in tons");
+      Alert.alert(t.warehouse.zkp.invalidInputTitle, t.warehouse.zkp.invalidCapacity);
       return;
     }
     if (!threshold || isNaN(Number(threshold))) {
-      Alert.alert("Invalid input", "Enter the required threshold in tons");
+      Alert.alert(t.warehouse.zkp.invalidInputTitle, t.warehouse.zkp.invalidThreshold);
       return;
     }
 
@@ -86,12 +88,14 @@ export default function ZKPScreen() {
       });
       setGeneratedProof(res.data.data);
       Alert.alert(
-        "Proof Generated ✅",
-        `The circuit proved: ${availableCapacity} tons ≥ ${threshold} tons threshold.\n\nThe actual capacity (${availableCapacity}) was NOT revealed in the proof.\n\nTap Submit to anchor this on the blockchain.`
+        t.warehouse.zkp.generatedTitle,
+        t.warehouse.zkp.generatedBody
+          .replace(/\{capacity\}/g, availableCapacity)
+          .replace(/\{threshold\}/g, threshold)
       );
     } catch (err: any) {
-      const msg = err?.response?.data?.message || "Proof generation failed";
-      Alert.alert("Proof Failed ❌", msg);
+      const msg = err?.response?.data?.message || t.warehouse.zkp.generateFailedBody;
+      Alert.alert(t.warehouse.zkp.generateFailedTitle, msg);
     } finally {
       setGenerating(false);
     }
@@ -111,15 +115,15 @@ export default function ZKPScreen() {
 
       const result = res.data.data;
       Alert.alert(
-        result.verificationResult ? "Verified ✅" : "Verification Failed ❌",
+        result.verificationResult ? t.warehouse.zkp.verifiedTitle : t.warehouse.zkp.verifyFailedTitle,
         result.verificationResult
-          ? `Proof anchored on Hyperledger Fabric.\n\nTx: ${result.blockchainTxId}\n\nThis warehouse is now marked as ZKP-verified in the ranked candidates list.`
-          : "The proof could not be verified.",
-        [{ text: "Done", onPress: () => { setGeneratedProof(null); setSelectedWarehouse(null); load(); } }]
+          ? t.warehouse.zkp.verifiedBody.replace("{txId}", result.blockchainTxId)
+          : t.warehouse.zkp.verifyFailedBody,
+        [{ text: t.warehouse.zkp.done, onPress: () => { setGeneratedProof(null); setSelectedWarehouse(null); load(); } }]
       );
     } catch (err: any) {
-      const msg = err?.response?.data?.message || "Submission failed";
-      Alert.alert("Error", msg);
+      const msg = err?.response?.data?.message || t.warehouse.zkp.submitError;
+      Alert.alert(t.warehouse.errors.title, msg);
     } finally {
       setSubmitting(false);
     }
@@ -129,7 +133,7 @@ export default function ZKPScreen() {
     return (
       <View style={styles.centered}>
         <ActivityIndicator size="large" color={COLORS.primary} />
-        <Text style={styles.loadingText}>Loading ZKP data...</Text>
+        <Text style={styles.loadingText}>{t.warehouse.zkp.loading}</Text>
       </View>
     );
   }
@@ -144,8 +148,8 @@ export default function ZKPScreen() {
           <Ionicons name="arrow-back" size={24} color={COLORS.white} />
         </TouchableOpacity>
         <View>
-          <Text style={styles.headerTitle}>ZKP Capacity Proofs</Text>
-          <Text style={styles.headerSub}>Zero Knowledge Proof verification</Text>
+          <Text style={styles.headerTitle}>{t.warehouse.zkp.title}</Text>
+          <Text style={styles.headerSub}>{t.warehouse.zkp.subtitle}</Text>
         </View>
       </View>
 
@@ -156,15 +160,14 @@ export default function ZKPScreen() {
           <View style={styles.explainCard}>
             <Ionicons name="shield-checkmark" size={18} color={COLORS.info} />
             <Text style={styles.explainText}>
-              A warehouse can prove it has enough capacity without revealing its exact stock level.
-              The proof is verified on-chain and marks the warehouse as ZKP-verified in the ranked list.
+              {t.warehouse.zkp.explanation}
             </Text>
           </View>
 
           {/* Existing proofs */}
           {existingProofs.length > 0 && (
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Submitted Proofs</Text>
+              <Text style={styles.sectionTitle}>{t.warehouse.zkp.submittedProofs}</Text>
               {existingProofs.map((proof) => (
                 <View key={proof.id} style={styles.proofRow}>
                   <Ionicons
@@ -186,7 +189,7 @@ export default function ZKPScreen() {
                     <Text style={[styles.proofBadgeText, {
                       color: proof.verificationResult ? COLORS.successText : COLORS.dangerText
                     }]}>
-                      {proof.verificationResult ? "VALID" : "INVALID"}
+                      {proof.verificationResult ? t.warehouse.zkp.valid : t.warehouse.zkp.invalid}
                     </Text>
                   </View>
                   {proof.blockchainTxId && (
@@ -198,14 +201,14 @@ export default function ZKPScreen() {
           )}
 
           {/* Generate new proof */}
-          <Text style={styles.sectionTitle}>Generate New Proof</Text>
+          <Text style={styles.sectionTitle}>{t.warehouse.zkp.generateNew}</Text>
 
           {/* Step 1 — Select warehouse */}
-          <Text style={styles.stepLabel}>Step 1 — Select candidate warehouse</Text>
+          <Text style={styles.stepLabel}>{t.warehouse.zkp.step1}</Text>
           {candidates.filter(c => !proofWarehouseIds.has(c.warehouseId)).length === 0 ? (
             <View style={styles.allProvedCard}>
               <Ionicons name="checkmark-circle" size={24} color={COLORS.success} />
-              <Text style={styles.allProvedText}>All candidates have submitted proofs</Text>
+              <Text style={styles.allProvedText}>{t.warehouse.zkp.allProved}</Text>
             </View>
           ) : (
             candidates
@@ -222,10 +225,14 @@ export default function ZKPScreen() {
                 >
                   <View style={styles.candidateInfo}>
                     <Text style={styles.candidateName}>{c.name}</Text>
-                    <Text style={styles.candidateSub}>{c.code} · {c.distanceKm} km away</Text>
+                    <Text style={styles.candidateSub}>
+                      {c.code} · {t.warehouse.zkp.kmAway.replace("{km}", String(c.distanceKm))}
+                    </Text>
                   </View>
                   <View style={styles.candidateRight}>
-                    <Text style={styles.candidateAvailable}>{c.availableTons}t free</Text>
+                    <Text style={styles.candidateAvailable}>
+                      {t.warehouse.zkp.freeCapacity.replace("{tons}", String(c.availableTons))}
+                    </Text>
                     {selectedWarehouse?.warehouseId === c.warehouseId && (
                       <Ionicons name="checkmark-circle" size={20} color={COLORS.primary} />
                     )}
@@ -237,14 +244,14 @@ export default function ZKPScreen() {
           {/* Step 2 — Inputs */}
           {selectedWarehouse && (
             <>
-              <Text style={styles.stepLabel}>Step 2 — Set capacity inputs</Text>
+              <Text style={styles.stepLabel}>{t.warehouse.zkp.step2}</Text>
               <View style={styles.inputCard}>
                 <View style={styles.inputRow}>
                   <View style={styles.inputHalf}>
                     <Text style={styles.inputLabel}>
-                      🔒 Available Capacity (private)
+                      {t.warehouse.zkp.privateLabel}
                     </Text>
-                    <Text style={styles.inputHint}>Never revealed to verifier</Text>
+                    <Text style={styles.inputHint}>{t.warehouse.zkp.privateHint}</Text>
                     <TextInput
                       style={styles.input}
                       value={availableCapacity}
@@ -256,9 +263,9 @@ export default function ZKPScreen() {
                   </View>
                   <View style={styles.inputHalf}>
                     <Text style={styles.inputLabel}>
-                      👁 Threshold (public)
+                      {t.warehouse.zkp.publicLabel}
                     </Text>
-                    <Text style={styles.inputHint}>Verifier sees this</Text>
+                    <Text style={styles.inputHint}>{t.warehouse.zkp.publicHint}</Text>
                     <TextInput
                       style={styles.input}
                       value={threshold}
@@ -270,12 +277,14 @@ export default function ZKPScreen() {
                   </View>
                 </View>
                 <Text style={styles.proofEquation}>
-                  Circuit proves: {availableCapacity || "?"} ≥ {threshold || "?"} tons
+                  {t.warehouse.zkp.circuitProves
+                    .replace("{capacity}", availableCapacity || "?")
+                    .replace("{threshold}", threshold || "?")}
                 </Text>
               </View>
 
               {/* Step 3 — Generate */}
-              <Text style={styles.stepLabel}>Step 3 — Generate & submit proof</Text>
+              <Text style={styles.stepLabel}>{t.warehouse.zkp.step3}</Text>
               <TouchableOpacity
                 style={[styles.generateBtn, generating && styles.btnDisabled]}
                 onPress={handleGenerate}
@@ -284,12 +293,12 @@ export default function ZKPScreen() {
                 {generating ? (
                   <>
                     <ActivityIndicator size="small" color={COLORS.white} />
-                    <Text style={styles.btnText}>Running circuit... (2-5s)</Text>
+                    <Text style={styles.btnText}>{t.warehouse.zkp.generating}</Text>
                   </>
                 ) : (
                   <>
                     <Ionicons name="flash" size={18} color={COLORS.white} />
-                    <Text style={styles.btnText}>Generate ZKP Proof</Text>
+                    <Text style={styles.btnText}>{t.warehouse.zkp.generateButton}</Text>
                   </>
                 )}
               </TouchableOpacity>
@@ -299,12 +308,12 @@ export default function ZKPScreen() {
                   <View style={styles.proofGeneratedCard}>
                     <Ionicons name="checkmark-circle" size={20} color={COLORS.success} />
                     <View style={styles.proofGeneratedInfo}>
-                      <Text style={styles.proofGeneratedTitle}>Proof ready</Text>
+                      <Text style={styles.proofGeneratedTitle}>{t.warehouse.zkp.proofReady}</Text>
                       <Text style={styles.proofGeneratedSub}>
-                        Public signals: [{generatedProof.publicSignals?.join(", ")}]
+                        {t.warehouse.zkp.publicSignals.replace("{signals}", generatedProof.publicSignals?.join(", "))}
                       </Text>
                       <Text style={styles.proofGeneratedSub}>
-                        The number {availableCapacity} is not in those signals.
+                        {t.warehouse.zkp.notInSignals.replace("{capacity}", availableCapacity)}
                       </Text>
                     </View>
                   </View>
@@ -317,12 +326,12 @@ export default function ZKPScreen() {
                     {submitting ? (
                       <>
                         <ActivityIndicator size="small" color={COLORS.white} />
-                        <Text style={styles.btnText}>Anchoring on blockchain...</Text>
+                        <Text style={styles.btnText}>{t.warehouse.zkp.submitting}</Text>
                       </>
                     ) : (
                       <>
                         <Ionicons name="lock-closed" size={18} color={COLORS.white} />
-                        <Text style={styles.btnText}>Submit & Anchor on Fabric</Text>
+                        <Text style={styles.btnText}>{t.warehouse.zkp.submitButton}</Text>
                       </>
                     )}
                   </TouchableOpacity>

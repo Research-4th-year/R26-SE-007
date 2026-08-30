@@ -8,6 +8,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { api } from "@/services/shared/api";
 import { COLORS } from "@/constants/theme";
 import { useDebouncedCallback } from "@/hooks/shared/useDebounce";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface SearchResult {
   place_id:    number;
@@ -17,6 +18,8 @@ interface SearchResult {
 }
 
 export default function CreateWarehouseScreen() {
+  const { t } = useLanguage();
+
   const [name, setName]         = useState("");
   const [code, setCode]         = useState("");
   const [district, setDistrict] = useState("");
@@ -42,11 +45,11 @@ export default function CreateWarehouseScreen() {
       );
       const data: SearchResult[] = await res.json();
       if (data.length === 0) {
-        Alert.alert("No results", "No locations found. Try a more specific address.");
+        Alert.alert(t.warehouse.createWarehouse.noResultsTitle, t.warehouse.createWarehouse.noResultsBody);
       }
       setSearchResults(data);
     } catch {
-      Alert.alert("Error", "Address search failed. Check your connection.");
+      Alert.alert(t.warehouse.errors.title, t.warehouse.createWarehouse.searchFailed);
     } finally {
       setSearching(false);
     }
@@ -66,12 +69,12 @@ export default function CreateWarehouseScreen() {
   };
 
   const handleSubmit = useDebouncedCallback(async () => {
-    if (!name.trim())     { Alert.alert("Required", "Enter warehouse name"); return; }
-    if (!code.trim())     { Alert.alert("Required", "Enter warehouse code (e.g. AMP-02)"); return; }
-    if (!district.trim()) { Alert.alert("Required", "Enter district"); return; }
-    if (!latitude || !longitude) { Alert.alert("Required", "Search for an address to set coordinates"); return; }
+    if (!name.trim())     { Alert.alert(t.warehouse.createWarehouse.requiredTitle, t.warehouse.createWarehouse.requiredName); return; }
+    if (!code.trim())     { Alert.alert(t.warehouse.createWarehouse.requiredTitle, t.warehouse.createWarehouse.requiredCode); return; }
+    if (!district.trim()) { Alert.alert(t.warehouse.createWarehouse.requiredTitle, t.warehouse.createWarehouse.requiredDistrict); return; }
+    if (!latitude || !longitude) { Alert.alert(t.warehouse.createWarehouse.requiredTitle, t.warehouse.createWarehouse.requiredCoords); return; }
     if (!capacityTons || isNaN(Number(capacityTons))) {
-      Alert.alert("Required", "Enter a valid capacity in tons");
+      Alert.alert(t.warehouse.createWarehouse.requiredTitle, t.warehouse.createWarehouse.requiredCapacity);
       return;
     }
 
@@ -86,11 +89,13 @@ export default function CreateWarehouseScreen() {
         longitude:    parseFloat(longitude),
         capacityTons: parseFloat(capacityTons),
       });
-      Alert.alert("Success", `Warehouse ${code.toUpperCase()} created`, [
-        { text: "Done", onPress: () => router.back() },
-      ]);
+      Alert.alert(
+        t.warehouse.createWarehouse.successTitle,
+        t.warehouse.createWarehouse.successMessage.replace("{code}", code.toUpperCase()),
+        [{ text: t.common.close, onPress: () => router.back() }]
+      );
     } catch (err: any) {
-      Alert.alert("Error", err?.response?.data?.message || "Failed to create warehouse");
+      Alert.alert(t.warehouse.errors.title, err?.response?.data?.message || t.warehouse.createWarehouse.createError);
     } finally {
       setSubmitting(false);
     }
@@ -104,8 +109,8 @@ export default function CreateWarehouseScreen() {
           <Ionicons name="arrow-back" size={24} color={COLORS.white} />
         </TouchableOpacity>
         <View>
-          <Text style={styles.headerTitle}>Create Warehouse</Text>
-          <Text style={styles.headerSub}>Admin only</Text>
+          <Text style={styles.headerTitle}>{t.warehouse.createWarehouse.title}</Text>
+          <Text style={styles.headerSub}>{t.warehouse.createWarehouse.adminOnly}</Text>
         </View>
       </View>
 
@@ -113,13 +118,13 @@ export default function CreateWarehouseScreen() {
         <View style={styles.content}>
 
           {/* Address search */}
-          <Text style={styles.sectionTitle}>📍 Location</Text>
-          <Text style={styles.hint}>Search by address or place name to auto-fill coordinates</Text>
+          <Text style={styles.sectionTitle}>{t.warehouse.createWarehouse.locationSection}</Text>
+          <Text style={styles.hint}>{t.warehouse.createWarehouse.locationHint}</Text>
 
           <View style={styles.searchRow}>
             <TextInput
               style={styles.searchInput}
-              placeholder="e.g. Ampara town, Badulla road..."
+              placeholder={t.warehouse.createWarehouse.searchPlaceholder}
               placeholderTextColor={COLORS.textFaint}
               value={searchQuery}
               onChangeText={setSearchQuery}
@@ -170,17 +175,17 @@ export default function CreateWarehouseScreen() {
           ) : (
             <View style={styles.coordPlaceholder}>
               <Ionicons name="location-outline" size={16} color={COLORS.textFaint} />
-              <Text style={styles.coordPlaceholderText}>No location selected</Text>
+              <Text style={styles.coordPlaceholderText}>{t.warehouse.createWarehouse.noLocationSelected}</Text>
             </View>
           )}
 
           {/* Warehouse details */}
-          <Text style={styles.sectionTitle}>🏭 Warehouse Details</Text>
+          <Text style={styles.sectionTitle}>{t.warehouse.createWarehouse.detailsSection}</Text>
 
-          <Text style={styles.label}>Warehouse Name *</Text>
+          <Text style={styles.label}>{t.warehouse.createWarehouse.name}</Text>
           <TextInput
             style={styles.input}
-            placeholder="e.g. Ampara North Warehouse"
+            placeholder={t.warehouse.createWarehouse.namePlaceholder}
             placeholderTextColor={COLORS.textFaint}
             value={name}
             onChangeText={setName}
@@ -188,10 +193,10 @@ export default function CreateWarehouseScreen() {
 
           <View style={styles.row}>
             <View style={styles.half}>
-              <Text style={styles.label}>Code *</Text>
+              <Text style={styles.label}>{t.warehouse.createWarehouse.code}</Text>
               <TextInput
                 style={styles.input}
-                placeholder="e.g. AMP-02"
+                placeholder={t.warehouse.createWarehouse.codePlaceholder}
                 placeholderTextColor={COLORS.textFaint}
                 value={code}
                 onChangeText={setCode}
@@ -199,10 +204,10 @@ export default function CreateWarehouseScreen() {
               />
             </View>
             <View style={styles.half}>
-              <Text style={styles.label}>District *</Text>
+              <Text style={styles.label}>{t.warehouse.createWarehouse.district}</Text>
               <TextInput
                 style={styles.input}
-                placeholder="e.g. Ampara"
+                placeholder={t.warehouse.createWarehouse.districtPlaceholder}
                 placeholderTextColor={COLORS.textFaint}
                 value={district}
                 onChangeText={setDistrict}
@@ -210,19 +215,19 @@ export default function CreateWarehouseScreen() {
             </View>
           </View>
 
-          <Text style={styles.label}>Address (optional)</Text>
+          <Text style={styles.label}>{t.warehouse.createWarehouse.address}</Text>
           <TextInput
             style={styles.input}
-            placeholder="Street address"
+            placeholder={t.warehouse.createWarehouse.addressPlaceholder}
             placeholderTextColor={COLORS.textFaint}
             value={address}
             onChangeText={setAddress}
           />
 
-          <Text style={styles.label}>Capacity (tons) *</Text>
+          <Text style={styles.label}>{t.warehouse.createWarehouse.capacity}</Text>
           <TextInput
             style={styles.input}
-            placeholder="e.g. 500"
+            placeholder={t.warehouse.createWarehouse.capacityPlaceholder}
             placeholderTextColor={COLORS.textFaint}
             keyboardType="numeric"
             value={capacityTons}
@@ -232,16 +237,16 @@ export default function CreateWarehouseScreen() {
           {/* Manual coordinate override */}
           <TouchableOpacity
             onPress={() => Alert.alert(
-              "Manual coordinates",
-              "You can also type coordinates directly below if needed"
+              t.warehouse.createWarehouse.manualTitle,
+              t.warehouse.createWarehouse.manualBody
             )}
           >
-            <Text style={styles.manualLink}>Enter coordinates manually instead?</Text>
+            <Text style={styles.manualLink}>{t.warehouse.createWarehouse.manualLink}</Text>
           </TouchableOpacity>
 
           <View style={styles.row}>
             <View style={styles.half}>
-              <Text style={styles.label}>Latitude</Text>
+              <Text style={styles.label}>{t.warehouse.createWarehouse.latitude}</Text>
               <TextInput
                 style={styles.input}
                 placeholder="7.2963"
@@ -252,7 +257,7 @@ export default function CreateWarehouseScreen() {
               />
             </View>
             <View style={styles.half}>
-              <Text style={styles.label}>Longitude</Text>
+              <Text style={styles.label}>{t.warehouse.createWarehouse.longitude}</Text>
               <TextInput
                 style={styles.input}
                 placeholder="81.6723"
@@ -273,7 +278,7 @@ export default function CreateWarehouseScreen() {
               ? <ActivityIndicator color={COLORS.white} />
               : <>
                   <Ionicons name="add-circle" size={20} color={COLORS.white} />
-                  <Text style={styles.submitBtnText}>Create Warehouse</Text>
+                  <Text style={styles.submitBtnText}>{t.warehouse.createWarehouse.submit}</Text>
                 </>
             }
           </TouchableOpacity>

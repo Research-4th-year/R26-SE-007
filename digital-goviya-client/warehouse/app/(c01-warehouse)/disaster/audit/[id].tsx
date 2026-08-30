@@ -7,6 +7,7 @@ import { useLocalSearchParams, router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { api } from "@/services/shared/api";
 import { COLORS, DISASTER_ICONS } from "@/constants/theme";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 
 interface TimelineEntry {
@@ -56,6 +57,8 @@ function formatDate(iso: string) {
 }
 
 export default function AuditTrailScreen() {
+  const { t } = useLanguage();
+
   const { id }                      = useLocalSearchParams<{ id: string }>();
   const [data, setData]             = useState<AuditData | null>(null);
   const [loading, setLoading]       = useState(true);
@@ -66,7 +69,7 @@ export default function AuditTrailScreen() {
       const res = await api.get(`/api/disasters/${id}/audit`);
       setData(res.data.data);
     } catch (err: any) {
-      Alert.alert("Error", err?.response?.data?.message || "Failed to load audit trail");
+      Alert.alert(t.warehouse.errors.title, err?.response?.data?.message || t.warehouse.audit.loadError);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -75,11 +78,15 @@ export default function AuditTrailScreen() {
 
   useEffect(() => { load(); }, [id]);
 
+  const getTimelineEventLabel = (eventType: string): string => {
+    return t.warehouse.audit.events[eventType as keyof typeof t.warehouse.audit.events] ?? eventType.replace(/_/g, " ");
+  };
+
   if (loading) {
     return (
       <View style={styles.centered}>
         <ActivityIndicator size="large" color={COLORS.primary} />
-        <Text style={styles.loadingText}>Loading audit trail...</Text>
+        <Text style={styles.loadingText}>{t.warehouse.audit.loading}</Text>
       </View>
     );
   }
@@ -96,13 +103,13 @@ export default function AuditTrailScreen() {
           <Ionicons name="arrow-back" size={24} color={COLORS.white} />
         </TouchableOpacity>
         <View style={styles.headerContent}>
-          <Text style={styles.headerTitle}>Blockchain Audit Trail</Text>
+          <Text style={styles.headerTitle}>{t.warehouse.audit.title}</Text>
           <Text style={styles.headerSub}>{disaster.affectedWarehouse.name}</Text>
         </View>
         {disaster.blockchainTxId && (
           <View style={styles.chainBadge}>
             <Ionicons name="lock-closed" size={12} color={COLORS.info} />
-            <Text style={styles.chainBadgeText}>On-chain</Text>
+            <Text style={styles.chainBadgeText}>{t.warehouse.audit.onChain}</Text>
           </View>
         )}
       </View>
@@ -121,13 +128,13 @@ export default function AuditTrailScreen() {
               </Text>
               <View style={styles.cardInfo}>
                 <Text style={styles.cardTitle}>
-                  {disaster.disasterType.replace(/_/g, " ")}
+                  {t.warehouse.disasterTypes[disaster.disasterType as keyof typeof t.warehouse.disasterTypes] ?? disaster.disasterType}
                 </Text>
                 <Text style={styles.cardSub}>
                   {disaster.affectedWarehouse.name} · {disaster.affectedWarehouse.district}
                 </Text>
                 <Text style={styles.cardSub}>
-                  Reported by {disaster.reportedBy.fullName}
+                  {t.warehouse.audit.by.replace("{actor}", disaster.reportedBy.fullName)}
                 </Text>
               </View>
             </View>
@@ -143,21 +150,21 @@ export default function AuditTrailScreen() {
           </View>
 
           {/* Summary stats */}
-          <Text style={styles.sectionTitle}>Summary</Text>
+          <Text style={styles.sectionTitle}>{t.warehouse.audit.summary}</Text>
           <View style={styles.summaryGrid}>
             <View style={styles.summaryCard}>
               <Text style={styles.summaryValue}>{summary.totalRedistributionOrders}</Text>
-              <Text style={styles.summaryLabel}>Orders Issued</Text>
+              <Text style={styles.summaryLabel}>{t.warehouse.audit.ordersIssued}</Text>
             </View>
             <View style={styles.summaryCard}>
               <Text style={styles.summaryValue}>{summary.totalQuantityRedistributed}</Text>
-              <Text style={styles.summaryLabel}>Tons Moved</Text>
+              <Text style={styles.summaryLabel}>{t.warehouse.audit.tonsMoved}</Text>
             </View>
             <View style={styles.summaryCard}>
               <Text style={[styles.summaryValue, { color: COLORS.info }]}>
                 {summary.zkpProofsVerified}/{summary.zkpProofsSubmitted}
               </Text>
-              <Text style={styles.summaryLabel}>ZKP Verified</Text>
+              <Text style={styles.summaryLabel}>{t.warehouse.audit.zkpVerified}</Text>
             </View>
             <View style={styles.summaryCard}>
               <Ionicons
@@ -166,15 +173,15 @@ export default function AuditTrailScreen() {
                 color={summary.blockchainAnchored ? COLORS.success : COLORS.textFaint}
               />
               <Text style={styles.summaryLabel}>
-                {summary.blockchainAnchored ? "Anchored" : "Not anchored"}
+                {summary.blockchainAnchored ? t.warehouse.audit.anchored : t.warehouse.audit.notAnchored}
               </Text>
             </View>
           </View>
 
           {/* Timeline */}
-          <Text style={styles.sectionTitle}>Event Timeline</Text>
+          <Text style={styles.sectionTitle}>{t.warehouse.audit.eventTimeline}</Text>
           <Text style={styles.sectionSub}>
-            All events are cryptographically timestamped and immutable on Hyperledger Fabric
+            {t.warehouse.audit.timelineNote}
           </Text>
 
           {timeline.map((entry, index) => {
@@ -197,27 +204,29 @@ export default function AuditTrailScreen() {
                 <View style={[styles.timelineCard, { marginBottom: isLast ? 0 : 16 }]}>
                   <View style={styles.timelineCardHeader}>
                     <Text style={styles.timelineEventType}>
-                      {entry.eventType.replace(/_/g, " ")}
+                      {getTimelineEventLabel(entry.eventType)}
                     </Text>
                     <Text style={styles.timelineTime}>{formatDate(entry.timestamp)}</Text>
                   </View>
 
                   <Text style={styles.timelineDesc}>{entry.description}</Text>
-                  <Text style={styles.timelineActor}>by {entry.actor}</Text>
+                  <Text style={styles.timelineActor}>
+                    {t.warehouse.audit.by.replace("{actor}", entry.actor)}
+                  </Text>
 
                   {/* Metadata pills */}
                   <View style={styles.metaRow}>
                     {entry.metadata.compositeScore !== undefined && (
                       <View style={styles.metaPill}>
                         <Text style={styles.metaPillText}>
-                          Score: {Number(entry.metadata.compositeScore).toFixed(3)}
+                          {t.warehouse.audit.scorePill.replace("{score}", Number(entry.metadata.compositeScore).toFixed(3))}
                         </Text>
                       </View>
                     )}
                     {entry.metadata.quantityTons !== undefined && (
                       <View style={styles.metaPill}>
                         <Text style={styles.metaPillText}>
-                          {entry.metadata.quantityTons} tons
+                          {t.warehouse.audit.tonsPill.replace("{tons}", String(entry.metadata.quantityTons))}
                         </Text>
                       </View>
                     )}
@@ -230,7 +239,7 @@ export default function AuditTrailScreen() {
                           color: entry.metadata.verificationResult
                             ? COLORS.successText : COLORS.dangerText
                         }]}>
-                          ZKP: {entry.metadata.verificationResult ? "VALID" : "INVALID"}
+                          {entry.metadata.verificationResult ? t.warehouse.audit.zkpValid : t.warehouse.audit.zkpInvalid}
                         </Text>
                       </View>
                     )}
@@ -238,7 +247,7 @@ export default function AuditTrailScreen() {
                       <View style={[styles.metaPill, { backgroundColor: COLORS.infoBg }]}>
                         <Ionicons name="lock-closed" size={10} color={COLORS.info} />
                         <Text style={[styles.metaPillText, { color: COLORS.infoText, marginLeft: 4 }]}>
-                          On-chain
+                          {t.warehouse.audit.onChain}
                         </Text>
                       </View>
                     )}
@@ -333,7 +342,7 @@ const styles = StyleSheet.create({
   },
   timelineEventType: {
     fontSize: 12, fontWeight: "700", color: COLORS.textSecondary,
-    textTransform: "uppercase", letterSpacing: 0.5, flex: 1,
+    letterSpacing: 0.5, flex: 1,
   },
   timelineTime: { fontSize: 11, color: COLORS.textFaint, marginLeft: 8 },
   timelineDesc: { fontSize: 13, color: COLORS.textPrimary, marginBottom: 4 },

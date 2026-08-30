@@ -17,8 +17,11 @@ import {
   getReliabilityColor,
 } from "@/constants/theme";
 import { router } from "expo-router";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function WarehousesScreen() {
+  const { t } = useLanguage();
+
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -28,7 +31,7 @@ export default function WarehousesScreen() {
       const data = await warehouseService.listWarehouses();
       setWarehouses(data);
     } catch {
-      Alert.alert("Error", "Failed to load warehouses");
+      Alert.alert(t.warehouse.errors.title, t.warehouse.warehouses.loadError);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -50,9 +53,9 @@ export default function WarehousesScreen() {
   return (
     <View style={styles.screen}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Warehouses</Text>
+        <Text style={styles.headerTitle}>{t.warehouse.warehouses.title}</Text>
         <Text style={styles.headerSubtitle}>
-          {warehouses.length} active warehouses
+          {t.warehouse.warehouses.subtitle.replace("{count}", String(warehouses.length))}
         </Text>
       </View>
 
@@ -89,7 +92,7 @@ export default function WarehousesScreen() {
                   <Text
                     style={[styles.utilBadgeText, { color: util.badgeText }]}
                   >
-                    {wh.utilizationPct}% full
+                    {t.warehouse.warehouses.full.replace("{percent}", String(wh.utilizationPct))}
                   </Text>
                 </View>
               </View>
@@ -110,22 +113,22 @@ export default function WarehousesScreen() {
               {/* Stats row */}
               <View style={styles.statsRow}>
                 <View style={styles.statItem}>
-                  <Text style={styles.statLabel}>Stock</Text>
-                  <Text style={styles.statValue}>{wh.currentStockTons} t</Text>
+                  <Text style={styles.statLabel}>{t.warehouse.warehouses.stock}</Text>
+                  <Text style={styles.statValue}>{wh.currentStockTons} {t.warehouse.units.tonsShort}</Text>
                 </View>
                 <View style={styles.statItem}>
-                  <Text style={styles.statLabel}>Available</Text>
+                  <Text style={styles.statLabel}>{t.warehouse.warehouses.available}</Text>
                   <Text style={[styles.statValue, { color: COLORS.info }]}>
-                    {wh.availableTons} t
+                    {wh.availableTons} {t.warehouse.units.tonsShort}
                   </Text>
                 </View>
                 <View style={styles.statItem}>
-                  <Text style={styles.statLabel}>Capacity</Text>
-                  <Text style={styles.statValue}>{wh.capacityTons} t</Text>
+                  <Text style={styles.statLabel}>{t.warehouse.warehouses.capacity}</Text>
+                  <Text style={styles.statValue}>{wh.capacityTons} {t.warehouse.units.tonsShort}</Text>
                 </View>
                 {wh.reliabilityScore !== null && (
                   <View style={styles.statItem}>
-                    <Text style={styles.statLabel}>GNN Score</Text>
+                    <Text style={styles.statLabel}>{t.warehouse.warehouses.gnnScore}</Text>
                     <View style={styles.gnnRow}>
                       <Ionicons
                         name={

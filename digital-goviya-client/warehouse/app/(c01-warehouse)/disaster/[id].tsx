@@ -13,8 +13,11 @@ import { useLocalSearchParams, router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { disasterService, Disaster, RankedCandidate } from "@/services/warehouse/disaster.service";
 import { COLORS, getStatusColors, DISASTER_ICONS } from "@/constants/theme";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function DisasterDetailScreen() {
+  const { t } = useLanguage();
+
   const { id } = useLocalSearchParams<{ id: string }>();
   const [disaster, setDisaster] = useState<Disaster | null>(null);
   const [loading, setLoading] = useState(true);
@@ -26,7 +29,7 @@ export default function DisasterDetailScreen() {
       const data = await disasterService.getDisaster(id);
       setDisaster(data);
     } catch {
-      Alert.alert("Error", "Failed to load disaster details");
+      Alert.alert(t.warehouse.errors.title, t.warehouse.disasterDetail.loadError);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -39,13 +42,15 @@ export default function DisasterDetailScreen() {
 
   const handleRedistribute = (candidate: RankedCandidate) => {
     Alert.prompt(
-      "Issue Redistribution Order",
-      `From: ${candidate.name}\nAvailable: ${candidate.availableTons} tons\n\nEnter quantity (tons):`,
+      t.warehouse.disasterDetail.orderPromptTitle,
+      t.warehouse.disasterDetail.orderPromptBody
+        .replace("{name}", candidate.name)
+        .replace("{tons}", String(candidate.availableTons)),
       async (qty) => {
         if (!qty) return;
         const quantity = parseFloat(qty);
         if (isNaN(quantity) || quantity <= 0) {
-          Alert.alert("Invalid", "Enter a valid quantity");
+          Alert.alert(t.warehouse.errors.title, t.warehouse.disasterDetail.invalidQuantity);
           return;
         }
         try {
@@ -55,14 +60,14 @@ export default function DisasterDetailScreen() {
             quantity,
           );
           Alert.alert(
-            "Success",
-            "Redistribution order issued and anchored on blockchain",
+            t.warehouse.disasterDetail.orderSuccessTitle,
+            t.warehouse.disasterDetail.orderSuccessMessage,
           );
           load();
         } catch (err: any) {
           Alert.alert(
-            "Error",
-            err?.response?.data?.message || "Failed to issue order",
+            t.warehouse.errors.title,
+            err?.response?.data?.message || t.warehouse.disasterDetail.orderError,
           );
         }
       },
@@ -71,21 +76,21 @@ export default function DisasterDetailScreen() {
   };
 
   const handleResolve = async () => {
-    Alert.alert("Resolve Disaster", "Mark this disaster as resolved?", [
-      { text: "Cancel", style: "cancel" },
+    Alert.alert(t.warehouse.disasterDetail.resolveTitle, t.warehouse.disasterDetail.resolveConfirm, [
+      { text: t.common.cancel, style: "cancel" },
       {
-        text: "Resolve",
+        text: t.warehouse.disasterDetail.resolveAction,
         style: "destructive",
         onPress: async () => {
           setResolving(true);
           try {
             await disasterService.updateStatus(id, "RESOLVED");
-            Alert.alert("Resolved", "Disaster marked as resolved");
+            Alert.alert(t.warehouse.disasterDetail.resolvedTitle, t.warehouse.disasterDetail.resolvedMessage);
             router.back();
           } catch (err: any) {
             Alert.alert(
-              "Error",
-              err?.response?.data?.message || "Failed to resolve",
+              t.warehouse.errors.title,
+              err?.response?.data?.message || t.warehouse.disasterDetail.resolveError,
             );
           } finally {
             setResolving(false);
@@ -123,7 +128,7 @@ export default function DisasterDetailScreen() {
           </Text>
           <View>
             <Text style={styles.headerTitle}>
-              {disaster.disasterType.replace("_", " ")}
+              {t.warehouse.disasterTypes[disaster.disasterType as keyof typeof t.warehouse.disasterTypes] ?? disaster.disasterType}
             </Text>
             <Text style={styles.headerSubtitle}>
               {disaster.affectedWarehouse.name}
@@ -148,24 +153,24 @@ export default function DisasterDetailScreen() {
           {/* Status card */}
           <View style={styles.card}>
             <View style={styles.statusRow}>
-              <Text style={styles.cardTitle}>Status</Text>
+              <Text style={styles.cardTitle}>{t.warehouse.disasterDetail.statusLabel}</Text>
               <View
                 style={[styles.statusBadge, { backgroundColor: status.bg }]}
               >
                 <Text style={[styles.statusBadgeText, { color: status.text }]}>
-                  {disaster.status.replace("_", " ")}
+                  {t.warehouse.status[disaster.status as keyof typeof t.warehouse.status] ?? disaster.status}
                 </Text>
               </View>
             </View>
             <View style={styles.statsRow}>
               <View style={styles.statItem}>
-                <Text style={styles.statLabel}>Estimated Loss</Text>
+                <Text style={styles.statLabel}>{t.warehouse.disasterDetail.estimatedLoss}</Text>
                 <Text style={styles.statValue}>
-                  {disaster.estimatedLossTons ?? "—"} tons
+                  {disaster.estimatedLossTons ?? "—"} {t.warehouse.units.tons}
                 </Text>
               </View>
               <View style={styles.statItem}>
-                <Text style={styles.statLabel}>Reported by</Text>
+                <Text style={styles.statLabel}>{t.warehouse.disasterDetail.reportedBy}</Text>
                 <Text style={styles.statValue}>
                   {disaster.reportedBy.fullName}
                 </Text>
@@ -175,7 +180,7 @@ export default function DisasterDetailScreen() {
               <View style={styles.chainRow}>
                 <Ionicons name="lock-closed" size={12} color={COLORS.info} />
                 <Text style={styles.chainText}>
-                  Anchored on Hyperledger Fabric
+                  {t.warehouse.disasterDetail.anchoredOnFabric}
                 </Text>
               </View>
             )}
@@ -184,7 +189,7 @@ export default function DisasterDetailScreen() {
           {/* ZKP Proofs */}
           {disaster.zkpProofs && disaster.zkpProofs.length > 0 && (
             <View style={styles.card}>
-              <Text style={styles.cardTitleBlock}>ZKP Capacity Proofs</Text>
+              <Text style={styles.cardTitleBlock}>{t.warehouse.disasterDetail.zkpProofs}</Text>
               {disaster.zkpProofs.map((proof: any) => (
                 <View key={proof.id} style={styles.proofRow}>
                   <Ionicons
@@ -209,7 +214,7 @@ export default function DisasterDetailScreen() {
                       },
                     ]}
                   >
-                    {proof.verificationResult ? "VERIFIED" : "FAILED"}
+                    {proof.verificationResult ? t.warehouse.disasterDetail.verified : t.warehouse.disasterDetail.failed}
                   </Text>
                 </View>
               ))}
@@ -227,7 +232,7 @@ export default function DisasterDetailScreen() {
                 size={16}
                 color={COLORS.success}
               />
-              <Text style={styles.zkpButtonText}>ZKP Capacity Proofs</Text>
+              <Text style={styles.zkpButtonText}>{t.warehouse.disasterDetail.zkpProofsButton}</Text>
               <Ionicons
                 name="chevron-forward"
                 size={16}
@@ -241,7 +246,7 @@ export default function DisasterDetailScreen() {
             disaster.rankedCandidates.length > 0 && (
               <View style={styles.section}>
                 <Text style={styles.sectionTitle}>
-                  Ranked Candidates ({disaster.rankedCandidates.length})
+                  {t.warehouse.disasterDetail.rankedCandidates.replace("{count}", String(disaster.rankedCandidates.length))}
                 </Text>
                 {disaster.rankedCandidates.map((c, index) => (
                   <View key={c.warehouseId} style={styles.candidateCard}>
@@ -261,36 +266,36 @@ export default function DisasterDetailScreen() {
                         <Text style={styles.scoreValue}>
                           {c.compositeScore.toFixed(3)}
                         </Text>
-                        <Text style={styles.scoreLabel}>score</Text>
+                        <Text style={styles.scoreLabel}>{t.warehouse.disasterDetail.score}</Text>
                       </View>
                     </View>
 
                     <View style={styles.candidateStatsRow}>
                       <View style={styles.candidateStatItem}>
-                        <Text style={styles.candidateStatLabel}>Distance</Text>
+                        <Text style={styles.candidateStatLabel}>{t.warehouse.disasterDetail.distance}</Text>
                         <Text style={styles.candidateStatValue}>
-                          {c.distanceKm} km
+                          {c.distanceKm} {t.warehouse.units.km}
                         </Text>
                       </View>
                       <View style={styles.candidateStatItem}>
-                        <Text style={styles.candidateStatLabel}>Available</Text>
+                        <Text style={styles.candidateStatLabel}>{t.warehouse.disasterDetail.available}</Text>
                         <Text
                           style={[
                             styles.candidateStatValue,
                             { color: COLORS.info },
                           ]}
                         >
-                          {c.availableTons} tons
+                          {c.availableTons} {t.warehouse.units.tons}
                         </Text>
                       </View>
                       <View style={styles.candidateStatItem}>
-                        <Text style={styles.candidateStatLabel}>GNN Score</Text>
+                        <Text style={styles.candidateStatLabel}>{t.warehouse.disasterDetail.gnnScore}</Text>
                         <Text style={styles.candidateStatValue}>
                           {(c.reliabilityScore * 100).toFixed(0)}%
                         </Text>
                       </View>
                       <View style={styles.candidateStatItem}>
-                        <Text style={styles.candidateStatLabel}>ZKP</Text>
+                        <Text style={styles.candidateStatLabel}>{t.warehouse.disasterDetail.zkp}</Text>
                         <View style={styles.zkpRow}>
                           <Ionicons
                             name={
@@ -313,7 +318,7 @@ export default function DisasterDetailScreen() {
                               },
                             ]}
                           >
-                            {c.zkpVerified ? "Yes" : "No"}
+                            {c.zkpVerified ? t.common.yes : t.common.no}
                           </Text>
                         </View>
                       </View>
@@ -325,14 +330,14 @@ export default function DisasterDetailScreen() {
                         onPress={() => handleRedistribute(c)}
                       >
                         <Text style={styles.redistributeButtonText}>
-                          Issue Redistribution Order
+                          {t.warehouse.disasterDetail.issueOrder}
                         </Text>
                       </TouchableOpacity>
                     )}
                     {!c.canFulfil && (
                       <View style={styles.insufficientBadge}>
                         <Text style={styles.insufficientText}>
-                          Insufficient capacity
+                          {t.warehouse.disasterDetail.insufficientCapacity}
                         </Text>
                       </View>
                     )}
@@ -345,11 +350,11 @@ export default function DisasterDetailScreen() {
           {disaster.redistributionOrders &&
             disaster.redistributionOrders.length > 0 && (
               <View style={styles.card}>
-                <Text style={styles.cardTitleBlock}>Redistribution Orders</Text>
+                <Text style={styles.cardTitleBlock}>{t.warehouse.disasterDetail.redistributionOrders}</Text>
                 {disaster.redistributionOrders.map((order: any) => (
                   <View key={order.id} style={styles.orderRow}>
                     <Text style={styles.orderText}>
-                      {order.quantityTons} tons · {order.sourceWarehouse?.name}{" "}
+                      {order.quantityTons} {t.warehouse.units.tons} · {order.sourceWarehouse?.name}{" "}
                       → {order.destinationWarehouse?.name}
                     </Text>
                     {order.blockchainTxId && (
@@ -360,7 +365,7 @@ export default function DisasterDetailScreen() {
                           color={COLORS.info}
                         />
                         <Text style={styles.orderChainText}>
-                          Blockchain anchored
+                          {t.warehouse.disasterDetail.blockchainAnchored}
                         </Text>
                       </View>
                     )}
@@ -376,7 +381,7 @@ export default function DisasterDetailScreen() {
           >
             <Ionicons name="lock-closed" size={16} color={COLORS.info} />
             <Text style={styles.auditButtonText}>
-              View Blockchain Audit Trail
+              {t.warehouse.disasterDetail.viewAuditTrail}
             </Text>
             <Ionicons name="chevron-forward" size={16} color={COLORS.info} />
           </TouchableOpacity>
@@ -394,7 +399,7 @@ export default function DisasterDetailScreen() {
               {resolving ? (
                 <ActivityIndicator color={COLORS.white} />
               ) : (
-                <Text style={styles.resolveButtonText}>Mark as Resolved</Text>
+                <Text style={styles.resolveButtonText}>{t.warehouse.disasterDetail.markResolved}</Text>
               )}
             </TouchableOpacity>
           )}
