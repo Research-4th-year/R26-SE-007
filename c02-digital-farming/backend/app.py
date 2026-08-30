@@ -106,7 +106,7 @@ def predict_yield_type(input_data: PredictionInput):
         raise HTTPException(status_code=500, detail="Model is not loaded. Please train the model first.")
         
     # Convert input to DataFrame for prediction
-    input_df = pd.DataFrame([input_data.dict()])
+    input_df = pd.DataFrame([input_data.model_dump()])
     
     try:
         # Predict the Variety Code
@@ -410,7 +410,7 @@ class FarmerProfile(BaseModel):
 def save_history(item: AdvisoryHistoryItem):
     try:
         # Save to Firebase under advisory_history category
-        result = save_user_history(item.user_id, "advisory_history", item.dict())
+        result = save_user_history(item.user_id, "advisory_history", item.model_dump())
         if result:
             return {"message": "Saved successfully", "id": result.get("id")}
         raise HTTPException(status_code=500, detail="Failed to save to Firebase")
@@ -449,7 +449,7 @@ def get_profile(user_id: str):
 @app.post("/api/profile")
 def save_profile(profile: FarmerProfile):
     try:
-        result = save_farmer_profile(profile.user_id, profile.dict())
+        result = save_farmer_profile(profile.user_id, profile.model_dump())
         if result:
             return {"message": "Profile saved successfully"}
         raise HTTPException(status_code=500, detail="Failed to save profile")
@@ -481,7 +481,7 @@ class YieldHistoryItem(BaseModel):
 @app.post("/api/yield_history")
 def save_yield_history(item: YieldHistoryItem):
     try:
-        result = save_user_history(item.user_id, "yield_history", item.dict())
+        result = save_user_history(item.user_id, "yield_history", item.model_dump())
         if result:
             return {"message": "Yield history saved successfully"}
         raise HTTPException(status_code=500, detail="Failed to save yield history")
@@ -517,7 +517,7 @@ class DiseaseHistoryItem(BaseModel):
 @app.post("/api/disease_history")
 def save_disease_history(item: DiseaseHistoryItem):
     try:
-        result = save_user_history(item.user_id, "disease_history", item.dict())
+        result = save_user_history(item.user_id, "disease_history", item.model_dump())
         if result:
             return {"message": "Disease history saved successfully"}
         raise HTTPException(status_code=500, detail="Failed to save disease history")
@@ -557,7 +557,7 @@ class FertilizerHistoryItem(BaseModel):
 @app.post("/api/fertilizer_history")
 def save_fertilizer_history(item: FertilizerHistoryItem):
     try:
-        result = save_user_history(item.user_id, "fertilizer_history", item.dict())
+        result = save_user_history(item.user_id, "fertilizer_history", item.model_dump())
         if result:
             return {"message": "Fertilizer history saved successfully"}
         raise HTTPException(status_code=500, detail="Failed to save fertilizer history")
