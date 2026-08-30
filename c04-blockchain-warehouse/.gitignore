@@ -7,3 +7,6 @@ node_modules
 # Fabric certificates and private keys (security-sensitive)
 fabric-wallet/
 fabric-samples/test-network/organizations/
+
+# Build output
+dist/
