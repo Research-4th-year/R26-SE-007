@@ -250,13 +250,13 @@ def predict_yield_production(input_data: YieldPredictionInput):
         raise HTTPException(status_code=400, detail=str(e))
 
 @app.get("/predict_suitability")
-def predict_suitability(field_id: str, lat: float, lon: float):
+def predict_suitability(field_id: str, lat: float, lon: float, use_firebase: bool = False):
     """
     Predicts the suitability of the yield for a specific field based on 
     real-time IoT metrics (via Firebase) and forecast weather data.
     """
     try:
-        result = predict_yield_suitability(field_id, lat, lon)
+        result = predict_yield_suitability(field_id, lat, lon, use_firebase)
         return result
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))

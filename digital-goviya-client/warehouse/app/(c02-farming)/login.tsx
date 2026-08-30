@@ -14,9 +14,13 @@ import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useFarmingAuth } from "@/contexts/FarmingAuthContext";
+import { useLanguage } from "../../contexts/LanguageContext";
+import { translations } from "../../i18n";
 
 export default function LoginScreen() {
   const { login } = useFarmingAuth();
+  const { language } = useLanguage();
+  const t = translations[language].c02Farming.authAndProfile;
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -80,10 +84,8 @@ export default function LoginScreen() {
 
           {/* Card */}
           <View style={styles.card}>
-            <Text style={styles.cardTitle}>Welcome Back, Farmer 👋</Text>
-            <Text style={styles.cardSubtitle}>
-              Login to access your digital advisory dashboard
-            </Text>
+            <Text style={styles.cardTitle}>{t.loginTitle}</Text>
+            <Text style={styles.cardSubtitle}>{t.loginSubtitle}</Text>
 
             {!!error && (
               <View style={styles.errorBox}>
@@ -94,14 +96,14 @@ export default function LoginScreen() {
 
             {/* Email */}
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Email</Text>
+              <Text style={styles.inputLabel}>{t.email}</Text>
               <View style={styles.inputWrapper}>
                 <Ionicons name="mail-outline" size={18} color="#9CA3AF" style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
                   value={email}
                   onChangeText={setEmail}
-                  placeholder="you@example.com"
+                  placeholder={t.emailPlaceholder}
                   placeholderTextColor="#9CA3AF"
                   keyboardType="email-address"
                   autoCapitalize="none"
@@ -112,7 +114,7 @@ export default function LoginScreen() {
 
             {/* Password */}
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Password</Text>
+              <Text style={styles.inputLabel}>{t.password}</Text>
               <View style={styles.inputWrapper}>
                 <Ionicons name="lock-closed-outline" size={18} color="#9CA3AF" style={styles.inputIcon} />
                 <TextInput
@@ -146,7 +148,7 @@ export default function LoginScreen() {
                   <ActivityIndicator color="white" />
                 ) : (
                   <>
-                    <Text style={styles.loginBtnText}>Log In</Text>
+                    <Text style={styles.loginBtnText}>{t.loginBtn}</Text>
                     <Ionicons name="arrow-forward" size={18} color="white" />
                   </>
                 )}
@@ -155,9 +157,9 @@ export default function LoginScreen() {
 
             {/* Register link */}
             <View style={styles.footer}>
-              <Text style={styles.footerText}>Need an account? </Text>
+              <Text style={styles.footerText}>{t.needAccount}</Text>
               <TouchableOpacity onPress={() => router.push("/(c02-farming)/register" as any)}>
-                <Text style={styles.footerLink}>Register here</Text>
+                <Text style={styles.footerLink}>{t.registerHere}</Text>
               </TouchableOpacity>
             </View>
           </View>

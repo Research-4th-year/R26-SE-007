@@ -1,0 +1,263 @@
+{
+  "metadata": {
+    "dataset_name": "Sri Lanka Rice Disease Advisory Knowledge Base",
+    "version": "1.0",
+    "country": "Sri Lanka",
+    "primary_authority": "Department of Agriculture, Sri Lanka",
+    "institute": "Rice Research and Development Institute (RRDI), Bathalagoda",
+    "purpose": "Disease management and advisory information for a paddy disease detection application",
+    "source_policy": "Information is based primarily on Sri Lanka Department of Agriculture RRDI disease-management information.",
+    "important_note": "Disease identification from an image should be treated as a screening result. Field history, field symptoms, plant symptoms and expert diagnosis may be required for accurate diagnosis.",
+    "source": {
+      "organization": "Department of Agriculture, Sri Lanka",
+      "institute": "Rice Research and Development Institute (RRDI)",
+      "location": "Bathalagoda, Ibbagamuwa, Sri Lanka",
+      "email": "rrdi@doa.gov.lk"
+    }
+  },
+  "diseases": [
+    {
+      "id": "leaf_blast",
+      "disease": "කොළ පාළුව (Leaf Blast)",
+      "official_rrdi_name": "Rice Blast",
+      "cause": "Magnaporthe grisea (Pyricularia grisea)",
+      "type": "Fungal disease",
+      "affected_parts": [
+        "Leaves",
+        "Nodes",
+        "Panicles",
+        "Seeds"
+      ],
+      "life_stage": "Any life stage of the rice plant",
+      "symptoms": [
+        "කඩවසම් හැඩයේ කොළ ලප",
+        "දුඹුරු හෝ රතු-දුඹුරු පැහැති වාටිය",
+        "අළු පැහැති මධ්‍යය",
+        "ලප වල උල් වූ අග",
+        "ආසාදිත ගැට කළු වී කුණුවීම",
+        "කරල් පදනමට ආසාදනය වී කරල් කඩා වැටීම",
+        "දරුණු ආසාදන වලදී බොල් වී හෝ සුදු කරල් ඇතිවීම"
+      ],
+      "favorable_conditions": [
+        "Low night temperature around 17-20°C",
+        "High humidity",
+        "Excessive nitrogen fertilizer application",
+        "Foggy and dark climatic conditions",
+        "High plant density",
+        "Susceptible rice varieties"
+      ],
+      "prevention": [
+        "ප්‍රතිරෝධී වී ප්‍රභේද භාවිතා කරන්න",
+        "රෝග මුක්ත සහතික කළ බිත්තර වී භාවිතා කරන්න",
+        "අධික නයිට්‍රජන් පොහොර භාවිතයෙන් වළකින්න",
+        "නිර්දේශිත ප්‍රමාණයට හෝ කොළ පාට පුවරුව අනුව නයිට්‍රජන් යොදන්න",
+        "සුදුසු ක්ෂේත්‍ර කළමනාකරණයක් පවත්වා ගන්න",
+        "වල් පැළෑටි පාලනය කරන්න",
+        "රෝගී පිදුරු භාවිතා කිරීමෙන් වළකින්න"
+      ],
+      "fertilizer": {
+        "nitrogen": [
+          "අධික නයිට්‍රජන් පොහොර භාවිතයෙන් වළකින්න",
+          "නිර්දේශිත ප්‍රමාණයට යූරියා යොදන්න"
+        ],
+        "general": [
+          "සමතුලිත පෝෂක කළමනාකරණයක් පවත්වා ගන්න"
+        ],
+        "reason": "අධික නයිට්‍රජන් භාවිතය රෝගය වර්ධනයට හේතු වේ."
+      },
+      "chemical": {
+        "type": "දිලීර නාශක",
+        "condition": "රෝගය වේගයෙන් පැතිරේ නම්",
+        "instruction": "කෘෂිකර්ම දෙපාර්තමේන්තුවේ නිර්දේශිත දිලීර නාශක භාවිතා කරන්න (උදා: ටෙබුකොනසෝල්)."
+      },
+      "monitoring": [
+        "Check leaves regularly for spindle-shaped lesions",
+        "Monitor fields during high-humidity conditions",
+        "Monitor during periods of low night temperature",
+        "Pay particular attention where excessive nitrogen has been applied",
+        "Monitor susceptible varieties",
+        "Monitor nodes and panicles as the crop develops"
+      ],
+      "resistant_varieties_listed_by_rrdi": [
+        "Bg 403",
+        "Bg 406",
+        "Bg 366",
+        "Bg 359",
+        "Bw 361",
+        "Bg 250"
+      ],
+      "next_season_management": [
+        "Use resistant varieties",
+        "Use certified disease-free seed paddy",
+        "Add burnt paddy husk during land preparation where recommended",
+        "Avoid infected straw"
+      ],
+      "source": {
+        "organization": "Department of Agriculture, Sri Lanka",
+        "institute": "Rice Research and Development Institute (RRDI)",
+        "source_title": "Rice Blast",
+        "url": "https://doa.gov.lk/rrdi_ricediseases_riceblast/"
+      }
+    },
+    {
+      "id": "bacterial_leaf_blight",
+      "disease": "බැක්ටීරියා කොළ අංගමාරය (Bacterial Leaf Blight)",
+      "cause": "Xanthomonas oryzae pv. oryzae",
+      "type": "Bacterial disease",
+      "affected_parts": [
+        "Leaves"
+      ],
+      "life_stage": [
+        "Seedling stage",
+        "Maturity stage"
+      ],
+      "symptoms": [
+        "පැළ අවධියේදී කොළ මැලවීම සහ කහ වීම",
+        "කපා දැමූ කොළ අගින් කහ පැහැති බැක්ටීරියා ශ්‍රාවයක් පිටවීම",
+        "මේරූ කොළ මත ජලය පිරුණු තැඹිලි පැහැති ඉරි ඇතිවීම",
+        "ලප කොළ අගින් ආරම්භ වීම",
+        "ලප කොළයේ පදනම දෙසට පැතිරීම"
+      ],
+      "favorable_conditions": [
+        "Temperature around 25-34°C",
+        "Strong winds",
+        "Continuous heavy rain",
+        "High humidity",
+        "Excessive nitrogen fertilizer application"
+      ],
+      "prevention": [
+        "සුදුසු නයිට්‍රජන් පොහොර ප්‍රමාණ භාවිතා කරන්න",
+        "අධික නයිට්‍රජන් භාවිතයෙන් වළකින්න",
+        "හොඳ ජලවහනයක් පවත්වා ගන්න",
+        "ආසාදිත කුඹුරු වලින් ජලය නිරෝගී කුඹුරු වලට ගලායාම වළක්වන්න",
+        "රෝගය දුටු විට සුදුසු පොටෑසියම් කළමනාකරණයක් භාවිතා කරන්න",
+        "ප්‍රතිරෝධී ප්‍රභේද භාවිතා කරන්න"
+      ],
+      "fertilizer": {
+        "nitrogen": [
+          "අධික නයිට්‍රජන් භාවිතයෙන් වළකින්න"
+        ],
+        "potassium": [
+          "රෝගය දුටු විට පැතිරීම පාලනයට පොටෑසියම් භාවිතා කළ හැක"
+        ],
+        "general": [
+          "සමතුලිත පෝෂක කළමනාකරණයක් පවත්වා ගන්න"
+        ]
+      },
+      "water_management": [
+        "Ensure good field drainage",
+        "When disease is observed, stop water supply and allow the field to dry",
+        "Where complete water removal is not possible, use drainage ditches or water courses",
+        "Avoid directing drainage water from infected fields into disease-free fields"
+      ],
+      "chemical": {
+        "type": "බැක්ටීරියා පාලනය",
+        "instruction": "මෙය බැක්ටීරියා රෝගයක් බැවින් දිලීර නාශක භාවිතා නොකරන්න. ඒකාබද්ධ රෝග කළමනාකරණ ක්‍රම අනුගමනය කරන්න."
+      },
+      "monitoring": [
+        "Check seedlings for wilting and yellowing",
+        "Check mature leaves for water-soaked orange stripes",
+        "Monitor during continuous heavy rain",
+        "Monitor during high-humidity conditions",
+        "Monitor fields where excessive nitrogen has been applied",
+        "Check drainage water movement between fields"
+      ],
+      "source": {
+        "organization": "Department of Agriculture, Sri Lanka",
+        "institute": "Rice Research and Development Institute (RRDI)",
+        "source_title": "Bacterial Leaf Blight",
+        "url": "https://doa.gov.lk/rrdi_ricediseases_bacterialleafblight/"
+      }
+    },
+    {
+      "id": "brown_spot",
+      "disease": "දුඹුරු ලප රෝගය (Brown Spot)",
+      "cause": "Cochliobolus miyabeanus (Bipolaris oryzae)",
+      "type": "Fungal disease",
+      "affected_parts": [
+        "Coleoptiles",
+        "Leaves",
+        "Leaf sheaths",
+        "Immature florets",
+        "Panicle branches",
+        "Glumes",
+        "Grains"
+      ],
+      "life_stage": "More prevalent as plants approach maturity",
+      "symptoms": [
+        "දුඹුරු පැහැති රවුම් හෝ ඕවලාකාර ලප",
+        "කුඩා තද දුඹුරු හෝ රතු-දුඹුරු ලප",
+        "විශාල ඕවලාකාර ලප",
+        "තද දුඹුරු පැහැති වාටිය",
+        "පැළ කුණුවීම",
+        "දුර්වල පැළ"
+      ],
+      "favorable_conditions": [
+        "Temperature around 16-36°C",
+        "High humidity around 86-100%",
+        "Low soil nutrient levels",
+        "Problem soils",
+        "High soil salinity",
+        "Iron toxicity",
+        "Drought"
+      ],
+      "prevention": [
+        "රෝග මුක්ත සහතික කළ බිත්තර වී භාවිතා කරන්න",
+        "පසෙහි ගුණාත්මකභාවය වැඩි දියුණු කරන්න",
+        "සුදුසු කාබනික පොහොර යොදන්න",
+        "සමතුලිත පෝෂක කළමනාකරණයක් පවත්වා ගන්න",
+        "වල් පැළෑටි පාලනය කරන්න"
+      ],
+      "fertilizer": {
+        "nitrogen": [
+          "නිර්දේශිත ප්‍රමාණයට යූරියා යොදන්න"
+        ],
+        "general": [
+          "ප්‍රමාණවත් හා සමතුලිත පෝෂණයක් පවත්වා ගන්න",
+          "පසෙහි සාරවත් බව වැඩි කරන්න"
+        ]
+      },
+      "soil_management": [
+        "Improve soil quality using organic fertilizer",
+        "Add burnt paddy husk during land preparation where recommended",
+        "Consider soil salinity and iron toxicity",
+        "Maintain proper land leveling"
+      ],
+      "seed_management": [
+        "Use certified disease-free seed paddy",
+        "Hot-water treatment of seed at 53-54°C for 10-12 minutes",
+        "Use seed-protectant fungicide where recommended"
+      ],
+      "chemical": {
+        "type": "බීජ ප්‍රතිකාර",
+        "instruction": "බීජ ප්‍රතිකාර දිලීර නාශක භාවිතා කිරීම නිර්දේශ කෙරේ."
+      },
+      "monitoring": [
+        "Check leaves regularly for brown circular or oval lesions",
+        "Monitor seedlings for seedling blight",
+        "Monitor crop approaching maturity",
+        "Monitor fields with nutrient-deficient soils",
+        "Monitor fields affected by salinity",
+        "Monitor fields affected by iron toxicity",
+        "Monitor during high-humidity conditions",
+        "Monitor crops experiencing drought stress"
+      ],
+      "next_season_management": [
+        "Apply organic fertilizer to improve soil quality",
+        "Use certified disease-free seed paddy",
+        "Add burnt paddy husk during land preparation where recommended",
+        "Avoid infected straw",
+        "Treat seed with hot water where appropriate",
+        "Use seed-protectant fungicide where recommended",
+        "Practice crop rotation",
+        "Maintain proper land leveling"
+      ],
+      "source": {
+        "organization": "Department of Agriculture, Sri Lanka",
+        "institute": "Rice Research and Development Institute (RRDI)",
+        "source_title": "Brown Spot",
+        "url": "https://doa.gov.lk/rrdi_ricediseases_brownspot/"
+      }
+    }
+  ]
+}

@@ -8,7 +8,6 @@ import {
   Modal as RNModal,
   Pressable as RNPressable,
   RefreshControl as RNRefreshControl,
-  SafeAreaView as RNSafeAreaView,
   ScrollView as RNScrollView,
   Text as RNText,
   TextInput as RNTextInput,
@@ -29,6 +28,7 @@ import {
   type ViewProps,
   type ViewStyle,
 } from "react-native";
+import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 
 import { useMarketplaceAppearanceOptional } from "@/contexts/c03-marketplace/MarketplaceAppearanceContext";
 

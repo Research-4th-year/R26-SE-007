@@ -1,5 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { useLanguage } from '../contexts/LanguageContext';
+import { translations } from '../i18n';
 import { generateCropTimeline } from '../utils/cropGuidance';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -12,6 +14,9 @@ interface FarmerGuidanceProps {
 }
 
 export default function FarmerGuidance({ variety, ageGroup, zone, irrigation, cultivationDate }: FarmerGuidanceProps) {
+  const { language } = useLanguage();
+  const t = translations[language].c02Farming.farmerGuidance;
+
   const guidanceData = useMemo(() => {
     if (!variety || !ageGroup || !zone) return null;
     return generateCropTimeline(variety, ageGroup, zone, irrigation || "Irrigated", cultivationDate);
@@ -37,15 +42,15 @@ export default function FarmerGuidance({ variety, ageGroup, zone, irrigation, cu
             <Text style={{ fontSize: 24 }}>🌾</Text>
           </View>
           <View style={styles.headerTextContainer}>
-            <Text style={styles.title}>Farmer Crop Guidance</Text>
-            <Text style={styles.subtitle}>(වගා උපදෙස්)</Text>
+            <Text style={styles.title}>{t.title}</Text>
+            <Text style={styles.subtitle}>{t.subtitle}</Text>
           </View>
         </View>
 
         <View style={styles.infoBox}>
           <Text style={styles.infoText}>
-            Your recommended variety (<Text style={styles.boldGreen}>{guidanceData.variety}</Text>) has an approximate crop duration of <Text style={styles.boldGreen}>{guidanceData.ageGroup}</Text>. 
-            The following guidance is organized according to crop age and Sri Lankan agricultural recommendations for the <Text style={styles.boldGreen}>{guidanceData.zone}</Text> ({guidanceData.irrigation}).
+            {t.infoPart1}<Text style={styles.boldGreen}>{guidanceData.variety}</Text>{t.infoPart2}<Text style={styles.boldGreen}>{guidanceData.ageGroup}</Text> 
+            {t.infoPart3}<Text style={styles.boldGreen}>{guidanceData.zone}</Text> ({guidanceData.irrigation}).
           </Text>
         </View>
 
@@ -81,7 +86,7 @@ export default function FarmerGuidance({ variety, ageGroup, zone, irrigation, cu
                   <View style={styles.stageContent}>
                     {/* Activities */}
                     <View style={[styles.contentBlock, { backgroundColor: '#EFF6FF', borderColor: '#BFDBFE' }]}>
-                      <Text style={[styles.blockTitle, { color: '#1D4ED8' }]}>⚙️ Action:</Text>
+                      <Text style={[styles.blockTitle, { color: '#1D4ED8' }]}>⚙️ {t.action}:</Text>
                       {stage.activities.map((act: string, i: number) => (
                         <Text key={i} style={[styles.blockText, { color: '#1E3A8A' }]}>• {act}</Text>
                       ))}
@@ -89,14 +94,14 @@ export default function FarmerGuidance({ variety, ageGroup, zone, irrigation, cu
 
                     {/* Water */}
                     <View style={[styles.contentBlock, { backgroundColor: '#F0F9FF', borderColor: '#BAE6FD' }]}>
-                      <Text style={[styles.blockTitle, { color: '#0369A1' }]}>💧 Water:</Text>
+                      <Text style={[styles.blockTitle, { color: '#0369A1' }]}>💧 {t.water}:</Text>
                       <Text style={[styles.blockText, { color: '#0C4A6E' }]}>{stage.water}</Text>
                     </View>
 
                     {/* Fertilizers */}
                     {stage.fertilizers.length > 0 && (
                       <View style={[styles.contentBlock, { backgroundColor: '#FEF3C7', borderColor: '#FDE68A' }]}>
-                        <Text style={[styles.blockTitle, { color: '#B45309' }]}>🧪 Fertilizer:</Text>
+                        <Text style={[styles.blockTitle, { color: '#B45309' }]}>🧪 {t.fertilizer}:</Text>
                         {stage.fertilizers.map((fert: any, i: number) => (
                           <Text key={i} style={[styles.blockText, { color: '#78350F' }]}>
                             <Text style={{ fontWeight: 'bold' }}>{fert.type}</Text>: {fert.quantity}
@@ -108,7 +113,7 @@ export default function FarmerGuidance({ variety, ageGroup, zone, irrigation, cu
                     {/* Warnings */}
                     {stage.warnings.length > 0 && (
                       <View style={[styles.contentBlock, { backgroundColor: '#FEF2F2', borderColor: '#FECACA' }]}>
-                        <Text style={[styles.blockTitle, { color: '#B91C1C' }]}>⚠️ Warning:</Text>
+                        <Text style={[styles.blockTitle, { color: '#B91C1C' }]}>⚠️ {t.warning}:</Text>
                         {stage.warnings.map((warn: string, i: number) => (
                           <Text key={i} style={[styles.blockText, { color: '#7F1D1D' }]}>• {warn}</Text>
                         ))}
@@ -122,7 +127,7 @@ export default function FarmerGuidance({ variety, ageGroup, zone, irrigation, cu
         </View>
 
         <View style={styles.sourceBox}>
-          <Text style={styles.sourceText}><Text style={{ fontWeight: 'bold' }}>Source:</Text> {guidanceData.source}</Text>
+          <Text style={styles.sourceText}><Text style={{ fontWeight: 'bold' }}>{t.source}:</Text> {guidanceData.source}</Text>
         </View>
       </View>
     </View>

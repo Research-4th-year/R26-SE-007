@@ -14,6 +14,8 @@ import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useFarmingAuth } from "@/contexts/FarmingAuthContext";
+import { useLanguage } from "../../contexts/LanguageContext";
+import { translations } from "../../i18n";
 import districtData from "./districtData.json";
 
 import { API_URL } from "@/services/c02-farming/apiConfig";
@@ -110,6 +112,8 @@ function PickerField({
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 export default function ProfileScreen() {
   const { currentUser, logout } = useFarmingAuth();
+  const { language } = useLanguage();
+  const t = translations[language].c02Farming.authAndProfile;
   const [activeTab, setActiveTab] = useState<Tab>("settings");
 
   // Use Firebase uid as user_id (same as web frontend)
@@ -253,11 +257,11 @@ export default function ProfileScreen() {
 
   // ─── Tab definitions ─────────────────────────────────────────────────────────
   const TABS: { key: Tab; label: string; icon: string }[] = [
-    { key: "settings", label: "Settings", icon: "person" },
-    { key: "advisory", label: "Advisory", icon: "leaf" },
-    { key: "yield", label: "Yield", icon: "stats-chart" },
-    { key: "disease", label: "Disease", icon: "scan" },
-    { key: "fertilizer", label: "Fertilizer", icon: "flask" },
+    { key: "settings", label: t.tabSettings, icon: "person" },
+    { key: "advisory", label: t.tabAdvisory, icon: "leaf" },
+    { key: "yield", label: t.tabYield, icon: "stats-chart" },
+    { key: "disease", label: t.tabDisease, icon: "scan" },
+    { key: "fertilizer", label: t.tabFertilizer, icon: "flask" },
   ];
 
   // ─── Render ──────────────────────────────────────────────────────────────────
@@ -287,7 +291,7 @@ export default function ProfileScreen() {
         <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
           <Ionicons name="chevron-back" size={20} color="white" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Farmer Profile</Text>
+        <Text style={styles.headerTitle}>{t.profileTitle}</Text>
         <TouchableOpacity
           style={styles.logoutBtn}
           onPress={() => {
@@ -353,11 +357,11 @@ export default function ProfileScreen() {
         {activeTab === "settings" && (
           <View style={styles.card}>
             <View style={styles.cardHeader}>
-              <Text style={styles.cardTitle}>Account Details</Text>
+              <Text style={styles.cardTitle}>{t.accountDetails}</Text>
               {!isEditing && (
                 <TouchableOpacity style={styles.editBtn} onPress={() => setIsEditing(true)}>
                   <Ionicons name="pencil" size={14} color="#15803D" />
-                  <Text style={styles.editBtnText}>Edit</Text>
+                  <Text style={styles.editBtnText}>{t.edit}</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -365,7 +369,7 @@ export default function ProfileScreen() {
             {isEditing ? (
               <>
                 <View style={styles.formGroup}>
-                  <Text style={styles.formLabel}>Full Name</Text>
+                  <Text style={styles.formLabel}>{t.fullName.replace(" *", "")}</Text>
                   <TextInput
                     style={styles.input}
                     value={profile.name}
@@ -376,7 +380,7 @@ export default function ProfileScreen() {
                 </View>
 
                 <View style={styles.formGroup}>
-                  <Text style={styles.formLabel}>Phone</Text>
+                  <Text style={styles.formLabel}>{t.phone}</Text>
                   <TextInput
                     style={styles.input}
                     value={profile.phone}
@@ -388,14 +392,14 @@ export default function ProfileScreen() {
                 </View>
 
                 <PickerField
-                  label="Location (District)"
+                  label={t.locationDistrict.replace(" *", "")}
                   value={profile.location}
                   options={districts}
                   onSelect={(v) => setProfile({ ...profile, location: v })}
                 />
 
                 <View style={styles.formGroup}>
-                  <Text style={styles.formLabel}>Farm Size</Text>
+                  <Text style={styles.formLabel}>{t.farmSize.replace(" *", "")}</Text>
                   <View style={{ flexDirection: "row", gap: 10 }}>
                     <TextInput
                       style={[styles.input, { flex: 2 }]}
@@ -416,7 +420,7 @@ export default function ProfileScreen() {
 
                 <View style={styles.formActions}>
                   <TouchableOpacity style={styles.cancelBtn} onPress={() => setIsEditing(false)}>
-                    <Text style={styles.cancelBtnText}>Cancel</Text>
+                    <Text style={styles.cancelBtnText}>{t.cancel}</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={styles.saveBtn}
@@ -426,7 +430,7 @@ export default function ProfileScreen() {
                     {saving ? (
                       <ActivityIndicator color="white" size="small" />
                     ) : (
-                      <Text style={styles.saveBtnText}>Save Changes</Text>
+                      <Text style={styles.saveBtnText}>{t.saveChanges}</Text>
                     )}
                   </TouchableOpacity>
                 </View>
@@ -434,12 +438,12 @@ export default function ProfileScreen() {
             ) : (
               <>
                 {[
-                  { label: "Email", value: userEmail },
-                  { label: "Name", value: profile.name || "Not set" },
-                  { label: "Phone", value: profile.phone || "Not set" },
-                  { label: "Location", value: profile.location || "Not set" },
+                  { label: t.email, value: userEmail },
+                  { label: t.fullName.replace(" *", ""), value: profile.name || "Not set" },
+                  { label: t.phone, value: profile.phone || "Not set" },
+                  { label: t.location, value: profile.location || "Not set" },
                   {
-                    label: "Farm Size",
+                    label: t.farmSize.replace(" *", ""),
                     value: profile.farm_size
                       ? `${profile.farm_size} ${profile.farm_unit}`
                       : "Not set",
@@ -458,9 +462,9 @@ export default function ProfileScreen() {
         {/* ── Advisory Tab ── */}
         {activeTab === "advisory" && (
           <View>
-            <Text style={styles.sectionTitle}>Advisory History</Text>
+            <Text style={styles.sectionTitle}>{t.advHistory}</Text>
             {advisoryHistory.length === 0 ? (
-              <EmptyState message="No advisory history yet." icon="leaf-outline" />
+              <EmptyState message={t.noAdv} icon="leaf-outline" />
             ) : (
               advisoryHistory.map((item) => (
                 <View key={item.id} style={styles.historyCard}>
@@ -471,11 +475,11 @@ export default function ProfileScreen() {
                     </View>
                   </View>
                   <View style={styles.historyCardBody}>
-                    <InfoLine label="Field" value={item.field_id} />
-                    <InfoLine label="Location" value={`${item.city}, ${item.district}`} />
-                    <InfoLine label="Variety Predicted" value={item.predicted_variety} highlight />
+                    <InfoLine label={t.field} value={item.field_id} />
+                    <InfoLine label={t.location} value={`${item.city}, ${item.district}`} />
+                    <InfoLine label={t.varietyPred} value={item.predicted_variety} highlight />
                   </View>
-                  <DeleteBtn onPress={() => handleDeleteRecord("history", item.id, setAdvisoryHistory, advisoryHistory)} />
+                  <DeleteBtn label={t.delete} onPress={() => handleDeleteRecord("history", item.id, setAdvisoryHistory, advisoryHistory)} />
                 </View>
               ))
             )}
@@ -485,9 +489,9 @@ export default function ProfileScreen() {
         {/* ── Yield Tab ── */}
         {activeTab === "yield" && (
           <View>
-            <Text style={styles.sectionTitle}>Yield Predictions</Text>
+            <Text style={styles.sectionTitle}>{t.yieldPred}</Text>
             {yieldHistory.length === 0 ? (
-              <EmptyState message="No yield predictions yet." icon="stats-chart-outline" />
+              <EmptyState message={t.noYield} icon="stats-chart-outline" />
             ) : (
               yieldHistory.map((item) => (
                 <View key={item.id} style={styles.historyCard}>
@@ -495,17 +499,17 @@ export default function ProfileScreen() {
                     <Text style={styles.historyDate}>{formatDate(item.created_at)}</Text>
                   </View>
                   <View style={styles.historyCardBody}>
-                    <InfoLine label="Location" value={`${item.district} (${item.land_size} Ha)`} />
-                    <InfoLine label="Paddy Type" value={item.paddy_type} />
-                    <InfoLine label="Yield Rate" value={`${item.predicted_yield_kg_per_ha.toFixed(2)} kg/ha`} />
+                    <InfoLine label={t.location} value={`${item.district} (${item.land_size} Ha)`} />
+                    <InfoLine label={t.paddyType} value={item.paddy_type} />
+                    <InfoLine label={t.yieldRate} value={`${item.predicted_yield_kg_per_ha.toFixed(2)} kg/ha`} />
                     <InfoLine
-                      label="Total Yield"
+                      label={t.totalYield}
                       value={`${item.total_yield_kg.toFixed(2)} kg`}
                       highlight
                       highlightColor="#10B981"
                     />
                   </View>
-                  <DeleteBtn onPress={() => handleDeleteRecord("yield_history", item.id, setYieldHistory, yieldHistory)} />
+                  <DeleteBtn label={t.delete} onPress={() => handleDeleteRecord("yield_history", item.id, setYieldHistory, yieldHistory)} />
                 </View>
               ))
             )}
@@ -515,9 +519,9 @@ export default function ProfileScreen() {
         {/* ── Disease Tab ── */}
         {activeTab === "disease" && (
           <View>
-            <Text style={styles.sectionTitle}>Disease Detections</Text>
+            <Text style={styles.sectionTitle}>{t.disDetect}</Text>
             {diseaseHistory.length === 0 ? (
-              <EmptyState message="No disease detections yet." icon="scan-outline" />
+              <EmptyState message={t.noDis} icon="scan-outline" />
             ) : (
               diseaseHistory.map((item) => {
                 const isHealthy = item.disease_name.toLowerCase() === "healthy";
@@ -531,10 +535,10 @@ export default function ProfileScreen() {
                       </Text>
                     </View>
                     <View style={styles.historyCardBody}>
-                      <InfoLine label="Diagnosis" value={item.disease_name.replace(/_/g, " ")} highlight highlightColor={color} />
-                      <InfoLine label="Type" value={item.disease_type} />
+                      <InfoLine label={t.diagnosis} value={item.disease_name.replace(/_/g, " ")} highlight highlightColor={color} />
+                      <InfoLine label={t.type} value={item.disease_type} />
                     </View>
-                    <DeleteBtn onPress={() => handleDeleteRecord("disease_history", item.id, setDiseaseHistory, diseaseHistory)} />
+                    <DeleteBtn label={t.delete} onPress={() => handleDeleteRecord("disease_history", item.id, setDiseaseHistory, diseaseHistory)} />
                   </View>
                 );
               })
@@ -545,9 +549,9 @@ export default function ProfileScreen() {
         {/* ── Fertilizer Tab ── */}
         {activeTab === "fertilizer" && (
           <View>
-            <Text style={styles.sectionTitle}>Fertilizer Plans</Text>
+            <Text style={styles.sectionTitle}>{t.fertPlans}</Text>
             {fertilizerHistory.length === 0 ? (
-              <EmptyState message="No fertilizer plans yet." icon="flask-outline" />
+              <EmptyState message={t.noFert} icon="flask-outline" />
             ) : (
               fertilizerHistory.map((item) => (
                 <View key={item.id} style={styles.historyCard}>
@@ -555,8 +559,8 @@ export default function ProfileScreen() {
                     <Text style={styles.historyDate}>{formatDate(item.created_at)}</Text>
                   </View>
                   <View style={styles.historyCardBody}>
-                    <InfoLine label="Zone" value={item.agro_zone} />
-                    <InfoLine label="Duration" value={item.crop_duration.replace(/_/g, " ")} />
+                    <InfoLine label={t.zone} value={item.agro_zone} />
+                    <InfoLine label={t.duration} value={item.crop_duration.replace(/_/g, " ")} />
                   </View>
                   <View style={styles.fertGrid}>
                     <FertItem label="Urea" value={`${item.total_urea} kg`} color="#2563EB" />
@@ -564,7 +568,7 @@ export default function ProfileScreen() {
                     <FertItem label="MOP" value={`${item.total_mop} kg`} color="#EF4444" />
                     <FertItem label="Zinc" value={`${item.total_zinc} kg`} color="#10B981" />
                   </View>
-                  <DeleteBtn onPress={() => handleDeleteRecord("fertilizer_history", item.id, setFertilizerHistory, fertilizerHistory)} />
+                  <DeleteBtn label={t.delete} onPress={() => handleDeleteRecord("fertilizer_history", item.id, setFertilizerHistory, fertilizerHistory)} />
                 </View>
               ))
             )}
@@ -609,11 +613,11 @@ function FertItem({ label, value, color }: { label: string; value: string; color
   );
 }
 
-function DeleteBtn({ onPress }: { onPress: () => void }) {
+function DeleteBtn({ onPress, label }: { onPress: () => void; label: string }) {
   return (
     <TouchableOpacity style={styles.deleteBtnSmall} onPress={onPress}>
       <Ionicons name="trash-outline" size={13} color="#EF4444" />
-      <Text style={styles.deleteBtnSmallText}>Delete</Text>
+      <Text style={styles.deleteBtnSmallText}>{label}</Text>
     </TouchableOpacity>
   );
 }
@@ -686,7 +690,7 @@ const styles = StyleSheet.create({
   contentArea: { flex: 1 },
   sectionTitle: {
     fontFamily: "Poppins_700Bold",
-    fontSize: 18, color: "#1F2937", marginBottom: 16,
+    fontSize: 18, color: "#ffffffff", marginBottom: 16,
   },
 
   // Card
