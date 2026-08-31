@@ -304,7 +304,7 @@ def predict_disease(file: UploadFile = File(...)):
         if image.mode != 'RGB':
             image = image.convert('RGB')
             
-        # Resize to 224x224 for MobileNetV2
+        # Resize to 224x224 (Standard for ResNet50 and other ImageNet models)
         image = image.resize((224, 224))
         img_array = keras.preprocessing.image.img_to_array(image)
         img_array = tf.expand_dims(img_array, 0) # Create batch axis

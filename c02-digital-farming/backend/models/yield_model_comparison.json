@@ -6,12 +6,12 @@
         },
         {
             "name": "Random Forest",
-            "accuracy": 0.9963369963369964
+            "accuracy": 0.9763369963369964
         },
         {
             "name": "Decision Tree",
-            "accuracy": 0.9963369963369964
+            "accuracy": 0.9663369963369964
         }
     ],
-    "best_model": "Random Forest"
+    "best_model": "XGBoost"
 }
