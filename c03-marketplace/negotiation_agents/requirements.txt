@@ -1,4 +1,4 @@
-ollama>=0.4.7
+openai>=1.40.0
 pydantic>=2.10.0
 python-dotenv>=1.0.1
 fastapi>=0.100.0

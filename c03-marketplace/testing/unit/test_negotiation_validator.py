@@ -1,6 +1,6 @@
 """
 Unit tests for negotiation DecisionValidator and request schema bounds.
-Uses the existing negotiation_agents package. Does not call Ollama.
+Uses the existing negotiation_agents package. Does not call the LLM.
 """
 
 from __future__ import annotations
