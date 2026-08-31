@@ -118,8 +118,10 @@ def predict_yield_type(input_data: PredictionInput):
         
         # Enrich response with category details if available
         if category_data is not None and prediction in category_data.index:
-            details = category_data.loc[prediction].to_dict()
-            response["details"] = details
+            details = category_data.loc[prediction]
+            if isinstance(details, pd.DataFrame):
+                details = details.iloc[0]
+            response["details"] = details.to_dict()
             
         return response
     except Exception as e:
