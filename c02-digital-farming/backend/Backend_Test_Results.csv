@@ -1,16 +1,3 @@
 Test Node ID,Status,Duration (s),Error Message
-test.integration.test_endpoints::test_predict_variety,PASSED,4.641,
-test.integration.test_endpoints::test_predict_yield_production,PASSED,8.654,
-test.integration.test_endpoints::test_environment_data,PASSED,0.926,
-test.integration.test_endpoints::test_predict_disease,PASSED,0.968,
-test.integration.test_endpoints::test_history_api,PASSED,4.52,
-test.system.test_workflows::test_end_to_end_variety_and_history,PASSED,2.596,
-test.system.test_workflows::test_disease_detection_workflow,PASSED,0.936,
-test.system.test_workflows::test_environment_suitability_fallback,PASSED,0.928,
-test.unit.test_schemas::test_prediction_input_schema_valid,PASSED,0.0,
-test.unit.test_schemas::test_prediction_input_schema_invalid,PASSED,0.001,
-test.unit.test_schemas::test_yield_prediction_input_schema,PASSED,0.0,
-test.unit.test_schemas::test_environment_data_request_schema,PASSED,0.0,
-test.unit.test_services::test_weather_service_parsing,PASSED,0.002,
-test.unit.test_services::test_confidence_level_classification,PASSED,0.0,
-test.unit.test_services::test_history_payload_formatting,PASSED,0.0,
+::backend-test.unit.test_schemas,ERROR,0.0,collection failure
+::backend-test.unit.test_services,ERROR,0.0,collection failure

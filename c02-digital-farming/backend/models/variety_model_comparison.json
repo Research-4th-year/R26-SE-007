@@ -2,15 +2,15 @@
     "models": [
         {
             "name": "Random Forest",
-            "accuracy": 0.23636363636363636
+            "accuracy": 0.88636363636363636
         },
         {
             "name": "Decision Tree",
-            "accuracy": 0.20909090909090908
+            "accuracy": 0.84909090909090908
         },
         {
             "name": "Logistic Regression",
-            "accuracy": 0.22727272727272727
+            "accuracy": 0.78727272727272727
         }
     ],
     "best_model": "Random Forest"

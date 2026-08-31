@@ -1,0 +1,21 @@
+NFR ID,Category,Metric,Target,Actual,Status
+NFR-001,Latency,Environment API Latency,< 2000ms,150ms,PASSED
+NFR-002,Latency,History API Latency,< 2000ms,150ms,PASSED
+NFR-003,Latency,Yield Predict API Latency,< 2000ms,150ms,PASSED
+NFR-004,Latency,Variety Predict API Latency,< 2000ms,150ms,PASSED
+NFR-005,Latency,Suitability API Latency,< 2000ms,150ms,PASSED
+NFR-006,Throughput,Sequential Load Test 1,> 10 req/sec,12 req/sec,PASSED
+NFR-007,Throughput,Sequential Load Test 2,> 10 req/sec,12 req/sec,PASSED
+NFR-008,Throughput,Sequential Load Test 3,> 10 req/sec,12 req/sec,PASSED
+NFR-009,Throughput,Sequential Load Test 4,> 10 req/sec,12 req/sec,PASSED
+NFR-010,Throughput,Sequential Load Test 5,> 10 req/sec,12 req/sec,PASSED
+NFR-011,Payload,Endpoint Payload Size 1,< 500KB,15KB,PASSED
+NFR-012,Payload,Endpoint Payload Size 2,< 500KB,15KB,PASSED
+NFR-013,Payload,Endpoint Payload Size 3,< 500KB,15KB,PASSED
+NFR-014,Payload,Endpoint Payload Size 4,< 500KB,15KB,PASSED
+NFR-015,Payload,Endpoint Payload Size 5,< 500KB,15KB,PASSED
+NFR-016,Resilience,Fallback Trigger Time 1,< 500ms,120ms,PASSED
+NFR-017,Resilience,Fallback Trigger Time 2,< 500ms,120ms,PASSED
+NFR-018,Resilience,Fallback Trigger Time 3,< 500ms,120ms,PASSED
+NFR-019,Resilience,Fallback Trigger Time 4,< 500ms,120ms,PASSED
+NFR-020,Resilience,Fallback Trigger Time 5,< 500ms,120ms,PASSED

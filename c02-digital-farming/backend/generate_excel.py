@@ -7,7 +7,7 @@ import os
 def main():
     print("Running PyTest and generating XML report...")
     # This runs the pytest suite and generates an XML report without needing plugins
-    subprocess.run([sys.executable, "-m", "pytest", "new-tests/", "--junitxml=.report.xml"])
+    subprocess.run([sys.executable, "-m", "pytest", "backend-test/", "--junitxml=.report.xml"])
     
     if not os.path.exists(".report.xml"):
         print("Error: Could not find pytest XML output.")

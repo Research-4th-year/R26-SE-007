@@ -1,1 +1,17 @@
-<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="0" skipped="0" tests="15" time="24.199" timestamp="2026-08-31T13:58:46.747329+05:30" hostname="MacBook-Air.local"><testcase classname="test.integration.test_endpoints" name="test_predict_variety" time="4.641" /><testcase classname="test.integration.test_endpoints" name="test_predict_yield_production" time="8.654" /><testcase classname="test.integration.test_endpoints" name="test_environment_data" time="0.926" /><testcase classname="test.integration.test_endpoints" name="test_predict_disease" time="0.968" /><testcase classname="test.integration.test_endpoints" name="test_history_api" time="4.520" /><testcase classname="test.system.test_workflows" name="test_end_to_end_variety_and_history" time="2.596" /><testcase classname="test.system.test_workflows" name="test_disease_detection_workflow" time="0.936" /><testcase classname="test.system.test_workflows" name="test_environment_suitability_fallback" time="0.928" /><testcase classname="test.unit.test_schemas" name="test_prediction_input_schema_valid" time="0.000" /><testcase classname="test.unit.test_schemas" name="test_prediction_input_schema_invalid" time="0.001" /><testcase classname="test.unit.test_schemas" name="test_yield_prediction_input_schema" time="0.000" /><testcase classname="test.unit.test_schemas" name="test_environment_data_request_schema" time="0.000" /><testcase classname="test.unit.test_services" name="test_weather_service_parsing" time="0.002" /><testcase classname="test.unit.test_services" name="test_confidence_level_classification" time="0.000" /><testcase classname="test.unit.test_services" name="test_history_payload_formatting" time="0.000" /></testsuite></testsuites>
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="2" failures="0" skipped="0" tests="2" time="1.643" timestamp="2026-08-31T21:56:04.508056+05:30" hostname="MacBook-Air.local"><testcase classname="" name="backend-test.unit.test_schemas" time="0.000"><error message="collection failure">ImportError while importing test module '/Users/nerandadilhara/Desktop/SLIIT/4Y1S/Research/ResearchImplementation/R26-SE-007/c02-digital-farming/backend/backend-test/unit/test_schemas.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/importlib/__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+backend-test/unit/test_schemas.py:3: in &lt;module&gt;
+    from schemas import PredictionInput, EnvironmentDataRequest, YieldPredictionInput
+E   ModuleNotFoundError: No module named 'schemas'</error></testcase><testcase classname="" name="backend-test.unit.test_services" time="0.000"><error message="collection failure">ImportError while importing test module '/Users/nerandadilhara/Desktop/SLIIT/4Y1S/Research/ResearchImplementation/R26-SE-007/c02-digital-farming/backend/backend-test/unit/test_services.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/importlib/__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+backend-test/unit/test_services.py:2: in &lt;module&gt;
+    from services.weather_service import fetch_forecast_weather
+services/weather_service.py:7: in &lt;module&gt;
+    from firebase_config import get_firebase_db
+E   ModuleNotFoundError: No module named 'firebase_config'</error></testcase></testsuite></testsuites>
