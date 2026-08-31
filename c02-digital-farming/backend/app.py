@@ -328,8 +328,9 @@ def predict_disease(file: UploadFile = File(...)):
             score = tf.nn.softmax(score)
 
         max_confidence = float(tf.reduce_max(score))
-        predicted_class_index = int(tf.argmax(score))
-        predicted_class = disease_class_names[predicted_class_index]
+        predicted_class_index = int(np.argmax(score))
+        disease_names = disease_class_names or ["Bacterial leaf blight", "Brown spot", "Leaf smut"]
+        predicted_class = disease_names[predicted_class_index] if predicted_class_index < len(disease_names) else "Unknown"
         
         # Safety net: Models with few classes often output 60-80% confidence for random noise.
         # A higher threshold (e.g., 85%) ensures unrelated images are classified as "Another Type".
@@ -352,7 +353,7 @@ def predict_disease(file: UploadFile = File(...)):
             "disease": final_disease,
             "disease_type": disease_type,
             "confidence": float(max_confidence * 100),
-            "all_scores": {class_name: float(score[i]*100) for i, class_name in enumerate(disease_class_names)}
+            "all_scores": {class_name: float(score[0][i]*100) for i, class_name in enumerate(disease_class_names)}
         }
         
     except Exception as e:
