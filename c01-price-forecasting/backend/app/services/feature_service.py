@@ -3,7 +3,10 @@ import pandas as pd
 
 from app.services.data_loader import data_loader
 from app.services.model_loader import model_loader
-from app.core.exceptions import FeatureGenerationException
+from app.core.exceptions import (
+    FeatureGenerationException,
+    ValidationError
+)
 
 
 class FeatureService:
@@ -42,6 +45,14 @@ class FeatureService:
     ):
 
         input_date = pd.to_datetime(input_date)
+
+        # Validate district
+        valid_districts = ["Anuradhapura", "Kurunagala", "Polonnaruwa", "Ampara"]
+        if district not in valid_districts:
+            raise ValidationError(
+                message="The selected district is not supported.",
+                error_code="INVALID_DISTRICT"
+            )
 
         if df is None:
             df = self.df.copy()
