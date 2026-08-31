@@ -1,0 +1,12 @@
+.env.example
+CONFIGURATION_guide.md
+docker-compose.yml
+DOCKERFILES_TEMPLATE.md
+health-check.sh
+IMPLEMENTATION_SUMMARY.md
+Makefile
+nginx.conf
+prometheus.yml
+QUICK_START.md
+README.md
+setup.sh
