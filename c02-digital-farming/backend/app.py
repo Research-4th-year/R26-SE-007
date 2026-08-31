@@ -80,7 +80,7 @@ def load_resources():
     
     time.sleep(0.3)
     print(f"\n{C_BLUE}[STEP 2/3]{C_END} Caching Rice Category Dataset...")
-    category_path = os.path.join(os.path.dirname(__file__), '..', 'dataset', 'SL_Rice_Varietal_CategoryBased_Dataset.csv')
+    category_path = os.path.join(os.path.dirname(__file__), '..', 'dataset', 'RiceVarietal_Category.csv')
     try:
         category_data = pd.read_csv(category_path)
         category_data.set_index('Variety_Code', inplace=True)
@@ -353,7 +353,7 @@ def predict_disease(file: UploadFile = File(...)):
             "disease": final_disease,
             "disease_type": disease_type,
             "confidence": float(max_confidence * 100),
-            "all_scores": {class_name: float(score[0][i]*100) for i, class_name in enumerate(disease_class_names)}
+            "all_scores": {class_name: float(score[i]*100) for i, class_name in enumerate(disease_class_names)}
         }
         
     except Exception as e:

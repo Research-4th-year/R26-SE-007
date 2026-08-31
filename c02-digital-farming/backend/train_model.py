@@ -16,7 +16,7 @@ from sklearn.tree import DecisionTreeClassifier
 def train_and_save_model():
     print("Loading dataset...")
     # Go up one level to access the dataset folder
-    dataset_path = os.path.join(os.path.dirname(__file__), '..', 'dataset', 'SL_Rice_Varietal_District_Dataset.csv')
+    dataset_path = os.path.join(os.path.dirname(__file__), '..', 'dataset', 'RiceVarietal_Category.csv')
     
     try:
         df = pd.read_csv(dataset_path)

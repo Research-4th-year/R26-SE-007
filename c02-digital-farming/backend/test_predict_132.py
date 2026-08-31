@@ -1,3 +1,4 @@
+# pyrefly: ignore [missing-import]
 import joblib
 import pandas as pd
 model = joblib.load('models/rice_variety_predictor.pkl')

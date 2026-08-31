@@ -14,7 +14,7 @@ import glob
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, '..', 'dataset', 'Yield-Prediction')
 MODEL_DIR = os.path.join(BASE_DIR, 'models')
-VARIETY_FILE = os.path.join(BASE_DIR, '..', 'dataset', 'SL_Rice_Varietal_CategoryBased_Dataset.csv')
+VARIETY_FILE = os.path.join(BASE_DIR, '..', 'dataset', 'RiceVarietal_Category.csv')
 
 def clean_numeric(val):
     if pd.isna(val) or val == '-':
