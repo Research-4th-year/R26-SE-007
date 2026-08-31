@@ -1,0 +1,1279 @@
+{
+    "info": {
+        "name": "Digital Goviya Backend Tests (Viva)",
+        "description": "Comprehensive test suite for the Digital Goviya FastAPI Backend containing 40+ endpoints for the Viva presentation.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "http://localhost:8000",
+            "type": "string"
+        }
+    ],
+    "item": [
+        {
+            "name": "Variety Prediction",
+            "item": [
+                {
+                    "name": "Valid: Dry Zone, Maha",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "http://localhost:8000/predict",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "predict"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"District\": \"Anuradhapura\",\n    \"Zone\": \"Dry Zone\",\n    \"Season\": \"Maha\",\n    \"Salinity_Prone\": \"No\",\n    \"Iron_Toxicity_Prone\": \"No\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Valid: Wet Zone, Yala",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "http://localhost:8000/predict",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "predict"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"District\": \"Kalutara\",\n    \"Zone\": \"Wet Zone\",\n    \"Season\": \"Yala\",\n    \"Salinity_Prone\": \"Yes\",\n    \"Iron_Toxicity_Prone\": \"No\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Valid: Intermediate Zone",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "http://localhost:8000/predict",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "predict"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"District\": \"Kurunegala\",\n    \"Zone\": \"Intermediate Zone\",\n    \"Season\": \"Maha\",\n    \"Salinity_Prone\": \"No\",\n    \"Iron_Toxicity_Prone\": \"Yes\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Edge: High Salinity Dry Zone",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "http://localhost:8000/predict",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "predict"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"District\": \"Polonnaruwa\",\n    \"Zone\": \"Dry Zone\",\n    \"Season\": \"Yala\",\n    \"Salinity_Prone\": \"Yes\",\n    \"Iron_Toxicity_Prone\": \"No\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Edge: Both Toxicities",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "http://localhost:8000/predict",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "predict"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"District\": \"Galle\",\n    \"Zone\": \"Wet Zone\",\n    \"Season\": \"Maha\",\n    \"Salinity_Prone\": \"Yes\",\n    \"Iron_Toxicity_Prone\": \"Yes\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Valid: Ampara Maha",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "http://localhost:8000/predict",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "predict"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"District\": \"Ampara\",\n    \"Zone\": \"Dry Zone\",\n    \"Season\": \"Maha\",\n    \"Salinity_Prone\": \"No\",\n    \"Iron_Toxicity_Prone\": \"No\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Valid: Hambantota Yala",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "http://localhost:8000/predict",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "predict"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"District\": \"Hambantota\",\n    \"Zone\": \"Dry Zone\",\n    \"Season\": \"Yala\",\n    \"Salinity_Prone\": \"Yes\",\n    \"Iron_Toxicity_Prone\": \"No\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Invalid: Missing District",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "http://localhost:8000/predict",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "predict"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"Zone\": \"Dry Zone\",\n    \"Season\": \"Maha\",\n    \"Salinity_Prone\": \"No\",\n    \"Iron_Toxicity_Prone\": \"No\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Invalid: Wrong Data Types",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "http://localhost:8000/predict",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "predict"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"District\": 123,\n    \"Zone\": \"Dry Zone\",\n    \"Season\": \"Maha\",\n    \"Salinity_Prone\": \"No\",\n    \"Iron_Toxicity_Prone\": \"No\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Invalid: Empty Payload",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "http://localhost:8000/predict",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "predict"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Yield Prediction",
+            "item": [
+                {
+                    "name": "Valid: Colombo Bg 300",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "http://localhost:8000/predict_yield_production",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "predict_yield_production"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"District\": \"Colombo\",\n    \"Total_Land_Size\": 5.5,\n    \"Paddy_Type\": \"Bg 300\",\n    \"lat\": 6.9271,\n    \"lon\": 79.8612\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Valid: Anuradhapura Bg 352",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "http://localhost:8000/predict_yield_production",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "predict_yield_production"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"District\": \"Anuradhapura\",\n    \"Total_Land_Size\": 2.0,\n    \"Paddy_Type\": \"Bg 352\",\n    \"lat\": 8.3114,\n    \"lon\": 80.4037\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Valid: Kurunegala Ld 368",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "http://localhost:8000/predict_yield_production",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "predict_yield_production"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"District\": \"Kurunegala\",\n    \"Total_Land_Size\": 10.0,\n    \"Paddy_Type\": \"Ld 368\",\n    \"lat\": 7.4818,\n    \"lon\": 80.3609\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Valid: Polonnaruwa At 306",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "http://localhost:8000/predict_yield_production",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "predict_yield_production"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"District\": \"Polonnaruwa\",\n    \"Total_Land_Size\": 1.5,\n    \"Paddy_Type\": \"At 306\",\n    \"lat\": 7.9403,\n    \"lon\": 81.0188\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Valid: Small Land Size",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "http://localhost:8000/predict_yield_production",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "predict_yield_production"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"District\": \"Gampaha\",\n    \"Total_Land_Size\": 0.5,\n    \"Paddy_Type\": \"Bg 300\",\n    \"lat\": 7.0873,\n    \"lon\": 79.9997\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Valid: Huge Land Size",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "http://localhost:8000/predict_yield_production",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "predict_yield_production"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"District\": \"Ampara\",\n    \"Total_Land_Size\": 50.0,\n    \"Paddy_Type\": \"Bg 352\",\n    \"lat\": 7.2833,\n    \"lon\": 81.6667\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Valid: Hambantota Bg 366",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "http://localhost:8000/predict_yield_production",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "predict_yield_production"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"District\": \"Hambantota\",\n    \"Total_Land_Size\": 4.2,\n    \"Paddy_Type\": \"Bg 366\",\n    \"lat\": 6.1248,\n    \"lon\": 81.1185\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Invalid: Missing Coordinates",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "http://localhost:8000/predict_yield_production",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "predict_yield_production"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"District\": \"Colombo\",\n    \"Total_Land_Size\": 5.5,\n    \"Paddy_Type\": \"Bg 300\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Invalid: Negative Land Size",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "http://localhost:8000/predict_yield_production",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "predict_yield_production"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"District\": \"Colombo\",\n    \"Total_Land_Size\": -5.5,\n    \"Paddy_Type\": \"Bg 300\",\n    \"lat\": 6.9271,\n    \"lon\": 79.8612\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Invalid: Empty Payload",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "http://localhost:8000/predict_yield_production",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "predict_yield_production"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Suitability Prediction",
+            "item": [
+                {
+                    "name": "Valid: Dry Zone Maha",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "http://localhost:8000/predict_suitability",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "predict_suitability"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"District\": \"Anuradhapura\",\n    \"Zone\": \"Dry Zone\",\n    \"Season\": \"Maha\",\n    \"Paddy_Type\": \"Bg 300\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Valid: Wet Zone Yala",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "http://localhost:8000/predict_suitability",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "predict_suitability"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"District\": \"Kalutara\",\n    \"Zone\": \"Wet Zone\",\n    \"Season\": \"Yala\",\n    \"Paddy_Type\": \"Bg 352\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Valid: Intermediate Zone",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "http://localhost:8000/predict_suitability",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "predict_suitability"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"District\": \"Kurunegala\",\n    \"Zone\": \"Intermediate Zone\",\n    \"Season\": \"Maha\",\n    \"Paddy_Type\": \"Ld 368\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Invalid: Missing Paddy Type",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "http://localhost:8000/predict_suitability",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "predict_suitability"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"District\": \"Kurunegala\",\n    \"Zone\": \"Intermediate Zone\",\n    \"Season\": \"Maha\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Invalid: Empty Payload",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "http://localhost:8000/predict_suitability",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "predict_suitability"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Environment Data",
+            "item": [
+                {
+                    "name": "Valid: Fetch Firebase Data",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "http://localhost:8000/api/environment_data",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "environment_data"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"lat\": 7.8731,\n    \"lon\": 80.7718,\n    \"use_firebase\": true,\n    \"field_id\": \"field_001\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Valid: Fetch Weather API Only",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "http://localhost:8000/api/environment_data",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "environment_data"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"lat\": 6.9271,\n    \"lon\": 79.8612,\n    \"use_firebase\": false,\n    \"field_id\": \"\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Valid: Anuradhapura Coordinates",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "http://localhost:8000/api/environment_data",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "environment_data"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"lat\": 8.3114,\n    \"lon\": 80.4037,\n    \"use_firebase\": true,\n    \"field_id\": \"field_002\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Valid: Remote Coordinates",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "http://localhost:8000/api/environment_data",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "environment_data"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"lat\": 0.0,\n    \"lon\": 0.0,\n    \"use_firebase\": false,\n    \"field_id\": \"field_003\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Invalid: Missing Lat/Lon",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "http://localhost:8000/api/environment_data",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "environment_data"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"use_firebase\": true,\n    \"field_id\": \"field_001\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Invalid: Empty Payload",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "http://localhost:8000/api/environment_data",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "environment_data"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "History",
+            "item": [
+                {
+                    "name": "GET Valid User History",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "http://localhost:8000/api/history/user_12345",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "history",
+                                "user_12345"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "GET Empty/Non-existent User",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "http://localhost:8000/api/history/unknown_999",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "history",
+                                "unknown_999"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "POST Save Valid History",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "http://localhost:8000/api/history",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "history"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "[\n    {\n        \"user_id\": \"user_12345\",\n        \"field_id\": \"field_01\",\n        \"district\": \"Anuradhapura\",\n        \"city\": \"Anuradhapura City\",\n        \"zone\": \"Dry Zone\",\n        \"season\": \"Maha\",\n        \"predicted_variety\": \"Bg 300\",\n        \"suitability_score\": 5\n    }\n]",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "POST Save Minimum History",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "http://localhost:8000/api/history",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "history"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "[\n    {\n        \"user_id\": \"user_12345\"\n    }\n]",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "POST Save Missing UserID",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "http://localhost:8000/api/history",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "history"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "[\n    {\n        \"field_id\": \"field_01\",\n        \"district\": \"Anuradhapura\"\n    }\n]",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "POST Save History with Nulls",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "http://localhost:8000/api/history",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "history"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "[\n    {\n        \"user_id\": \"user_999\",\n        \"district\": null,\n        \"city\": null\n    }\n]",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Disease Prediction",
+            "item": [
+                {
+                    "name": "Valid: Test Image 1",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "http://localhost:8000/predict_disease",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "predict_disease"
+                            ]
+                        },
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "file",
+                                    "type": "file",
+                                    "src": "example_leaf_1.jpg"
+                                }
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Valid: Test Image 2",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "http://localhost:8000/predict_disease",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "predict_disease"
+                            ]
+                        },
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "file",
+                                    "type": "file",
+                                    "src": "example_leaf_2.jpg"
+                                }
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Valid: Non-leaf Image",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "http://localhost:8000/predict_disease",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "predict_disease"
+                            ]
+                        },
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "file",
+                                    "type": "file",
+                                    "src": "random_image.jpg"
+                                }
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Invalid: No File Provided",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "http://localhost:8000/predict_disease",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "predict_disease"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Invalid: Wrong Field Name",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "http://localhost:8000/predict_disease",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "predict_disease"
+                            ]
+                        },
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "document",
+                                    "type": "file",
+                                    "src": "example_leaf_1.jpg"
+                                }
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        }
+    ]
+}
