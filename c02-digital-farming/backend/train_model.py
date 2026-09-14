@@ -3,7 +3,9 @@ import pandas as pd
 import joblib
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
+# pyrefly: ignore [missing-import]
 from sklearn.preprocessing import OneHotEncoder
+# pyrefly: ignore [missing-import]
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 import os

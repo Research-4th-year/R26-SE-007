@@ -17,8 +17,7 @@ import json
 
 def train_and_save_model(csv_path):
     """
-    Trains multiple models (XGBoost, Random Forest, Decision Tree) using historical dataset,
-    selects the best one based on accuracy, saves it to disk, and saves a comparison JSON.
+    Trains multiple models (XGBoost, Random Forest, Decision Tree) using historical dataset and saves the best performing model to disk.
     """
     print("Preprocessing data for training...")
     df = preprocess_historical_weather(csv_path)
