@@ -36,6 +36,10 @@ import { ragService } from "@/services/c03-marketplace/rag.service";
 import { getApiErrorMessage } from "@/utils/c03-marketplace/getApiErrorMessage";
 import type { RagChatMessage } from "@/types/c03-marketplace/rag.types";
 import { useLanguage } from "@/contexts/LanguageContext";
+import type {
+  Animated as RNAnimated,
+  FlatList as RNFlatList,
+} from "react-native";
 
 // ===========================================================================
 // SUGGESTED QUESTIONS
@@ -64,12 +68,12 @@ type RoleTheme = {
 };
 
 const FARMER_THEME: RoleTheme = {
-  accent: "#2F9E44",
-  accentDark: "#176B2C",
-  accentSoft: "#DDF7E4",
-  accentPale: "#F0FFF4",
-  gradient: ["#61a070", "#0f602e"],
-  headerGradient: ["#E8FBEF", "#F9FFFB"],
+  accent: "#15803D",
+  accentDark: "#0B3B22",
+  accentSoft: "#DCFCE7",
+  accentPale: "#ECFDF5",
+  gradient: ["#0A331D", "#12522E"],
+  headerGradient: ["#ECFDF5", "#F8FAF8"],
   icon: "leaf",
   eyebrow: "GROWER KNOWLEDGE ASSISTANT",
 };
@@ -93,7 +97,7 @@ export default function MarketplaceAssistantScreen() {
   const { user } = useMarketplaceAuth();
   const { t, language } = useLanguage();
 
-  const listRef = useRef<FlatList<RagChatMessage>>(null);
+  const listRef = useRef<RNFlatList<RagChatMessage>>(null);
 
   const [question, setQuestion] = useState("");
   const [messages, setMessages] = useState<RagChatMessage[]>([]);
@@ -1257,7 +1261,7 @@ function TypingIndicator({
 
   useEffect(() => {
     const makeLoop = (
-      value: Animated.Value,
+      value: RNAnimated.Value,
       delay: number
     ) =>
       Animated.loop(
@@ -1292,7 +1296,7 @@ function TypingIndicator({
   }, [dot1, dot2, dot3]);
 
   const dotStyle = (
-    value: Animated.Value
+    value: RNAnimated.Value
   ) => ({
     opacity: value.interpolate({
       inputRange: [0, 1],

@@ -86,11 +86,11 @@ const MARKABLE_DEMAND_STATUSES = [
   "open",
   "negotiation_ready",
   "negotiating",
+  "agreement_reached",
 ];
 
 const COMPLETED_DEMAND_STATUSES = [
   "fulfilled",
-  "agreement_reached",
 ];
 
 const cancelPendingDemandSelections = async (demandId) => {

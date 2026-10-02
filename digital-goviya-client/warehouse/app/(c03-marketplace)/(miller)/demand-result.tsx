@@ -300,6 +300,7 @@ function getStatusStyle(status: string): { background: string; text: string } {
     case "negotiating":
       return { background: "#FDE68A", text: "#78350F" };
     case "agreement_reached":
+      return { background: "#FEF3C7", text: "#92400E" };
     case "fulfilled":
       return { background: "#D1FAE5", text: "#065F46" };
     case "negotiation_failed":

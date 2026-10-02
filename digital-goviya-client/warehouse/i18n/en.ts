@@ -261,6 +261,7 @@ const en = {
     total: "Total",
     available: "Available",
     matched: "Matched",
+    agreementReached: "Agreement Reached",
     sold: "Sold",
     filterHarvestsBy: "Filter harvests by",
     of: "of",
@@ -541,6 +542,11 @@ c3MatchedMillers: {
 
   rankedRecommendations: "Ranked recommendations",
   selectUpToFive: "Select up to five",
+  allMatches: "All Matches",
+  connectedPartners: "Connected Partners",
+  noConnectedPartners: "No connected partners available for this match",
+  noConnectedPartnersDescription:
+    "None of your connected millers currently have an open demand that matches this harvest.",
 
   matchingScore: "Matching score",
   location: "Location",
@@ -1122,6 +1128,11 @@ c3MillerHome: {
 
     aiRecommendations: "AI RECOMMENDATIONS",
     bestFarmerMatches: "Best Farmer Matches",
+    allMatches: "All Matches",
+    connectedPartners: "Connected Partners",
+    noConnectedPartners: "No connected partners available for this match",
+    noConnectedPartnersDescription:
+      "None of your connected farmers currently have an available harvest that matches this demand.",
     matches: "matches",
     selected: "selected",
 
@@ -1388,6 +1399,18 @@ c3MillerHome: {
     requestCancelledMessage:
       "Your connection request to {{name}} has been cancelled.",
     unableToCancel: "Unable to cancel request",
+
+    removeConnection: "Remove Connection",
+    removeConnectionTitle: "Remove connection?",
+    removeConnectionMessage:
+      "Are you sure you want to remove this connection with {{name}}? You can find them again later and send a new connection request.",
+    keepConnection: "Cancel",
+    remove: "Remove",
+    connectionRemoved: "Connection removed",
+    connectionRemovedMessage:
+      "{{name}} is no longer in your connected partners.",
+    unableToRemove: "Unable to remove connection",
+
     noDate: "No date",
     dateUnavailable: "Date unavailable",
     lastTrade: "LAST TRADE",

@@ -38,6 +38,8 @@ import { MarketplaceApiError } from "@/services/c03-marketplace/api-client";
 
 import { useLanguage } from "@/contexts/LanguageContext";
 
+type MatchListTab = "all" | "connected";
+
 const THEME = {
   page: "#FBF8F1",
   primary: "#92400E",
@@ -65,6 +67,8 @@ export default function MatchedFarmersScreen() {
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] =
     useState<string | null>(null);
+  const [activeTab, setActiveTab] =
+    useState<MatchListTab>("all");
 
   const fade = useRef(new Animated.Value(0)).current;
   const rise = useRef(new Animated.Value(14)).current;
@@ -201,11 +205,16 @@ export default function MatchedFarmersScreen() {
     }
   };
 
+  const matches = data?.matches ?? [];
+  const connectedMatches = matches.filter(
+    (item) => item.isConnected,
+  );
+  const displayedMatches =
+    activeTab === "connected" ? connectedMatches : matches;
+
   if (loading) {
     return <LoadingState />;
   }
-
-  const matches = data?.matches ?? [];
 
   return (
     <SafeAreaView style={styles.screen}>
@@ -270,19 +279,90 @@ export default function MatchedFarmersScreen() {
           >
             {data ? <DemandBanner data={data} /> : null}
 
+            <View style={styles.tabBar}>
+              <Pressable
+                onPress={() => setActiveTab("all")}
+                style={({ pressed }) => [
+                  styles.tabButton,
+                  activeTab === "all" && styles.tabButtonActive,
+                  pressed && styles.pressed,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.tabLabel,
+                    activeTab === "all" && styles.tabLabelActive,
+                  ]}
+                >
+                  {t.c3matchedFarmers.allMatches}
+                </Text>
+                <View
+                  style={[
+                    styles.tabCount,
+                    activeTab === "all" && styles.tabCountActive,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.tabCountText,
+                      activeTab === "all" && styles.tabCountTextActive,
+                    ]}
+                  >
+                    {matches.length}
+                  </Text>
+                </View>
+              </Pressable>
+
+              <Pressable
+                onPress={() => setActiveTab("connected")}
+                style={({ pressed }) => [
+                  styles.tabButton,
+                  activeTab === "connected" && styles.tabButtonActive,
+                  pressed && styles.pressed,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.tabLabel,
+                    activeTab === "connected" && styles.tabLabelActive,
+                  ]}
+                >
+                  {t.c3matchedFarmers.connectedPartners}
+                </Text>
+                <View
+                  style={[
+                    styles.tabCount,
+                    activeTab === "connected" && styles.tabCountActive,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.tabCountText,
+                      activeTab === "connected" &&
+                        styles.tabCountTextActive,
+                    ]}
+                  >
+                    {connectedMatches.length}
+                  </Text>
+                </View>
+              </Pressable>
+            </View>
+
             <View style={styles.sectionHeader}>
               <View>
                 <Text style={styles.eyebrow}>
                   {t.c3matchedFarmers.aiRecommendations}
                 </Text>
                 <Text style={styles.sectionTitle}>
-                  {t.c3matchedFarmers.bestFarmerMatches}
+                  {activeTab === "connected"
+                    ? t.c3matchedFarmers.connectedPartners
+                    : t.c3matchedFarmers.allMatches}
                 </Text>
               </View>
 
               <View style={styles.countBadge}>
                 <Text style={styles.countValue}>
-                  {matches.length}
+                  {displayedMatches.length}
                 </Text>
                 <Text style={styles.countLabel}>
                   {t.c3matchedFarmers.matches}
@@ -290,8 +370,12 @@ export default function MatchedFarmersScreen() {
               </View>
             </View>
 
+            {activeTab === "connected" &&
+            displayedMatches.length === 0 ? (
+              <ConnectedEmptyState />
+            ) : (
             <View style={styles.cards}>
-              {matches.map((match, index) => (
+              {displayedMatches.map((match, index) => (
                 <FarmerMatchCard
                   key={match.harvest._id}
                   match={match}
@@ -308,6 +392,7 @@ export default function MatchedFarmersScreen() {
                 />
               ))}
             </View>
+            )}
           </Animated.View>
         )}
       </ScrollView>
@@ -759,6 +844,28 @@ function EmptyState() {
   );
 }
 
+function ConnectedEmptyState() {
+  const { t } = useLanguage();
+
+  return (
+    <View style={styles.connectedEmpty}>
+      <View style={styles.emptyIcon}>
+        <Ionicons
+          name="people-outline"
+          size={36}
+          color={THEME.primary}
+        />
+      </View>
+      <Text style={styles.stateTitle}>
+        {t.c3matchedFarmers.noConnectedPartners}
+      </Text>
+      <Text style={styles.stateText}>
+        {t.c3matchedFarmers.noConnectedPartnersDescription}
+      </Text>
+    </View>
+  );
+}
+
 function ErrorState({
   message,
   onRetry,
@@ -951,7 +1058,7 @@ const styles = StyleSheet.create({
     backgroundColor: THEME.soft,
     borderWidth: 1,
     borderColor: THEME.border,
-    marginBottom: 23,
+    marginBottom: 16,
   },
 
   demandIcon: {
@@ -1000,6 +1107,72 @@ const styles = StyleSheet.create({
     color: THEME.primary,
     fontSize: 7,
     fontWeight: "900",
+  },
+
+  tabBar: {
+    flexDirection: "row",
+    gap: 6,
+    padding: 4,
+    borderRadius: 16,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: THEME.border,
+    marginBottom: 16,
+  },
+
+  tabButton: {
+    flex: 1,
+    minHeight: 42,
+    borderRadius: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    paddingHorizontal: 8,
+  },
+
+  tabButtonActive: {
+    backgroundColor: THEME.primary,
+  },
+
+  tabLabel: {
+    color: THEME.muted,
+    fontSize: 11,
+    fontWeight: "700",
+  },
+
+  tabLabelActive: {
+    color: "#FFFFFF",
+  },
+
+  tabCount: {
+    minWidth: 20,
+    height: 20,
+    paddingHorizontal: 5,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: THEME.soft,
+  },
+
+  tabCountActive: {
+    backgroundColor: "rgba(255,255,255,0.22)",
+  },
+
+  tabCountText: {
+    color: THEME.muted,
+    fontSize: 9,
+    fontWeight: "800",
+  },
+
+  tabCountTextActive: {
+    color: "#FFFFFF",
+  },
+
+  connectedEmpty: {
+    alignItems: "center",
+    paddingVertical: 36,
+    paddingHorizontal: 18,
   },
 
   sectionHeader: {

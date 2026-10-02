@@ -94,6 +94,7 @@ export interface HarvestMatch {
   reasons: BilingualText[];
   recommendation: BilingualText;
   existingRequest?: ExistingMatchRequest | null;
+  isConnected?: boolean;
 }
 
 export interface FarmerHarvestMatch {
@@ -113,6 +114,7 @@ export interface FarmerHarvestMatch {
   reasons: BilingualText[];
   recommendation: BilingualText;
   existingRequest?: ExistingMatchRequest | null;
+  isConnected?: boolean;
 }
 
 export interface MatchingResponse {

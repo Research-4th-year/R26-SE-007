@@ -964,7 +964,8 @@ function DemandCard({
   const canMarkFulfilled =
     demand.status === "open" ||
     demand.status === "negotiation_ready" ||
-    demand.status === "negotiating";
+    demand.status === "negotiating" ||
+    demand.status === "agreement_reached";
 
   const isFulfilled = demand.status === "fulfilled";
 
@@ -1627,6 +1628,11 @@ function getStatusStyle(
         border: "#F5C542",
       };
     case "agreement_reached":
+      return {
+        background: "#FEF3C7",
+        text: "#92400E",
+        border: "#FDE68A",
+      };
     case "fulfilled":
       return {
         background: "#D1FAE5",
