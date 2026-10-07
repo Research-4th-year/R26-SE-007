@@ -2,6 +2,7 @@ import { DisasterStatus } from '@prisma/client';
 import { prisma } from '../config/prisma';
 import { AppError } from '../utils/errors';
 import { haversineKm, computeRankingScore } from '../utils/geo';
+import { computeStockEventHash } from '../utils/eventHash';
 import { warehouseService } from './warehouse.service';
 import { JwtPayload } from '../types';
 import {
@@ -16,7 +17,6 @@ export class DisasterService {
 
   // ── Create disaster event ─────────────────────────────────────
   async createDisaster(dto: CreateDisasterInput, caller: JwtPayload) {
-    // Verify the affected warehouse exists and is active
     const warehouse = await prisma.warehouse.findUnique({
       where: { id: dto.affectedWarehouseId },
     });
@@ -28,7 +28,6 @@ export class DisasterService {
       throw AppError.badRequest('Cannot create a disaster event for an inactive warehouse');
     }
 
-    // Block duplicate open disasters on the same warehouse
     const existingOpen = await prisma.disasterEvent.findFirst({
       where: {
         affectedWarehouseId: dto.affectedWarehouseId,
@@ -38,7 +37,8 @@ export class DisasterService {
 
     if (existingOpen) {
       throw AppError.conflict(
-        `Warehouse already has an active disaster event (ID: ${existingOpen.id}). Resolve it before creating a new one.`
+        `Warehouse already has an active disaster event (ID: ${existingOpen.id}). ` +
+        `Resolve it before creating a new one.`
       );
     }
 
@@ -62,24 +62,24 @@ export class DisasterService {
       },
     });
 
-        try {
-  await fabricService.recordDisasterEvent({
-    id:                  disaster.id,
-    disasterType:        dto.disasterType.toString(),
-    affectedWarehouseId: dto.affectedWarehouseId,
-    estimatedLossTons:   dto.estimatedLossTons ?? 0,
-    description:         dto.description ?? '',
-    reportedById:        caller.sub,
-    occurredAt:          dto.occurredAt.toISOString(),
-  });
-  await prisma.disasterEvent.update({
-    where: { id: disaster.id },
-    data:  { blockchainTxId: `fabric:${disaster.id}` },
-  });
-  console.log(`[Fabric] Disaster event anchored: ${disaster.id}`);
-} catch (fabricErr) {
-  console.error('[Fabric] Failed to anchor disaster event:', fabricErr);
-}
+    try {
+      await fabricService.recordDisasterEvent({
+        id:                  disaster.id,
+        disasterType:        dto.disasterType.toString(),
+        affectedWarehouseId: dto.affectedWarehouseId,
+        estimatedLossTons:   dto.estimatedLossTons ?? 0,
+        description:         dto.description ?? '',
+        reportedById:        caller.sub,
+        occurredAt:          dto.occurredAt.toISOString(),
+      });
+      await prisma.disasterEvent.update({
+        where: { id: disaster.id },
+        data:  { blockchainTxId: `fabric:${disaster.id}` },
+      });
+      console.log(`[Fabric] Disaster event anchored: ${disaster.id}`);
+    } catch (fabricErr) {
+      console.error('[Fabric] Failed to anchor disaster event:', fabricErr);
+    }
 
     return disaster;
   }
@@ -90,8 +90,8 @@ export class DisasterService {
     const skip = (page - 1) * limit;
 
     const where = {
-      ...(status      ? { status }                                : {}),
-      ...(warehouseId ? { affectedWarehouseId: warehouseId }      : {}),
+      ...(status      ? { status }                           : {}),
+      ...(warehouseId ? { affectedWarehouseId: warehouseId } : {}),
     };
 
     const [disasters, total] = await Promise.all([
@@ -152,20 +152,26 @@ export class DisasterService {
 
     if (!disaster) throw AppError.notFound('Disaster event not found');
 
-    // Build ranked candidate list only for non-resolved disasters
     let rankedCandidates: RankedWarehouse[] = [];
+    let stockToEvacuate = 0;
 
     if (disaster.status !== DisasterStatus.RESOLVED) {
+      // Under the evacuation model the relevant figure is how much stock
+      // SURVIVED and needs moving — not how much was lost.
+      stockToEvacuate = await warehouseService.computeCurrentStock(
+        disaster.affectedWarehouseId
+      );
+
       rankedCandidates = await this.rankCandidateWarehouses(
         disaster.affectedWarehouseId,
         disaster.affectedWarehouse.latitude,
         disaster.affectedWarehouse.longitude,
-        disaster.estimatedLossTons ?? 0,
+        stockToEvacuate,
         disaster.id
       );
     }
 
-    return { ...disaster, rankedCandidates };
+    return { ...disaster, stockToEvacuate, rankedCandidates };
   }
 
   // ── Update disaster status ────────────────────────────────────
@@ -176,7 +182,6 @@ export class DisasterService {
   ) {
     const disaster = await this.findOrFail(disasterId);
 
-    // Enforce valid status transitions
     const validTransitions: Record<DisasterStatus, DisasterStatus[]> = {
       [DisasterStatus.OPEN]:        [DisasterStatus.IN_PROGRESS, DisasterStatus.RESOLVED],
       [DisasterStatus.IN_PROGRESS]: [DisasterStatus.RESOLVED],
@@ -204,7 +209,9 @@ export class DisasterService {
     });
   }
 
-  // ── Issue redistribution order ────────────────────────────────
+  // ── Issue evacuation order ────────────────────────────────────
+  // Stock moves OUT of the disaster-affected warehouse INTO a safe
+  // warehouse that has sufficient free capacity to receive it.
   async createRedistributionOrder(
     disasterId: string,
     dto: CreateRedistributionInput,
@@ -213,104 +220,184 @@ export class DisasterService {
     const disaster = await this.findOrFail(disasterId);
 
     if (disaster.status === DisasterStatus.RESOLVED) {
-      throw AppError.badRequest('Cannot issue a redistribution order for a resolved disaster');
+      throw AppError.badRequest('Cannot issue an evacuation order for a resolved disaster');
     }
 
-    // Validate source warehouse
-    const sourceWarehouse = await prisma.warehouse.findUnique({
-      where: { id: dto.sourceWarehouseId },
+    const destination = await prisma.warehouse.findUnique({
+      where: { id: dto.destinationWarehouseId },
     });
 
-    if (!sourceWarehouse) throw AppError.notFound('Source warehouse not found');
-    if (!sourceWarehouse.isActive) {
-      throw AppError.badRequest('Source warehouse is inactive');
+    if (!destination) throw AppError.notFound('Destination warehouse not found');
+    if (!destination.isActive) {
+      throw AppError.badRequest('Destination warehouse is inactive');
+    }
+    if (dto.destinationWarehouseId === disaster.affectedWarehouseId) {
+      throw AppError.badRequest('Destination cannot be the affected warehouse itself');
     }
 
-    // Cannot redistribute from the affected warehouse itself
-    if (dto.sourceWarehouseId === disaster.affectedWarehouseId) {
-      throw AppError.badRequest('Source warehouse cannot be the same as the affected warehouse');
-    }
-
-    // Check source has enough stock
-    const currentStock = await warehouseService.computeCurrentStock(dto.sourceWarehouseId);
-    if (dto.quantityTons > currentStock) {
-      throw AppError.badRequest(
-        `Source warehouse has insufficient stock. Available: ${currentStock.toFixed(2)} tons, ` +
-        `Requested: ${dto.quantityTons} tons`
-      );
-    }
-
-    // Get current ranking score for audit trail
+    // Composite score recorded on the order for the audit trail
     const distanceKm = haversineKm(
       disaster.affectedWarehouse.latitude,
       disaster.affectedWarehouse.longitude,
-      sourceWarehouse.latitude,
-      sourceWarehouse.longitude
+      destination.latitude,
+      destination.longitude
     );
 
     const latestScore = await prisma.warehouseScore.findFirst({
-      where:   { warehouseId: dto.sourceWarehouseId },
+      where:   { warehouseId: dto.destinationWarehouseId },
       orderBy: { computedAt: 'desc' },
       select:  { reliabilityScore: true },
     });
 
-    const availableTons = Math.max(0, sourceWarehouse.capacityTons - currentStock);
+    const destStockNow = await warehouseService.computeCurrentStock(dto.destinationWarehouseId);
     const compositeScore = computeRankingScore(
       distanceKm,
-      availableTons,
-      sourceWarehouse.capacityTons,
+      Math.max(0, destination.capacityTons - destStockNow),
+      destination.capacityTons,
       latestScore?.reliabilityScore ?? 0.5
     );
 
-    // Create the redistribution order
-    const order = await prisma.redistributionOrder.create({
-      data: {
-        disasterEventId:       disasterId,
-        sourceWarehouseId:     dto.sourceWarehouseId,
-        destinationWarehouseId: disaster.affectedWarehouseId,
-        quantityTons:          dto.quantityTons,
-        compositeScore,
-        issuedById:            caller.sub,
-      },
-      include: { 
-        sourceWarehouse:      { select: { id: true, name: true, code: true, district: true } },
-        destinationWarehouse: { select: { id: true, name: true, code: true, district: true } },
-        issuedBy:             { select: { id: true, fullName: true, role: true } },
-        disasterEvent:        { select: { id: true, disasterType: true, status: true } },
-      },
+    const timestamp = new Date();
+
+    // The order, both stock legs and the status change commit together.
+    // A partial failure would otherwise leave stock existing in neither
+    // warehouse, or in both.
+    const order = await prisma.$transaction(async (tx) => {
+
+      // Lock both warehouse rows in a deterministic order so two concurrent
+      // orders involving the same pair cannot deadlock.
+      const [firstId, secondId] =
+        [disaster.affectedWarehouseId, dto.destinationWarehouseId].sort();
+      await tx.$queryRaw`SELECT id FROM warehouses WHERE id = ${firstId} FOR UPDATE`;
+      await tx.$queryRaw`SELECT id FROM warehouses WHERE id = ${secondId} FOR UPDATE`;
+
+      const stockOf = async (warehouseId: string) => {
+        const [inflow, outflow] = await Promise.all([
+          tx.stockEvent.aggregate({
+            where: { warehouseId, eventType: 'INFLOW' },
+            _sum:  { quantityTons: true },
+          }),
+          tx.stockEvent.aggregate({
+            where: {
+              warehouseId,
+              eventType: { in: ['OUTFLOW', 'REDISTRIBUTION', 'DAMAGE', 'ADJUSTMENT'] },
+            },
+            _sum: { quantityTons: true },
+          }),
+        ]);
+        return Math.max(0,
+          (inflow._sum.quantityTons ?? 0) - (outflow._sum.quantityTons ?? 0));
+      };
+
+      // The affected warehouse must hold the stock being evacuated
+      const affectedStock = await stockOf(disaster.affectedWarehouseId);
+      if (dto.quantityTons > affectedStock) {
+        throw AppError.badRequest(
+          `Affected warehouse holds only ${affectedStock.toFixed(2)} tons. ` +
+          `Cannot evacuate ${dto.quantityTons} tons.`
+        );
+      }
+
+      // The destination must have room for it
+      const destStock = await stockOf(dto.destinationWarehouseId);
+      const destFree  = Math.max(0, destination.capacityTons - destStock);
+      if (dto.quantityTons > destFree) {
+        throw AppError.badRequest(
+          `Destination warehouse has only ${destFree.toFixed(2)} tons of free capacity. ` +
+          `Cannot receive ${dto.quantityTons} tons.`
+        );
+      }
+
+      const created = await tx.redistributionOrder.create({
+        data: {
+          disasterEventId:        disasterId,
+          sourceWarehouseId:      disaster.affectedWarehouseId,   // evacuating FROM
+          destinationWarehouseId: dto.destinationWarehouseId,     // evacuating TO
+          quantityTons:           dto.quantityTons,
+          compositeScore,
+          issuedById:             caller.sub,
+        },
+        include: {
+          sourceWarehouse:      { select: { id: true, name: true, code: true, district: true } },
+          destinationWarehouse: { select: { id: true, name: true, code: true, district: true } },
+          issuedBy:             { select: { id: true, fullName: true, role: true } },
+          disasterEvent:        { select: { id: true, disasterType: true, status: true } },
+        },
+      });
+
+      // Outbound leg — reduces stock at the affected warehouse
+      await tx.stockEvent.create({
+        data: {
+          warehouseId:  disaster.affectedWarehouseId,
+          eventType:    'REDISTRIBUTION',
+          quantityTons: dto.quantityTons,
+          notes:        `Evacuation order ${created.id} → ${destination.code}`,
+          documentHash: computeStockEventHash({
+            warehouseId:  disaster.affectedWarehouseId,
+            eventType:    'REDISTRIBUTION',
+            quantityTons: dto.quantityTons,
+            reportedById: caller.sub,
+            timestamp,
+          }),
+          reportedById: caller.sub,
+          timestamp,
+        },
+      });
+
+      // Inbound leg — increases stock at the receiving warehouse
+      await tx.stockEvent.create({
+        data: {
+          warehouseId:  dto.destinationWarehouseId,
+          eventType:    'INFLOW',
+          quantityTons: dto.quantityTons,
+          notes:        `Received via evacuation order ${created.id}`,
+          documentHash: computeStockEventHash({
+            warehouseId:  dto.destinationWarehouseId,
+            eventType:    'INFLOW',
+            quantityTons: dto.quantityTons,
+            reportedById: caller.sub,
+            timestamp,
+          }),
+          reportedById: caller.sub,
+          timestamp,
+        },
+      });
+
+      if (disaster.status === DisasterStatus.OPEN) {
+        await tx.disasterEvent.update({
+          where: { id: disasterId },
+          data:  { status: DisasterStatus.IN_PROGRESS },
+        });
+      }
+
+      return created;
     });
 
+    // Anchor after the transaction commits — never hold a database
+    // transaction open across a network call to the ledger.
     try {
-  await fabricService.issueRedistributionOrder({
-    id:                     order.id,
-    disasterEventId:        disasterId,
-    sourceWarehouseId:      dto.sourceWarehouseId,
-    destinationWarehouseId: disaster.affectedWarehouseId,
-    quantityTons:           dto.quantityTons,
-    compositeScore:         compositeScore,
-    issuedById:             caller.sub,
-  });
-  await prisma.redistributionOrder.update({
-    where: { id: order.id },
-    data:  { blockchainTxId: `fabric:${order.id}` },
-  });
-  console.log(`[Fabric] Redistribution order anchored: ${order.id}`);
-} catch (fabricErr) {
-  console.error('[Fabric] Failed to anchor redistribution order:', fabricErr);
-}
-
-    // Auto-advance disaster to IN_PROGRESS if still OPEN
-    if (disaster.status === DisasterStatus.OPEN) {
-      await prisma.disasterEvent.update({
-        where: { id: disasterId },
-        data:  { status: DisasterStatus.IN_PROGRESS },
+      await fabricService.issueRedistributionOrder({
+        id:                     order.id,
+        disasterEventId:        disasterId,
+        sourceWarehouseId:      disaster.affectedWarehouseId,
+        destinationWarehouseId: dto.destinationWarehouseId,
+        quantityTons:           dto.quantityTons,
+        compositeScore,
+        issuedById:             caller.sub,
       });
+      await prisma.redistributionOrder.update({
+        where: { id: order.id },
+        data:  { blockchainTxId: `fabric:${order.id}` },
+      });
+      console.log(`[Fabric] Evacuation order anchored: ${order.id}`);
+    } catch (fabricErr) {
+      console.error('[Fabric] Failed to anchor evacuation order:', fabricErr);
     }
 
     return order;
   }
 
-  // ── List redistribution orders for a disaster ─────────────────
+  // ── List evacuation orders for a disaster ─────────────────────
   async listRedistributionOrders(disasterId: string) {
     await this.findOrFail(disasterId);
 
@@ -358,7 +445,6 @@ export class DisasterService {
 
     if (!disaster) throw AppError.notFound('Disaster event not found');
 
-    // Build a chronological event timeline
     const timeline: AuditEntry[] = [];
 
     // 1. Disaster reported
@@ -374,13 +460,13 @@ export class DisasterService {
       },
     });
 
-    // 2. ZKP proofs (Phase 4 — blockchain verification)
+    // 2. ZKP capacity proofs submitted by candidate recipients
     for (const proof of disaster.zkpProofs) {
       timeline.push({
         eventType:   'ZKP_PROOF_SUBMITTED',
         timestamp:   proof.submittedAt,
         actor:       `Warehouse ${proof.warehouseId}`,
-        description: `Capacity proof submitted — verification: ${proof.verificationResult ?? 'pending'}`,
+        description: `Free-capacity proof submitted — verification: ${proof.verificationResult ?? 'pending'}`,
         metadata:    {
           warehouseId:        proof.warehouseId,
           verificationResult: proof.verificationResult,
@@ -389,13 +475,13 @@ export class DisasterService {
       });
     }
 
-    // 3. Redistribution orders issued
+    // 3. Evacuation orders issued
     for (const order of disaster.redistributionOrders) {
       timeline.push({
         eventType:   'REDISTRIBUTION_ORDER_ISSUED',
         timestamp:   order.issuedAt,
         actor:       order.issuedBy.fullName,
-        description: `${order.quantityTons} tons ordered from ${order.sourceWarehouse.name} → ${order.destinationWarehouse.name}`,
+        description: `${order.quantityTons} tons evacuated from ${order.sourceWarehouse.name} → ${order.destinationWarehouse.name}`,
         metadata:    {
           sourceWarehouse:      order.sourceWarehouse.name,
           destinationWarehouse: order.destinationWarehouse.name,
@@ -406,7 +492,7 @@ export class DisasterService {
       });
     }
 
-    // 4. Status changes implied by resolvedAt
+    // 4. Resolution
     if (disaster.resolvedAt) {
       timeline.push({
         eventType:   'DISASTER_RESOLVED',
@@ -417,19 +503,18 @@ export class DisasterService {
       });
     }
 
-    // Sort chronologically
     timeline.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
 
     return {
       disaster: {
-        id:           disaster.id,
-        disasterType: disaster.disasterType,
-        status:       disaster.status,
-        occurredAt:   disaster.occurredAt,
-        resolvedAt:   disaster.resolvedAt,
+        id:             disaster.id,
+        disasterType:   disaster.disasterType,
+        status:         disaster.status,
+        occurredAt:     disaster.occurredAt,
+        resolvedAt:     disaster.resolvedAt,
         affectedWarehouse: disaster.affectedWarehouse,
-        reportedBy:   disaster.reportedBy,
-        blockchainTxId: disaster.blockchainTxId, // null until Phase 4
+        reportedBy:     disaster.reportedBy,
+        blockchainTxId: disaster.blockchainTxId,
       },
       summary: {
         totalRedistributionOrders: disaster.redistributionOrders.length,
@@ -444,15 +529,16 @@ export class DisasterService {
     };
   }
 
-  // ── Private: rank candidate warehouses ───────────────────────
+  // ── Private: rank candidate recipient warehouses ─────────────
   private async rankCandidateWarehouses(
     affectedWarehouseId: string,
     affectedLat: number,
     affectedLon: number,
-    requiredTons: number,
-    disasterId: string 
+    tonsToEvacuate: number,
+    disasterId: string
   ): Promise<RankedWarehouse[]> {
-    // Get all active warehouses except the affected one
+    // The affected warehouse is excluded because it is the SOURCE of the
+    // evacuation, not a candidate recipient.
     const candidates = await prisma.warehouse.findMany({
       where: {
         isActive: true,
@@ -474,15 +560,20 @@ export class DisasterService {
         const distanceKm     = haversineKm(affectedLat, affectedLon, wh.latitude, wh.longitude);
         const reliability    = wh.gnnScores[0]?.reliabilityScore ?? 0.5;
         const compositeScore = computeRankingScore(distanceKm, availableTons, wh.capacityTons, reliability);
-        const canFulfil      = availableTons >= requiredTons;
 
-const zkpProof = await prisma.zKPProof.findFirst({
-  where: {
-    warehouseId:        wh.id,
-    disasterEventId:    disasterId, // pass disasterId through
-    verificationResult: true,
-  },
-});
+        // canFulfil means "can absorb the entire evacuation on its own".
+        // A warehouse that cannot is still useful for a partial evacuation,
+        // which canAbsorbTons quantifies.
+        const canFulfil     = availableTons >= tonsToEvacuate;
+        const canAbsorbTons = Math.min(availableTons, tonsToEvacuate);
+
+        const zkpProof = await prisma.zKPProof.findFirst({
+          where: {
+            warehouseId:        wh.id,
+            disasterEventId:    disasterId,
+            verificationResult: true,
+          },
+        });
 
         return {
           warehouseId:      wh.id,
@@ -498,14 +589,14 @@ const zkpProof = await prisma.zKPProof.findFirst({
           reliabilityScore: reliability,
           compositeScore:   Math.round(compositeScore * 1000) / 1000,
           canFulfil,
-          // zkpVerified:      false,
+          canAbsorbTons,
           zkpVerified:      !!zkpProof,
-
         };
       })
     );
 
-    // Sort by composite score descending; eligible warehouses first
+    // Warehouses that can absorb the whole evacuation rank first,
+    // then by composite score descending.
     return ranked.sort((a, b) => {
       if (a.canFulfil !== b.canFulfil) return a.canFulfil ? -1 : 1;
       return b.compositeScore - a.compositeScore;
@@ -542,6 +633,7 @@ type RankedWarehouse = {
   reliabilityScore: number;
   compositeScore:   number;
   canFulfil:        boolean;
+  canAbsorbTons:    number;
   zkpVerified:      boolean;
 };
 

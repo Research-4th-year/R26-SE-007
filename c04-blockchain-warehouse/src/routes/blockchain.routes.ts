@@ -1,8 +1,10 @@
 import { Router, Request, Response, NextFunction } from 'express';
-import { authenticate, allStaff, adminOrRM } from '../middleware/auth.middleware';
+import { authenticate, allStaff } from '../middleware/auth.middleware';
 import { sendSuccess, AppError } from '../utils/errors';
 import * as fabricService from '../services/fabric.service';
+import { config } from '../config/env';
 import { prisma } from '../config/prisma';
+import { computeStockEventHash } from '../utils/eventHash';
 
 const router = Router();
 
@@ -32,19 +34,30 @@ router.get(
 
       if (!dbRecord) throw AppError.notFound('Stock event not found in database');
 
-      // Try ledger — gracefully handle events not yet anchored
-      let ledgerRecord = null;
-      let blockchainAnchored = !!dbRecord.blockchainTxId;
-      let hashMatch = false;
+      // Recompute from the stored row. This is what detects direct
+      // modification of event data in MySQL — the stored hash alone
+      // proves nothing, since an attacker editing the row could edit it too.
+      const recomputedHash = computeStockEventHash({
+        warehouseId:  dbRecord.warehouseId,
+        eventType:    dbRecord.eventType,
+        quantityTons: dbRecord.quantityTons,
+        reportedById: dbRecord.reportedById,
+        timestamp:    dbRecord.timestamp,
+      });
+      const databaseIntact = recomputedHash === dbRecord.documentHash;
 
-      if (blockchainAnchored) {
+      const anchoredInDb = !!dbRecord.blockchainTxId;
+
+      let ledgerRecord    = null;
+      let ledgerAvailable = config.fabric.enabled;
+      let ledgerMatch     = false;
+
+      if (anchoredInDb && config.fabric.enabled) {
         try {
           ledgerRecord = await fabricService.queryStockEvent(req.params.eventId);
-          hashMatch = dbRecord.documentHash === (ledgerRecord as any).documentHash;
+          ledgerMatch  = dbRecord.documentHash === (ledgerRecord as any).documentHash;
         } catch {
-          // Event has a txId in DB but isn't found on ledger
-          // This can happen after network restart — ledger was wiped
-          blockchainAnchored = false;
+          ledgerAvailable = false;
         }
       }
 
@@ -52,13 +65,21 @@ router.get(
         ledger:   ledgerRecord,
         database: dbRecord,
         integrity: {
-          hashMatch,
-          blockchainAnchored,
-          message: !blockchainAnchored
-            ? 'Event not yet anchored on blockchain'
-            : hashMatch
-            ? 'Document hash matches ledger record → data integrity confirmed'
-            : 'WARNING: Document hash mismatch → possible tampering detected',
+          databaseIntact,
+          ledgerMatch,
+          anchoredInDb,
+          ledgerAvailable,
+          recomputedHash,
+          storedHash: dbRecord.documentHash,
+          message: !databaseIntact
+            ? 'WARNING: Recomputed hash does not match stored hash — event data was modified in the database'
+            : !anchoredInDb
+            ? 'Event data intact, but not anchored on the ledger'
+            : !ledgerAvailable
+            ? 'Event data intact; ledger unreachable so the anchor could not be confirmed'
+            : ledgerMatch
+            ? 'Event data intact and matches ledger record — integrity confirmed'
+            : 'WARNING: Stored hash differs from ledger — the hash column was modified',
         },
       });
     } catch (err) {
@@ -84,12 +105,26 @@ router.get(
 
       if (!warehouse) throw AppError.notFound('Warehouse not found');
 
-      const ledgerHistory = await fabricService.queryWarehouseHistory(req.params.warehouseId);
+      let ledgerHistory: any[] = [];
+      let ledgerAvailable = config.fabric.enabled;
+
+      if (config.fabric.enabled) {
+        try {
+          const result = await fabricService.queryWarehouseHistory(req.params.warehouseId);
+          ledgerHistory = Array.isArray(result) ? result : [];
+        } catch {
+          ledgerAvailable = false;
+        }
+      }
 
       sendSuccess(res, {
         warehouse,
-        totalOnChain: Array.isArray(ledgerHistory) ? ledgerHistory.length : 0,
+        ledgerAvailable,
+        totalOnChain: ledgerHistory.length,
         events:       ledgerHistory,
+        message: ledgerAvailable
+          ? undefined
+          : 'Ledger unavailable — on-chain history cannot be retrieved',
       });
     } catch (err) {
       next(err);
@@ -120,15 +155,16 @@ router.get(
 
       if (!dbRecord) throw AppError.notFound('Disaster event not found in database');
 
-      // Try ledger — gracefully handle records not found (e.g. after network restart)
-      let ledgerRecord = null;
-      let blockchainAnchored = !!dbRecord.blockchainTxId;
+      const anchoredInDb = !!dbRecord.blockchainTxId;
 
-      if (blockchainAnchored) {
+      let ledgerRecord    = null;
+      let ledgerAvailable = config.fabric.enabled;
+
+      if (anchoredInDb && config.fabric.enabled) {
         try {
           ledgerRecord = await fabricService.queryDisasterEvent(req.params.disasterId);
         } catch {
-          blockchainAnchored = false;
+          ledgerAvailable = false;
         }
       }
 
@@ -136,10 +172,13 @@ router.get(
         ledger:   ledgerRecord,
         database: dbRecord,
         integrity: {
-          blockchainAnchored,
-          mspId: blockchainAnchored ? (ledgerRecord as any)?.reportedByMsp : null,
-          message: !blockchainAnchored
-            ? 'Event not yet anchored on blockchain'
+          anchoredInDb,
+          ledgerAvailable,
+          mspId: ledgerRecord ? (ledgerRecord as any)?.reportedByMsp : null,
+          message: !anchoredInDb
+            ? 'Event not anchored on the ledger'
+            : !ledgerAvailable
+            ? 'Event is marked as anchored, but the ledger could not be reached to verify it'
             : 'Disaster event confirmed on ledger',
         },
       });
@@ -178,8 +217,18 @@ router.get(
 
       if (!dbDisaster) throw AppError.notFound('Disaster event not found');
 
-      // Pull full audit trail from ledger
-      const ledgerAudit = await fabricService.queryDisasterAuditTrail(req.params.disasterId);
+      // Pull the full audit trail from the ledger, degrading gracefully
+      // when the ledger is disabled or unreachable.
+      let ledgerAudit: any = null;
+      let ledgerAvailable  = config.fabric.enabled;
+
+      if (config.fabric.enabled) {
+        try {
+          ledgerAudit = await fabricService.queryDisasterAuditTrail(req.params.disasterId);
+        } catch {
+          ledgerAvailable = false;
+        }
+      }
 
       // Build combined response — DB for rich relational data,
       // ledger for tamper-proof proof of what happened
@@ -195,7 +244,8 @@ router.get(
           totalQuantityRedistributed: dbDisaster.redistributionOrders.reduce(
             (sum, o) => sum + o.quantityTons, 0
           ),
-          blockchainAnchored: !!dbDisaster.blockchainTxId,
+          anchoredInDb:    !!dbDisaster.blockchainTxId,
+          ledgerAvailable,
         },
         ledger:   ledgerAudit,
         database: {
@@ -235,14 +285,16 @@ router.get(
 
       if (!dbRecord) throw AppError.notFound('Redistribution order not found in database');
 
-      let ledgerRecord = null;
-      let blockchainAnchored = !!dbRecord.blockchainTxId;
+      const anchoredInDb = !!dbRecord.blockchainTxId;
 
-      if (blockchainAnchored) {
+      let ledgerRecord    = null;
+      let ledgerAvailable = config.fabric.enabled;
+
+      if (anchoredInDb && config.fabric.enabled) {
         try {
           ledgerRecord = await fabricService.queryRedistributionOrder(req.params.orderId);
         } catch {
-          blockchainAnchored = false;
+          ledgerAvailable = false;
         }
       }
 
@@ -250,11 +302,14 @@ router.get(
         ledger:   ledgerRecord,
         database: dbRecord,
         integrity: {
-          blockchainAnchored,
-          rmSignature: blockchainAnchored ? (ledgerRecord as any)?.rmSignature : null,
-          issuedByMsp: blockchainAnchored ? (ledgerRecord as any)?.issuedByMsp : null,
-          message: !blockchainAnchored
-            ? 'Order not yet anchored on blockchain'
+          anchoredInDb,
+          ledgerAvailable,
+          rmSignature: ledgerRecord ? (ledgerRecord as any)?.rmSignature : null,
+          issuedByMsp: ledgerRecord ? (ledgerRecord as any)?.issuedByMsp : null,
+          message: !anchoredInDb
+            ? 'Order not anchored on the ledger'
+            : !ledgerAvailable
+            ? 'Order is marked as anchored, but the ledger could not be reached to verify it'
             : 'Redistribution order confirmed on ledger',
         },
       });
@@ -270,14 +325,16 @@ router.get(
 
 /**
  * GET /api/blockchain/status
- * Admin / RM — check if the Fabric network is reachable.
+ * All staff — report ledger configuration and anchoring counts.
+ *
+ * Note: the counts come from the application database, not the ledger.
+ * They record how many entities were successfully anchored at write time.
  */
 router.get(
   '/status',
   allStaff,
   async (_req: Request, res: Response, next: NextFunction) => {
     try {
-      // Count anchored records in DB
       const [stockEvents, disasters, orders] = await Promise.all([
         prisma.stockEvent.count({ where: { blockchainTxId: { not: null } } }),
         prisma.disasterEvent.count({ where: { blockchainTxId: { not: null } } }),
@@ -285,9 +342,9 @@ router.get(
       ]);
 
       sendSuccess(res, {
-        network:  'warehousechannel',
-        chaincode: 'warehousecc',
-        status:   'connected',
+        network:   config.fabric.channelName,
+        chaincode: config.fabric.chaincodeName,
+        status:    config.fabric.enabled ? 'enabled' : 'ledger_disabled',
         anchored: {
           stockEvents,
           disasters,

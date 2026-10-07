@@ -2,7 +2,7 @@ import torch
 import numpy as np
 from torch_geometric.data import HeteroData
 from .database import fetch_all
-
+from .features import compute_features
 
 async def build_warehouse_graph() -> tuple[HeteroData, list[str]]:
     """
@@ -71,39 +71,14 @@ async def build_warehouse_graph() -> tuple[HeteroData, list[str]]:
     for wh in warehouses:
         i = warehouse_idx[wh['id']]
         wh_events = [e for e in events if e['warehouseId'] == wh['id']]
-
-        total = len(wh_events)
-        if total > 0:
-            inflows  = sum(1 for e in wh_events if e['eventType'] == 'INFLOW')
-            damages  = sum(1 for e in wh_events if e['eventType'] == 'DAMAGE')
-            avg_qty  = sum(float(e['quantityTons']) for e in wh_events) / total
-
-            # Event frequency: events per day since warehouse creation
-            from datetime import datetime, timezone
-            now = datetime.now(timezone.utc)
-            created = wh['createdAt']
-            if hasattr(created, 'replace'):
-                created = created.replace(tzinfo=timezone.utc) if created.tzinfo is None else created
-            days_active = max(1, (now - created).days)
-
-            features[i, 0] = min(total / 100.0, 1.0)               # total_events (normalised)
-            features[i, 1] = inflows / total                        # inflow_ratio
-            features[i, 2] = damages / total                        # damage_ratio
-            features[i, 4] = min(avg_qty / 500.0, 1.0)             # avg_quantity (normalised)
-            features[i, 5] = min(total / days_active / 10.0, 1.0)  # event_frequency
-
-        # Utilization from capacity
-        capacity = float(wh['capacityTons']) if wh['capacityTons'] else 1.0
-        inflow_total   = sum(float(e['quantityTons']) for e in wh_events if e['eventType'] == 'INFLOW')
-        outflow_total  = sum(float(e['quantityTons']) for e in wh_events
-                            if e['eventType'] in ('OUTFLOW', 'REDISTRIBUTION', 'DAMAGE', 'ADJUSTMENT'))
-        current_stock  = max(0.0, inflow_total - outflow_total)
-        features[i, 3] = min(current_stock / capacity, 1.0)        # utilization_pct
-
-        features[i, 6] = 1.0 if wh['id'] in disaster_set else 0.0  # has_disaster
-
         redist_count = sum(1 for o in orders if o['sourceWarehouseId'] == wh['id'])
-        features[i, 7] = min(redist_count / 10.0, 1.0)             # redistribution_count
+
+        features[i] = compute_features(
+            warehouse=wh,
+            events=wh_events,
+            redistribution_count=redist_count,
+            has_disaster=wh['id'] in disaster_set,
+        )
 
     # ── Build edges (redistribution flows) ───────────────────────
     edge_src, edge_dst = [], []
