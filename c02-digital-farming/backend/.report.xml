@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="2" failures="0" skipped="0" tests="2" time="1.643" timestamp="2026-08-31T21:56:04.508056+05:30" hostname="MacBook-Air.local"><testcase classname="" name="backend-test.unit.test_schemas" time="0.000"><error message="collection failure">ImportError while importing test module '/Users/nerandadilhara/Desktop/SLIIT/4Y1S/Research/ResearchImplementation/R26-SE-007/c02-digital-farming/backend/backend-test/unit/test_schemas.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/importlib/__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+backend-test/unit/test_schemas.py:3: in &lt;module&gt;
+    from schemas import PredictionInput, EnvironmentDataRequest, YieldPredictionInput
+E   ModuleNotFoundError: No module named 'schemas'</error></testcase><testcase classname="" name="backend-test.unit.test_services" time="0.000"><error message="collection failure">ImportError while importing test module '/Users/nerandadilhara/Desktop/SLIIT/4Y1S/Research/ResearchImplementation/R26-SE-007/c02-digital-farming/backend/backend-test/unit/test_services.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/importlib/__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+backend-test/unit/test_services.py:2: in &lt;module&gt;
+    from services.weather_service import fetch_forecast_weather
+services/weather_service.py:7: in &lt;module&gt;
+    from firebase_config import get_firebase_db
+E   ModuleNotFoundError: No module named 'firebase_config'</error></testcase></testsuite></testsuites>

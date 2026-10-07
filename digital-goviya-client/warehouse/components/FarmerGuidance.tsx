@@ -3,7 +3,6 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useLanguage } from '../contexts/LanguageContext';
 import { translations } from '../i18n';
 import { generateCropTimeline } from '../utils/cropGuidance';
-import { Ionicons } from '@expo/vector-icons';
 
 interface FarmerGuidanceProps {
   variety: string;
@@ -27,20 +26,14 @@ export default function FarmerGuidance({ variety, ageGroup, zone, irrigation, cu
   if (!guidanceData) return null;
 
   const toggleStage = (id: number) => {
-    if (expandedStage === id) {
-      setExpandedStage(null);
-    } else {
-      setExpandedStage(id);
-    }
+    setExpandedStage(expandedStage === id ? null : id);
   };
 
   return (
     <View style={styles.container}>
       <View style={styles.card}>
         <View style={styles.header}>
-          <View style={styles.iconBox}>
-            <Text style={{ fontSize: 24 }}>🌾</Text>
-          </View>
+          <View style={styles.iconBox} />
           <View style={styles.headerTextContainer}>
             <Text style={styles.title}>{t.title}</Text>
             <Text style={styles.subtitle}>{t.subtitle}</Text>
@@ -49,7 +42,7 @@ export default function FarmerGuidance({ variety, ageGroup, zone, irrigation, cu
 
         <View style={styles.infoBox}>
           <Text style={styles.infoText}>
-            {t.infoPart1}<Text style={styles.boldGreen}>{guidanceData.variety}</Text>{t.infoPart2}<Text style={styles.boldGreen}>{guidanceData.ageGroup}</Text> 
+            {t.infoPart1}<Text style={styles.boldGreen}>{guidanceData.variety}</Text>{t.infoPart2}<Text style={styles.boldGreen}>{guidanceData.ageGroup}</Text>
             {t.infoPart3}<Text style={styles.boldGreen}>{guidanceData.zone}</Text> ({guidanceData.irrigation}).
           </Text>
         </View>
@@ -58,50 +51,38 @@ export default function FarmerGuidance({ variety, ageGroup, zone, irrigation, cu
           {guidanceData.stages.map((stage: any) => {
             const isExpanded = expandedStage === stage.id;
             return (
-              <TouchableOpacity 
-                key={stage.id} 
-                style={[styles.stageBox, isExpanded && styles.stageBoxExpanded]} 
+              <TouchableOpacity
+                key={stage.id}
+                style={[styles.stageBox, isExpanded && styles.stageBoxExpanded]}
                 onPress={() => toggleStage(stage.id)}
                 activeOpacity={0.8}
               >
                 <View style={styles.stageHeader}>
-                  <Text style={styles.stageTitle}>
-                    <Text>{stage.icon} </Text>
-                    {stage.title}
-                  </Text>
+                  <Text style={styles.stageTitle}>{stage.title}</Text>
                   <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                     <View style={[styles.dateBadge, isExpanded && styles.dateBadgeExpanded]}>
                       <Text style={[styles.dateText, isExpanded && styles.dateTextExpanded]}>{stage.date}</Text>
                     </View>
-                    <Ionicons 
-                      name={isExpanded ? "chevron-up" : "chevron-down"} 
-                      size={20} 
-                      color={isExpanded ? "#10B981" : "#94A3B8"} 
-                      style={{ marginLeft: 5 }}
-                    />
                   </View>
                 </View>
 
                 {isExpanded && (
                   <View style={styles.stageContent}>
-                    {/* Activities */}
                     <View style={[styles.contentBlock, { backgroundColor: '#EFF6FF', borderColor: '#BFDBFE' }]}>
-                      <Text style={[styles.blockTitle, { color: '#1D4ED8' }]}>⚙️ {t.action}:</Text>
+                      <Text style={[styles.blockTitle, { color: '#1D4ED8' }]}>{t.action}:</Text>
                       {stage.activities.map((act: string, i: number) => (
                         <Text key={i} style={[styles.blockText, { color: '#1E3A8A' }]}>• {act}</Text>
                       ))}
                     </View>
 
-                    {/* Water */}
                     <View style={[styles.contentBlock, { backgroundColor: '#F0F9FF', borderColor: '#BAE6FD' }]}>
-                      <Text style={[styles.blockTitle, { color: '#0369A1' }]}>💧 {t.water}:</Text>
+                      <Text style={[styles.blockTitle, { color: '#0369A1' }]}>{t.water}:</Text>
                       <Text style={[styles.blockText, { color: '#0C4A6E' }]}>{stage.water}</Text>
                     </View>
 
-                    {/* Fertilizers */}
                     {stage.fertilizers.length > 0 && (
                       <View style={[styles.contentBlock, { backgroundColor: '#FEF3C7', borderColor: '#FDE68A' }]}>
-                        <Text style={[styles.blockTitle, { color: '#B45309' }]}>🧪 {t.fertilizer}:</Text>
+                        <Text style={[styles.blockTitle, { color: '#B45309' }]}>{t.fertilizer}:</Text>
                         {stage.fertilizers.map((fert: any, i: number) => (
                           <Text key={i} style={[styles.blockText, { color: '#78350F' }]}>
                             <Text style={{ fontWeight: 'bold' }}>{fert.type}</Text>: {fert.quantity}
@@ -110,10 +91,9 @@ export default function FarmerGuidance({ variety, ageGroup, zone, irrigation, cu
                       </View>
                     )}
 
-                    {/* Warnings */}
                     {stage.warnings.length > 0 && (
                       <View style={[styles.contentBlock, { backgroundColor: '#FEF2F2', borderColor: '#FECACA' }]}>
-                        <Text style={[styles.blockTitle, { color: '#B91C1C' }]}>⚠️ {t.warning}:</Text>
+                        <Text style={[styles.blockTitle, { color: '#B91C1C' }]}>{t.warning}:</Text>
                         {stage.warnings.map((warn: string, i: number) => (
                           <Text key={i} style={[styles.blockText, { color: '#7F1D1D' }]}>• {warn}</Text>
                         ))}
@@ -138,7 +118,7 @@ const styles = StyleSheet.create({
   container: { marginTop: 20 },
   card: { backgroundColor: '#F0FDF4', borderRadius: 16, borderWidth: 1, borderColor: '#BBF7D0', padding: 20, shadowColor: '#10B981', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 6, elevation: 3 },
   header: { flexDirection: 'row', alignItems: 'center', marginBottom: 20, borderBottomWidth: 1, borderBottomColor: 'rgba(16,185,129,0.2)', paddingBottom: 15 },
-  iconBox: { backgroundColor: '#D1FAE5', padding: 12, borderRadius: 12, marginRight: 15 },
+  iconBox: { width: 48, height: 48, backgroundColor: '#D1FAE5', borderRadius: 12, marginRight: 15 },
   headerTextContainer: { flex: 1 },
   title: { fontSize: 18, fontFamily: 'Poppins_700Bold', color: '#065F46' },
   subtitle: { fontSize: 13, fontFamily: 'Poppins_500Medium', color: '#059669' },
@@ -161,3 +141,4 @@ const styles = StyleSheet.create({
   sourceBox: { marginTop: 20, padding: 10, backgroundColor: '#F1F5F9', borderRadius: 8, borderWidth: 1, borderColor: '#E2E8F0' },
   sourceText: { fontSize: 11, color: '#475569', fontFamily: 'Poppins_400Regular' }
 });
+

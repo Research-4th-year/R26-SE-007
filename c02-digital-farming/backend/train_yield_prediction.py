@@ -14,7 +14,7 @@ import glob
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, '..', 'dataset', 'Yield-Prediction')
 MODEL_DIR = os.path.join(BASE_DIR, 'models')
-VARIETY_FILE = os.path.join(BASE_DIR, '..', 'dataset', 'SL_Rice_Varietal_CategoryBased_Dataset.csv')
+VARIETY_FILE = os.path.join(BASE_DIR, '..', 'dataset', 'RiceVarietal_Category.csv')
 
 def clean_numeric(val):
     if pd.isna(val) or val == '-':
@@ -112,7 +112,7 @@ def load_and_preprocess_data():
         X[col] = le.fit_transform(X[col])
         encoders[col] = le
 
-    # Scale features
+    # Scale features - create to same range all the values
     scaler = StandardScaler()
     X_scaled = scaler.fit_transform(X)
 

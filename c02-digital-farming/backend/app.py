@@ -1,9 +1,9 @@
 # pyrefly: ignore [missing-import]
 from fastapi import FastAPI, HTTPException, File, UploadFile
 # pyrefly: ignore [missing-import]
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.cors import CORSMiddleware # Allow requests from any frontend domains
 # pyrefly: ignore [missing-import]
-from pydantic import BaseModel
+from pydantic import BaseModel # For Data validation
 # pyrefly: ignore [missing-import]
 import joblib
 import pandas as pd
@@ -80,7 +80,7 @@ def load_resources():
     
     time.sleep(0.3)
     print(f"\n{C_BLUE}[STEP 2/3]{C_END} Caching Rice Category Dataset...")
-    category_path = os.path.join(os.path.dirname(__file__), '..', 'dataset', 'SL_Rice_Varietal_CategoryBased_Dataset.csv')
+    category_path = os.path.join(os.path.dirname(__file__), '..', 'dataset', 'RiceVarietal_Category.csv')
     try:
         category_data = pd.read_csv(category_path)
         category_data.set_index('Variety_Code', inplace=True)
@@ -106,7 +106,7 @@ def predict_yield_type(input_data: PredictionInput):
         raise HTTPException(status_code=500, detail="Model is not loaded. Please train the model first.")
         
     # Convert input to DataFrame for prediction
-    input_df = pd.DataFrame([input_data.dict()])
+    input_df = pd.DataFrame([input_data.model_dump()])
     
     try:
         # Predict the Variety Code
@@ -118,8 +118,10 @@ def predict_yield_type(input_data: PredictionInput):
         
         # Enrich response with category details if available
         if category_data is not None and prediction in category_data.index:
-            details = category_data.loc[prediction].to_dict()
-            response["details"] = details
+            details = category_data.loc[prediction]
+            if isinstance(details, pd.DataFrame):
+                details = details.iloc[0]
+            response["details"] = details.to_dict()
             
         return response
     except Exception as e:
@@ -304,7 +306,7 @@ def predict_disease(file: UploadFile = File(...)):
         if image.mode != 'RGB':
             image = image.convert('RGB')
             
-        # Resize to 224x224 for MobileNetV2
+        # Resize to 224x224 (Standard for ResNet50 and other ImageNet models)
         image = image.resize((224, 224))
         img_array = keras.preprocessing.image.img_to_array(image)
         img_array = tf.expand_dims(img_array, 0) # Create batch axis
@@ -328,8 +330,9 @@ def predict_disease(file: UploadFile = File(...)):
             score = tf.nn.softmax(score)
 
         max_confidence = float(tf.reduce_max(score))
-        predicted_class_index = int(tf.argmax(score))
-        predicted_class = disease_class_names[predicted_class_index]
+        predicted_class_index = int(np.argmax(score))
+        disease_names = disease_class_names or ["Bacterial leaf blight", "Brown spot", "Leaf smut"]
+        predicted_class = disease_names[predicted_class_index] if predicted_class_index < len(disease_names) else "Unknown"
         
         # Safety net: Models with few classes often output 60-80% confidence for random noise.
         # A higher threshold (e.g., 85%) ensures unrelated images are classified as "Another Type".
@@ -410,7 +413,7 @@ class FarmerProfile(BaseModel):
 def save_history(item: AdvisoryHistoryItem):
     try:
         # Save to Firebase under advisory_history category
-        result = save_user_history(item.user_id, "advisory_history", item.dict())
+        result = save_user_history(item.user_id, "advisory_history", item.model_dump())
         if result:
             return {"message": "Saved successfully", "id": result.get("id")}
         raise HTTPException(status_code=500, detail="Failed to save to Firebase")
@@ -449,7 +452,7 @@ def get_profile(user_id: str):
 @app.post("/api/profile")
 def save_profile(profile: FarmerProfile):
     try:
-        result = save_farmer_profile(profile.user_id, profile.dict())
+        result = save_farmer_profile(profile.user_id, profile.model_dump())
         if result:
             return {"message": "Profile saved successfully"}
         raise HTTPException(status_code=500, detail="Failed to save profile")
@@ -481,7 +484,7 @@ class YieldHistoryItem(BaseModel):
 @app.post("/api/yield_history")
 def save_yield_history(item: YieldHistoryItem):
     try:
-        result = save_user_history(item.user_id, "yield_history", item.dict())
+        result = save_user_history(item.user_id, "yield_history", item.model_dump())
         if result:
             return {"message": "Yield history saved successfully"}
         raise HTTPException(status_code=500, detail="Failed to save yield history")
@@ -517,7 +520,7 @@ class DiseaseHistoryItem(BaseModel):
 @app.post("/api/disease_history")
 def save_disease_history(item: DiseaseHistoryItem):
     try:
-        result = save_user_history(item.user_id, "disease_history", item.dict())
+        result = save_user_history(item.user_id, "disease_history", item.model_dump())
         if result:
             return {"message": "Disease history saved successfully"}
         raise HTTPException(status_code=500, detail="Failed to save disease history")
@@ -557,7 +560,7 @@ class FertilizerHistoryItem(BaseModel):
 @app.post("/api/fertilizer_history")
 def save_fertilizer_history(item: FertilizerHistoryItem):
     try:
-        result = save_user_history(item.user_id, "fertilizer_history", item.dict())
+        result = save_user_history(item.user_id, "fertilizer_history", item.model_dump())
         if result:
             return {"message": "Fertilizer history saved successfully"}
         raise HTTPException(status_code=500, detail="Failed to save fertilizer history")

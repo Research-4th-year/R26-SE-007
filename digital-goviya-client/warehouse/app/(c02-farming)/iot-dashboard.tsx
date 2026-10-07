@@ -300,7 +300,7 @@ export default function IoTDashboardScreen() {
         </View>
 
         {/* Section: Small Sensor Metrics (NPK, pH) */}
-        <Text style={styles.sectionTitle}>{t.soilNutrients}</Text>
+        {/* <Text style={styles.sectionTitle}>{t.soilNutrients}</Text>
         <View style={styles.secondaryGrid}>
           {SECONDARY_SENSORS.map((config) => {
             const val = sensorData?.[config.key];
@@ -319,7 +319,7 @@ export default function IoTDashboardScreen() {
               </Pressable>
             );
           })}
-        </View>
+        </View> */}
       </ScrollView>
 
       {/* ── Modal: ESP32 Hardware Details ── */}

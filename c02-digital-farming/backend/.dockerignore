@@ -1,0 +1,28 @@
+# Virtual environments
+venv/
+env/
+.env
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Testing and configuration
+.pytest_cache/
+tests/
+pytest.ini
+
+# IDE and OS files
+.DS_Store
+.vscode/
+.idea/
+
+# Local databases (don't want to copy a dirty local DB into the clean container)
+database.db
+
+# Other unneeded files
+Dockerfile
+.dockerignore

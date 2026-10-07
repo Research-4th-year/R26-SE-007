@@ -1,473 +1,574 @@
 #include <WiFi.h>
+#include <NetworkClientSecure.h>
 #include <DHT.h>
 #include <time.h>
-#include <Firebase_ESP_Client.h>
-#include "addons/TokenHelper.h"
-#include "addons/RTDBHelper.h"
+#include <ArduinoHttpClient.h>
 
 #define TINY_GSM_MODEM_A7672X
 #include <TinyGsmClient.h>
-#include <ArduinoHttpClient.h>
 
-// ================= SECRETS & CONFIGURATIONS =================
-const char* ssid     = "Redmi Note 11 Pro 5G";
-const char* password = "22222222";
+// Wi-Fi
+#define WIFI_SSID "Redmi Note 11 Pro 5G"
+#define WIFI_PASSWORD "22222222"
 
-#define API_KEY          "AIzaSyBqs9kHOCJ5nBlRoGuWaPxuPRkBoUmXcmE"
-#define DATABASE_URL     "https://esp32-project01-1641b-default-rtdb.firebaseio.com/"
-#define FIREBASE_HOST    "esp32-project01-1641b-default-rtdb.firebaseio.com"
-#define FIREBASE_SECRET  "AIzaSyBqs9kHOCJ5nBlRoGuWaPxuPRkBoUmXcmE"
+// Firebase
+#define FIREBASE_HOST "esp32-project01-1641b-default-rtdb.firebaseio.com"
 
-// ================= 4G LTE MODEM CONFIG (A7672X) =================
-#define MODEM_RX       16
-#define MODEM_TX       17
-#define MODEM_BAUDRATE 115200
+// 4G
+#define MODEM_RX 16
+#define MODEM_TX 17
+#define MODEM_BAUD 115200
+#define APN "mobitel"
+#define GPRS_USER ""
+#define GPRS_PASS ""
 
-const char* APN       = "mobitel";
-const char* GPRS_USER = "";
-const char* GPRS_PASS = "";
+// Sensors
+#define DHTPIN 4
+#define DHTTYPE DHT22
+#define SOIL_PIN 34
+#define SOIL_DRY_RAW 3200
+#define SOIL_WET_RAW 1400
+
+#define SEND_INTERVAL 60000UL
+
+// Time
+#define NTP_SERVER "pool.ntp.org"
+#define GMT_OFFSET 19800
+#define DAYLIGHT_OFFSET 0
 
 HardwareSerial SerialAT(2);
 TinyGsm modem(SerialAT);
-
-// ================= FIREBASE HANDLES =================
-FirebaseData fbdo;
-FirebaseConfig config;
-
-// ================= SENSOR DEFINITIONS =================
-// DHT22 Temperature & Humidity Sensor
-#define DHTPIN  4
-#define DHTTYPE DHT22
 DHT dht(DHTPIN, DHTTYPE);
 
-// Analog Soil Moisture Sensor
-#define SOIL_PIN      34
-#define SOIL_DRY_RAW  3200
-#define SOIL_WET_RAW  1400
-
-// RS485 / Modbus 7-in-1 NPK Sensor
-#define NPK_RX_PIN    25
-#define NPK_TX_PIN    26
-#define NPK_DE_RE_PIN 27 // Direction Control Pin
-#define NPK_BAUDRATE  9600
-#define NPK_SLAVE_ID  1
-
-HardwareSerial SerialNPK(1);
-
-// NPK Global Variables
-float npkMoisture = 0.0, npkTemperature = 0.0, npkEC = 0.0, npkPH = 0.0;
-float nitrogen = 0.0, phosphorus = 0.0, potassium = 0.0;
-bool npkReadingValid = false;
-
-// ================= TIMING & SCHEDULING =================
-#define SEND_INTERVAL_MINUTES 1
-unsigned long sendInterval   = SEND_INTERVAL_MINUTES * 60UL * 1000UL;
 unsigned long previousMillis = 0;
 
-// ================= NTP TIME CONFIGURATION =================
-const char* ntpServer       = "pool.ntp.org";
-const long gmtOffset_sec    = 19800; // GMT+5:30
-const int daylightOffset_sec = 0;
-
-// ================= CONNECTION MODES =================
-enum ConnectionMode { CONNECTION_NONE, CONNECTION_WIFI, CONNECTION_4G };
-ConnectionMode currentConnection = CONNECTION_NONE;
-
-// ================= FUNCTION PROTOTYPES =================
 bool connectWiFi();
 bool connect4G();
-void initializeFirebase();
-void uploadSensorData();
-bool uploadViaWiFi(float t, float h, int sm, float n, float p, float k, float ph, float ec, String ts);
-bool uploadVia4G(float t, float h, int sm, float n, float p, float k, float ph, float ec, String ts);
-
-void initializeNPK();
-bool readNPKSensor();
-bool readModbusRegisters(uint8_t slaveID, uint16_t startReg, uint16_t numRegs, uint16_t* data);
-uint16_t modbusCRC16(uint8_t* buffer, uint8_t length);
-void setRS485Transmit();
-void setRS485Receive();
+bool syncTimeWiFi();
+bool syncTime4G();
+bool getModemClock(int&, int&, int&, int&, int&, int&);
+bool uploadViaWiFi(float, float, int, String);
+bool uploadVia4G(float, float, int, String);
+bool sendATCommand(String, String, unsigned long);
+void readAndUpload();
 String getTimestamp();
 
-// ================= SETUP =================
 void setup() {
-    Serial.begin(115200);
-    delay(1000);
-    Serial.println("\n--- SMART PADDY IoT SENSOR SYSTEM ---");
+  Serial.begin(115200);
+  delay(1000);
 
-    // Initialize Local Sensors
-    Serial.println("[1] Initializing sensors...");
-    dht.begin();
-    pinMode(SOIL_PIN, INPUT);
-    initializeNPK();
+  Serial.println("\n--- SMART PADDY IoT SENSOR SYSTEM ---");
 
-    // Setup Serial for 4G Modem
-    SerialAT.begin(MODEM_BAUDRATE, SERIAL_8N1, MODEM_RX, MODEM_TX);
-    delay(3000);
+  dht.begin();
+  pinMode(SOIL_PIN, INPUT);
 
-    // Network Connectivity Setup (WiFi Primary, 4G Fallback)
-    Serial.println("[2] Checking Connectivity...");
-    if (connectWiFi()) {
-        currentConnection = CONNECTION_WIFI;
-        Serial.println("\n>>> CONNECTION MODE: WIFI");
-    } else {
-        Serial.println("\nWi-Fi unavailable. Switching to 4G LTE...");
-        if (connect4G()) {
-            currentConnection = CONNECTION_4G;
-            Serial.println("\n>>> CONNECTION MODE: 4G LTE SIM");
-        } else {
-            currentConnection = CONNECTION_NONE;
-            Serial.println("\n>>> NO INTERNET CONNECTION");
-        }
-    }
+  SerialAT.begin(MODEM_BAUD, SERIAL_8N1, MODEM_RX, MODEM_TX);
+  delay(3000);
 
-    // NTP Time Sync
-    Serial.println("\n[3] Synchronizing time...");
-    configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
-    struct tm timeinfo;
-    if (getLocalTime(&timeinfo, 10000)) {
-        Serial.println("NTP Time : READY");
-    } else {
-        Serial.println("NTP Time : FAILED");
-    }
+  if (!connectWiFi()) {
+    Serial.println("Wi-Fi unavailable. Switching to 4G...");
+    if (!connect4G()) Serial.println("4G connection failed.");
+  }
 
-    // Initialize Firebase Services
-    Serial.println("\n[4] Initializing Firebase...");
-    initializeFirebase();
+  bool timeOK = WiFi.status() == WL_CONNECTED ?
+                syncTimeWiFi() : syncTime4G();
 
-    Serial.println("\n--- SYSTEM READY ---");
+  if (!timeOK && WiFi.status() != WL_CONNECTED) {
+    Serial.println("Retrying 4G time synchronization...");
+    if (connect4G()) timeOK = syncTime4G();
+  }
+
+  Serial.println(timeOK ?
+    "Time Ready: " + getTimestamp() :
+    "Time Sync Failed");
+
+  Serial.println("--- SYSTEM READY ---");
 }
 
-// ================= MAIN LOOP =================
 void loop() {
-    if (millis() - previousMillis >= sendInterval || previousMillis == 0) {
-        previousMillis = millis();
-        uploadSensorData();
-    }
-    delay(100);
+  if (previousMillis == 0 ||
+      millis() - previousMillis >= SEND_INTERVAL) {
+    previousMillis = millis();
+    readAndUpload();
+  }
+  delay(100);
 }
 
-// ================= NETWORK HELPERS =================
+// Wi-Fi connection
 bool connectWiFi() {
-    WiFi.mode(WIFI_STA);
-    WiFi.begin(ssid, password);
-    Serial.print("Connecting Wi-Fi");
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
-    unsigned long startTime = millis();
-    while (WiFi.status() != WL_CONNECTED && millis() - startTime < 15000) {
-        Serial.print(".");
-        delay(500);
-    }
-    Serial.println();
+  Serial.print("Connecting Wi-Fi");
+  unsigned long start = millis();
 
-    if (WiFi.status() == WL_CONNECTED) {
-        Serial.print("Wi-Fi Connected. IP: ");
-        Serial.println(WiFi.localIP());
-        return true;
-    }
-    WiFi.disconnect(true);
-    return false;
-}
-
-bool connect4G() {
-    Serial.println("Checking modem...");
-    if (!modem.testAT()) {
-        Serial.println("Modem AT test failed.");
-        return false;
-    }
-
-    Serial.println("Checking SIM...");
-    if (modem.getSimStatus() != SIM_READY) {
-        Serial.println("SIM not ready.");
-        return false;
-    }
-
-    Serial.println("Waiting for network...");
-    if (!modem.waitForNetwork(60000L)) {
-        Serial.println("Network unavailable.");
-        return false;
-    }
-
-    Serial.println("Connecting to APN...");
-    if (!modem.gprsConnect(APN, GPRS_USER, GPRS_PASS)) {
-        Serial.println("GPRS connection failed.");
-        return false;
-    }
-
-    Serial.print("4G Connected. IP: ");
-    Serial.println(modem.getLocalIP());
-    return true;
-}
-
-void initializeFirebase() {
-    config.api_key = API_KEY;
-    config.database_url = DATABASE_URL;
-    config.signer.tokens.legacy_token = FIREBASE_SECRET;
-
-    Firebase.begin(&config, nullptr);
-    Firebase.reconnectWiFi(true);
-    Serial.println("Firebase : READY");
-}
-
-// ================= RS485 / NPK MODBUS IMPLEMENTATION =================
-void initializeNPK() {
-    Serial.println("Initializing 7-in-1 NPK sensor...");
-    pinMode(NPK_DE_RE_PIN, OUTPUT);
-    setRS485Receive(); // Default to listening mode
-
-    SerialNPK.begin(NPK_BAUDRATE, SERIAL_8N1, NPK_RX_PIN, NPK_TX_PIN);
+  while (WiFi.status() != WL_CONNECTED &&
+         millis() - start < 15000) {
+    Serial.print(".");
     delay(500);
-    Serial.println("NPK RS485 : READY");
-}
+  }
 
-void setRS485Transmit() {
-    digitalWrite(NPK_DE_RE_PIN, HIGH);
-    delayMicroseconds(100);
-}
+  Serial.println();
 
-void setRS485Receive() {
-    digitalWrite(NPK_DE_RE_PIN, LOW);
-    delayMicroseconds(100);
-}
-
-// Generates 16-bit Modbus CRC check
-uint16_t modbusCRC16(uint8_t* buffer, uint8_t length) {
-    uint16_t crc = 0xFFFF;
-    for (uint8_t pos = 0; pos < length; pos++) {
-        crc ^= (uint16_t)buffer[pos];
-        for (uint8_t i = 8; i != 0; i--) {
-            if ((crc & 0x0001) != 0) {
-                crc >>= 1;
-                crc ^= 0xA001;
-            } else {
-                crc >>= 1;
-            }
-        }
-    }
-    return crc;
-}
-
-bool readModbusRegisters(uint8_t slaveID, uint16_t startRegister, uint16_t numberOfRegisters, uint16_t* data) {
-    uint8_t request[8];
-    request[0] = slaveID;
-    request[1] = 0x03; // Read Holding Registers Command
-    request[2] = highByte(startRegister);
-    request[3] = lowByte(startRegister);
-    request[4] = highByte(numberOfRegisters);
-    request[5] = lowByte(numberOfRegisters);
-
-    uint16_t crc = modbusCRC16(request, 6);
-    request[6] = lowByte(crc);
-    request[7] = highByte(crc);
-
-    // Flush rx buffer before sending request
-    while (SerialNPK.available()) {
-        SerialNPK.read();
-    }
-
-    setRS485Transmit();
-    SerialNPK.write(request, 8);
-    SerialNPK.flush();
-    setRS485Receive();
-
-    uint8_t expectedBytes = 5 + (numberOfRegisters * 2);
-    uint8_t response[32];
-    uint8_t index = 0;
-    unsigned long startTime = millis();
-
-    while (millis() - startTime < 1000) {
-        if (SerialNPK.available()) {
-            response[index++] = SerialNPK.read();
-            if (index >= expectedBytes) break;
-        }
-    }
-
-    // Packet validation checks
-    if (index != expectedBytes) return false;
-    if (response[0] != slaveID || response[1] != 0x03 || response[2] != numberOfRegisters * 2) return false;
-
-    uint16_t receivedCRC   = response[index - 2] | (response[index - 1] << 8);
-    uint16_t calculatedCRC = modbusCRC16(response, index - 2);
-    if (receivedCRC != calculatedCRC) return false;
-
-    for (uint8_t i = 0; i < numberOfRegisters; i++) {
-        data[i] = ((uint16_t)response[3 + i * 2] << 8) | response[4 + i * 2];
-    }
+  if (WiFi.status() == WL_CONNECTED) {
+    Serial.println("Wi-Fi Connected: " + WiFi.localIP().toString());
     return true;
+  }
+
+  return false;
 }
 
-bool readNPKSensor() {
-    uint16_t registers[7];
-    Serial.println("\nReading 7-in-1 NPK sensor...");
+// 4G connection
+bool connect4G() {
+  Serial.println("Checking 4G Modem...");
 
-    if (!readModbusRegisters(NPK_SLAVE_ID, 0x0000, 7, registers)) {
-        npkReadingValid = false;
-        return false;
+  if (!modem.testAT(10000)) {
+    Serial.println("4G modem not responding.");
+    return false;
+  }
+
+  if (modem.getSimStatus() != SIM_READY) {
+    Serial.println("SIM card not ready.");
+    return false;
+  }
+
+  if (!modem.waitForNetwork(60000L)) {
+    Serial.println("4G network unavailable.");
+    return false;
+  }
+
+  if (!modem.isGprsConnected()) {
+    if (!modem.gprsConnect(APN, GPRS_USER, GPRS_PASS)) {
+      Serial.println("Mobile data connection failed.");
+      return false;
     }
+  }
 
-    // Register Mapping: 0:Moisture, 1:Temp, 2:EC, 3:pH, 4:N, 5:P, 6:K
-    npkMoisture    = registers[0] / 10.0;
-    npkTemperature = registers[1] / 10.0;
-    npkEC          = registers[2] / 100.0;
-    npkPH          = registers[3] / 10.0;
-    nitrogen       = registers[4];
-    phosphorus     = registers[5];
-    potassium      = registers[6];
-    npkReadingValid = true;
-
-    Serial.println("--- 7-IN-1 NPK DATA ---");
-    Serial.printf("NPK Moisture : %.1f %%\n", npkMoisture);
-    Serial.printf("NPK Temp     : %.1f C\n", npkTemperature);
-    Serial.printf("EC           : %.2f\n", npkEC);
-    Serial.printf("pH           : %.1f\n", npkPH);
-    Serial.printf("Nitrogen     : %.1f\n", nitrogen);
-    Serial.printf("Phosphorus   : %.1f\n", phosphorus);
-    Serial.printf("Potassium    : %.1f\n", potassium);
-
-    return true;
+  Serial.println("4G Connected IP: " + modem.getLocalIP());
+  return true;
 }
 
-// ================= DATA PROCESSING & UPLOAD =================
-void uploadSensorData() {
-    Serial.println("\n--- SENSOR READING ---");
+// Wi-Fi NTP
+bool syncTimeWiFi() {
+  configTime(GMT_OFFSET, DAYLIGHT_OFFSET, NTP_SERVER);
 
-    // Read DHT22
-    float temperature = dht.readTemperature();
-    float humidity    = dht.readHumidity();
-    if (isnan(temperature) || isnan(humidity)) {
-        Serial.println("DHT22 Reading Failed.");
-        return;
-    }
+  struct tm timeinfo;
 
-    // Read Analog Soil Moisture
-    int soilRaw     = analogRead(SOIL_PIN);
-    int soilPercent = map(soilRaw, SOIL_DRY_RAW, SOIL_WET_RAW, 0, 100);
-    soilPercent     = constrain(soilPercent, 0, 100);
+  for (int i = 0; i < 15; i++) {
+    if (getLocalTime(&timeinfo, 1000) &&
+        timeinfo.tm_year + 1900 >= 2024)
+      return true;
 
-    // Read Modbus RS485 Sensor
-    readNPKSensor();
+    delay(500);
+  }
 
-    String timestamp = getTimestamp();
-
-    // Output local readings to Serial
-    Serial.printf("DHT Temp: %.1f C\nHumidity: %.1f %%\n", temperature, humidity);
-    Serial.printf("Soil Moisture: %d %% (Raw: %d)\n", soilPercent, soilRaw);
-    if (!npkReadingValid) Serial.println("NPK: READING FAILED");
-    Serial.println("Time: " + timestamp);
-
-    bool uploadSuccess = false;
-
-    // Check Wi-Fi First, fallback to 4G LTE if connection fails
-    if (WiFi.status() == WL_CONNECTED) {
-        currentConnection = CONNECTION_WIFI;
-        Serial.println("\n>>> UPLOADING VIA WIFI");
-        uploadSuccess = uploadViaWiFi(temperature, humidity, soilPercent, nitrogen, phosphorus, potassium, npkPH, npkEC, timestamp);
-
-        if (!uploadSuccess) {
-            Serial.println("Wi-Fi Firebase upload failed. Trying 4G LTE fallback...");
-            if (connect4G()) {
-                currentConnection = CONNECTION_4G;
-                uploadSuccess = uploadVia4G(temperature, humidity, soilPercent, nitrogen, phosphorus, potassium, npkPH, npkEC, timestamp);
-            }
-        }
-    } else {
-        currentConnection = CONNECTION_4G;
-        Serial.println("\n>>> UPLOADING VIA 4G SIM");
-        if (!modem.isGprsConnected() && !connect4G()) {
-            Serial.println("4G connection unavailable.");
-            return;
-        }
-        uploadSuccess = uploadVia4G(temperature, humidity, soilPercent, nitrogen, phosphorus, potassium, npkPH, npkEC, timestamp);
-    }
-
-    if (uploadSuccess) {
-        Serial.println(">>> FIREBASE UPLOAD SUCCESSFUL");
-    } else {
-        Serial.println(">>> FIREBASE UPLOAD FAILED");
-    }
+  return false;
 }
 
-// Native Firebase Library Realtime Database Upload (Wi-Fi)
-bool uploadViaWiFi(float t, float h, int sm, float n, float p, float k, float ph, float ec, String ts) {
-    if (!Firebase.ready()) {
-        Serial.println("Firebase not ready.");
-        return false;
+// 4G NTP
+bool syncTime4G() {
+  if (!modem.isGprsConnected()) return false;
+
+  Serial.println("Synchronizing time using 4G...");
+
+  while (SerialAT.available()) SerialAT.read();
+
+  SerialAT.println("AT+CNTP=\"pool.ntp.org\",22");
+  delay(1000);
+  SerialAT.println("AT+CNTP");
+
+  String response;
+  unsigned long start = millis();
+
+  while (millis() - start < 20000) {
+    while (SerialAT.available())
+      response += (char)SerialAT.read();
+
+    if (response.indexOf("+CNTP: 0") >= 0) {
+      Serial.println("4G NTP synchronization successful.");
+      break;
     }
 
-    String path = "/sensor/";
-    bool success = true;
+    delay(10);
+  }
 
-    success &= Firebase.RTDB.setFloat(&fbdo, path + "temperature", t);
-    success &= Firebase.RTDB.setFloat(&fbdo, path + "humidity", h);
-    success &= Firebase.RTDB.setInt(&fbdo, path + "soilMoisture", sm);
-    success &= Firebase.RTDB.setFloat(&fbdo, path + "nitrogen", n);
-    success &= Firebase.RTDB.setFloat(&fbdo, path + "phosphorus", p);
-    success &= Firebase.RTDB.setFloat(&fbdo, path + "potassium", k);
-    success &= Firebase.RTDB.setFloat(&fbdo, path + "ph", ph);
-    success &= Firebase.RTDB.setFloat(&fbdo, path + "ec", ec);
-    success &= Firebase.RTDB.setString(&fbdo, path + "timestamp", ts);
+  int y, m, d, h, min, s;
+
+  if (!getModemClock(y, m, d, h, min, s)) {
+    Serial.println("Could not read modem clock.");
+    return false;
+  }
+
+  struct tm timeinfo = {
+    s, min, h, d, m - 1, y - 1900
+  };
+
+  time_t epoch = mktime(&timeinfo);
+  if (epoch <= 0) return false;
+
+  struct timeval tv = {epoch, 0};
+  settimeofday(&tv, nullptr);
+
+  return true;
+}
+
+// Read modem clock
+bool getModemClock(
+  int &y, int &m, int &d,
+  int &h, int &min, int &s
+) {
+  while (SerialAT.available()) SerialAT.read();
+
+  SerialAT.println("AT+CCLK?");
+
+  String response;
+  unsigned long start = millis();
+
+  while (millis() - start < 3000) {
+    while (SerialAT.available())
+      response += (char)SerialAT.read();
+
+    delay(10);
+  }
+
+  int q1 = response.indexOf('"');
+  int q2 = response.indexOf('"', q1 + 1);
+
+  if (q1 < 0 || q2 < 0) return false;
+
+  String clock = response.substring(q1 + 1, q2);
+  if (clock.length() < 17) return false;
+
+  y = 2000 + clock.substring(0, 2).toInt();
+  m = clock.substring(3, 5).toInt();
+  d = clock.substring(6, 8).toInt();
+  h = clock.substring(9, 11).toInt();
+  min = clock.substring(12, 14).toInt();
+  s = clock.substring(15, 17).toInt();
+
+  return y >= 2024 && m >= 1 && m <= 12 &&
+         d >= 1 && d <= 31;
+}
+
+// Read sensors + upload
+void readAndUpload() {
+  Serial.println("\n--- SENSOR READING ---");
+
+  float t = dht.readTemperature();
+  float h = dht.readHumidity();
+
+  if (isnan(t) || isnan(h)) {
+    Serial.println("DHT22 Reading Failed.");
+    return;
+  }
+
+  int soilRaw = analogRead(SOIL_PIN);
+
+  int soilPercent = constrain(
+    map(soilRaw, SOIL_DRY_RAW, SOIL_WET_RAW, 0, 100),
+    0, 100
+  );
+
+  String timestamp = getTimestamp();
+
+  Serial.printf(
+    "Temp: %.1f C | Hum: %.1f %% | Soil: %d %% | Time: %s\n",
+    t, h, soilPercent, timestamp.c_str()
+  );
+
+  bool success = false;
+
+  // Wi-Fi first
+  if (WiFi.status() == WL_CONNECTED) {
+    Serial.println(">>> UPLOADING VIA WIFI");
+
+    success = uploadViaWiFi(
+      t, h, soilPercent, timestamp
+    );
 
     if (!success) {
-        Serial.print("Firebase Error: ");
-        Serial.println(fbdo.errorReason());
+      Serial.println("Wi-Fi upload failed. Switching to 4G...");
+      WiFi.disconnect(true);
+      delay(500);
+
+      if (connect4G())
+        success = uploadVia4G(
+          t, h, soilPercent, timestamp
+        );
     }
-    return success;
+
+  } else {
+    // 4G fallback
+    Serial.println(">>> UPLOADING VIA 4G");
+
+    if (connect4G())
+      success = uploadVia4G(
+        t, h, soilPercent, timestamp
+      );
+  }
+
+  Serial.println(
+    success ? ">>> UPLOAD SUCCESSFUL" :
+              ">>> UPLOAD FAILED"
+  );
 }
 
-// REST API HTTP REST Request Upload (4G LTE SIM)
-bool uploadVia4G(float t, float h, int sm, float n, float p, float k, float ph, float ec, String ts) {
-    if (!modem.isGprsConnected()) return false;
+// Wi-Fi Firebase upload
+bool uploadViaWiFi(
+  float t, float h, int s, String ts
+) {
+  NetworkClientSecure client;
+  client.setInsecure();
 
-    TinyGsmClientSecure client(modem);
-    client.setTimeout(30000);
-    HttpClient http(client, FIREBASE_HOST, 443);
+  HttpClient http(client, FIREBASE_HOST, 443);
 
-    // Build JSON Payload
-    String json = "{";
-    json += "\"temperature\":" + String(t, 2) + ",";
-    json += "\"humidity\":" + String(h, 2) + ",";
-    json += "\"soilMoisture\":" + String(sm) + ",";
-    json += "\"nitrogen\":" + String(n, 2) + ",";
-    json += "\"phosphorus\":" + String(p, 2) + ",";
-    json += "\"potassium\":" + String(k, 2) + ",";
-    json += "\"ph\":" + String(ph, 2) + ",";
-    json += "\"ec\":" + String(ec, 2) + ",";
-    json += "\"timestamp\":\"" + ts + "\"";
-    json += "}";
+  String json =
+    "{\"temperature\":" + String(t, 2) +
+    ",\"humidity\":" + String(h, 2) +
+    ",\"soilMoisture\":" + String(s) +
+    ",\"timestamp\":\"" + ts + "\"}";
 
-    String path = "/sensor.json?auth=" + String(FIREBASE_SECRET);
+  http.beginRequest();
+  http.put("/sensor.json");
+  http.sendHeader("Content-Type", "application/json");
+  http.sendHeader("Content-Length", json.length());
+  http.beginBody();
+  http.print(json);
+  http.endRequest();
 
-    http.beginRequest();
-    http.put(path);
-    http.sendHeader("Content-Type", "application/json");
-    http.sendHeader("Content-Length", json.length());
-    http.beginBody();
-    http.print(json);
-    http.endRequest();
+  int statusCode = http.responseStatusCode();
 
-    int statusCode = http.responseStatusCode();
-    Serial.print("HTTP Status: ");
-    Serial.println(statusCode);
-    http.stop();
+  Serial.print("Wi-Fi Firebase HTTP status: ");
+  Serial.println(statusCode);
 
-    return (statusCode >= 200 && statusCode < 300);
+  http.stop();
+
+  return statusCode >= 200 && statusCode < 300;
 }
 
-// Utility: Returns formatted string timestamp from system RTC
+// Send AT command
+bool sendATCommand(
+  String command,
+  String expected,
+  unsigned long timeout
+) {
+  while (SerialAT.available()) SerialAT.read();
+
+  SerialAT.println(command);
+
+  String response;
+  unsigned long start = millis();
+
+  while (millis() - start < timeout) {
+    while (SerialAT.available()) {
+      char c = SerialAT.read();
+      response += c;
+
+      if (response.indexOf(expected) >= 0)
+        return true;
+
+      if (response.indexOf("ERROR") >= 0)
+        return false;
+    }
+
+    delay(5);
+  }
+
+  return false;
+}
+
+// 4G Firebase upload
+bool uploadVia4G(
+  float t, float h, int s, String ts
+) {
+  Serial.println("--- 4G FIREBASE UPLOAD ---");
+
+  if (!modem.isGprsConnected()) {
+    Serial.println("4G data disconnected.");
+
+    if (!connect4G()) return false;
+  }
+
+  String json =
+    "{\"temperature\":" + String(t, 2) +
+    ",\"humidity\":" + String(h, 2) +
+    ",\"soilMoisture\":" + String(s) +
+    ",\"timestamp\":\"" + ts + "\"}";
+
+  Serial.println("4G Firebase JSON:");
+  Serial.println(json);
+
+  // Stop previous HTTP session
+  SerialAT.println("AT+HTTPTERM");
+  delay(500);
+
+  while (SerialAT.available()) SerialAT.read();
+
+  // Start HTTP
+  if (!sendATCommand("AT+HTTPINIT", "OK", 5000)) {
+    Serial.println("HTTPINIT failed.");
+    return false;
+  }
+
+  // Firebase URL
+  String url =
+    "https://" + String(FIREBASE_HOST) + "/sensor.json";
+
+  if (!sendATCommand(
+    "AT+HTTPPARA=\"URL\",\"" + url + "\"",
+    "OK", 5000
+  )) {
+    Serial.println("URL setting failed.");
+    SerialAT.println("AT+HTTPTERM");
+    return false;
+  }
+
+  // JSON content type
+  if (!sendATCommand(
+    "AT+HTTPPARA=\"CONTENT\",\"application/json\"",
+    "OK", 5000
+  )) {
+    Serial.println("Content type failed.");
+    SerialAT.println("AT+HTTPTERM");
+    return false;
+  }
+
+  // Tell modem JSON size
+  while (SerialAT.available()) SerialAT.read();
+
+  SerialAT.print("AT+HTTPDATA=");
+  SerialAT.print(json.length());
+  SerialAT.println(",10000");
+
+  // Wait for DOWNLOAD
+  String dataResponse;
+  unsigned long dataStart = millis();
+  bool downloadReady = false;
+
+  while (millis() - dataStart < 12000) {
+    while (SerialAT.available()) {
+      char c = SerialAT.read();
+      dataResponse += c;
+
+      if (dataResponse.indexOf("DOWNLOAD") >= 0) {
+        downloadReady = true;
+        break;
+      }
+
+      if (dataResponse.indexOf("ERROR") >= 0)
+        break;
+    }
+
+    if (downloadReady) break;
+    delay(5);
+  }
+
+  if (!downloadReady) {
+    Serial.println("HTTPDATA failed.");
+    Serial.println(dataResponse);
+    SerialAT.println("AT+HTTPTERM");
+    return false;
+  }
+
+  // Send JSON
+  SerialAT.print(json);
+  delay(1000);
+
+  // IMPORTANT: 4 = PUT
+  Serial.println("Sending Firebase PUT request...");
+  while (SerialAT.available()) SerialAT.read();
+
+  SerialAT.println("AT+HTTPACTION=4");
+
+  String response;
+  unsigned long start = millis();
+  int httpStatus = -1;
+
+  while (millis() - start < 30000) {
+    while (SerialAT.available()) {
+      char c = SerialAT.read();
+      response += c;
+
+      int pos = response.indexOf("+HTTPACTION:");
+
+      if (pos >= 0) {
+        int c1 = response.indexOf(',', pos);
+        int c2 = response.indexOf(',', c1 + 1);
+
+        if (c1 > 0 && c2 > c1) {
+          httpStatus = response.substring(
+            c1 + 1, c2
+          ).toInt();
+          break;
+        }
+      }
+    }
+
+    if (httpStatus >= 0) break;
+    delay(10);
+  }
+
+  Serial.println("4G HTTP response:");
+  Serial.println(response);
+
+  Serial.print("Firebase HTTP status: ");
+  Serial.println(httpStatus);
+
+  // Read Firebase response
+  if (httpStatus >= 200 && httpStatus < 300) {
+    Serial.println("Firebase PUT successful.");
+
+    SerialAT.println("AT+HTTPREAD");
+
+    String body;
+    unsigned long readStart = millis();
+
+    while (millis() - readStart < 5000) {
+      while (SerialAT.available())
+        body += (char)SerialAT.read();
+
+      delay(5);
+    }
+
+    Serial.println("Firebase response:");
+    Serial.println(body);
+
+    SerialAT.println("AT+HTTPTERM");
+    delay(300);
+
+    return true;
+  }
+
+  Serial.println("Firebase PUT failed.");
+
+  SerialAT.println("AT+HTTPTERM");
+  delay(300);
+
+  return false;
+}
+
+// Timestamp
 String getTimestamp() {
-    struct tm timeinfo;
-    if (!getLocalTime(&timeinfo, 3000)) {
-        return "TIME_ERROR";
-    }
+  struct tm timeinfo;
 
-    char buffer[30];
-    sprintf(buffer, "%04d-%02d-%02d %02d:%02d:%02d",
-            timeinfo.tm_year + 1900,
-            timeinfo.tm_mon + 1,
-            timeinfo.tm_mday,
-            timeinfo.tm_hour,
-            timeinfo.tm_min,
-            timeinfo.tm_sec);
+  if (
+    !getLocalTime(&timeinfo, 1000) ||
+    timeinfo.tm_year + 1900 < 2024
+  )
+    return "TIME_ERROR";
 
-    return String(buffer);
+  char buf[25];
+
+  sprintf(
+    buf,
+    "%04d-%02d-%02d %02d:%02d:%02d",
+    timeinfo.tm_year + 1900,
+    timeinfo.tm_mon + 1,
+    timeinfo.tm_mday,
+    timeinfo.tm_hour,
+    timeinfo.tm_min,
+    timeinfo.tm_sec
+  );
+
+  return String(buf);
 }

@@ -112,7 +112,7 @@ export default function FarmingHomeScreen() {
 
             {/* IoT Dashboard card */}
             <View style={styles.featureCard}>
-              <View style={[styles.featureIconBox, { backgroundColor: "#E0F2FE", padding: 8 }]}>
+              <View style={[styles.featureIconBox, { backgroundColor: "#e0fdfeff", padding: 8 }]}>
                 <Image source={require("../../assets/farming-icons/iotsensors.png")} style={{ width: 32, height: 32 }} resizeMode="contain" />
               </View>
               <Text style={styles.featureTitle}>{t.iotDashboardTitle}</Text>
@@ -151,7 +151,7 @@ export default function FarmingHomeScreen() {
                 onPress={() => router.push(ROUTES.variety as any)}
               >
                 <LinearGradient
-                  colors={["#F5C542", "#D97706"]}
+                  colors={["#a8efaeff", "#288e31ff"]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                   style={styles.primaryBtn}
