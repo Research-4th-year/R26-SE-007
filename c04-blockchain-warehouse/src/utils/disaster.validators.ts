@@ -32,11 +32,14 @@ export const updateDisasterStatusSchema = z.object({
     .optional(),
 });
 
-// ── Issue Redistribution Order ─────────────────────────────────
+// ── Issue Evacuation Order ─────────────────────────────────────
+// Stock moves OUT of the disaster-affected warehouse INTO the warehouse
+// named here, so the source is implied by the disaster and only the
+// destination is a client input.
 export const createRedistributionOrderSchema = z.object({
-  sourceWarehouseId: z
-    .string({ required_error: 'Source warehouse ID is required' })
-    .uuid('Invalid source warehouse ID'),
+  destinationWarehouseId: z
+    .string({ required_error: 'Destination warehouse ID is required' })
+    .uuid('Invalid destination warehouse ID'),
   quantityTons: z
     .number({ required_error: 'Quantity is required', invalid_type_error: 'Quantity must be a number' })
     .positive('Quantity must be greater than 0'),

@@ -12,6 +12,7 @@ export interface RankedCandidate {
   reliabilityScore: number;
   compositeScore: number;
   canFulfil: boolean;
+  canAbsorbTons: number;
   zkpVerified: boolean;
 }
 
@@ -25,6 +26,7 @@ export interface Disaster {
   blockchainTxId: string | null;
   affectedWarehouse: { id: string; name: string; code: string; district: string };
   reportedBy: { id: string; fullName: string; role: string };
+  stockToEvacuate?: number;
   redistributionOrders?: any[];
   zkpProofs?: any[];
   rankedCandidates?: RankedCandidate[];
@@ -53,9 +55,14 @@ export const disasterService = {
     return res.data.data;
   },
 
-  async redistribute(disasterId: string, sourceWarehouseId: string, quantityTons: number) {
+  /**
+   * Issues an evacuation order: stock moves OUT of the disaster-affected
+   * warehouse INTO the warehouse given here. The source is implied by the
+   * disaster, so only the destination is sent.
+   */
+  async redistribute(disasterId: string, destinationWarehouseId: string, quantityTons: number) {
     const res = await api.post(`/api/disasters/${disasterId}/redistribute`, {
-      sourceWarehouseId,
+      destinationWarehouseId,
       quantityTons,
     });
     return res.data.data;
