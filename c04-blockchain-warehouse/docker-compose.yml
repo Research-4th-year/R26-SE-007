@@ -100,11 +100,14 @@ services:
       - backend_uploads:/app/uploads
       # Fabric identity material, mounted read-only from the host in phase 3.
       - ./fabric-wallet:/app/fabric-wallet:ro
-    networks: [c04net]
+    networks: [c04net, fabric_test]
     ports:
       # Caddy terminates TLS on 443 and proxies here. Bound to loopback so
       # port 3000 is never directly exposed.
       - "127.0.0.1:3000:3000"
+    # Joined to Fabric's network as well, so the gateway client can resolve
+    # peer0.org1.example.com -- the name the peer's TLS certificate is
+    # issued for. Reaching it via localhost would fail hostname validation.
 
   caddy:
     image: caddy:2-alpine
@@ -137,3 +140,6 @@ volumes:
 networks:
   c04net:
     driver: bridge
+  # Created by fabric-samples' network.sh, not by this file.
+  fabric_test:
+    external: true
