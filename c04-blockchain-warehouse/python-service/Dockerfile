@@ -23,7 +23,8 @@ RUN pip install --no-cache-dir -r requirements.txt \
 COPY main.py ./
 COPY src ./src
 COPY models ./models
-COPY data ./data
+# data/ is empty in git (generated at /retrain), so create it rather than COPY
+RUN mkdir -p data
 
 RUN useradd -m -u 1001 gnn && chown -R gnn:gnn /app
 USER gnn
