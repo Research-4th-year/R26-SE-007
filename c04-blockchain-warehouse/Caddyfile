@@ -1,0 +1,36 @@
+# Caddy terminates TLS and proxies to the backend container.
+#
+# The domain comes from SITE_DOMAIN in .env, so this file needs no editing
+# when the domain changes.
+#
+# Caddy obtains and renews a Let's Encrypt certificate automatically on
+# first request. That requires port 80 to be reachable from the internet
+# (the HTTP-01 challenge) -- which is why the VCN security list and the
+# instance's iptables both had to be opened.
+
+{$SITE_DOMAIN} {
+	# backend:3000 is the compose service name on c04net. Using
+	# 127.0.0.1:3000 here would point Caddy at itself.
+	reverse_proxy backend:3000 {
+		# Preserve the real client address for the backend's rate limiter
+		# and morgan logs; without these every request looks like it came
+		# from Caddy.
+		header_up X-Real-IP {remote_host}
+	}
+
+	# Document uploads run to a few MB. Caddy does not limit request
+	# bodies by default, but stating it makes the contract explicit --
+	# and it is the same 15 MB the gateway is being asked to allow.
+	request_body {
+		max_size 15MB
+	}
+
+	encode gzip
+
+	log {
+		output file /data/access.log {
+			roll_size 10MB
+			roll_keep 3
+		}
+	}
+}

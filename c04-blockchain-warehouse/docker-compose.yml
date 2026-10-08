@@ -106,9 +106,33 @@ services:
       # port 3000 is never directly exposed.
       - "127.0.0.1:3000:3000"
 
+  caddy:
+    image: caddy:2-alpine
+    container_name: c04-caddy
+    restart: unless-stopped
+    environment:
+      # Set SITE_DOMAIN in .env, e.g. digital-goviya.duckdns.org
+      SITE_DOMAIN: ${SITE_DOMAIN:?set SITE_DOMAIN in .env}
+    ports:
+      # The only ports open to the internet. Everything else stays on
+      # loopback or the private compose network.
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # Certificates live here -- without this volume Caddy re-requests a
+      # certificate on every restart and hits Let's Encrypt rate limits.
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - backend
+    networks: [c04net]
+
 volumes:
   mysql_data:
   backend_uploads:
+  caddy_data:
+  caddy_config:
 
 networks:
   c04net:
