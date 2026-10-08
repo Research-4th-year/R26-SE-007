@@ -1,0 +1,115 @@
+# c04 — AI-Driven Privacy-Preserving Paddy Warehouse Coordination
+#
+# Three services on one private bridge network. Only the backend is published
+# to the host; MySQL and the GNN service are reachable by service name from
+# inside the network and by nothing else.
+#
+#   docker compose up -d --build
+#   docker compose logs -f backend
+#
+# Values come from a .env file beside this one — copy .env.production.example
+# and fill it in. Nothing secret is written in this file.
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: c04-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?set MYSQL_ROOT_PASSWORD in .env}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-warehouse}
+    command:
+      # Default buffer pool sizing assumes the box is the database's alone.
+      # Capped so Fabric's peers and PyTorch have room on a 12 GB instance.
+      - --innodb-buffer-pool-size=512M
+      - --max-connections=100
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+    networks: [c04net]
+    # Not published. Reach it for debugging with:
+    #   docker compose exec mysql mysql -uroot -p warehouse
+
+  gnn:
+    build:
+      context: ./python-service
+    container_name: c04-gnn
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: mysql+asyncmy://root:${MYSQL_ROOT_PASSWORD}@mysql:3306/${MYSQL_DATABASE:-warehouse}
+      PORT: "8000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks: [c04net]
+    # Bound to loopback only — curl it over an SSH tunnel when debugging,
+    # never from the public internet.
+    ports:
+      - "127.0.0.1:8000:8000"
+
+  backend:
+    build:
+      context: .
+    container_name: c04-backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+
+      # Service names resolve on the compose network; localhost would point
+      # the container at itself.
+      DATABASE_URL: mysql://root:${MYSQL_ROOT_PASSWORD}@mysql:3306/${MYSQL_DATABASE:-warehouse}
+      GNN_SERVICE_URL: http://gnn:8000
+
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-15m}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?set JWT_REFRESH_SECRET in .env}
+      JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-30d}
+      BCRYPT_ROUNDS: ${BCRYPT_ROUNDS:-12}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
+
+      ZKP_WASM_PATH: /app/zkp/build/capacity_range_js/capacity_range.wasm
+      ZKP_ZKEY_PATH: /app/zkp/build/capacity_range_final.zkey
+      ZKP_VKEY_PATH: /app/zkp/build/verification_key.json
+
+      # config/env.ts calls requireEnv() on every FABRIC_* variable even when
+      # the ledger is switched off, so these must be present regardless.
+      # Phase 1 deploys with FABRIC_ENABLED=false; phase 3 brings up the
+      # Fabric network and flips it to true with real paths.
+      FABRIC_ENABLED: ${FABRIC_ENABLED:-false}
+      FABRIC_PEER_ENDPOINT: ${FABRIC_PEER_ENDPOINT:-localhost:7051}
+      FABRIC_PEER_HOST_ALIAS: ${FABRIC_PEER_HOST_ALIAS:-peer0.org1.example.com}
+      FABRIC_CHANNEL_NAME: ${FABRIC_CHANNEL_NAME:-warehousechannel}
+      FABRIC_CHAINCODE_NAME: ${FABRIC_CHAINCODE_NAME:-warehousecc}
+      FABRIC_MSP_ID: ${FABRIC_MSP_ID:-Org1MSP}
+      FABRIC_CERT_PATH: ${FABRIC_CERT_PATH:-/app/fabric-wallet/cert.pem}
+      FABRIC_KEY_PATH: ${FABRIC_KEY_PATH:-/app/fabric-wallet/key.pem}
+      FABRIC_TLS_CERT_PATH: ${FABRIC_TLS_CERT_PATH:-/app/fabric-wallet/tls.pem}
+    depends_on:
+      mysql:
+        condition: service_healthy
+      gnn:
+        condition: service_started
+    volumes:
+      # Uploaded documents must outlive the container.
+      - backend_uploads:/app/uploads
+      # Fabric identity material, mounted read-only from the host in phase 3.
+      - ./fabric-wallet:/app/fabric-wallet:ro
+    networks: [c04net]
+    ports:
+      # Caddy terminates TLS on 443 and proxies here. Bound to loopback so
+      # port 3000 is never directly exposed.
+      - "127.0.0.1:3000:3000"
+
+volumes:
+  mysql_data:
+  backend_uploads:
+
+networks:
+  c04net:
+    driver: bridge

@@ -37,7 +37,7 @@ export const config = {
   certPath:      requireEnv('FABRIC_CERT_PATH'),
   keyPath:       requireEnv('FABRIC_KEY_PATH'),
   tlsCertPath:   requireEnv('FABRIC_TLS_CERT_PATH'),
-  enabled: process.env.FABRIC_ENABLED !== 'true',
+  enabled: process.env.FABRIC_ENABLED !== 'false',
 },
 zkp: {
   wasmPath: requireEnv('ZKP_WASM_PATH'),
