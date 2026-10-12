@@ -18,6 +18,15 @@ import userRoutes from './routes/user.routes';
 
 const app = express();
 
+// Caddy terminates TLS and forwards to this container, so the real client
+// address arrives in X-Forwarded-For. Without this, express-rate-limit keys
+// every request by Caddy's container IP -- one shared bucket for all users,
+// so a single noisy client would lock out everyone.
+//
+// 1 means "trust exactly one proxy hop". `true` would trust the whole chain,
+// letting a caller spoof their address with their own X-Forwarded-For header.
+app.set('trust proxy', 1);
+
 // ── Security headers ───────────────────────────────────────────
 app.use(helmet());
 
