@@ -12,7 +12,7 @@ export const dashboardService = {
     Promise<FarmerDashboardResponse> {
     const response =
       await marketplaceApiClient.get<FarmerDashboardResponse>(
-        "/dashboard/farmer"
+        "/api/marketplace/api/dashboard/farmer"
       );
 
     return response.data;
@@ -22,7 +22,7 @@ export const dashboardService = {
     Promise<MillerDashboardResponse> {
     const response =
       await marketplaceApiClient.get<MillerDashboardResponse>(
-        "/dashboard/miller"
+        "/api/marketplace/api/dashboard/miller"
       );
 
     return response.data;

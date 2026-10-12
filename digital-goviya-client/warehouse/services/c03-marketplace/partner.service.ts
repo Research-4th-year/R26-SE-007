@@ -20,7 +20,7 @@ export const partnerService = {
     Promise<PartnerListResponse> {
     const response =
       await marketplaceApiClient.get<PartnerListResponse>(
-        "/partners"
+        "/api/marketplace/api/partners"
       );
 
     return response.data;
@@ -42,7 +42,7 @@ export const partnerService = {
   ): Promise<PartnerDetailResponse> {
     const response =
       await marketplaceApiClient.get<PartnerDetailResponse>(
-        `/partners/${partnerType}/${partnerId}`
+        `/api/marketplace/api/partners/${partnerType}/${partnerId}`
       );
 
     return response.data;
@@ -57,7 +57,7 @@ export const partnerService = {
   ): Promise<FavoritePartnerResponse> {
     const response =
       await marketplaceApiClient.post<FavoritePartnerResponse>(
-        `/partners/${partnerType}/${partnerId}/favorite`
+        `/api/marketplace/api/partners/${partnerType}/${partnerId}/favorite`
       );
 
     return response.data;
@@ -72,7 +72,7 @@ export const partnerService = {
   ): Promise<FavoritePartnerResponse> {
     const response =
       await marketplaceApiClient.delete<FavoritePartnerResponse>(
-        `/partners/${partnerType}/${partnerId}/favorite`
+        `/api/marketplace/api/partners/${partnerType}/${partnerId}/favorite`
       );
 
     return response.data;

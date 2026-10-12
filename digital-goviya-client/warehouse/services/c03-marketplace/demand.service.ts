@@ -20,7 +20,7 @@ export const demandService = {
 
     const response =
       await marketplaceApiClient.post<CreateDemandResponse>(
-        "/miller-demand/create",
+        "/api/marketplace/api/miller-demand/create",
         payload
       );
 
@@ -30,7 +30,7 @@ export const demandService = {
   async getMyDemands(): Promise<GetDemandsResponse> {
     const response =
       await marketplaceApiClient.get<GetDemandsResponse>(
-        "/miller-demand/my-demands"
+        "/api/marketplace/api/miller-demand/my-demands"
       );
 
     return response.data;
@@ -41,7 +41,7 @@ export const demandService = {
   ): Promise<MarkDemandFulfilledResponse> {
     const response =
       await marketplaceApiClient.patch<MarkDemandFulfilledResponse>(
-        `/miller-demand/${demandId}/fulfilled`
+        `/api/marketplace/api/miller-demand/${demandId}/fulfilled`
       );
 
     return response.data;

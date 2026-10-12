@@ -23,11 +23,11 @@ if (__DEV__ && Constants.expoConfig?.hostUri) {
 }
 
 const API_BASE_URL =
-  process.env.EXPO_PUBLIC_MARKETPLACE_API_URL || `http://${LOCAL_IP}:8000`;
+  process.env.EXPO_PUBLIC_API_URL || `http://${LOCAL_IP}:8000`;
 
-if (!process.env.EXPO_PUBLIC_MARKETPLACE_API_URL && !__DEV__) {
+if (!process.env.EXPO_PUBLIC_API_URL && !__DEV__) {
   console.warn(
-    "EXPO_PUBLIC_MARKETPLACE_API_URL is not configured for production."
+    "EXPO_PUBLIC_API_URL is not configured for production."
   );
 }
 

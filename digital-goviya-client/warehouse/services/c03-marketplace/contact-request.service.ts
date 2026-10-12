@@ -14,7 +14,7 @@ export const contactRequestService = {
   ): Promise<ContactRequestStateResponse> {
     const response =
       await marketplaceApiClient.get<ContactRequestStateResponse>(
-        `/contact-requests/negotiation/${negotiationId}`
+        `/api/marketplace/api/contact-requests/negotiation/${negotiationId}`
       );
 
     return response.data;
@@ -25,7 +25,7 @@ export const contactRequestService = {
   ): Promise<ContactRequestMutationResponse> {
     const response =
       await marketplaceApiClient.post<ContactRequestMutationResponse>(
-        "/contact-requests",
+        "/api/marketplace/api/contact-requests",
         payload
       );
 
@@ -38,7 +38,7 @@ export const contactRequestService = {
   ): Promise<ContactRequestMutationResponse> {
     const response =
       await marketplaceApiClient.patch<ContactRequestMutationResponse>(
-        `/contact-requests/${requestId}/respond`,
+        `/api/marketplace/api/contact-requests/${requestId}/respond`,
         {
           decision,
         }
