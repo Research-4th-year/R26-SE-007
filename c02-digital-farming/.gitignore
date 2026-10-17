@@ -7,6 +7,9 @@ dataset/.DS_Store
 
 # Trained model binaries (regenerate from train scripts)
 backend/models/*.pkl
+!backend/models/rice_variety_predictor.pkl
+!backend/models/yield_prediction_pipeline.pkl
+!backend/models/yield_predictor.pkl
 
 # Python
 backend/venv/
@@ -20,4 +23,5 @@ backend/firebase_service_account.json
 # Paddy Disease Detection models and datasets
 backend/models/*.h5
 backend/models/*.keras
+!backend/models/disease_prediction_model.keras
 dataset/RiceLeafsDisease/
