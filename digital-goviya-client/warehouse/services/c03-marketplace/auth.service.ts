@@ -17,7 +17,7 @@ export async function loginMarketplaceUser(
 ): Promise<MarketplaceSession> {
   const response =
     await marketplaceApiClient.post<LoginResponse>(
-      "/auth/login",
+      "/api/marketplace/api/auth/login",
       {
         identifier:
           credentials.username
@@ -41,7 +41,7 @@ export async function changeMarketplacePassword(
 ): Promise<MarketplaceSession> {
   const response =
     await marketplaceApiClient.patch<ChangePasswordResponse>(
-      "/auth/change-password",
+      "/api/marketplace/api/auth/change-password",
       payload
     );
 
@@ -57,7 +57,7 @@ export async function getCurrentMarketplaceUser():
   > {
   const response =
     await marketplaceApiClient.get<CurrentUserResponse>(
-      "/auth/me"
+      "/api/marketplace/api/auth/me"
     );
 
   return response.data.data;

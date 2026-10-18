@@ -45,8 +45,8 @@ export const connectionService = {
     const response =
       await marketplaceApiClient.get<SearchMarketplaceResponse>(
         query
-          ? `/connections/search?${query}`
-          : "/connections/search"
+          ? `/api/marketplace/api/connections/search?${query}`
+          : "/api/marketplace/api/connections/search"
       );
 
     return response.data;
@@ -61,7 +61,7 @@ export const connectionService = {
   ): Promise<PublicProfileResponse> {
     const response =
       await marketplaceApiClient.get<PublicProfileResponse>(
-        `/connections/profile/${partnerType}/${partnerId}`
+        `/api/marketplace/api/connections/profile/${partnerType}/${partnerId}`
       );
 
     return response.data;
@@ -76,7 +76,7 @@ export const connectionService = {
   ): Promise<SendConnectionResponse> {
     const response =
       await marketplaceApiClient.post<SendConnectionResponse>(
-        `/connections/request/${partnerType}/${partnerId}`
+        `/api/marketplace/api/connections/request/${partnerType}/${partnerId}`
       );
 
     return response.data;
@@ -87,10 +87,10 @@ export const connectionService = {
   ): Promise<MyConnectionsResponse> {
     const path =
       status
-        ? `/connections/mine?status=${encodeURIComponent(
+        ? `/api/marketplace/api/connections/mine?status=${encodeURIComponent(
             status
           )}`
-        : "/connections/mine";
+        : "/api/marketplace/api/connections/mine";
 
     const response =
       await marketplaceApiClient.get<MyConnectionsResponse>(
@@ -109,7 +109,7 @@ export const connectionService = {
   ): Promise<RespondConnectionResponse> {
     const response =
       await marketplaceApiClient.patch<RespondConnectionResponse>(
-        `/connections/${connectionId}/respond`,
+        `/api/marketplace/api/connections/${connectionId}/respond`,
         {
           decision,
         }
@@ -123,7 +123,7 @@ export const connectionService = {
   ) {
     const response =
       await marketplaceApiClient.patch(
-        `/connections/${connectionId}/remove`
+        `/api/marketplace/api/connections/${connectionId}/remove`
       );
 
     return response.data;
@@ -134,7 +134,7 @@ export const connectionService = {
 ) {
   const response =
     await marketplaceApiClient.patch(
-      `/connections/${connectionId}/cancel`
+      `/api/marketplace/api/connections/${connectionId}/cancel`
     );
 
   return response.data;

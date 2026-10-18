@@ -1,0 +1,3 @@
+algorithm,samples,mae,rmse,r2,status
+FedAvg,1000,3.55,4.27,0.78,Measured
+FedProx,1000,5.31,7.08,0.61,Measured

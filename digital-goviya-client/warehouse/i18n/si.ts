@@ -279,6 +279,7 @@ const si = {
     total: "මුළු",
     available: "ලබා ගත හැකි",
     matched: "ගැළපුම් කළ",
+    agreementReached: "එකඟතාවකට එළඹුණි",
     sold: "අලෙවි කළ",
 
     searchPlaceholder: "වී වර්ගය, කන්නය, තත්ත්වය සොයන්න...",
@@ -598,6 +599,11 @@ c3MatchedMillers: {
 
   rankedRecommendations: "ශ්‍රේණිගත නිර්දේශ",
   selectUpToFive: "පස් දෙනෙකු දක්වා තෝරන්න",
+  allMatches: "සියලු ගැළපීම්",
+  connectedPartners: "සම්බන්ධිත හවුල්කරුවන්",
+  noConnectedPartners: "මෙම ගැළපීම සඳහා සම්බන්ධිත හවුල්කරුවන් නොමැත",
+  noConnectedPartnersDescription:
+    "ඔබ සම්බන්ධ වී සිටින මෝල්කරුවන්ට මෙම අස්වැන්නට ගැළපෙන විවෘත ඉල්ලීමක් දැනට නොමැත.",
 
   matchingScore: "ගැළපුම් ලකුණු",
   location: "ස්ථානය",
@@ -1199,6 +1205,11 @@ c3MillerHome: {
 
     aiRecommendations: "AI නිර්දේශ",
     bestFarmerMatches: "හොඳම ගොවි ගැළපීම්",
+    allMatches: "සියලු ගැළපීම්",
+    connectedPartners: "සම්බන්ධිත හවුල්කරුවන්",
+    noConnectedPartners: "මෙම ගැළපීම සඳහා සම්බන්ධිත හවුල්කරුවන් නොමැත",
+    noConnectedPartnersDescription:
+      "ඔබ සම්බන්ධ වී සිටින ගොවීන්ට මෙම ඉල්ලීමට ගැළපෙන ලබා ගත හැකි අස්වැන්නක් දැනට නොමැත.",
     matches: "ගැළපීම්",
     selected: "තෝරා ඇත",
 
@@ -1465,6 +1476,18 @@ c3MillerHome: {
     requestCancelledMessage:
       "{{name}} වෙත යැවූ සම්බන්ධතා ඉල්ලීම අවලංගු කරන ලදී.",
     unableToCancel: "ඉල්ලීම අවලංගු කළ නොහැක",
+
+    removeConnection: "සම්බන්ධතාව ඉවත් කරන්න",
+    removeConnectionTitle: "සම්බන්ධතාව ඉවත් කරන්නද?",
+    removeConnectionMessage:
+      "{{name}} සමඟ ඇති සම්බන්ධතාව ඉවත් කිරීමට ඔබට අවශ්‍ය බව විශ්වාසද? පසුව ඔවුන් නැවත සොයා නව සම්බන්ධතා ඉල්ලීමක් යැවිය හැකිය.",
+    keepConnection: "අවලංගු කරන්න",
+    remove: "ඉවත් කරන්න",
+    connectionRemoved: "සම්බන්ධතාව ඉවත් කරන ලදී",
+    connectionRemovedMessage:
+      "{{name}} දැන් ඔබගේ සම්බන්ධ වූ හවුල්කරුවන් අතර නොමැත.",
+    unableToRemove: "සම්බන්ධතාව ඉවත් කළ නොහැක",
+
     noDate: "දිනයක් නොමැත",
     dateUnavailable: "දිනය ලබා ගත නොහැක",
     lastTrade: "අවසන් වෙළඳාම",
@@ -1720,7 +1743,7 @@ c3MillerHome: {
       "ඔබගේ සම්බන්ධතා ඉල්ලීම සාර්ථකව යවන ලදී. අනෙක් පාර්ශ්වය පිළිගන්නා තෙක් දුරකථනය සහ WhatsApp ආරක්ෂිතව පවතී.",
     newRequest: "නව ඉල්ලීම",
     whatsappMessage:
-      "ආයුබෝවන්, අප එකඟ වූ වී වෙළඳපොළ සාකච්ඡාව සම්බන්ධයෙන් මම ඔබ අමතමි.",
+      "ආයුබෝවන්, ඩිජිටල් ගොවියා හරහා අප එකඟ වූ වී වෙළඳපොළ සාකච්ඡාව සම්බන්ධයෙන් කතා කිරීමට අවශ්‍යයි.",
     call: "අමතන්න",
     whatsapp: "WhatsApp",
     accept: "පිළිගන්න",

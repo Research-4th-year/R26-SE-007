@@ -20,12 +20,13 @@ import {
   Poppins_500Medium,
 } from "@expo-google-fonts/poppins";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { API_URLS } from "../../../config/api";
 
 
 const APP_LOGO = require("@/assets/logo2.png");
 
-const API_BASE = process.env.EXPO_PUBLIC_API_URL;
-const PREDICT_ENDPOINT = `${API_BASE}/prediction/explanation`;
+//const API_BASE = process.env.EXPO_PUBLIC_API_URL;
+const PREDICT_ENDPOINT = `${API_URLS.forecast}/prediction/explanation`;
 
 const EXPLANATION_ROUTE = "/(c04-analytics)/price-prediction/prediction-explanation";
 const ADVANCED_DETAILS_ROUTE = "/(c04-analytics)/price-prediction/detailed-analysis";

@@ -11,6 +11,7 @@ import {
   useFonts,
 } from "@expo-google-fonts/poppins";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { ViewStyle } from "react-native";
 import {
   ActivityIndicator,
   Alert,
@@ -119,8 +120,8 @@ export default function PartnersScreen() {
             border: "#BBF7D0",
             page: "#F5F8F5",
             glow: "rgba(21,128,61,0.16)",
-            gradientStart: "#14532D",
-            gradientEnd: "#16A34A",
+            gradientStart: "#0A331D",
+            gradientEnd: "#0B3B22",
           }
         : {
             primary: "#A16207",
@@ -218,6 +219,69 @@ export default function PartnersScreen() {
     } finally {
       setActionId(null);
     }
+  }
+
+  async function removeConnection(item: MyConnectionItem) {
+    try {
+      setActionId(item.connectionId);
+
+      await connectionService.removeConnection(
+        item.connectionId
+      );
+
+      Alert.alert(
+        t.c3partners.connectionRemoved,
+        t.c3partners.connectionRemovedMessage.replace(
+          "{{name}}",
+          item.partner.name
+        )
+      );
+
+      await loadAll();
+    } catch (error) {
+      Alert.alert(
+        t.c3partners.unableToRemove,
+        getApiErrorMessage(error)
+      );
+    } finally {
+      setActionId(null);
+    }
+  }
+
+  function confirmRemoveConnection(item: MyConnectionItem) {
+    if (Platform.OS === "web") {
+      const confirmed = window.confirm(
+        t.c3partners.removeConnectionMessage.replace(
+          "{{name}}",
+          item.partner.name
+        )
+      );
+
+      if (confirmed) {
+        void removeConnection(item);
+      }
+
+      return;
+    }
+
+    Alert.alert(
+      t.c3partners.removeConnectionTitle,
+      t.c3partners.removeConnectionMessage.replace(
+        "{{name}}",
+        item.partner.name
+      ),
+      [
+        {
+          text: t.c3partners.keepConnection,
+          style: "cancel",
+        },
+        {
+          text: t.c3partners.remove,
+          style: "destructive",
+          onPress: () => void removeConnection(item),
+        },
+      ]
+    );
   }
 
   async function cancelRequest() {
@@ -533,7 +597,11 @@ export default function PartnersScreen() {
         {/* ------------------------------------------------------------- */}
 
         <LinearGradient
-          colors={[theme.gradientStart, theme.gradientEnd]}
+          colors={
+            isFarmer
+              ? ["#0A331D", "#12522E", "#0B3B22"]
+              : [theme.gradientStart, theme.gradientEnd]
+          }
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.hero}
@@ -763,8 +831,10 @@ export default function PartnersScreen() {
         {activeTab === "connected" ? (
           <ConnectedSection
             items={visibleConnections}
+            actionId={actionId}
             theme={theme}
             onOpen={openPartner}
+            onRemove={confirmRemoveConnection}
           />
         ) : null}
 
@@ -973,15 +1043,19 @@ export default function PartnersScreen() {
 
 function ConnectedSection({
   items,
+  actionId,
   theme,
   onOpen,
+  onRemove,
 }: {
   items: MyConnectionItem[];
+  actionId: string | null;
   theme: Theme;
   onOpen: (
     type: "farmer" | "miller",
     id: string
   ) => void;
+  onRemove: (item: MyConnectionItem) => void;
 }) {
   const { t } = useLanguage();
 
@@ -1012,13 +1086,7 @@ function ConnectedSection({
               key={item.connectionId}
               index={index}
             >
-              <PressableScale
-                onPress={() =>
-                  onOpen(
-                    item.partner.type,
-                    item.partner.id
-                  )
-                }
+              <View
                 style={[
                   styles.connectionCard,
                   {
@@ -1036,81 +1104,119 @@ function ConnectedSection({
                   ]}
                 />
 
-                <PartnerIdentity
-                  partner={item.partner}
-                  theme={theme}
-                  showStatusDot
-                />
-
-                <View style={styles.badgeRow}>
-                  <Badge
-                    icon="checkmark-circle"
-                    text={t.c3partners.connected}
-                    background="#DCFCE7"
-                    color="#166534"
+                <PressableScale
+                  onPress={() =>
+                    onOpen(
+                      item.partner.type,
+                      item.partner.id
+                    )
+                  }
+                >
+                  <PartnerIdentity
+                    partner={item.partner}
+                    theme={theme}
+                    showStatusDot
                   />
 
-                  <Badge
-                    icon="call-outline"
-                    text={t.c3partners.contactUnlocked}
-                    background="#EFF6FF"
-                    color="#1D4ED8"
-                  />
-                </View>
+                  <View style={styles.badgeRow}>
+                    <Badge
+                      icon="checkmark-circle"
+                      text={t.c3partners.connected}
+                      background="#DCFCE7"
+                      color="#166534"
+                    />
 
-                <View style={styles.cardFooter}>
-                  <View>
-                    <Text
-                      style={
-                        styles.cardFooterLabel
-                      }
-                    >
-                      {t.c3partners.connectionSince}
-                    </Text>
-
-                    <Text
-                      style={
-                        styles.cardFooterText
-                      }
-                    >
-                      {formatDate(
-                        item.respondedAt ||
-                          item.requestedAt,
-                        t.c3partners.noDate,
-                        t.c3partners.dateUnavailable
-                      )}
-                    </Text>
+                    <Badge
+                      icon="call-outline"
+                      text={t.c3partners.contactUnlocked}
+                      background="#EFF6FF"
+                      color="#1D4ED8"
+                    />
                   </View>
 
-                  <View
-                    style={[
-                      styles.openPill,
-                      {
-                        backgroundColor:
-                          theme.soft,
-                      },
-                    ]}
-                  >
-                    <Text
+                  <View style={styles.cardFooter}>
+                    <View>
+                      <Text
+                        style={
+                          styles.cardFooterLabel
+                        }
+                      >
+                        {t.c3partners.connectionSince}
+                      </Text>
+
+                      <Text
+                        style={
+                          styles.cardFooterText
+                        }
+                      >
+                        {formatDate(
+                          item.respondedAt ||
+                            item.requestedAt,
+                          t.c3partners.noDate,
+                          t.c3partners.dateUnavailable
+                        )}
+                      </Text>
+                    </View>
+
+                    <View
                       style={[
-                        styles.openText,
+                        styles.openPill,
                         {
-                          color:
-                            theme.primary,
+                          backgroundColor:
+                            theme.soft,
                         },
                       ]}
                     >
-                      {t.c3partners.viewProfile}
-                    </Text>
+                      <Text
+                        style={[
+                          styles.openText,
+                          {
+                            color:
+                              theme.primary,
+                          },
+                        ]}
+                      >
+                        {t.c3partners.viewProfile}
+                      </Text>
 
-                    <Ionicons
-                      name="arrow-forward"
-                      size={14}
-                      color={theme.primary}
-                    />
+                      <Ionicons
+                        name="arrow-forward"
+                        size={14}
+                        color={theme.primary}
+                      />
+                    </View>
                   </View>
-                </View>
-              </PressableScale>
+                </PressableScale>
+
+                <PressableScale
+                  disabled={actionId === item.connectionId}
+                  style={[
+                    styles.removeConnectionButton,
+                    actionId === item.connectionId &&
+                      styles.disabledButton,
+                  ]}
+                  onPress={() => onRemove(item)}
+                >
+                  {actionId === item.connectionId ? (
+                    <ActivityIndicator
+                      size="small"
+                      color="#B91C1C"
+                    />
+                  ) : (
+                    <>
+                      <Ionicons
+                        name="person-remove-outline"
+                        size={16}
+                        color="#B91C1C"
+                      />
+
+                      <Text style={styles.removeConnectionText}>
+                        {t.c3partners.removeConnection}
+                      </Text>
+                    </>
+                  )}
+                </PressableScale>
+              </View>
             </FadeInItem>
           ))}
         </View>
@@ -1263,36 +1369,15 @@ function RequestsSection({
                         styles.requestActions
                       }
                     >
-                      <PressableScale
+                      <Pressable
                         disabled={busy}
-                        style={[
-                          styles.rejectButton,
-                          busy &&
-                            styles.disabledButton,
-                        ]}
                         onPress={() =>
                           onRespond(
                             item,
-                            "rejected"
+                            "accepted"
                           )
                         }
-                      >
-                        <Ionicons
-                          name="close-outline"
-                          size={16}
-                          color="#B91C1C"
-                        />
-
-                        <Text
-                          style={styles.rejectText}
-                        >
-                          {t.c3partners.reject}
-                        </Text>
-                      </PressableScale>
-
-                      <PressableScale
-                        disabled={busy}
-                        style={[
+                        style={({ pressed }) => [
                           styles.acceptButton,
                           {
                             backgroundColor:
@@ -1300,13 +1385,10 @@ function RequestsSection({
                           },
                           busy &&
                             styles.disabledButton,
+                          pressed &&
+                            !busy &&
+                            styles.requestActionPressed,
                         ]}
-                        onPress={() =>
-                          onRespond(
-                            item,
-                            "accepted"
-                          )
-                        }
                       >
                         {busy ? (
                           <ActivityIndicator
@@ -1317,7 +1399,7 @@ function RequestsSection({
                           <>
                             <Ionicons
                               name="checkmark"
-                              size={17}
+                              size={18}
                               color="#FFFFFF"
                             />
 
@@ -1330,7 +1412,37 @@ function RequestsSection({
                             </Text>
                           </>
                         )}
-                      </PressableScale>
+                      </Pressable>
+
+                      <Pressable
+                        disabled={busy}
+                        onPress={() =>
+                          onRespond(
+                            item,
+                            "rejected"
+                          )
+                        }
+                        style={({ pressed }) => [
+                          styles.rejectButton,
+                          busy &&
+                            styles.disabledButton,
+                          pressed &&
+                            !busy &&
+                            styles.requestActionPressed,
+                        ]}
+                      >
+                        <Ionicons
+                          name="close-outline"
+                          size={18}
+                          color="#B91C1C"
+                        />
+
+                        <Text
+                          style={styles.rejectText}
+                        >
+                          {t.c3partners.reject}
+                        </Text>
+                      </Pressable>
                     </View>
                   </View>
                 </FadeInItem>
@@ -1968,6 +2080,24 @@ function PressableScale({
     new Animated.Value(1)
   ).current;
 
+  const flattened =
+    StyleSheet.flatten(style) || {};
+
+  const {
+    flex,
+    flexGrow,
+    flexShrink,
+    flexBasis,
+    alignSelf,
+    width,
+    minWidth,
+    maxWidth,
+    ...visualStyle
+  } = flattened as Record<string, unknown>;
+
+  const fillsRow =
+    flex != null || width != null;
+
   const animateTo = (
     toValue: number
   ) =>
@@ -1988,10 +2118,23 @@ function PressableScale({
       onPressOut={() =>
         animateTo(1)
       }
+      style={{
+        flex: flex as ViewStyle["flex"],
+        flexGrow: flexGrow as ViewStyle["flexGrow"],
+        flexShrink: flexShrink as ViewStyle["flexShrink"],
+        flexBasis: flexBasis as ViewStyle["flexBasis"],
+        alignSelf: alignSelf as ViewStyle["alignSelf"],
+        width: width as ViewStyle["width"],
+        minWidth:
+          (minWidth as ViewStyle["minWidth"]) ??
+          (fillsRow ? 0 : undefined),
+        maxWidth: maxWidth as ViewStyle["maxWidth"],
+      }}
     >
       <Animated.View
         style={[
-          style,
+          visualStyle,
+          fillsRow ? { width: "100%" } : null,
           {
             transform: [
               { scale },
@@ -2847,7 +2990,7 @@ const styles = StyleSheet.create({
     width: 13,
     height: 13,
     borderRadius: 7,
-    backgroundColor: "#22C55E",
+    backgroundColor: "#4ADE80",
     borderWidth: 2,
   },
 
@@ -2955,6 +3098,25 @@ const styles = StyleSheet.create({
     fontSize: 6.7,
   },
 
+  removeConnectionButton: {
+    minHeight: 40,
+    marginTop: 10,
+    borderRadius: 13,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    backgroundColor: "#FEF2F2",
+    borderWidth: 1,
+    borderColor: "#FECACA",
+  },
+
+  removeConnectionText: {
+    color: "#B91C1C",
+    fontFamily: "Poppins_700Bold",
+    fontSize: 8,
+  },
+
   // -------------------------------------------------------------------
   // Request message
   // -------------------------------------------------------------------
@@ -2988,19 +3150,24 @@ const styles = StyleSheet.create({
   },
 
   requestActions: {
-    flexDirection: "row",
     gap: 8,
     marginTop: 11,
   },
 
+  requestActionPressed: {
+    opacity: 0.86,
+  },
+
   rejectButton: {
-    flex: 1,
-    minHeight: 44,
+    width: "100%",
+    minHeight: 48,
     borderRadius: 13,
     alignItems: "center",
     justifyContent: "center",
     flexDirection: "row",
-    gap: 4,
+    gap: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
     backgroundColor: "#FEF2F2",
     borderWidth: 1,
     borderColor: "#FECACA",
@@ -3009,23 +3176,27 @@ const styles = StyleSheet.create({
   rejectText: {
     color: "#B91C1C",
     fontFamily: "Poppins_700Bold",
-    fontSize: 7.8,
+    fontSize: 13,
+    textAlign: "center",
   },
 
   acceptButton: {
-    flex: 1.4,
-    minHeight: 44,
+    width: "100%",
+    minHeight: 48,
     borderRadius: 13,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 5,
+    gap: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
   },
 
   acceptText: {
     color: "#FFFFFF",
     fontFamily: "Poppins_700Bold",
-    fontSize: 7.8,
+    fontSize: 13,
+    textAlign: "center",
   },
 
   // -------------------------------------------------------------------

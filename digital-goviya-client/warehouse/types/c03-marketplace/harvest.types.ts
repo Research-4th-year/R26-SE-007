@@ -42,6 +42,7 @@ export interface Harvest {
   status:
     | "available"
     | "matched"
+    | "agreement_reached"
     | "sold"
     | "cancelled";
 

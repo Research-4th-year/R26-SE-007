@@ -8,19 +8,19 @@ from services.decision_validator import (
 from services.negotiation_orchestrator import (
     NegotiationOrchestrator,
 )
-from services.ollama_client import OllamaClient
+from services.openai_client import OpenAIClient
 
 
 @lru_cache
 def get_orchestrator() -> NegotiationOrchestrator:
-    ollama_client = OllamaClient()
+    openai_client = OpenAIClient()
 
     farmer_agent = FarmerAgent(
-        ollama_client=ollama_client
+        openai_client=openai_client
     )
 
     miller_agent = MillerAgent(
-        ollama_client=ollama_client
+        openai_client=openai_client
     )
 
     validator = DecisionValidator()

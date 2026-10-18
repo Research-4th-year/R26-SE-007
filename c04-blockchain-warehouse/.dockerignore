@@ -1,0 +1,33 @@
+node_modules
+dist
+coverage
+.git
+.github
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+
+# Fabric material is mounted at runtime, never baked into the image
+fabric-wallet
+fabric-samples
+
+# Local Python environment and caches
+python-service/venv
+python-service/__pycache__
+python-service/.pytest_cache
+python-service/.coverage
+**/__pycache__
+.pytest_cache
+
+# ZKP build inputs that the image does not need.
+# zkp/build/*.wasm, *.zkey and verification_key.json ARE copied explicitly
+# in the Dockerfile; these are the large intermediate artifacts.
+zkp/node_modules
+zkp/build/*.ptau
+zkp/build/*.r1cs
+zkp/build/*.sym
+zkp/build/capacity_range_0000.zkey
+
+uploads

@@ -22,7 +22,7 @@ export const matchingService = {
   ): Promise<MatchingResponse> {
     const response =
       await marketplaceApiClient.get<MatchingResponse>(
-        `/matching/harvest/${harvestId}`,
+        `/api/marketplace/api/matching/harvest/${harvestId}`,
         {
           params: {
             ...(options?.focusMillerId
@@ -52,7 +52,7 @@ export const matchingService = {
 
     const response =
       await marketplaceApiClient.get<MillerMatchingResponse>(
-        `/matching/demand/${demandId}`,
+        `/api/marketplace/api/matching/demand/${demandId}`,
         {
           params: {
             ...(options?.focusFarmerId
@@ -78,7 +78,7 @@ export const matchingService = {
   ): Promise<CreateSelectionsResponse> {
     const response =
       await marketplaceApiClient.post<CreateSelectionsResponse>(
-        "/match-selections/create",
+        "/api/marketplace/api/match-selections/create",
         payload,
       );
 
@@ -95,7 +95,7 @@ export const matchingService = {
 
     const response =
       await marketplaceApiClient.post<CreateSelectionsResponse>(
-        "/match-selections/create-by-miller",
+        "/api/marketplace/api/match-selections/create-by-miller",
         payload,
       );
 
@@ -106,7 +106,7 @@ export const matchingService = {
     Promise<GetSelectionsResponse> {
     const response =
       await marketplaceApiClient.get<GetSelectionsResponse>(
-        "/match-selections/farmer",
+        "/api/marketplace/api/match-selections/farmer",
       );
 
     return response.data;
@@ -116,7 +116,7 @@ export const matchingService = {
     Promise<GetSelectionsResponse> {
     const response =
       await marketplaceApiClient.get<GetSelectionsResponse>(
-        "/match-selections/miller",
+        "/api/marketplace/api/match-selections/miller",
       );
 
     return response.data;
@@ -128,7 +128,7 @@ export const matchingService = {
   ): Promise<RespondSelectionResponse> {
     const response =
       await marketplaceApiClient.patch<RespondSelectionResponse>(
-        `/match-selections/${selectionId}/respond`,
+        `/api/marketplace/api/match-selections/${selectionId}/respond`,
         {
           decision,
         },

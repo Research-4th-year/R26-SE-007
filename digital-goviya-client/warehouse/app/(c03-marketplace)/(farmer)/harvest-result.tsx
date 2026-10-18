@@ -232,7 +232,7 @@ export default function HarvestResultScreen() {
         {/* HERO */}
         <View style={styles.heroCardShadow}>
           <LinearGradient
-            colors={["#0A331D", "#14532D", "#166534"]}
+            colors={["#0A331D", "#12522E", "#0B3B22"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.heroCard}
@@ -243,7 +243,7 @@ export default function HarvestResultScreen() {
                   <Ionicons
                     name="sparkles"
                     size={24}
-                    color="#FFFFFF"
+                    color="#15803D"
                   />
                 </View>
               </View>
@@ -655,7 +655,7 @@ export default function HarvestResultScreen() {
           ]}
         >
           <LinearGradient
-            colors={["#22C55E", "#15803D"]}
+            colors={["#15803D", "#0B3B22"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.primaryButton}
@@ -983,7 +983,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(255,255,255,0.14)",
+    backgroundColor: "#FFFFFF",
   },
 
   aiBadge: {

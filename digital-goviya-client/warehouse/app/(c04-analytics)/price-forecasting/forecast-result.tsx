@@ -31,10 +31,11 @@ import {
   Poppins_500Medium,
 } from "@expo-google-fonts/poppins";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { API_URLS } from "../../../config/api";
 
 const APP_LOGO = require("@/assets/logo2.png");
 
-const API_BASE = process.env.EXPO_PUBLIC_API_URL;
+// const API_BASE = process.env.EXPO_PUBLIC_API_URL;
 const WEEKLY_BREAKDOWN_ROUTE =
   "/(c04-analytics)/price-forecasting/weekly-breakdown";
 
@@ -415,7 +416,7 @@ export default function ForecastResultScreen() {
 
     try {
       const res = await fetch(
-        `${API_BASE}/forecast`,
+        `${API_URLS.forecast}/forecast`,
         {
           method: "POST",
           headers: {

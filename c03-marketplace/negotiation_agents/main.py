@@ -1,37 +1,32 @@
 import json
 import sys
-from unittest import result
-
-from sklearn import metrics
 
 from agents.farmer_agent import FarmerAgent
 from agents.miller_agent import MillerAgent
 from schemas.negotiation import NegotiationRequest
+from schemas.negotiation_metrics import NegotiationMetrics
 from services.decision_validator import (
     DecisionValidator,
 )
 from services.negotiation_orchestrator import (
     NegotiationOrchestrator,
 )
-from services.ollama_client import (
-    OllamaAgentError,
-    OllamaClient,
+from services.openai_client import (
+    OpenAIAgentError,
+    OpenAIClient,
 )
-from schemas.negotiation_metrics import NegotiationMetrics
+
 
 def main() -> None:
-    client = OllamaClient()
+    client = OpenAIClient()
 
-    print("Checking Ollama connection...")
-
-    installed_models = client.check_connection()
+    print("Checking OpenAI negotiation configuration...")
 
     print(
         json.dumps(
             {
                 "connected": True,
-                "installedModels":
-                    installed_models,
+                **client.check_configuration(),
             },
             indent=2,
         )
@@ -75,8 +70,6 @@ def main() -> None:
         )
     )
 
-    
-
     metrics = NegotiationMetrics.from_result(result)
 
     print("\n========== METRICS ==========")
@@ -87,7 +80,7 @@ if __name__ == "__main__":
     try:
         main()
 
-    except OllamaAgentError as error:
+    except OpenAIAgentError as error:
         print(
             json.dumps(
                 {

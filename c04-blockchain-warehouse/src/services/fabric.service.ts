@@ -11,13 +11,15 @@ import * as crypto from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
 import { config } from '../config/env';
-import * as fabricService from './fabric.service';
 
 // ── Singleton gateway ──────────────────────────────────────────
 let gateway:    Gateway     | null = null;
 let grpcClient: grpc.Client | null = null;
 
 async function getContract(): Promise<Contract> {
+    if (!config.fabric.enabled) {
+    throw new Error('Ledger disabled (FABRIC_ENABLED=false)');
+  }
   if (!gateway) {
     const tlsCert = fs.readFileSync(path.resolve(config.fabric.tlsCertPath));
 

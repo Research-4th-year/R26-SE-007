@@ -41,9 +41,9 @@ type BotTheme = {
 };
 
 const FARMER_THEME: BotTheme = {
-  gradient: ["#3FB663", "#1B7A3D"],
+  gradient: ["#15803D", "#0B3B22"],
   primary: "#15803D",
-  secondary: "#22C55E",
+  secondary: "#4ADE80",
   soft: "#DCFCE7",
   border: "#BBF7D0",
   label: "Farmer AI",

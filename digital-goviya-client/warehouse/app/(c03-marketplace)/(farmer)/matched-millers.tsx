@@ -43,6 +43,8 @@ import { MarketplaceApiError } from "@/services/c03-marketplace/api-client";
 
 import { useLanguage } from "@/contexts/LanguageContext";
 
+type MatchListTab = "all" | "connected";
+
 export default function MatchedMillersScreen() {
   const { t, language } = useLanguage();
 
@@ -85,6 +87,9 @@ export default function MatchedMillersScreen() {
 
   const [errorMessage, setErrorMessage] =
     useState<string | null>(null);
+
+  const [activeTab, setActiveTab] =
+    useState<MatchListTab>("all");
 
   const fade = useRef(
     new Animated.Value(0)
@@ -257,6 +262,14 @@ export default function MatchedMillersScreen() {
     }
   };
 
+  const matches =
+    matchingData?.matches ?? [];
+  const connectedMatches = matches.filter(
+    (item) => item.isConnected,
+  );
+  const displayedMatches =
+    activeTab === "connected" ? connectedMatches : matches;
+
   if (loading) {
     return (
       <SafeAreaView style={styles.screen}>
@@ -279,9 +292,6 @@ export default function MatchedMillersScreen() {
       </SafeAreaView>
     );
   }
-
-  const matches =
-    matchingData?.matches ?? [];
 
   return (
     <SafeAreaView style={styles.screen}>
@@ -415,18 +425,93 @@ export default function MatchedMillersScreen() {
               </View>
             </View>
 
-            <View style={styles.sectionHeading}>
-              <Text style={styles.sectionTitle}>
-                {t.c3MatchedMillers.rankedRecommendations}
-              </Text>
+            <View style={styles.tabBar}>
+              <Pressable
+                onPress={() => setActiveTab("all")}
+                style={[
+                  styles.tabButton,
+                  activeTab === "all" && styles.tabButtonActive,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.tabLabel,
+                    activeTab === "all" && styles.tabLabelActive,
+                  ]}
+                >
+                  {t.c3MatchedMillers.allMatches}
+                </Text>
+                <View
+                  style={[
+                    styles.tabCount,
+                    activeTab === "all" && styles.tabCountActive,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.tabCountText,
+                      activeTab === "all" && styles.tabCountTextActive,
+                    ]}
+                  >
+                    {matches.length}
+                  </Text>
+                </View>
+              </Pressable>
 
-              <Text style={styles.sectionHint}>
-                {t.c3MatchedMillers.selectUpToFive}
-              </Text>
+              <Pressable
+                onPress={() => setActiveTab("connected")}
+                style={[
+                  styles.tabButton,
+                  activeTab === "connected" && styles.tabButtonActive,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.tabLabel,
+                    activeTab === "connected" && styles.tabLabelActive,
+                  ]}
+                >
+                  {t.c3MatchedMillers.connectedPartners}
+                </Text>
+                <View
+                  style={[
+                    styles.tabCount,
+                    activeTab === "connected" && styles.tabCountActive,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.tabCountText,
+                      activeTab === "connected" &&
+                        styles.tabCountTextActive,
+                    ]}
+                  >
+                    {connectedMatches.length}
+                  </Text>
+                </View>
+              </Pressable>
             </View>
 
+            <View style={styles.sectionHeading}>
+              <Text style={styles.sectionTitle}>
+                {activeTab === "connected"
+                  ? t.c3MatchedMillers.connectedPartners
+                  : t.c3MatchedMillers.allMatches}
+              </Text>
+
+              {activeTab === "all" ? (
+                <Text style={styles.sectionHint}>
+                  {t.c3MatchedMillers.selectUpToFive}
+                </Text>
+              ) : null}
+            </View>
+
+            {activeTab === "connected" &&
+            displayedMatches.length === 0 ? (
+              <ConnectedEmptyState t={t} />
+            ) : (
             <View style={styles.matchList}>
-              {matches.map(
+              {displayedMatches.map(
                 (match, index) => (
                   <MatchCard
                     key={match.demand._id}
@@ -448,6 +533,7 @@ export default function MatchedMillersScreen() {
                 )
               )}
             </View>
+            )}
           </Animated.View>
         )}
       </ScrollView>
@@ -939,6 +1025,32 @@ function EmptyState({
   );
 }
 
+function ConnectedEmptyState({
+  t,
+}: {
+  t: any;
+}) {
+  return (
+    <View style={styles.connectedEmpty}>
+      <View style={styles.emptyIcon}>
+        <Ionicons
+          name="people-outline"
+          size={36}
+          color="#15803D"
+        />
+      </View>
+
+      <Text style={styles.stateTitle}>
+        {t.c3MatchedMillers.noConnectedPartners}
+      </Text>
+
+      <Text style={styles.stateText}>
+        {t.c3MatchedMillers.noConnectedPartnersDescription}
+      </Text>
+    </View>
+  );
+}
+
 function getRequestStatusLabel(
   status: MatchSelectionStatus,
   labels: {
@@ -1166,6 +1278,72 @@ const styles = StyleSheet.create({
   matchCountLabel: {
     color: "#6B7280",
     fontSize: 8,
+  },
+
+  tabBar: {
+    flexDirection: "row",
+    gap: 6,
+    padding: 4,
+    borderRadius: 16,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    marginBottom: 16,
+  },
+
+  tabButton: {
+    flex: 1,
+    minHeight: 42,
+    borderRadius: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    paddingHorizontal: 8,
+  },
+
+  tabButtonActive: {
+    backgroundColor: "#15803D",
+  },
+
+  tabLabel: {
+    color: "#6B7280",
+    fontSize: 11,
+    fontWeight: "700",
+  },
+
+  tabLabelActive: {
+    color: "#FFFFFF",
+  },
+
+  tabCount: {
+    minWidth: 20,
+    height: 20,
+    paddingHorizontal: 5,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#F3F4F6",
+  },
+
+  tabCountActive: {
+    backgroundColor: "rgba(255,255,255,0.22)",
+  },
+
+  tabCountText: {
+    color: "#6B7280",
+    fontSize: 9,
+    fontWeight: "800",
+  },
+
+  tabCountTextActive: {
+    color: "#FFFFFF",
+  },
+
+  connectedEmpty: {
+    alignItems: "center",
+    paddingVertical: 36,
+    paddingHorizontal: 18,
   },
 
   sectionHeading: {

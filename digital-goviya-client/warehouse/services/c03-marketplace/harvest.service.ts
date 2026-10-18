@@ -20,7 +20,7 @@ export const harvestService = {
 
     const response =
       await marketplaceApiClient.post<CreateHarvestResponse>(
-        "/harvests/add",
+        "/api/marketplace/api/harvests/add",
         payload
       );
 
@@ -30,7 +30,7 @@ export const harvestService = {
   async getMyHarvests(): Promise<GetHarvestsResponse> {
     const response =
       await marketplaceApiClient.get<GetHarvestsResponse>(
-        "/harvests/my-harvests"
+        "/api/marketplace/api/harvests/my-harvests"
       );
 
     return response.data;
@@ -41,7 +41,7 @@ export const harvestService = {
   ): Promise<MarkHarvestSoldResponse> {
     const response =
       await marketplaceApiClient.patch<MarkHarvestSoldResponse>(
-        `/harvests/${harvestId}/sold`
+        `/api/marketplace/api/harvests/${harvestId}/sold`
       );
 
     return response.data;

@@ -10,7 +10,6 @@ const envVarsSchema = Joi.object()
     NODE_ENV: Joi.string().valid('production', 'development', 'test').required(),
     PORT: Joi.number().default(5000),
     OPENAI_API_KEY: Joi.string().description('OpenAI API Key'),
-    PYTHON_RAG_SCRIPT: Joi.string().description('Path to the python RAG script').default('../rag/rag_engine.py'),
   })
   .unknown();
 
@@ -27,7 +26,7 @@ module.exports = {
     apiKey: envVars.OPENAI_API_KEY,
   },
   rag: {
-    scriptPath: envVars.PYTHON_RAG_SCRIPT,
+    scriptPath: path.join(__dirname, '../../../rag/rag_engine.py'),
   },
   jwt: {
     secret: process.env.JWT_SECRET,

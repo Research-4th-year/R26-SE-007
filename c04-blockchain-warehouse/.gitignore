@@ -7,3 +7,16 @@ node_modules
 # Fabric certificates and private keys (security-sensitive)
 fabric-wallet/
 fabric-samples/test-network/organizations/
+
+# Build output
+dist/
+
+# Python
+__pycache__/
+*.pyc
+venv/
+.pytest_cache/
+
+# Test coverage
+coverage/
+python-service/.coverage

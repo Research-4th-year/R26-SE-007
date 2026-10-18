@@ -4,7 +4,7 @@ from schemas.negotiation import (
     MillerAgentInput,
     NegotiationDecision,
 )
-from services.ollama_client import OllamaClient
+from services.openai_client import OpenAIClient
 
 
 MILLER_SYSTEM_PROMPT = """
@@ -39,8 +39,8 @@ Mandatory rules:
 
 
 class MillerAgent:
-    def __init__(self, ollama_client: OllamaClient):
-        self.ollama_client = ollama_client
+    def __init__(self, openai_client: OpenAIClient):
+        self.openai_client = openai_client
 
     def decide(
         self,
@@ -152,7 +152,7 @@ Example:
 }}
 """
 
-        return self.ollama_client.generate_structured_response(
+        return self.openai_client.generate_structured_response(
             system_prompt=MILLER_SYSTEM_PROMPT,
             user_prompt=prompt,
             response_schema=NegotiationDecision,

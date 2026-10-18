@@ -40,6 +40,8 @@ export default function DisasterDetailScreen() {
     load();
   }, [id]);
 
+  // Issues an evacuation order: stock moves OUT of the affected warehouse
+  // INTO the candidate tapped here.
   const handleRedistribute = (candidate: RankedCandidate) => {
     Alert.prompt(
       t.warehouse.disasterDetail.orderPromptTitle,
@@ -51,6 +53,13 @@ export default function DisasterDetailScreen() {
         const quantity = parseFloat(qty);
         if (isNaN(quantity) || quantity <= 0) {
           Alert.alert(t.warehouse.errors.title, t.warehouse.disasterDetail.invalidQuantity);
+          return;
+        }
+        if (quantity > candidate.canAbsorbTons) {
+          Alert.alert(
+            t.warehouse.errors.title,
+            `${candidate.canAbsorbTons} ${t.warehouse.units.tons} max`,
+          );
           return;
         }
         try {
@@ -241,13 +250,21 @@ export default function DisasterDetailScreen() {
             </TouchableOpacity>
           )}
 
-          {/* Ranked Candidates */}
+          {/* Evacuation candidates — warehouses that can RECEIVE the
+              surviving stock from the affected warehouse */}
           {disaster.rankedCandidates &&
             disaster.rankedCandidates.length > 0 && (
               <View style={styles.section}>
                 <Text style={styles.sectionTitle}>
                   {t.warehouse.disasterDetail.rankedCandidates.replace("{count}", String(disaster.rankedCandidates.length))}
                 </Text>
+                {disaster.stockToEvacuate !== undefined &&
+                  disaster.stockToEvacuate > 0 && (
+                    <Text style={styles.sectionSub}>
+                      {disaster.stockToEvacuate} {t.warehouse.units.tons} ·{" "}
+                      {disaster.affectedWarehouse.name}
+                    </Text>
+                  )}
                 {disaster.rankedCandidates.map((c, index) => (
                   <View key={c.warehouseId} style={styles.candidateCard}>
                     <View style={styles.candidateHeader}>
@@ -324,17 +341,22 @@ export default function DisasterDetailScreen() {
                       </View>
                     </View>
 
-                    {c.canFulfil && disaster.status !== "RESOLVED" && (
+                    {/* A warehouse that cannot absorb the whole evacuation is
+                        still useful for a partial move, so the gate is on
+                        canAbsorbTons rather than canFulfil. */}
+                    {c.canAbsorbTons > 0 && disaster.status !== "RESOLVED" && (
                       <TouchableOpacity
                         style={styles.redistributeButton}
                         onPress={() => handleRedistribute(c)}
                       >
                         <Text style={styles.redistributeButtonText}>
-                          {t.warehouse.disasterDetail.issueOrder}
+                          {c.canFulfil
+                            ? t.warehouse.disasterDetail.issueOrder
+                            : `${t.warehouse.disasterDetail.issueOrder} · ${c.canAbsorbTons}${t.warehouse.units.tons}`}
                         </Text>
                       </TouchableOpacity>
                     )}
-                    {!c.canFulfil && (
+                    {c.canAbsorbTons <= 0 && (
                       <View style={styles.insufficientBadge}>
                         <Text style={styles.insufficientText}>
                           {t.warehouse.disasterDetail.insufficientCapacity}
@@ -346,7 +368,7 @@ export default function DisasterDetailScreen() {
               </View>
             )}
 
-          {/* Redistribution Orders */}
+          {/* Evacuation orders issued */}
           {disaster.redistributionOrders &&
             disaster.redistributionOrders.length > 0 && (
               <View style={styles.card}>
@@ -492,6 +514,12 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
     fontWeight: "bold",
     fontSize: 16,
+    marginBottom: 12,
+  },
+  sectionSub: {
+    color: COLORS.textFaint,
+    fontSize: 12,
+    marginTop: -8,
     marginBottom: 12,
   },
 

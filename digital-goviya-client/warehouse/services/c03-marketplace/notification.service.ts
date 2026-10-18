@@ -12,7 +12,7 @@ export const notificationService = {
     Promise<NotificationListResponse> {
     const response =
       await marketplaceApiClient.get<NotificationListResponse>(
-        "/notifications/mine"
+        "/api/marketplace/api/notifications/mine"
       );
 
     return response.data;
@@ -23,7 +23,7 @@ export const notificationService = {
   ): Promise<NotificationMutationResponse> {
     const response =
       await marketplaceApiClient.patch<NotificationMutationResponse>(
-        `/notifications/${notificationId}/read`
+        `/api/marketplace/api/notifications/${notificationId}/read`
       );
 
     return response.data;
@@ -33,7 +33,7 @@ export const notificationService = {
     Promise<NotificationMutationResponse> {
     const response =
       await marketplaceApiClient.patch<NotificationMutationResponse>(
-        "/notifications/read-all"
+        "/api/marketplace/api/notifications/read-all"
       );
 
     return response.data;

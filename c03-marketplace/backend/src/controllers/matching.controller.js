@@ -20,6 +20,10 @@ const MatchSelection = require(
   "../models/matchSelection.model"
 );
 
+const Connection = require(
+  "../models/connection.model"
+);
+
 const MAX_MATCH_SCORE = 100;
 
 const escapeRegex = (value = "") => {
@@ -461,57 +465,49 @@ const readQueryId = (value) => {
 };
 
 /**
- * Keep the normal top-5 ranking, then pin a connected-partner
- * match that would otherwise be sliced away.
+ * Accepted connections only. Used to flag matches for the
+ * Connected Partners tab. Does not change matching scores.
  */
-const includeFocusedMatch = ({
-  matched,
-  getPartnerId,
-  getResourceId,
-  focusPartnerId,
-  focusResourceId,
+const getAcceptedConnectedPartnerIds = async ({
+  farmerId,
+  millerId,
 }) => {
-  const topMatches = matched.slice(0, 5);
+  const filter = {
+    status: "accepted",
+  };
 
-  if (!focusPartnerId && !focusResourceId) {
-    return topMatches;
+  if (farmerId) {
+    filter.farmerId = farmerId;
   }
 
-  const focused =
-    matched.find(
-      (item) =>
-        Boolean(focusResourceId) &&
-        asId(getResourceId(item)) === asId(focusResourceId)
-    ) ||
-    matched.find(
-      (item) =>
-        Boolean(focusPartnerId) &&
-        asId(getPartnerId(item)) === asId(focusPartnerId)
+  if (millerId) {
+    filter.millerId = millerId;
+  }
+
+  const connections = await Connection.find(filter)
+    .select("farmerId millerId")
+    .lean();
+
+  if (farmerId) {
+    return new Set(
+      connections.map((item) => asId(item.millerId))
     );
-
-  if (!focused) {
-    return topMatches;
   }
 
-  const focusedPartnerId = asId(getPartnerId(focused));
-  const existingIndex = topMatches.findIndex(
-    (item) => asId(getPartnerId(item)) === focusedPartnerId
+  return new Set(
+    connections.map((item) => asId(item.farmerId))
   );
+};
 
-  if (existingIndex >= 0) {
-    if (
-      asId(getResourceId(topMatches[existingIndex])) ===
-      asId(getResourceId(focused))
-    ) {
-      return topMatches;
-    }
-
-    const next = topMatches.slice();
-    next[existingIndex] = focused;
-    return next;
-  }
-
-  return [...topMatches, focused];
+const attachConnectedFlags = (
+  matches,
+  connectedIds,
+  getPartnerId
+) => {
+  return matches.map((item) => ({
+    ...item,
+    isConnected: connectedIds.has(asId(getPartnerId(item))),
+  }));
 };
 
 const attachExistingRequests = async ({
@@ -834,18 +830,27 @@ const matchHarvest = async (
       focusMillerId,
     });
 
-    const rankedMatches = includeFocusedMatch({
-      matched,
-      getPartnerId: (item) => item.miller._id,
-      getResourceId: (item) => item.demand._id,
-      focusPartnerId: focusMillerId,
-      focusResourceId: focusDemandId,
-    });
+    matched.sort(
+      (first, second) =>
+        second.matchingPercentage -
+        first.matchingPercentage
+    );
 
-    const matches = await attachExistingRequests({
-      matches: rankedMatches,
+    const connectedMillerIds =
+      await getAcceptedConnectedPartnerIds({
+        farmerId: farmer._id,
+      });
+
+    const matchesWithRequests = await attachExistingRequests({
+      matches: matched,
       harvestId: harvest._id,
     });
+
+    const matches = attachConnectedFlags(
+      matchesWithRequests,
+      connectedMillerIds,
+      (item) => item.miller._id
+    );
 
     return res
       .status(200)
@@ -1062,18 +1067,27 @@ const matchDemand = async (
       focusFarmerId,
     });
 
-    const rankedMatches = includeFocusedMatch({
-      matched,
-      getPartnerId: (item) => item.farmer._id,
-      getResourceId: (item) => item.harvest._id,
-      focusPartnerId: focusFarmerId,
-      focusResourceId: focusHarvestId,
-    });
+    matched.sort(
+      (first, second) =>
+        second.matchingPercentage -
+        first.matchingPercentage
+    );
 
-    const matches = await attachExistingRequests({
-      matches: rankedMatches,
+    const connectedFarmerIds =
+      await getAcceptedConnectedPartnerIds({
+        millerId: miller._id,
+      });
+
+    const matchesWithRequests = await attachExistingRequests({
+      matches: matched,
       demandId: demand._id,
     });
+
+    const matches = attachConnectedFlags(
+      matchesWithRequests,
+      connectedFarmerIds,
+      (item) => item.farmer._id
+    );
 
     return res
       .status(200)

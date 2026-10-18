@@ -6,18 +6,21 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-OLLAMA_HOST = os.getenv(
-    "OLLAMA_HOST",
-    "http://192.168.8.141:11434",
+OPENAI_NEGOTIATION_API_KEY = os.getenv(
+    "OPENAI_NEGOTIATION_API_KEY",
+    "",
 )
 
-OLLAMA_MODEL = os.getenv(
-    "OLLAMA_MODEL",
-    "qwen2.5:3b-instruct",
+OPENAI_NEGOTIATION_MODEL = os.getenv(
+    "OPENAI_NEGOTIATION_MODEL",
+    "",
 )
 
-OLLAMA_TIMEOUT_SECONDS = int(
-    os.getenv("OLLAMA_TIMEOUT_SECONDS", "120")
+OPENAI_NEGOTIATION_TIMEOUT_SECONDS = float(
+    os.getenv(
+        "OPENAI_NEGOTIATION_TIMEOUT_SECONDS",
+        "120",
+    )
 )
 
 AGENT_TEMPERATURE = float(

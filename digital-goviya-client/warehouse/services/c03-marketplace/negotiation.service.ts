@@ -17,7 +17,7 @@ export const negotiationService = {
     Promise<NegotiationHealthResponse> {
     const response =
       await marketplaceApiClient.get<NegotiationHealthResponse>(
-        "/negotiations/health",
+        "/api/marketplace/api/negotiations/health",
         {
           timeout: 10000,
         }
@@ -37,7 +37,7 @@ export const negotiationService = {
     try {
       const response =
         await marketplaceApiClient.post<NegotiationResponse>(
-          "/negotiations/start",
+          "/api/marketplace/api/negotiations/start",
           payload,
           {
             timeout:
@@ -77,7 +77,7 @@ export const negotiationService = {
   ): Promise<NegotiationResponse> {
     const response =
       await marketplaceApiClient.get<NegotiationResponse>(
-        `/negotiations/${negotiationId}`
+        `/api/marketplace/api/negotiations/${negotiationId}`
       );
 
     return response.data;
@@ -87,7 +87,7 @@ export const negotiationService = {
     Promise<NegotiationListResponse> {
     const response =
       await marketplaceApiClient.get<NegotiationListResponse>(
-        "/negotiations/mine"
+        "/api/marketplace/api/negotiations/mine"
       );
 
     return response.data;

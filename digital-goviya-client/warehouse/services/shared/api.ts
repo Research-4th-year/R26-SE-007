@@ -1,7 +1,10 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const BASE_URL = process.env.EXPO_PUBLIC_API_URL!;
+// const BASE_URL = process.env.EXPO_PUBLIC_API_URL!;
+import { API_URLS } from "@/config/api";
+
+const BASE_URL = process.env.EXPO_PUBLIC_WAREHOUSE_API_URL ?? API_URLS.blockchain;
 
 export const api = axios.create({
   baseURL: BASE_URL,

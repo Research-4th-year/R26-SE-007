@@ -112,7 +112,7 @@ export default function PublicProfileScreen() {
             soft: "#DCFCE7",
             softDark: "#BBF7D0",
             page: "#F6FAF7",
-            accent: "#22C55E",
+            accent: "#15803D",
           }
         : {
             primary: "#92400E",
@@ -389,10 +389,14 @@ export default function PublicProfileScreen() {
       >
         {/* HERO */}
         <LinearGradient
-          colors={[
-            theme.dark,
-            theme.primary,
-          ]}
+          colors={
+            isFarmer
+              ? ["#0A331D", "#12522E", "#0B3B22"]
+              : [
+                  theme.dark,
+                  theme.primary,
+                ]
+          }
           start={{
             x: 0,
             y: 0,

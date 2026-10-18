@@ -20,7 +20,7 @@ export const ragService = {
 
     const response =
       await marketplaceApiClient.post<AskRagResponse>(
-        "/rag/ask",
+        "/api/marketplace/api/rag/ask",
         payload,
         {
           timeout: RAG_TIMEOUT_MS,
