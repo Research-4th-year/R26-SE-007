@@ -11,4 +11,9 @@ if (__DEV__ && Constants.expoConfig?.hostUri) {
   LOCAL_IP = "10.0.2.2";
 }
 
-export const API_URL = process.env.EXPO_PUBLIC_API_URL || `http://${LOCAL_IP}:8000`;
+const rawUrl = process.env.EXPO_PUBLIC_API_URL || `http://${LOCAL_IP}:8000`;
+
+// When using the Render API Gateway, requests for digital farming must be routed through /api/farming
+export const API_URL = rawUrl.includes("onrender.com") && !rawUrl.includes("/api/farming")
+  ? `${rawUrl.replace(/\/+$/, '')}/api/farming`
+  : rawUrl;
