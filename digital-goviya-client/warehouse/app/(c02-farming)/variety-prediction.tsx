@@ -21,6 +21,7 @@ import { Platform, Alert } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import FarmerGuidance from "@/components/FarmerGuidance";
 import FertilizerSummary from "@/components/FertilizerSummary";
+import Svg, { Path, Defs, LinearGradient as SvgGradient, Stop } from "react-native-svg";
 
 let MapView: any = View;
 let Marker: any = View;
@@ -538,94 +539,327 @@ export default function VarietyPredictionScreen() {
           )}
 
           {suitability && (
-            <View style={[styles.resultCard, { borderColor: '#BFDBFE', borderWidth: 1, backgroundColor: '#EFF6FF' }]}>
-              <View style={styles.resultHeaderBox}>
-                <View style={{ backgroundColor: '#DBEAFE', padding: 10, borderRadius: 12, marginRight: 10 }}>
-                  <Text style={{ fontSize: 24 }}>🛰️</Text>
+            <View style={[styles.resultCard, { borderColor: '#BFDBFE', borderWidth: 1, backgroundColor: '#F8FAFC', padding: 20 }]}>
+              {/* Header */}
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <View style={{ backgroundColor: '#DBEAFE', padding: 10, borderRadius: 12, marginRight: 10 }}>
+                    <Ionicons name="radio-outline" size={22} color="#1D4ED8" />
+                  </View>
+                  <View>
+                    <Text style={[styles.resultHeader, { color: '#1E3A8A', marginLeft: 0 }]}>{t.fieldSuitability}</Text>
+                    <Text style={{ color: '#2563EB', fontSize: 12, fontFamily: 'Poppins_500Medium' }}>{t.realTimeIoT}</Text>
+                  </View>
                 </View>
-                <View>
-                  <Text style={[styles.resultHeader, { color: '#1E3A8A', marginLeft: 0 }]}>{t.fieldSuitability}</Text>
-                  <Text style={{ color: '#2563EB', fontSize: 12, fontFamily: 'Poppins_500Medium' }}>{t.realTimeIoT}</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#ECFDF5', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, borderWidth: 1, borderColor: '#A7F3D0' }}>
+                  <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#10B981', marginRight: 6 }} />
+                  <Text style={{ fontSize: 11, fontFamily: 'Poppins_600SemiBold', color: '#047857' }}>
+                    {language === 'si' ? 'සක්‍රියයි' : 'Live'}
+                  </Text>
                 </View>
               </View>
 
-              <View style={{ alignItems: 'center', marginBottom: 25, marginTop: 10 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 15 }}>
-                  {[1, 2, 3, 4, 5].map((level) => {
-                    const score = suitability.suitability_score;
-                    const blocksToFill = 6 - score; // Score 1 -> 5 blocks, Score 5 -> 1 block
-                    const isActive = level <= blocksToFill;
-                    
-                    let activeColor = '#10B981'; // Default Green (for 1 and 2)
-                    if (score === 1) activeColor = '#10B981'; // Green
-                    else if (score === 2) activeColor = '#84CC16'; // Light Green
-                    else if (score === 3) activeColor = '#F59E0B'; // Yellow/Orange
-                    else if (score === 4) activeColor = '#F97316'; // Orange
-                    else if (score === 5) activeColor = '#EF4444'; // Red
-                    
-                    return (
-                      <View key={level} style={{
-                        width: 45, 
-                        height: 12, 
-                        borderRadius: 6, 
-                        backgroundColor: isActive ? activeColor : '#E2E8F0',
-                        marginHorizontal: 4,
-                        shadowColor: isActive ? activeColor : 'transparent',
+              {/* Gauge and Score Display */}
+              {(() => {
+                const s = suitability.suitability_score || 3;
+                const labels: Record<number, { text: string; desc: string; color: string; gradientStart: string; gradientEnd: string; bg: string; border: string; pct: number; icon: string }> = {
+                  1: { text: t.excellent, desc: t.excellentDesc, color: "#059669", gradientStart: "#10B981", gradientEnd: "#059669", bg: "#ECFDF5", border: "#A7F3D0", pct: 95, icon: "checkmark-circle" },
+                  2: { text: t.good, desc: t.goodDesc, color: "#16A34A", gradientStart: "#22C55E", gradientEnd: "#16A34A", bg: "#F0FDF4", border: "#BBF7D0", pct: 80, icon: "checkmark-done-circle" },
+                  3: { text: t.moderate, desc: t.moderateDesc, color: "#D97706", gradientStart: "#F59E0B", gradientEnd: "#D97706", bg: "#FFFBEB", border: "#FDE68A", pct: 60, icon: "alert-circle" },
+                  4: { text: t.poor, desc: t.poorDesc, color: "#EA580C", gradientStart: "#F97316", gradientEnd: "#EA580C", bg: "#FFF7ED", border: "#FED7AA", pct: 40, icon: "warning" },
+                  5: { text: t.veryPoor, desc: t.veryPoorDesc, color: "#DC2626", gradientStart: "#EF4444", gradientEnd: "#DC2626", bg: "#FEF2F2", border: "#FECACA", pct: 20, icon: "close-circle" }
+                };
+                const current = labels[s] || labels[2];
+                const arcLength = 267.04;
+                const dashOffset = arcLength * (1 - current.pct / 100);
+
+                // Parse reasoning sentences
+                const parseReasoning = (raw: string) => {
+                  if (!raw) return [];
+                  return raw.split('.').map(str => str.trim()).filter(Boolean).map(sentence => {
+                    const lower = sentence.toLowerCase();
+                    let icon = "information-circle-outline";
+                    let color = "#3B82F6";
+                    let localizedText = sentence;
+
+                    if (lower.includes("temperature")) {
+                      icon = "thermometer-outline";
+                      if (lower.includes("low")) {
+                        color = "#2563EB";
+                        localizedText = language === 'si' ? "උෂ්ණත්වය අවශ්‍ය ප්‍රමාණයට වඩා අඩුයි" : sentence;
+                      } else if (lower.includes("high")) {
+                        color = "#EF4444";
+                        localizedText = language === 'si' ? "උෂ්ණත්වය අවශ්‍ය ප්‍රමාණයට වඩා වැඩියි" : sentence;
+                      } else {
+                        color = "#10B981";
+                        localizedText = language === 'si' ? "උෂ්ණත්වය වගාව සඳහා ප්‍රශස්ත මට්ටමක පවතී" : sentence;
+                      }
+                    } else if (lower.includes("moisture") || lower.includes("soil")) {
+                      icon = "leaf-outline";
+                      if (lower.includes("low") || lower.includes("critical")) {
+                        color = "#F97316";
+                        localizedText = language === 'si' ? "පසෙහි තෙතමනය ඉතා අඩු මට්ටමක පවතී" : sentence;
+                      } else {
+                        color = "#10B981";
+                        localizedText = language === 'si' ? "පසෙහි තෙතමනය වගාව සඳහා ප්‍රශස්තයි" : sentence;
+                      }
+                    } else if (lower.includes("humidity")) {
+                      icon = "water-outline";
+                      color = "#0284C7";
+                    }
+                    return { icon, color, text: localizedText };
+                  });
+                };
+
+                const insights = parseReasoning(suitability.reasoning);
+
+                // Telemetry badge helpers
+                const metrics = suitability.metrics || {};
+                const temp = metrics.temperature;
+                const tempStatus = temp == null ? null : temp < 22 
+                  ? { text: language === 'si' ? 'අඩුයි' : 'Low', bg: '#EFF6FF', color: '#2563EB' }
+                  : temp <= 32 
+                  ? { text: language === 'si' ? 'ප්‍රශස්තයි' : 'Optimal', bg: '#F0FDF4', color: '#16A34A' }
+                  : { text: language === 'si' ? 'ඉහළයි' : 'High', bg: '#FEF2F2', color: '#DC2626' };
+
+                const hum = metrics.humidity;
+                const humStatus = hum == null ? null : hum < 60
+                  ? { text: language === 'si' ? 'අඩුයි' : 'Low', bg: '#FFF7ED', color: '#EA580C' }
+                  : hum <= 85
+                  ? { text: language === 'si' ? 'ප්‍රශස්තයි' : 'Optimal', bg: '#F0FDF4', color: '#16A34A' }
+                  : { text: language === 'si' ? 'ඉහළයි' : 'High', bg: '#EFF6FF', color: '#2563EB' };
+
+                const soil = metrics.soil_moisture;
+                const soilStatus = soil == null ? null : soil >= 0.3
+                  ? { text: language === 'si' ? 'ප්‍රශස්තයි' : 'Optimal', bg: '#F0FDF4', color: '#16A34A' }
+                  : { text: language === 'si' ? 'අඩුයි' : 'Low', bg: '#FEF2F2', color: '#DC2626' };
+
+                return (
+                  <>
+                    {/* Radial Speedometer Gauge */}
+                    <View style={{ alignItems: 'center', marginVertical: 10 }}>
+                      <View style={{ width: 240, height: 135, alignItems: 'center', justifyContent: 'flex-start' }}>
+                        <Svg width={240} height={135} viewBox="0 0 240 135">
+                          <Defs>
+                            <SvgGradient id="suitabilityGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                              <Stop offset="0%" stopColor={current.gradientStart} />
+                              <Stop offset="100%" stopColor={current.gradientEnd} />
+                            </SvgGradient>
+                          </Defs>
+
+                          {/* Background Track Arc */}
+                          <Path
+                            d="M 35 115 A 85 85 0 0 1 205 115"
+                            fill="none"
+                            stroke="#E2E8F0"
+                            strokeWidth={14}
+                            strokeLinecap="round"
+                          />
+
+                          {/* Progress Arc */}
+                          <Path
+                            d="M 35 115 A 85 85 0 0 1 205 115"
+                            fill="none"
+                            stroke="url(#suitabilityGradient)"
+                            strokeWidth={14}
+                            strokeLinecap="round"
+                            strokeDasharray="267.04 267.04"
+                            strokeDashoffset={dashOffset}
+                          />
+                        </Svg>
+
+                        {/* Center Value Inside Gauge */}
+                        <View style={{ position: 'absolute', bottom: 5, alignItems: 'center' }}>
+                          <Text style={{ fontSize: 36, fontFamily: 'Poppins_800ExtraBold', color: current.color, lineHeight: 42 }}>
+                            {current.pct}%
+                          </Text>
+                          <Text style={{ fontSize: 11, fontFamily: 'Poppins_600SemiBold', color: '#64748B', marginTop: -2 }}>
+                            {language === 'si' ? 'ක්ෂේත්‍ර යෝග්‍යතා දර්ශකය' : 'SUITABILITY SCORE'}
+                          </Text>
+                        </View>
+                      </View>
+
+                      {/* Status Pill Badge */}
+                      <View style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        backgroundColor: current.bg,
+                        borderColor: current.border,
+                        borderWidth: 1.5,
+                        paddingHorizontal: 16,
+                        paddingVertical: 7,
+                        borderRadius: 24,
+                        marginTop: 12,
+                        marginBottom: 6,
+                        shadowColor: current.color,
                         shadowOffset: { width: 0, height: 2 },
-                        shadowOpacity: isActive ? 0.4 : 0,
+                        shadowOpacity: 0.1,
                         shadowRadius: 4,
-                        elevation: isActive ? 4 : 0,
-                      }} />
-                    )
-                  })}
-                </View>
-                
-                {(() => {
-                  const s = suitability.suitability_score;
-                  const labels = {
-                    1: { text: t.excellent, desc: t.excellentDesc, color: "#10B981" },
-                    2: { text: t.good, desc: t.goodDesc, color: "#84CC16" },
-                    3: { text: t.moderate, desc: t.moderateDesc, color: "#F59E0B" },
-                    4: { text: t.poor, desc: t.poorDesc, color: "#F97316" },
-                    5: { text: t.veryPoor, desc: t.veryPoorDesc, color: "#EF4444" }
-                  };
-                  const current = labels[s as keyof typeof labels] || labels[1];
-                  return (
-                    <View style={{ alignItems: 'center' }}>
-                      <Text style={{ fontSize: 24, fontFamily: 'Poppins_700Bold', color: current.color }}>
-                        {s}/5 {current.text}
-                      </Text>
-                      <Text style={{ fontSize: 13, color: '#64748B', fontFamily: 'Poppins_500Medium', marginTop: 2 }}>{current.desc}</Text>
-                    </View>
-                  );
-                })()}
-              </View>
+                        elevation: 2,
+                      }}>
+                        <Ionicons name={current.icon as any} size={18} color={current.color} style={{ marginRight: 6 }} />
+                        <Text style={{ fontSize: 16, fontFamily: 'Poppins_700Bold', color: current.color }}>
+                          {current.text}
+                        </Text>
+                      </View>
 
-              <View style={{ backgroundColor: 'rgba(255,255,255,0.7)', padding: 15, borderRadius: 12, borderWidth: 1, borderColor: '#E2E8F0', marginBottom: 15 }}>
-                <Text style={{ fontFamily: 'Poppins_500Medium', color: '#334155', lineHeight: 22 }}>
-                  💡 {suitability.reasoning}
-                </Text>
-              </View>
-              
-              {suitability.metrics && (
-                <View style={styles.readingsGrid}>
-                  <View style={[styles.readingBox, { backgroundColor: '#F8FAFC', borderWidth: 1, borderColor: '#E2E8F0' }]}>
-                    <Text style={{ fontSize: 24, marginBottom: 5 }}>🌡️</Text>
-                    <Text style={styles.readingLabel}>{yt.temp}</Text>
-                    <Text style={styles.readingVal}>{suitability.metrics.temperature}°C</Text>
-                  </View>
-                  <View style={[styles.readingBox, { backgroundColor: '#F8FAFC', borderWidth: 1, borderColor: '#E2E8F0' }]}>
-                    <Text style={{ fontSize: 24, marginBottom: 5 }}>💧</Text>
-                    <Text style={styles.readingLabel}>{yt.humidity}</Text>
-                    <Text style={styles.readingVal}>{suitability.metrics.humidity}%</Text>
-                  </View>
-                  <View style={[styles.readingBox, { backgroundColor: '#F8FAFC', borderWidth: 1, borderColor: '#E2E8F0' }]}>
-                    <Text style={{ fontSize: 24, marginBottom: 5 }}>🌱</Text>
-                    <Text style={styles.readingLabel}>{yt.soilMoisture}</Text>
-                    <Text style={styles.readingVal}>{suitability.metrics.soil_moisture}</Text>
-                  </View>
-                </View>
-              )}
+                      {/* Description */}
+                      <Text style={{ fontSize: 13, color: '#64748B', fontFamily: 'Poppins_500Medium', textAlign: 'center', paddingHorizontal: 15, marginBottom: 18 }}>
+                        {current.desc}
+                      </Text>
+
+                      {/* 5-Level Spectrum Meter */}
+                      <View style={{ width: '100%', paddingHorizontal: 4, marginBottom: 18 }}>
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
+                          <Text style={{ fontSize: 11, fontFamily: 'Poppins_600SemiBold', color: '#94A3B8' }}>
+                            {language === 'si' ? 'අඩු යෝග්‍යතාව' : 'Low Suitability'}
+                          </Text>
+                          <Text style={{ fontSize: 11, fontFamily: 'Poppins_600SemiBold', color: '#94A3B8' }}>
+                            {language === 'si' ? 'උපරිම යෝග්‍යතාව' : 'High Suitability'}
+                          </Text>
+                        </View>
+                        
+                        <View style={{ flexDirection: 'row', height: 8, borderRadius: 4, overflow: 'hidden', gap: 3 }}>
+                          {[5, 4, 3, 2, 1].map((lvl) => {
+                            const isSelected = s === lvl;
+                            const lvlColors: Record<number, string> = {
+                              5: '#EF4444',
+                              4: '#F97316',
+                              3: '#F59E0B',
+                              2: '#22C55E',
+                              1: '#10B981',
+                            };
+                            return (
+                              <View
+                                key={lvl}
+                                style={{
+                                  flex: 1,
+                                  backgroundColor: isSelected ? lvlColors[lvl] : '#E2E8F0',
+                                  borderRadius: 4,
+                                  opacity: isSelected ? 1 : 0.45,
+                                }}
+                              />
+                            );
+                          })}
+                        </View>
+
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 }}>
+                          {[
+                            { lvl: 5, label: language === 'si' ? 'ඉතා දුර්වල' : 'V.Poor' },
+                            { lvl: 4, label: language === 'si' ? 'දුර්වල' : 'Poor' },
+                            { lvl: 3, label: language === 'si' ? 'මධ්‍යම' : 'Moderate' },
+                            { lvl: 2, label: language === 'si' ? 'හොඳයි' : 'Good' },
+                            { lvl: 1, label: language === 'si' ? 'විශිෂ්ට' : 'Excellent' },
+                          ].map((item) => (
+                            <Text
+                              key={item.lvl}
+                              style={{
+                                flex: 1,
+                                textAlign: 'center',
+                                fontSize: 10,
+                                fontFamily: s === item.lvl ? 'Poppins_700Bold' : 'Poppins_500Medium',
+                                color: s === item.lvl ? current.color : '#94A3B8',
+                              }}
+                            >
+                              {item.label}
+                            </Text>
+                          ))}
+                        </View>
+                      </View>
+                    </View>
+
+                    {/* AI & Environmental Reasoning Card */}
+                    {insights.length > 0 && (
+                      <View style={{
+                        backgroundColor: '#FFFFFF',
+                        borderRadius: 16,
+                        padding: 16,
+                        borderWidth: 1,
+                        borderColor: '#E2E8F0',
+                        marginBottom: 16,
+                        shadowColor: '#000',
+                        shadowOffset: { width: 0, height: 2 },
+                        shadowOpacity: 0.03,
+                        shadowRadius: 5,
+                        elevation: 1,
+                      }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
+                          <View style={{ backgroundColor: '#FEF3C7', padding: 6, borderRadius: 8, marginRight: 8 }}>
+                            <Ionicons name="bulb-outline" size={16} color="#D97706" />
+                          </View>
+                          <Text style={{ fontSize: 13, fontFamily: 'Poppins_700Bold', color: '#1E293B' }}>
+                            {language === 'si' ? 'ක්ෂේත්‍ර තත්ත්ව විග්‍රහය (AI Analysis)' : 'Field Condition Analysis'}
+                          </Text>
+                        </View>
+
+                        {insights.map((item, idx) => (
+                          <View key={idx} style={{ flexDirection: 'row', alignItems: 'flex-start', marginTop: idx > 0 ? 8 : 2 }}>
+                            <View style={{ marginTop: 2, marginRight: 8 }}>
+                              <Ionicons name={item.icon as any} size={15} color={item.color} />
+                            </View>
+                            <Text style={{ fontSize: 13, fontFamily: 'Poppins_500Medium', color: '#334155', flex: 1, lineHeight: 20 }}>
+                              {item.text}
+                            </Text>
+                          </View>
+                        ))}
+                      </View>
+                    )}
+                    
+                    {/* Real-time Environmental Telemetry */}
+                    {suitability.metrics && (
+                      <View style={styles.readingsGrid}>
+                        {/* Temperature */}
+                        <View style={[styles.readingBox, { backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#E2E8F0', paddingVertical: 14, borderRadius: 14 }]}>
+                          <View style={{ backgroundColor: '#FEE2E2', padding: 8, borderRadius: 10, marginBottom: 6 }}>
+                            <Ionicons name="thermometer-outline" size={20} color="#DC2626" />
+                          </View>
+                          <Text style={styles.readingLabel}>{yt.temp}</Text>
+                          <Text style={[styles.readingVal, { fontSize: 15 }]}>{suitability.metrics.temperature}°C</Text>
+                          {tempStatus && (
+                            <View style={{ marginTop: 6, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10, backgroundColor: tempStatus.bg }}>
+                              <Text style={{ fontSize: 10, fontFamily: 'Poppins_600SemiBold', color: tempStatus.color }}>
+                                {tempStatus.text}
+                              </Text>
+                            </View>
+                          )}
+                        </View>
+
+                        {/* Humidity */}
+                        <View style={[styles.readingBox, { backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#E2E8F0', paddingVertical: 14, borderRadius: 14 }]}>
+                          <View style={{ backgroundColor: '#DBEAFE', padding: 8, borderRadius: 10, marginBottom: 6 }}>
+                            <Ionicons name="water-outline" size={20} color="#2563EB" />
+                          </View>
+                          <Text style={styles.readingLabel}>{yt.humidity}</Text>
+                          <Text style={[styles.readingVal, { fontSize: 15 }]}>{suitability.metrics.humidity}%</Text>
+                          {humStatus && (
+                            <View style={{ marginTop: 6, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10, backgroundColor: humStatus.bg }}>
+                              <Text style={{ fontSize: 10, fontFamily: 'Poppins_600SemiBold', color: humStatus.color }}>
+                                {humStatus.text}
+                              </Text>
+                            </View>
+                          )}
+                        </View>
+
+                        {/* Soil Moisture */}
+                        <View style={[styles.readingBox, { backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#E2E8F0', paddingVertical: 14, borderRadius: 14 }]}>
+                          <View style={{ backgroundColor: '#D1FAE5', padding: 8, borderRadius: 10, marginBottom: 6 }}>
+                            <Ionicons name="leaf-outline" size={20} color="#059669" />
+                          </View>
+                          <Text style={styles.readingLabel}>{yt.soilMoisture}</Text>
+                          <Text style={[styles.readingVal, { fontSize: 15 }]}>{suitability.metrics.soil_moisture}</Text>
+                          {soilStatus && (
+                            <View style={{ marginTop: 6, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10, backgroundColor: soilStatus.bg }}>
+                              <Text style={{ fontSize: 10, fontFamily: 'Poppins_600SemiBold', color: soilStatus.color }}>
+                                {soilStatus.text}
+                              </Text>
+                            </View>
+                          )}
+                        </View>
+                      </View>
+                    )}
+                  </>
+                );
+              })()}
             </View>
           )}
 

@@ -80,7 +80,9 @@ def load_resources():
     
     time.sleep(0.3)
     print(f"\n{C_BLUE}[STEP 2/3]{C_END} Caching Rice Category Dataset...")
-    category_path = os.path.join(os.path.dirname(__file__), '..', 'dataset', 'RiceVarietal_Category.csv')
+    category_path = os.path.join(os.path.dirname(__file__), 'RiceVarietal_Category.csv')
+    if not os.path.exists(category_path):
+        category_path = os.path.join(os.path.dirname(__file__), '..', 'dataset', 'RiceVarietal_Category.csv')
     try:
         category_data = pd.read_csv(category_path)
         category_data.set_index('Variety_Code', inplace=True)
