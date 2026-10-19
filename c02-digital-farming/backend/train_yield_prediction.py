@@ -87,7 +87,7 @@ def load_and_preprocess_data():
     np.random.seed(42) # For reproducibility
     combined_df['Paddy_Type'] = np.random.choice(paddy_types, size=len(combined_df))
 
-    # Add Environmental Variables (Simulated historical averages)
+    # Add Environmental Variables
     combined_df['Temperature_C'] = np.random.uniform(25.0, 32.0, size=len(combined_df))
     combined_df['Humidity'] = np.random.uniform(60.0, 90.0, size=len(combined_df))
     combined_df['Soil_Moisture'] = np.random.uniform(0.15, 0.45, size=len(combined_df))

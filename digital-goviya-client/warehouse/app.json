@@ -20,7 +20,8 @@
         "googleMaps": {
           "apiKey": "YOUR_GOOGLE_MAPS_API_KEY"
         }
-      }
+      },
+      "package": "com.nerandadilhara.paddywarehouse"
     },
     "plugins": [
       "expo-router",

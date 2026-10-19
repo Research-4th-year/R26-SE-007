@@ -44,9 +44,6 @@ def preprocess_historical_weather(csv_path):
         'soil_temp_7': 'mean'
     }).reset_index()
 
-    # Synthetic Labels: 
-    # Paddy requires roughly 20-30°C and high soil moisture / humidity.
-    # We will generate a suitability score from 1 (Best) to 5 (Worst) based on these parameters.
     def calculate_suitability(row):
         score = 0
         

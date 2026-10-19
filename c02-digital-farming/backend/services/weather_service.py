@@ -20,7 +20,7 @@ def load_env_manual():
 load_env_manual()
 API_KEY = os.environ.get("WEATHER_API_KEY", "5c6448ac91b34eda964171546260907")
 BASE_URL = "https://api.weatherapi.com/v1"
-
+ 
 class WeatherService:
     @staticmethod
     def getIoTWeather():

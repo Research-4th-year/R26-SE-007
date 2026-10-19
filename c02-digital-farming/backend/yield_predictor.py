@@ -102,9 +102,7 @@ def predict_yield_suitability(field_id, lat, lon, use_firebase=False):
     if not forecast_data:
         raise ValueError(f"Failed to fetch forecast for {lat}, {lon}")
         
-    # 4. Combine Features
-    # We mix realtime and forecast to get an "overall" current state.
-    # In a real system, you might weight these differently.
+    # 4. Combine Features - We mix realtime and forecast to get an "overall" current state.
     if iot_data:
         combined_temp = (iot_data['temp_mean'] + forecast_data['forecast_temp_mean']) / 2
         combined_hum = (iot_data['humidity_mean'] + forecast_data['forecast_humidity_mean']) / 2
@@ -112,7 +110,7 @@ def predict_yield_suitability(field_id, lat, lon, use_firebase=False):
     else:
         combined_temp = forecast_data['forecast_temp_mean']
         combined_hum = forecast_data['forecast_humidity_mean']
-        combined_moisture = 0.35 # Default fallback
+        combined_moisture = 0.35  #Default Fallback
     
     # Create input vector matching the training features
     X_input = np.array([[combined_temp, combined_hum, combined_moisture]])
@@ -151,5 +149,4 @@ if __name__ == "__main__":
     if os.path.exists(dataset_path):
         train_and_save_model(dataset_path)
     
-    # Test Prediction (Needs a valid field_id in Firebase and valid API)
-    # print(predict_yield_suitability("field_001", 7.8731, 80.7718))
+
