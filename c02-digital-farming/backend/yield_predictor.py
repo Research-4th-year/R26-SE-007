@@ -13,7 +13,7 @@ from services.weather_api import fetch_forecast_weather
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_PATH = os.path.join(BASE_DIR, 'models', 'yield_predictor.pkl')
-JSON_PATH = os.path.join(BASE_DIR, 'rice_suitability_scores_1_to_5.json')
+JSON_PATH = os.path.join(BASE_DIR, 'suitability_scoring_config.json')
 FEATURES = ['temp_mean', 'humidity_mean', 'soil_moisture_7']
 
 
@@ -46,7 +46,7 @@ def train_and_save_model(json_path=JSON_PATH):
     results = []
     best_model, best_name, best_acc = None, None, -1.0
     for name, clf in classifiers.items():
-        clf.fit(X_train, y_train)
+        clf.fit(X_train, y_train) # training part
         acc = accuracy_score(y_test, clf.predict(X_test))
         results.append({'name': name, 'accuracy': float(acc)})
         if acc > best_acc:
