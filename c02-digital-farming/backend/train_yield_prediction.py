@@ -75,7 +75,7 @@ def load_and_preprocess_data():
     for col in combined_df.columns.drop(district_col):
         combined_df[col] = combined_df[col].fillna(combined_df[col].median())
 
-    # --- Data Augmentation ---
+    # Data Augmentation
     # Since historical data lacks 'Paddy_Type' and exact environmental variables per row
     try:
         varieties_df = pd.read_csv(VARIETY_FILE)
