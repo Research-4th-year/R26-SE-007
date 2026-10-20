@@ -60,7 +60,7 @@ def train_specific_model(
         weights="imagenet"
     )
 
-    base_model.trainable = False
+    base_model.trainable = False # Freeze pre-trained weights
 
     # Build model
     inputs = tf.keras.Input(
@@ -69,16 +69,16 @@ def train_specific_model(
 
     x = data_augmentation(inputs)
     x = preprocess_fn(x)
-    x = base_model(x, training=False)
-    x = GlobalAveragePooling2D()(x)
-    x = Dropout(0.2)(x)
+    x = base_model(x, training=False) # 128 feature maps in 128 numbers (CNN)
+    x = GlobalAveragePooling2D()(x) # Conert 2D feature map - 1D feature vector
+    x = Dropout(0.2)(x) # This layer randomly drops 20% of input values
 
-    outputs = Dense(len(class_names), activation="softmax")(x)
-
+    outputs = Dense(len(class_names), activation="softmax")(x) # Converts output scores into probabilities
+   
     model = Model(inputs, outputs)
 
-    # Compile model
-    model.compile( # Adam — Updates the model's weights to improve its predictions
+    # Compile model(Adam-Updates the model's weights to improve its predictions)
+    model.compile( 
         optimizer=tf.keras.optimizers.Adam(learning_rate=0.001), # Controls the size of each weight update
         loss="sparse_categorical_crossentropy", # Measures prediction errors when class labels are integers
         metrics=["accuracy"]
