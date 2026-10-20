@@ -1,55 +1,57 @@
-
 {
-  "dataset_name": "Sri Lanka DOA Improved-AWD Paddy Suitability",
+  "dataset_name": "Rice Suitability Project Examples with DOA Improved-AWD Reference",
   "source": {
     "organization": "Department of Agriculture, Sri Lanka",
     "title": "Improved Alternate Wetting and Drying Technique in Rice Cultivation",
-    "url": "https://doa.gov.lk/rrdi_technology_soilscience_IAWD/"
+    "url": "https://doa.gov.lk/rrdi_technology_soilscience_IAWD/",
+    "role": "Irrigation guidance reference only; not source of the example suitability labels"
   },
-  "features": [
-    "temp_mean",
-    "humidity_mean",
-    "soil_moisture_7"
-  ],
-  "target": "suitability_score",
-  "score_scale": {
-    "1": "Very unsuitable",
-    "2": "Unsuitable",
-    "3": "Moderately suitable",
-    "4": "Suitable",
-    "5": "Highly suitable"
+  "feature_schema": {
+    "temp_mean": "degrees Celsius",
+    "humidity_mean": "relative humidity percent",
+    "soil_moisture_7": "fraction 0 to 1; sensor calibration and depth must be documented",
+    "suitability_score": "project-defined ordinal label 1 to 5, not DOA validated"
   },
-  "water_management_rules": {
-    "general_aw d_start": "2-3 weeks after crop establishment",
-    "irrigation_water_depth_cm": 5,
-    "drainage_trigger_cm_below_soil_surface": 15,
-    "flowering_period_weeks": 2,
-    "flowering_min_water_depth_cm": 0,
-    "flowering_max_water_depth_cm": 5,
-    "stop_irrigation_weeks_before_harvest": 2
-  },
-  "training_data": [
+  "records": [
     {
-      "temp_mean": 28.0,
-      "humidity_mean": 75.0,
-      "soil_moisture_7": 0.35,
-      "suitability_score": null,
-      "label_status": "requires_validated_label"
+      "temp_mean": 38.0,
+      "humidity_mean": 45.0,
+      "soil_moisture_7": 0.10,
+      "suitability_score": 1
     },
     {
       "temp_mean": 35.0,
       "humidity_mean": 60.0,
       "soil_moisture_7": 0.20,
-      "suitability_score": null,
-      "label_status": "requires_validated_label"
+      "suitability_score": 2
+    },
+    {
+      "temp_mean": 31.0,
+      "humidity_mean": 68.0,
+      "soil_moisture_7": 0.28,
+      "suitability_score": 3
+    },
+    {
+      "temp_mean": 28.0,
+      "humidity_mean": 75.0,
+      "soil_moisture_7": 0.35,
+      "suitability_score": 4
     },
     {
       "temp_mean": 24.0,
       "humidity_mean": 80.0,
       "soil_moisture_7": 0.40,
-      "suitability_score": null,
-      "label_status": "requires_validated_label"
+      "suitability_score": 5
     }
   ],
-  "important_note": "The official source does not assign 1-5 suitability scores to these weather and soil-moisture combinations. Labels must be validated before model training."
+  "record_provenance": {
+    "type": "user-provided illustrative examples",
+    "scientifically_validated": false,
+    "official_doa_labels": false
+  },
+  "awd_reference": {
+    "water_level_trigger_cm_below_soil_surface": 15,
+    "note": "Water depth below soil surface is not equivalent to volumetric soil moisture fraction. Apply only with crop-stage and field context."
+  },
+  "training_warning": "Three illustrative labeled rows are insufficient for scientifically meaningful classifier training or evaluation. Do not report accuracy from these as field-validated."
 }
