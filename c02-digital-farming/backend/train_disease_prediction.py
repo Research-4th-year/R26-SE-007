@@ -37,7 +37,7 @@ def train_specific_model(
     print(f"Training {name}")
     print(f"{'=' * 40}")
 
-    # Data augmentation
+    # Data augmentation - To improve Generalization - avoid Overfitting
     data_augmentation = tf.keras.Sequential([
         tf.keras.layers.RandomFlip(
             "horizontal",
@@ -78,15 +78,15 @@ def train_specific_model(
     model = Model(inputs, outputs)
 
     # Compile model
-    model.compile(
-        optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
-        loss="sparse_categorical_crossentropy",
+    model.compile( # Adam — Updates the model's weights to improve its predictions
+        optimizer=tf.keras.optimizers.Adam(learning_rate=0.001), # Controls the size of each weight update
+        loss="sparse_categorical_crossentropy", # Measures prediction errors when class labels are integers
         metrics=["accuracy"]
     )
 
-    # Stop when validation loss stops improving
+    # Stop when validation loss stops improving (Overfitting detection)
     early_stopping = tf.keras.callbacks.EarlyStopping(
-        monitor="val_loss",
+        monitor="val_loss", # Monitors the validation loss during training
         patience=3,
         restore_best_weights=True
     )

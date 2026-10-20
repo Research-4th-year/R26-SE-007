@@ -38,7 +38,7 @@ def train_and_save_model(csv_path):
 
     results = []
     best_model = None
-    best_acc = 0
+    best_acc = 0     
     best_name = ""
 
     for name, clf in classifiers.items():

@@ -1,0 +1,55 @@
+
+{
+  "dataset_name": "Sri Lanka DOA Improved-AWD Paddy Suitability",
+  "source": {
+    "organization": "Department of Agriculture, Sri Lanka",
+    "title": "Improved Alternate Wetting and Drying Technique in Rice Cultivation",
+    "url": "https://doa.gov.lk/rrdi_technology_soilscience_IAWD/"
+  },
+  "features": [
+    "temp_mean",
+    "humidity_mean",
+    "soil_moisture_7"
+  ],
+  "target": "suitability_score",
+  "score_scale": {
+    "1": "Very unsuitable",
+    "2": "Unsuitable",
+    "3": "Moderately suitable",
+    "4": "Suitable",
+    "5": "Highly suitable"
+  },
+  "water_management_rules": {
+    "general_aw d_start": "2-3 weeks after crop establishment",
+    "irrigation_water_depth_cm": 5,
+    "drainage_trigger_cm_below_soil_surface": 15,
+    "flowering_period_weeks": 2,
+    "flowering_min_water_depth_cm": 0,
+    "flowering_max_water_depth_cm": 5,
+    "stop_irrigation_weeks_before_harvest": 2
+  },
+  "training_data": [
+    {
+      "temp_mean": 28.0,
+      "humidity_mean": 75.0,
+      "soil_moisture_7": 0.35,
+      "suitability_score": null,
+      "label_status": "requires_validated_label"
+    },
+    {
+      "temp_mean": 35.0,
+      "humidity_mean": 60.0,
+      "soil_moisture_7": 0.20,
+      "suitability_score": null,
+      "label_status": "requires_validated_label"
+    },
+    {
+      "temp_mean": 24.0,
+      "humidity_mean": 80.0,
+      "soil_moisture_7": 0.40,
+      "suitability_score": null,
+      "label_status": "requires_validated_label"
+    }
+  ],
+  "important_note": "The official source does not assign 1-5 suitability scores to these weather and soil-moisture combinations. Labels must be validated before model training."
+}

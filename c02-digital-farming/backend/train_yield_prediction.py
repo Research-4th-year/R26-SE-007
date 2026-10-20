@@ -76,8 +76,7 @@ def load_and_preprocess_data():
         combined_df[col] = combined_df[col].fillna(combined_df[col].median())
 
     # --- Data Augmentation ---
-    # Since historical data lacks 'Paddy_Type' and exact environmental variables per row,
-    # we simulate these features based on reasonable ranges to train the model.
+    # Since historical data lacks 'Paddy_Type' and exact environmental variables per row
     try:
         varieties_df = pd.read_csv(VARIETY_FILE)
         paddy_types = varieties_df['Variety_Code'].tolist()
